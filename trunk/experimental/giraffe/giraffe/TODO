@@ -1,3 +1,23 @@
+for grafit M1:
+--------------
+- explorer
+    - work correctly
+    - move objects to folder
+    - delete objects
+
+- worksheets
+    - change column names
+    - change data from gui
+
+- graphs
+    - working legend
+    - add data from worksheet
+    - remove data from worksheet
+    - save/load datasets and zooming 
+    
+    
+
+
 - disallow objects with the same name in the same folder
 - automatically create names for new items
 * disable undo/redo buttons when nesessary

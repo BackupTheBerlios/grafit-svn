@@ -198,6 +198,9 @@ class ListModel(HasSignals):
         del self.items[key]
         self.emit('modified')
 
+    def index(self, value):
+        return self.items.index(value)
+
 class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
@@ -681,9 +684,6 @@ class Window(Widget):
 
         Widget.__init__(self, None)
 
-    def koal(self):
-        print 'koali'
-
     def _add(self, child, **place):
         if isinstance(child, Toolbar):
             self._widget.SetToolBar(child._widget)
@@ -951,12 +951,11 @@ class xGrid(wx.grid.Grid):
 
 
     def OnRightDown(self, event):
-        print "hello"
+        pass
 
 class Action(object):
     def __init__(self, name, desc, call, pixmap=None, accel=None):
         self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
 
     def __call__(self, *args, **kwds):
-        print '# called action %s' % self.name
         return self.call(*args, **kwds)

@@ -74,6 +74,9 @@ class Command(signals.HasSignals):
             cls.real_do, cls.do  = cls.do, cls._do_wrapper
             cls.real_undo, cls.undo  = cls.undo, cls._undo_wrapper
 
+    def __str__(self):
+        return self.__class__.__name__
+
 
 class CompositeCommand(Command):
     """A series of commands treated as a single command."""

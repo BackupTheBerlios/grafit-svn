@@ -11,6 +11,7 @@ import wx
 import os
 
 from giraffe.signals import HasSignals
+from giraffe.commands import command_list
 
 from giraffe import *
 
@@ -90,6 +91,24 @@ class ProjectExplorer(Box):
         self.project = None
         self.tree.clear()
 
+class ActionListModel(HasSignals):
+    def __init__(self, actionlist):
+        self.actionlist = actionlist
+        self.actionlist.connect('added', self.on_modified)
+        self.actionlist.connect('removed', self.on_modified)
+
+    def on_modified(self, command):
+        self.emit('modified')
+        
+    # list model interface
+    def get(self, row, column): return str(self.actionlist.commands[row])
+    def get_image(self, row): return None
+    def __len__(self): return len(self.actionlist.commands)
+
+class ActionList(List):
+    def __init__(self, actionlist, parent, **place):
+        List.__init__(self, parent, model=ActionListModel(actionlist), **place)
+
 class FolderListData(HasSignals):
     def __init__(self, folder):
         self.folder = folder
@@ -124,21 +143,15 @@ class MainWindow(Window):
 
         self.shell = ScriptWindow(self.main.bottom_panel,
                                   page_label='console', page_pixmap='console.png')
+        self.shell.locals['mainwin'] = self
         self.explorer = ProjectExplorer(self.main.left_panel,
                                         page_label='explorer', page_pixmap='stock_navigator.png')
+        self.actionlist = ActionList(command_list, self.main.left_panel,
+                                        page_label='actions', page_pixmap='stock_undo.png')
         self.explorer.connect('item-activated', self.on_item_activated)
 
         self.project = Project()
-        self.project.new(Folder, 'arse')
-        self.project.new(Worksheet, 'brse')
-        g = self.project.new(Graph, 'crse')
-        self.project.new(Folder, 'drse')
-
         self.open_project(self.project)
-        f = self.project.new(Folder, 'erse')
-        self.project.new(Folder, 'frse', f)
-        self.project.new(Folder, 'grse', f)
-
 
         self.book = Notebook(self.main)
         self.book.connect('page-changed', self.on_page_changed)
@@ -149,9 +162,9 @@ class MainWindow(Window):
             'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png'),
             'file-save': Action('Save', 'Save the project', self.on_project_save, 'save.png'),
             'file-saveas': Action('Save As', 'Save the project with a new name', self.on_project_saveas, 'saveas.png'),
-            'edit-undo': Action('Undo', 'Undo the last action', self.koal, 'stock_undo.png'),
-            'edit-redo': Action('Redo', 'Redo the last action', self.koal),
-            'edit-copy': Action('Copy', 'Undo the last action', self.koal),
+            'edit-undo': Action('Undo', 'Undo the last action', object, 'stock_undo.png'),
+            'edit-redo': Action('Redo', 'Redo the last action', object),
+            'edit-copy': Action('Copy', 'Undo the last action', object),
             'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
                                            self.on_new_worksheet, 'worksheet.png'),
             'object-new-graph': Action('New Graph', 'Create a new worksheet', 
@@ -226,6 +239,7 @@ class MainWindow(Window):
                 path = dlg.GetPaths()[0]
                 self.close_project()
                 self.open_project(Project(str(path)))
+                command_list.clear()
             dlg.Destroy()
         except Cancel:
             return
@@ -250,6 +264,7 @@ class MainWindow(Window):
                 path = dlg.GetPaths()[0]
                 self.project.saveto(path)
                 self.open_project(Project(str(path)))
+                command_list.clear()
             dlg.Destroy()
         except Cancel:
             return
@@ -269,6 +284,7 @@ class MainWindow(Window):
                 self.on_project_save()
             self.close_project()
             self.open_project(Project())
+            command_list.clear()
         except Cancel:
             return
             

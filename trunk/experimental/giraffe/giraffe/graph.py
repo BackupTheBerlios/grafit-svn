@@ -9,6 +9,7 @@ from giraffe.signals import HasSignals
 from giraffe.item import Item, wrap_attribute, register_class
 
 import ftgl
+from gl2ps import *
 
 from giraffe.graph_render import makedata
 
@@ -136,12 +137,18 @@ class Grid(object):
 
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
+            if self.ps:
+                gl2psEnable(GL2PS_LINE_STIPPLE)
+                gl2psLineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for x in self.axis_bottom.tics(self.xmin, self.xmax):
                 glVertex3f(x, 0.0, 0.0)
                 glVertex3f(x, plot_height_mm, 0.0)
             glEnd()
+            if self.ps:
+                gl2psDisable(GL2PS_LINE_STIPPLE)
+                gl2psLineWidth(0.1)
             glDisable(GL_LINE_STIPPLE)
             glColor3f(0.0, 0.0, 0.0)
 
@@ -158,6 +165,8 @@ class Grid(object):
 
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
+            if self.ps:
+                gl2psEnable(GL2PS_LINE_STIPPLE)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for y in self.axis_left.tics(self.ymin, self.ymax):
@@ -165,6 +174,8 @@ class Grid(object):
                 glVertex3f(plot_width_mm, y, 0.0)
             glEnd()
             glDisable(GL_LINE_STIPPLE)
+            if self.ps:
+                gl2psDisable(GL2PS_LINE_STIPPLE)
             glColor3f(0.0, 0.0, 0.0)
 
             glPopMatrix()
@@ -246,6 +257,8 @@ class Axis(object):
                 
                 w = self.font.Advance(str(x))
                 glRasterPos2f(x-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
+                if self.plot.ps:
+                    gl2psText(str(x), "Helvetica", h)
                 self.font.Render(str(x))
 
                 glPopMatrix()
@@ -260,6 +273,8 @@ class Axis(object):
                 w = self.font.Advance(str(y))
                 glRasterPos2f(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
                               y-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
+                if self.plot.ps:
+                    gl2psText(str(y), "Helvetica", h)
                 self.font.Render(str(y))
                 
                 glPopMatrix()
@@ -315,6 +330,7 @@ class Graph(Item, HasSignals):
         self.buf =  False
 
         self.datasets = []
+        self.ps = False
 
         x = arange(2, 6, 0.001)
         y = log10(hn.havriliak_negami(10.**x, 4, 1, 0.5, 1))
@@ -459,7 +475,12 @@ class Graph(Item, HasSignals):
 
         self.dl = False
 
-    def display(self, width, height):
+    def display(self, width=-1, height=-1):
+        if width == -1 and height == -1:
+            width, height = self.last_width, self.last_height
+        else:
+            self.last_width, self.last_height = width, height
+
         if not self.dl:
             self.make_data_list()
             self.dl = True
@@ -510,6 +531,8 @@ class Graph(Item, HasSignals):
             glColor3f(1.0,1.0,0.0)
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
+            if self.ps:
+                gl2psEnable(GL2PS_LINE_STIPPLE)
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
 
@@ -530,6 +553,8 @@ class Graph(Item, HasSignals):
             self.px, self.py = self.sx, self.sy
 
             glDisable(GL_LINE_STIPPLE)
+            if self.ps:
+                gl2psDisable(GL2PS_LINE_STIPPLE)
             glDisable(GL_COLOR_LOGIC_OP)
             glPopMatrix()
 
@@ -604,7 +629,36 @@ class Graph(Item, HasSignals):
     
     def button_release(self, x, y, button):
         if button == 2:
-            pass
+
+#GLint gl2psBeginPage( const char *title, const char *producer,
+#                      GLint viewport[4],
+#                      GLint format, GLint sort, GLint options, 
+#                      GLint colormode, GLint colorsize, 
+#                      GL2PSrgba *colortable, 
+#                      GLint nr, GLint ng, GLint nb, 
+#                      GLint buffersize, FILE *stream,
+#                      const char *filename )
+
+
+            f = file('ar.eps', 'w')
+            gl2psBeginPage("Title", "Producer", 
+                           self.viewport,
+                           GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,
+                           GL_RGBA, -1,
+                           0,
+                           0, 0, 0,
+                           21055000, f,
+                           "arxi.eps")
+            self.ps = True
+            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            self.display()
+            self.ps = False
+
+            gl2psEndPage()
+            f.close()
+                           
+
+
 #            self.autoscale()
 #            self.make_data_list()
 #            self.queue_draw()
