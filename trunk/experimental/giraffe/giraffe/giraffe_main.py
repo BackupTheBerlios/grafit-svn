@@ -24,6 +24,7 @@ from giraffe import gui
 def main():
     app = gui.Application()
     app.splash()
+    wx.FileDialog(None).Destroy()
     from giraffe.ui_main import MainWindow
     app.run(MainWindow)
 
