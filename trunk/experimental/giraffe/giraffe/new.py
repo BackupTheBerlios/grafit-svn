@@ -42,16 +42,39 @@ class Item(object):
             self.view.append(id=self.id)
             self.row = self.view.select(id=self.id)[0]
 
-    name = wrap('name')
-
     viewname = 'items'
     description = 'items[name:S,id:S]'
+    name = wrap('name')
+
+class Worksheet(Item):
+    def __init__(self, project, name, id=None):
+        Item.__init__(self, project, id)
+        self.name = name
+
+    def add_column(self, name):
+        self.row.columns.append([name, ''])
+
+    def get_column_names(self):
+        return [c.name for c in self.row.columns]
+    column_names = property(get_column_names)
+
+    viewname = 'worksheets'
+    description = 'worksheets[name:S,id:S,columns[name:S,data:B]]'
+    
+    name = wrap('name')
+
+    
+
 
 id = '34444444444'
         
 
 p = Project('test.db')
 i = Item(p, id)
+
+w = Worksheet(p, "baka")
+w.add_column('ass')
+print w.column_names
 
 print i.name
 i.name  = 'square'
@@ -69,13 +92,4 @@ Item:
     always associated with a Project
     data is stored in a row of a metakit view in a Project
     identified by uuid, (self.id)
-"""
-
-"""
-Folders and paths:
-    Folders are implemented as a type of Item.
-    folder[name:S,id:S,parent:S]
-    item[name:S,id:S,parent:S,other_data...]
-
-    Paths: project.get(path)
 """

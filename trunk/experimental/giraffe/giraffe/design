@@ -2,10 +2,19 @@ Project:
     container, encapsulates a metakit database
     has a flat structure, may contain several types of Items, each type corresponds to a view
 
+item = Item(project)
+
+We should never hold references to items or item names, only to item.id
+and use project.get(id). These references are guaranteed to be 
+valid even after saving/loading the project or deleting/undeleting the item.
+
+
 Item:
     always associated with a Project
     data is stored in a row of a metakit view in a Project
     identified by uuid, (self.id)
+
+    
 
 Folders and paths:
     Folders are implemented as a type of Item.
