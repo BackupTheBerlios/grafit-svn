@@ -22,29 +22,15 @@
     </object>
     <object class="wxMenu" name="object">
       <label>&amp;Object</label>
-      <object class="wxMenu" name="object-new">
-        <label>&amp;New</label>
-        <object class="wxMenuItem" name="object-new-worksheet">
-          <label>&amp;Worksheet</label>
-        </object>
-        <object class="wxMenuItem" name="object-new-graph">
-          <label>&amp;Graph</label>
-        </object>
-        <object class="wxMenuItem" name="object-new-folder">
-          <label>&amp;Folder</label>
-        </object>
+      <object class="wxMenuItem" name="object-new-folder">
+        <label>&amp;Folder</label>
       </object>
-    </object>
-  </object>
-  <object class="wxToolBar" name="worksheet_toolbar">
-    <object class="tool">
-      <bitmap>data/images/stock_insert-columns.png</bitmap>
-    </object>
-    <object class="tool">
-      <bitmap></bitmap>
-    </object>
-    <object class="tool">
-      <bitmap></bitmap>
+      <object class="wxMenuItem" name="object-new-graph">
+        <label>&amp;Graph</label>
+      </object>
+      <object class="wxMenuItem" name="object-new-worksheet">
+        <label>&amp;Worksheet</label>
+      </object>
     </object>
   </object>
 </resource>

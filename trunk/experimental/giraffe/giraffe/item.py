@@ -51,7 +51,7 @@ class Item(object):
         self.project = project
 
         if location is None:
-            self.view, self.data, self.id = project.create(type(self))
+            self.view, self.data, self.id = project._create(type(self))
             if hasattr(self, '_isroot') and self._isroot:
                 # this is the top folder, so we cannot specify 
                 # its parent when we create it!

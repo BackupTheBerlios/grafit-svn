@@ -93,7 +93,7 @@ class Project(HasSignals):
                 if row.id.startswith('-'):
                     view.delete(i)
 
-    def create(self, cls):
+    def _create(self, cls):
         """Create an entry for a new item of class `cls` in the database
 
         This method is called from the constructor of all `Item`-derived
@@ -121,7 +121,6 @@ class Project(HasSignals):
         return obj, obj
 
     def new_undo(self, obj):
-#        self.remove(obj.id)
         del self.items[obj.id]
         obj.id = '-'+obj.id
         self.deleted[obj.id] = obj
@@ -136,7 +135,6 @@ class Project(HasSignals):
         if obj.parent is self.top:
             self._dict[obj.name] = obj
         self.emit('add-item', obj)
-#        self.remove_undo(self, obj.id)
 
     def new_cleanup(self, obj):
         if obj.id in self.deleted:

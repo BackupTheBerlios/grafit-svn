@@ -256,6 +256,7 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.SetIndent(10)
         self.project = project
         self.project.connect('add-item', self.on_add_item)
+        self.project.connect('remove-item', self.on_remove_item)
 
         isz = (16,16)
         il = wx.ImageList(isz[0], isz[1])
@@ -283,6 +284,13 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
             self.SetItemImage(treeitem, self.wsidx, wx.TreeItemIcon_Normal)
             item.connect('rename', self.on_rename)
             self.Expand(self.root)
+
+    def on_remove_item(self, item):
+        if type(item) == Folder:
+            try:
+                self.Delete(self.items[item.id])
+            except KeyError:
+                self.Delete(self.items[item.id[1:]])
 
     def on_rename(self, name, item):
         self.SetItemText(self.items[item.id], name)
@@ -373,6 +381,7 @@ class MainWindow(wx.Panel):
         wx.Panel.__init__(self, parent, -1)
         self.project = project
         self.view = None
+        self.active = None
 
         self.locals = {}
 
@@ -414,6 +423,11 @@ class MainWindow(wx.Panel):
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.bottom_panel.GetId())
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
+        self.project.connect('remove-item', self.on_project_remove_item)
+
+    def on_project_remove_item(self, obj):
+        if obj == self.active:
+            self.show_object(None)
 
     def show_object(self, obj):
         if self.view is not None:
@@ -422,14 +436,19 @@ class MainWindow(wx.Panel):
 
         if isinstance(obj, Graph):
             self.view =  GraphView(self.remainingSpace, obj)
+            self.active = obj
         elif isinstance(obj, Worksheet):
-            print >>sys.stderr, "creating wsv"
             self.view = WorksheetView(self.remainingSpace, obj)
-            print >>sys.stderr, "created wsv"
+            self.active = obj
+        elif obj is None:
+            self.view = None
+            self.active = None
         else:
             raise TypeError
 
-        self.main_box.Add(self.view, 1, wx.EXPAND)
+        if self.view is not None:
+            self.main_box.Add(self.view, 1, wx.EXPAND)
+
         self.remainingSpace.Layout()
 
 

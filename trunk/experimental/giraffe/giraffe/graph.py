@@ -398,7 +398,7 @@ class Graph(Item, HasSignals):
         for d in self.datasets:
             d.build_display_list()
 
-        print (time.time()-t), "seconds"
+#        print (time.time()-t), "seconds"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
