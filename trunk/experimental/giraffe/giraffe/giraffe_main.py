@@ -18,7 +18,8 @@ print >>sys.stderr, "ok"
 def main():
     print >>sys.stderr, "creating application...",
     p = Project()
-    app = Application(p)
+    app = Application()
+    app.main.open_project(p)
     print >>sys.stderr, "ok"
     app.run()
 

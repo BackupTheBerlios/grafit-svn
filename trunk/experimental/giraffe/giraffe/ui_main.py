@@ -334,9 +334,8 @@ class ScriptWindow(wx.py.shell.Shell):
 
 
 class Application(wx.App):
-    def __init__(self, project):
+    def __init__(self):
         self.name = 'name'
-        self.project = project
         wx.App.__init__(self, redirect=False)
 
     def on_undo(self, event):
@@ -398,23 +397,23 @@ class Application(wx.App):
         # events
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 
-        main = MainPanel(frame, self.project)
-        main.SetFocus()
+        self.main = MainPanel(frame)
+        self.main.SetFocus()
 
         frame.SetSize((640, 480))
         frame.Show(True)
         return True
 
     def on_new_worksheet(self, evt):
-        ws = self.project.new(Worksheet, 'test', self.project.here)
+        ws = self.main.project.new(Worksheet, 'test', self.main.project.here)
         ws.a = [1,2,3]
         ws.other = 2*ws.a
 
     def on_new_graph(self, evt):
-        g = self.project.new(Graph, 'graph1', self.project.here)
+        g = self.main.project.new(Graph, 'graph1', self.main.project.here)
 
     def on_new_folder(self, evt):
-        self.project.new(Folder, 'folder1', self.project.here)
+        self.main.project.new(Folder, 'folder1', self.main.project.here)
 
     def OnButton(self, evt):
         self.frame.Close(True)
@@ -426,9 +425,8 @@ class Application(wx.App):
         self.MainLoop()
 
 class MainPanel(wx.Panel):
-    def __init__(self, parent, project):
+    def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
-        self.project = project
         self.view = None
         self.active = None
 
@@ -439,14 +437,12 @@ class MainPanel(wx.Panel):
         # bottom panel
         self.script_window = ScriptWindow(self.bottom_panel.panel)
         self.bottom_panel.add_page('Script', 'console.png', self.script_window)
-        self.script_window.connect_project(self.project)
         self.script_window.locals['mainwin'] = self
 
         # the left panel
         self.explorer = ProjectExplorer(self.left_panel.panel)
         self.explorer.connect('activate-object', self.show_object)
         self.left_panel.add_page('Project', 'stock_navigator.png', self.explorer)
-        self.explorer.connect_project(self.project)
 
 
         # will occupy the space not used by the Layout Algorithm
@@ -460,7 +456,16 @@ class MainPanel(wx.Panel):
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.bottom_panel.GetId())
         self.Bind(wx.EVT_SIZE, self.on_size)
 
+    def open_project(self, project):
+        self.project = project
+        self.script_window.connect_project(self.project)
+        self.explorer.connect_project(self.project)
         self.project.connect('remove-item', self.on_project_remove_item)
+
+    def close_project(self):
+        self.script_window.disconnect_project()
+        self.explorer.disconnect_project()
+        self.project.disconnect('remove-item', self.on_project_remove_item)
 
     def on_project_remove_item(self, obj):
         if obj == self.active:

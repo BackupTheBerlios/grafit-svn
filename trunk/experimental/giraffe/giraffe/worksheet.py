@@ -66,7 +66,7 @@ class Worksheet(Item, HasSignals):
 
         if location is not None:
             for i in range(len(self.data.columns)):
-                if not i.name.startswith('-'):
+                if not self.data.columns[i].name.startswith('-'):
                     self.columns.append(Column(self, i))
 
         self.__attr = True

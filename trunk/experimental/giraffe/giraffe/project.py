@@ -81,12 +81,6 @@ class Project(HasSignals):
 
     def set_dict(self, d):
         self._dict = d
-        if 'top' in self._dict:
-            self._save_dict['top'] = self._dict['top']
-        if 'here' in self._dict:
-            self._save_dict['here'] = self._dict['here']
-        if 'up' in self._dict:
-            self._save_dict['up'] = self._dict['up']
 
         self._dict['top'] = self.top
         self._dict['this'] = self.this
