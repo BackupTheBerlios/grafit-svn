@@ -115,6 +115,9 @@ class ListModel(HasSignals):
     def get(self, row, column):
         return str(self.items[row])
 
+    def get_image(self, row):
+        return None
+
     def __len__(self):
         return len(self.items)
 
@@ -302,6 +305,7 @@ class Tree(Widget):
 
     def _add_node_and_children(self, parent, node):
         node._nodeid = self._widget.AppendItem(parent._nodeid, str(node), self.getpixmap(node.get_pixmap()))
+        self._widget.Expand(node._nodeid)
         self.items.append(node)
         for child in node:
             self._add_node_and_children(node, child)
@@ -384,7 +388,7 @@ class xToolPanel(wx.SashLayoutWindow):
             self.box.Add(self.btnbox, 0, wx.EXPAND)
 
         self.toolbar = wx.ToolBar(self.panel, -1, 
-                                  style=d_toolbar | wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
+                                  style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
         self.btnbox.Add(self.toolbar, 1)
         self.toolbar.Bind(wx.EVT_TOOL, self.on_toolbar)
 
@@ -543,7 +547,8 @@ class xMainPanel(wx.Panel):
 
 class Toolbar(Widget):
     def __init__(self, parent, **place):
-        self._widget = wx.ToolBar(parent._widget)
+        self._widget = wx.ToolBar(parent._widget,
+                                  style=wx.SUNKEN_BORDER|wx.TB_FLAT)
         Widget.__init__(self, parent, **place)
         self._widget.Bind(wx.EVT_TOOL, self.on_tool)
         self.tools = {}

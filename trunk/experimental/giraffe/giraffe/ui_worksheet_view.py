@@ -22,15 +22,18 @@ class TableData(HasSignals):
     def get_data(self, col, row): return str(self.worksheet[col][row]).replace('nan', '')
 
 class WorksheetView(gui.Box):
-    def __init__(self, parent, worksheet):
-        gui.Box.__init__(self, parent, 'vertical')
+    def __init__(self, parent, worksheet, **place):
+        gui.Box.__init__(self, parent, 'vertical', **place)
 
         self.worksheet = worksheet
-        self.toolbar = gui.Toolbar(self, stretch=0)
+        tbbox = gui.Box(self, 'horizontal', stretch=0)
+        self.toolbar = gui.Toolbar(tbbox, stretch=1)
 
         self.toolbar.append(gui.Action('New column', 'Create a new column', 
                                        self.on_new_column, 'stock_insert-columns.png'))
-        self.toolbar.append(gui.Action('Close', 'Close this worksheet', 
+
+        self.closebar = gui.Toolbar(tbbox, stretch=0)
+        self.closebar.append(gui.Action('Close', 'Close this worksheet', 
                                        self.on_new_column, 'remove.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))

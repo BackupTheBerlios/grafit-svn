@@ -91,6 +91,12 @@ class ProjectExplorer(Box):
 class FolderListData(HasSignals):
     def __init__(self, folder):
         self.folder = folder
+        self.folder.project.connect('add-item', self.on_project_modified)
+        self.folder.project.connect('remove-item', self.on_project_modified)
+
+    def on_project_modified(self, item):
+        if item.parent == self.folder:
+            self.emit('modified')
 
     def __len__(self): 
         return len(list(self.folder.contents()))
@@ -105,23 +111,6 @@ class FolderListData(HasSignals):
         return { Worksheet: 'worksheet.png',
                  Graph: 'graph.png',
                  Folder: 'stock_folder.png', }[type(list(self.folder.contents())[row])]
-
-class TableData(HasSignals):
-    def get_n_columns(self):
-        return 200
-
-    def get_n_rows(self):
-        return 20000
-
-    def get_column_name(self, col):
-        return 'c'
-
-    def get_row_name(self, row):
-        return 'r'
-
-    def get_data(self, col, row):
-        return str(col + row)
-
 
 # example main window
 class MainWindow(Window):
@@ -149,12 +138,8 @@ class MainWindow(Window):
 
 
         book = Notebook(self.main)
-        box = Box(book, 'vertical', page_label='window1')
-        WorksheetView(box, self.project.new(Worksheet, 'a'))
-        koalaki = MainPanel(book, page_label='window2')
-        GraphView(koalaki, self.project.new(Graph, 'agraph'))
-        self.expl = Table(koalaki.right_panel, TableData(),
-                          page_label='koalaki', page_pixmap='stock_navigator.png')
+        WorksheetView(book, self.project.new(Worksheet, 'a'), page_label='koali')
+        GraphView(book, self.project.new(Graph, 'agraph'), page_label='graph')
 
         menubar = Menubar(self)
         actions = {

@@ -351,6 +351,9 @@ class Graph(Item, HasSignals):
 
     default_name_prefix = 'graph'
 
+    def __repr__(self):
+        return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
+
     def add(self, *args, **kwds):
         d = Dataset(*args, **kwds)
         self.datasets.append(d)
@@ -533,17 +536,17 @@ class Graph(Item, HasSignals):
 
         # set width and height (in pixels)
         self.ww, self.hh = self.w, self.h = width, height
-        if (1.*self.w) / self.h > ratio:
-            self.ww = ratio*self.h
-        else:
-            self.hh = self.w/ratio
+#        if (1.*self.w) / self.h > ratio:
+#            self.ww = ratio*self.h
+#        else:
+#            self.hh = self.w/ratio
 
-        self.excessh = height - self.hh
-        self.excessw = width - self.ww
-        self.w -= self.excessw
+#        self.excessh = height - self.hh
+#        self.excessw = width - self.ww
+#        self.w -= self.excessw
 
         # set margins (in pixels)
-        self.marginb = int(self.h * 0.1) + self.excessh
+        self.marginb = int(self.h * 0.1)# + self.excessh
         self.margint = int(self.h * 0.05)
         self.marginl = int(self.w * 0.1)
         self.marginr = int(self.w * 0.05)

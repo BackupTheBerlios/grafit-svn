@@ -12,10 +12,22 @@ from giraffe.signals import HasSignals
 from giraffe import gui
 
 class GraphView(gui.Box):
-    def __init__(self, parent, graph):
-        gui.Box.__init__(self, parent, 'horizontal')
+    def __init__(self, parent, graph, **place):
+        gui.Box.__init__(self, parent, 'vertical', **place)
         self.graph = graph
-        self.glwidget = gui.OpenGLWidget(self)
+
+        tbbox = gui.Box(self, 'horizontal', stretch=0)
+
+        self.toolbar = gui.Toolbar(tbbox, stretch=1)
+        self.toolbar.append(gui.Action('New column', 'Create a new column', 
+                                       self.on_new_column, 'stock_insert-columns.png'))
+
+        self.closebar = gui.Toolbar(tbbox, stretch=0)
+        self.closebar.append(gui.Action('Close', 'Close this worksheet', 
+                                       self.on_new_column, 'remove.png'))
+
+        self.box = gui.Box(self, 'horizontal')
+        self.glwidget = gui.OpenGLWidget(self.box)
 
         self.glwidget.connect('initialize-gl', self.graph.init)
         self.glwidget.connect('resize-gl', self.graph.reshape)
@@ -26,6 +38,12 @@ class GraphView(gui.Box):
         self.glwidget.connect('mouse-moved', self.graph.button_motion)
 
         self.graph.connect('redraw', self.glwidget.redraw)
+
+        self.legend = gui.List(self.box, stretch=0)
+        self.legend.model.append('pis10sv_e1(f)')
+
+    def on_new_column(self):
+        pass
 
 class FolderListModel(HasSignals):
     def __init__(self, folder):
