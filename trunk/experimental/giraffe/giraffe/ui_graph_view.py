@@ -75,6 +75,8 @@ class GraphView(gui.Box):
 
         self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
 
+
+        self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
         self.graphdata.connect_project(self.graph.project)
@@ -82,6 +84,9 @@ class GraphView(gui.Box):
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
+
+    def on_legend_select(self):
+        self.style.color.selection = self.style.colors.index([self.legend.model[i] for i in self.legend.selection][0].style.color)
 
     def on_new_column(self):
         pass
@@ -139,17 +144,20 @@ class GraphStylePanel(gui.Box):
         self.view = view
 
         self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
-        grid = gui.Grid(self.symbol, 3, 3)#, expand=True, stretch=1.)
+        grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
 
         gui.Label(grid,  'Symbol', pos=(0,1))
-        c = gui.Choose(grid, pos=(0,2))
+        c = gui.PixmapChoice(grid, pos=(0,2))
         c._widget.SetSizeHints(-1, 20, 60, 30)
+        for shape in ['circle', 'square']:
+            for interior in ['o', 'f']:
+                c.append(shape+'-'+interior+'.png')
 #        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
 #                      'diamond', 'pentagon', 'star', 'cross', 'x']:
 #            c.append(shape)
 
         gui.Label(grid,  'Color', pos=(1,1))
-        c = gui.Choose(grid, pos=(1,2))
+        c = gui.PixmapChoice(grid, pos=(1,2))
         c._widget.SetSizeHints(-1, 20, 60, 30)
         self.colors = []
         for r in range(0, 256, 64):
@@ -165,11 +173,14 @@ class GraphStylePanel(gui.Box):
         c._widget.SetSizeHints(-1, 20, 60, 30)
 
         b = gui.Checkbox(grid, pos=(0,0))
+        grid.layout.Hide(b._widget)
         b = gui.Checkbox(grid, pos=(1,0))
+        grid.layout.Hide(b._widget)
         b = gui.Checkbox(grid, pos=(2,0))
+        grid.layout.Hide(b._widget)
 
         grid.layout.AddGrowableCol(1)
-
+        grid.layout.Layout()
 
         self.line = gui.Frame(self, 'vertical', title='Line', stretch=0.)
         grid = gui.Grid(self.line, 3, 2)#, expand=True, stretch=1.)
@@ -181,7 +192,7 @@ class GraphStylePanel(gui.Box):
 #            c.append(shape)
 
         gui.Label(grid,  'Shape', pos=(1,0))
-        c = gui.Choose(grid, pos=(1,1))
+        c = self.color = gui.PixmapChoice(grid, pos=(1,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
         for r in range(0, 256, 64):
             for g in range(0, 256, 64):

@@ -79,67 +79,68 @@ class Widget(HasSignals):
         self._widget.Show(True)
 
     def hide(self):
-        self._widget.Hide()
+        pass        
+#        self._widget.Hide()
 
     def place(self, **kwds):
         return self, kwds
 
 # http://wiki.wxpython.org/index.cgi/_xProportionalSplitterWindow
 class _xProportionalSplitter(wx.SplitterWindow):
-        def __init__(self,parent, id = -1, proportion=0.33, size = wx.DefaultSize):
-                wx.SplitterWindow.__init__(self,parent,id,wx.Point(0, 0),size,0)
-                self.SetMinimumPaneSize(50) #the minimum size of a pane.
-                self.proportion = proportion
-                if not 0 < self.proportion < 1:
-                        raise ValueError, "proportion value for _xProportionalSplitter must be between 0 and 1."
-                self.ResetSash()
-                self.Bind(wx.EVT_SIZE, self.OnReSize)
-                self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSashChanged, id=id)
-                ##hack to set sizes on first paint event
-                self.Bind(wx.EVT_PAINT, self.OnPaint)
-                self.firstpaint = True
+    def __init__(self,parent, id = -1, proportion=0.33, size = wx.DefaultSize):
+        wx.SplitterWindow.__init__(self,parent,id,wx.Point(0, 0),size,0)
+        self.SetMinimumPaneSize(50) #the minimum size of a pane.
+        self.proportion = proportion
+        if not 0 < self.proportion < 1:
+            raise ValueError, "proportion value for _xProportionalSplitter must be between 0 and 1."
+        self.ResetSash()
+        self.Bind(wx.EVT_SIZE, self.OnReSize)
+        self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSashChanged, id=id)
+        ##hack to set sizes on first paint event
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.firstpaint = True
 
-        def SplitHorizontally(self, win1, win2):
-                if self.GetParent() is None: return False
-                return wx.SplitterWindow.SplitHorizontally(self, win1, win2,
-                        int(round(self.GetParent().GetSize().GetHeight() * self.proportion)))
+    def SplitHorizontally(self, win1, win2):
+        if self.GetParent() is None: return False
+        return wx.SplitterWindow.SplitHorizontally(self, win1, win2,
+            int(round(self.GetParent().GetSize().GetHeight() * self.proportion)))
 
-        def SplitVertically(self, win1, win2):
-                if self.GetParent() is None: return False
-                return wx.SplitterWindow.SplitVertically(self, win1, win2,
-                        int(round(self.GetParent().GetSize().GetWidth() * self.proportion)))
+    def SplitVertically(self, win1, win2):
+        if self.GetParent() is None: return False
+        return wx.SplitterWindow.SplitVertically(self, win1, win2,
+            int(round(self.GetParent().GetSize().GetWidth() * self.proportion)))
 
-        def GetExpectedSashPosition(self):
-                if self.GetSplitMode() == wx.SPLIT_HORIZONTAL:
-                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().height)
-                else:
-                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().width)
-                return int(round(tot * self.proportion))
+    def GetExpectedSashPosition(self):
+        if self.GetSplitMode() == wx.SPLIT_HORIZONTAL:
+            tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().height)
+        else:
+            tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().width)
+        return int(round(tot * self.proportion))
 
-        def ResetSash(self):
-                self.SetSashPosition(self.GetExpectedSashPosition())
+    def ResetSash(self):
+        self.SetSashPosition(self.GetExpectedSashPosition())
 
-        def OnReSize(self, event):
-                "Window has been resized, so we need to adjust the sash based on self.proportion."
-                self.ResetSash()
-                event.Skip()
+    def OnReSize(self, event):
+        "Window has been resized, so we need to adjust the sash based on self.proportion."
+        self.ResetSash()
+        event.Skip()
 
-        def OnSashChanged(self, event):
-                "We'll change self.proportion now based on where user dragged the sash."
-                pos = float(self.GetSashPosition())
-                if self.GetSplitMode() == wx.SPLIT_HORIZONTAL:
-                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().height)
-                else:
-                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().width)
-                self.proportion = pos / tot
-                event.Skip()
+    def OnSashChanged(self, event):
+            "We'll change self.proportion now based on where user dragged the sash."
+            pos = float(self.GetSashPosition())
+            if self.GetSplitMode() == wx.SPLIT_HORIZONTAL:
+                    tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().height)
+            else:
+                    tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().width)
+            self.proportion = pos / tot
+            event.Skip()
 
-        def OnPaint(self,event):
-                if self.firstpaint:
-                        if self.GetSashPosition() != self.GetExpectedSashPosition():
-                                self.ResetSash()
-                        self.firstpaint = False
-                event.Skip()
+    def OnPaint(self,event):
+            if self.firstpaint:
+                    if self.GetSashPosition() != self.GetExpectedSashPosition():
+                            self.ResetSash()
+                    self.firstpaint = False
+            event.Skip()
 
 class Splitter(Widget):
     def __init__(self, parent, orientation, proportion=0.33, **place):
@@ -197,7 +198,7 @@ class xPopup(wx.PopupWindow):
 #        return False
 
 
-class Choose(Widget):
+class PixmapChoice(Widget):
     def __init__(self, parent, **place):
 #        bimp = wx.Image('../data/images/'+'arrow.png').ConvertToBitmap()
         bimp = self.create_colored_bitmap((80, 20), (100, 80, 120))
@@ -246,6 +247,7 @@ class Choose(Widget):
         lst.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_sel)
         self._widget.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
         self.down = True
+        self._selection = -1
 
     def on_sel(self, event):
         i = event.GetIndex()
@@ -253,7 +255,15 @@ class Choose(Widget):
         self._widget.SetBitmapLabel(bitmap)
         wx.CallAfter(self.win.Destroy)
         self.down = False
+        self._selection = i
         self.emit('select', i)
+
+    def set_selection(self, idx):
+        bitmap = self.images[self.items[idx]]
+        self._widget.SetBitmapLabel(bitmap)
+    def get_selection(self):
+        return self._selection
+    selection = property(get_selection, set_selection)
 
     def on_kill_focus(self, event):
         try:
@@ -299,7 +309,6 @@ class Frame(Widget):
         self._widget.Layout()
 
 
-
 class Box(Widget):
     def __init__(self, parent, orientation, **kwds):
         self._widget = wx.Panel(parent._widget, -1)
@@ -320,6 +329,8 @@ class Box(Widget):
             expand = 0
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
 #        self.layout.SetSizeHints(self._widget)
+
+
 
 class Checkbox(Widget):
     def __init__(self, parent, **place):
@@ -721,7 +732,8 @@ class ToolPanel(Widget):
         Widget.__init__(self, parent, *args, **kwds)
 
     def _add(self, widget, page_label='', page_pixmap=''):
-        widget._widget.Reparent(self._widget.panel)
+        if hasattr(widget._widget, 'Reparent'):
+            widget._widget.Reparent(self._widget.panel)
         self._widget.add_page(page_label, page_pixmap, widget)
 
     def open(self, id):
@@ -903,7 +915,8 @@ class MainPanel(Widget):
         self.right_panel = self._widget.right_panel
 
     def _add(self, widget, expand=True, stretch=1.0):
-        widget._widget.Reparent(self._widget.remainingSpace)
+        if hasattr(widget._widget, 'Reparent'):
+            widget._widget.Reparent(self._widget.remainingSpace)
         if expand:
             expand = wx.EXPAND
         else:
@@ -920,7 +933,7 @@ class _xMainPanel(wx.Panel):
         self.left_panel = ToolPanel(self, 'left')
 
         # will occupy the space not used by the Layout Algorithm
-        self.remainingSpace = wx.Panel(self, -1, style=wx.CLIP_CHILDREN)#, style=wx.SUNKEN_BORDER)
+        self.remainingSpace = wx.Panel(self, -1)#, style=wx.CLIP_CHILDREN)#, style=wx.SUNKEN_BORDER)
 
         self.main_box = wx.BoxSizer(wx.VERTICAL)
         self.remainingSpace.SetSizer(self.main_box)
