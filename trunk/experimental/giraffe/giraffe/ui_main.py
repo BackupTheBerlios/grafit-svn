@@ -163,7 +163,7 @@ class ToolPanel(wx.SashLayoutWindow):
 
 class Application(wx.App):
     def __init__(self):
-        self.name = 'name'
+        self.name = 'Grafit'
         wx.App.__init__(self, redirect=False)
 
     def on_undo(self, event):
