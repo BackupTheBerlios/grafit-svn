@@ -1,7 +1,7 @@
 import items
 import lib.ElementTree as et
 
-class Project(items.Folder, items.Saveable):
+class Project(items.Folder, items.Persistent):
     """
     """
     def __init__(self):
@@ -31,7 +31,7 @@ class Project(items.Folder, items.Saveable):
         self.new()
         element = et.parse(filename).getroot()
         for child in element:
-            items.Saveable.create(child, self)
+            items.Persistent.create(child, self)
         
     def save(self):
         """
@@ -111,8 +111,16 @@ def test():
 #    p2.new()
 
     print p.desc()
+    print p.uuid
     p.load('test.xml')
     print p.desc()
+    print p.uuid
+    print items.WithId.get(p.uuid), p
+
+    p3 = items.Persistent.create(et.parse('test.xml').getroot())
+    print p3.uuid
+    print items.WithId.get(p.uuid), p3, p
+
 
 if __name__== '__main__':
     test()

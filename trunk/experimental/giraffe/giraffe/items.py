@@ -1,7 +1,24 @@
 import common.signals
 import lib.ElementTree as et
+import uuid as u
 
-class Saveable(object):
+class WithId(object):
+    objects = {}
+    def get(uuid):
+        return WithId.objects[uuid]
+    get = staticmethod(get)
+
+    def register(self, uuid=None):
+        if uuid is None:
+            uuid = u.uuid()
+        self.uuid = uuid
+        WithId.objects[self.uuid] = self
+
+    def unregister(self):
+        del WithId.objects[self.uuid]
+
+
+class Persistent(object):
     def to_element(self):
         """
         Convert the item to an Element. Must be overridden
@@ -19,11 +36,12 @@ class Saveable(object):
 
     def create(element, parent=None):
         """
-        Static method. Saveable.create(element) creates an object of the
+        Static method. Persistent.create(element) creates an object of the
         corresponding subclass. Like __init__(), it has a `parent` argument.
         """
-        lookup = dict([(i._element_name, i) for i in Saveable.__subclasses__() if hasattr(i, '_element_name')])
-        return lookup[element.tag].from_element(element, parent)
+        lookup = dict([(i._element_name, i) for i in Persistent.__subclasses__() if hasattr(i, '_element_name')])
+        obj = lookup[element.tag].from_element(element, parent)
+        return obj
     create = staticmethod(create)
 
 
@@ -45,11 +63,13 @@ class Item(common.signals.HasSignals):
     name = property(_get_name, _set_name)
 
 
-class Folder(Item, Saveable):
+class Folder(Item, Persistent, WithId):
     """A folder. Folders contain items and subfolders"""
-    def __init__(self, name, parent):
+    def __init__(self, name, parent, uuid=None):
         Item.__init__(self, name, parent)
+        Persistent.__init__(self, uuid)
         self.items = []
+        self.register(uuid)
 
     def add_item(self, item):
         """
@@ -100,15 +120,16 @@ class Folder(Item, Saveable):
         self.emit('modified')
 
     def from_element(element, parent):
-        folder = Folder(element.get('name'), parent)
+        folder = Folder(element.get('name'), parent, element.get('uuid'))
 
+        # child items
         for eitem in element:
-            item = Saveable.create(eitem, folder)
+            item = Persistent.create(eitem, folder)
         return folder
     from_element = staticmethod(from_element)
 
     def to_element(self):
-        elem = et.Element('Folder', name=self.name)
+        elem = et.Element('Folder', name=self.name, uuid=self.uuid)
 
         for item in self.items:
             elem.append(item.to_element())
@@ -118,7 +139,7 @@ class Folder(Item, Saveable):
     _element_name = 'Folder'
 
 
-class TrivialItem(Item, Saveable):
+class TrivialItem(Item, Persistent):
     """An example: the simplest Item supporting the to_element/from_element protocol"""
     def to_element(self):
         return et.Element('TrivialItem', name=self.name)
@@ -144,5 +165,5 @@ if __name__ == '__main__':
     e = f3.to_element()
 
     print f3.desc()
-    kaa = Saveable.create(e, f3)
+    kaa = Persistent.create(e, f3)
     print f3.desc()
