@@ -17,7 +17,7 @@ from grafit.utils import Observed, alfmt
 from grafit.import_ascii import import_ascii
 from grafit.project import project
 from grafit.lib import ElementTree as xml
-from grafit.utils import AutoCommands
+from grafit.utils import AutoCommands, CompositeCommand
 
 
 class Worksheet (Observed):

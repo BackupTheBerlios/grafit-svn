@@ -23,11 +23,12 @@ cdef extern from "GL/gl.h":
     void glEnd()
     void glCallList(int id)
     void glTranslated(double x, double y, double z)
-    int GL_COMPILE, GL_QUADS, GL_LINES
+    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON
 
 
-def makedata(ArrayType sx, ArrayType sy, double dx, double dy, 
-             double xmin, double xmax, double ymin, double ymax, int displaylist):
+def makedata(ArrayType sx, ArrayType sy,  
+             double xmin, double xmax, double ymin, double ymax, 
+             shape, vertices):
     cdef int n, l
     cdef double x, y
     cdef double *xd, *yd
@@ -44,6 +45,7 @@ def makedata(ArrayType sx, ArrayType sy, double dx, double dy,
     yinterval = (ymax-ymin)/1000.
 
     l = sx.dimensions[0]
+    glBegin(shape)
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
@@ -59,7 +61,6 @@ def makedata(ArrayType sx, ArrayType sy, double dx, double dy,
         ybucket = <int>((y-ymin)/yinterval)
         if (xbucket == xbucket_s) and (ybucket == ybucket_s):
             continue
-
-        glTranslated(x, y, 0)
-        glCallList(displaylist)
-        glTranslated(-x, -y, 0)
+        for v in vertices:
+            glVertex3d(x+v[0], y+v[1], 0.)
+    glEnd()

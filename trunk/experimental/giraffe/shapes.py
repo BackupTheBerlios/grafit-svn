@@ -115,7 +115,8 @@ class Dataset(object):
 
         glNewList(self.id, GL_COMPILE)
         glColor4f(*self.style.color)
-        makedata(self.x, self.y, dx, dy, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 1001)
+        makedata(self.x, self.y, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
+                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]  )
         glEndList()
 
 class Grid(object):
@@ -236,6 +237,7 @@ class Axis(object):
                 glVertex3f(0, y, 0.0)
                 glVertex3f(2, y, 0.0)
             glEnd()
+            glPopMatrix()
 #        glBegin(GL_LINES)
 #        ty  = tics(self.ymin, self.ymax)
 #        for yy in [(ty[n], ty[n+1]) for n in xrange(len(ty)-1)]:
@@ -344,8 +346,8 @@ class Plot(GLScene,
         d.graph = self
         self.datasets.append(d)
 
-        self.datasets.append(Dataset(x = arange(1000.)/1000,
-                                     y = sin(arange(1000.)/1000)))
+        self.datasets.append(Dataset(x = arange(1000000.)/1000000,
+                                     y = sin(arange(1000000.)/1000000)))
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
         self.datasets[-1].graph = self
 
@@ -505,19 +507,19 @@ class Plot(GLScene,
             glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
             glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
 
-#            glEnable(GL_CLIP_PLANE0)
-#            glEnable(GL_CLIP_PLANE1)
-#            glEnable(GL_CLIP_PLANE2)
-#            glEnable(GL_CLIP_PLANE3)
+            glEnable(GL_CLIP_PLANE0)
+            glEnable(GL_CLIP_PLANE1)
+            glEnable(GL_CLIP_PLANE2)
+            glEnable(GL_CLIP_PLANE3)
 
             glLoadMatrixd(self.projmatrix)
             for d in self.datasets:
                 d.paint()
 
-##            glDisable(GL_CLIP_PLANE0)
-##            glDisable(GL_CLIP_PLANE1)
-##            glDisable(GL_CLIP_PLANE2)
-##            glDisable(GL_CLIP_PLANE3)
+            glDisable(GL_CLIP_PLANE0)
+            glDisable(GL_CLIP_PLANE1)
+            glDisable(GL_CLIP_PLANE2)
+            glDisable(GL_CLIP_PLANE3)
 
             glPopMatrix()
         else:
