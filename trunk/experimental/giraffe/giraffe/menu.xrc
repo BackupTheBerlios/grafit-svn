@@ -2,22 +2,26 @@
 <resource>
   <object class="wxMenuBar" name="menubar">
     <object class="wxMenu">
-      <label>ar</label>
-      <object class="wxMenuItem">
-        <label></label>
+      <label>&amp;Project</label>
+      <object class="wxMenuItem" name="qww">
+        <label>&amp;New</label>
       </object>
       <object class="wxMenuItem">
-        <label></label>
+        <label>&amp;Open</label>
       </object>
       <object class="wxMenuItem">
-        <label></label>
+        <label>&amp;Save</label>
       </object>
       <object class="wxMenuItem">
-        <label></label>
+        <label>Save &amp;As</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem">
+        <label>&amp;Quit</label>
       </object>
     </object>
     <object class="wxMenu">
-      <label></label>
+      <label>&amp;Object</label>
       <object class="wxMenuItem">
         <label></label>
       </object>

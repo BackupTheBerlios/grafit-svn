@@ -56,7 +56,7 @@ class ToolPanel(wx.SashLayoutWindow):
             self.box.Add(self.contentbox, 1, wx.EXPAND)
             self.box.Add(self.btnbox, 0, wx.EXPAND)
 
-        self.toolbar = wx.ToolBar(self.panel, -1, style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_FLAT)
+        self.toolbar = wx.ToolBar(self.panel, -1, style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
         self.btnbox.Add(self.toolbar, 1)
 
         self.panel.SetAutoLayout(True)
