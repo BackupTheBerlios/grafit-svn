@@ -3,7 +3,7 @@
 import sys
 import time
 
-from Numeric import *
+from numarray import *
 
 from giraffe.base.signals import HasSignals
 from giraffe.base.item import Item, wrap_attribute, register_class
@@ -116,7 +116,8 @@ class Dataset(object):
 
         glNewList(self.id, GL_COMPILE)
         glColor4f(*self.style.color)
-        makedata(asarray(self.x), asarray(self.y), self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
+        makedata(asarray(self.x[:]), asarray(self.y[:]), 
+                 self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
                  GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]  )
         glEndList()
 
@@ -448,19 +449,17 @@ class Graph(Item, HasSignals):
         return min(f1, f2), max(f1, f2)
 
     def init(self):
+        glClearColor(252./256, 252./256, 252./256, 1.0)
+        glClear(GL_COLOR_BUFFER_BIT)
+
         # enable transparency
         glEnable (GL_BLEND)
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-#        glClearColor(252./256, 246./256, 238./256, 1.0)
-        glClearColor(252./256, 252./256, 252./256, 1.0)
-#        glClearColor(1., 1., 1., 1.0)
 
         glDisable(GL_DEPTH_TEST)
 
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
-#        self.reshape(self.width, self.height)
 
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)

@@ -55,8 +55,8 @@ class ToolPanel(wx.SashLayoutWindow):
 
         self.contents = []
         self.buttons = []
-        self.last_width = 120
-        self.last_height = 120
+        self.last_width = 180
+        self.last_height = 180
 
     def add_page(self, label, pixmap, widget):
 #        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
@@ -76,6 +76,7 @@ class ToolPanel(wx.SashLayoutWindow):
         dc.DrawBitmap(bimp, 0, 0)
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
+        bmp.SetMaskColour(self.GetBackgroundColour())
 
         if self.position in ['left', 'right']:
             bmp = bmp.ConvertToImage().Rotate90(False).ConvertToBitmap()
@@ -174,6 +175,7 @@ class ProjectTree(wx.TreeCtrl):
         self.items[item.id] = self.AppendItem(self.root, item.name)
         self.SetItemImage(self.items[item.id], self.wsidx, wx.TreeItemIcon_Normal)
         item.connect('rename', self.on_rename)
+        self.Expand(self.root)
 
     def on_double_click(self, event):
         item, flags = self.HitTest(event.GetPosition())
