@@ -188,11 +188,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.project_tree.connect('activate-object', self.on_activate)
 
         self.current_dir = wx.ListCtrl(splitter, -1, 
-                   style=
-#wx.LC_REPORT|
-                   wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS
-                  # |wx.LC_NO_HEADER
-                   |wx.LC_HRULES|wx.LC_SINGLE_SEL)
+                   style= wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS |wx.LC_HRULES|wx.LC_SINGLE_SEL)
         self.current_dir.InsertColumn(0, 'name')
 
         splitter.SplitHorizontally(self.project_tree, self.current_dir)
@@ -202,14 +198,22 @@ class ProjectExplorer(wx.Panel, HasSignals):
         sizer.SetSizeHints(self)
 
         self.project_tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
+        self.on_sel_changed(None, self.project_tree.root)
+        self.project.connect('add-item', self.on_add_item)
+
+    def on_add_item(self, item):
+        if self.project_tree.items[item.parent.id] is self.project_tree.current_item:
+            self.on_sel_changed(None, self.project_tree.items[item.parent.id])
 
     def on_activate(self, item):
         self.emit('activate-object', item)
 
-    def on_sel_changed(self, event):
-        item = event.GetItem()
+    def on_sel_changed(self, event, item=None):
+        if item is None:
+            item = event.GetItem()
         self.current_dir.ClearAll()
         for k, v in self.project_tree.items.iteritems():
+            print v, item
             if v == item:
                 folder = self.project.items[k]
         for i, o in enumerate(folder.contents()):
@@ -233,7 +237,7 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.il = il
         self.SetImageList(il)
 
-        self.root  = self.AddRoot('Project')
+        self.root = self.AddRoot('Project')
         self.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
         self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
 
@@ -241,7 +245,7 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.items = {}
         self.items[self.project.top.id] = self.root
 
-        self.current_item = None
+        self.current_item = self.root
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
 

@@ -32,7 +32,7 @@ class Project(HasSignals):
         try:
             fv = self.db.getas(storage_desc[Folder])
             row = fv.select(name='top')[0]
-            self.top = self.items[id] = Folder(self, location=(fv, row, row.id), _isroot=True)
+            self.top = self.items[row.id] = Folder(self, location=(fv, row, row.id), _isroot=True)
         except IndexError:
             # can't find it in the database, create a new one.
             self.top = Folder(self, 'top', _isroot=True)

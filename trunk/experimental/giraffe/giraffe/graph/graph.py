@@ -628,6 +628,9 @@ class Graph(Item, HasSignals):
         elif self.rubberband_active():
             self.rubberband_continue(x, y)
 
+    name = wrap_attribute('name')
+    parent = wrap_attribute('parent')
+
 
 register_class(Graph, 'graphs[name:S,id:S,parent:S]')
 
