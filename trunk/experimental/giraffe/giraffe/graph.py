@@ -162,7 +162,7 @@ class Dataset(HasSignals):
         glEndList()
 
     def on_data_changed(self):
-        self.emit('modified')
+        self.emit('modified', self)
 
 
 class Grid(object):
@@ -308,7 +308,7 @@ class Axis(object):
                 w = self.font.Advance(str(x))
                 glRasterPos2f(x-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
                 if self.plot.ps:
-                    gl2psText(str(x), "Helvetica", h)
+                    gl2psText(str(x), "Times-Roman", h)
                 self.font.Render(str(x))
 
                 glPopMatrix()
@@ -324,7 +324,7 @@ class Axis(object):
                 glRasterPos2f(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
                               y-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
                 if self.plot.ps:
-                    gl2psText(str(y), "Helvetica", h)
+                    gl2psText(str(y), "TimesRoman", h)
                 self.font.Render(str(y))
                 
                 glPopMatrix()
@@ -424,7 +424,12 @@ class Graph(Item, HasSignals):
     def add(self, *args, **kwds):
         d = Dataset(*args, **kwds)
         self.datasets.append(d)
-#        d.graph = self
+        d.connect('modified', self.on_dataset_modified)
+        self.on_dataset_modified(d)
+
+    def on_dataset_modified(self, d):
+        d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
+        self.emit('redraw')
 
     def paint_frame(self):
         glPushMatrix()

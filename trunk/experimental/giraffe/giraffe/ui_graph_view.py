@@ -11,6 +11,21 @@ from giraffe.signals import HasSignals
 
 from giraffe import gui
 
+def intersection (ml):
+    """Intersection of lists"""
+    tmp = {}
+    for l in ml:
+        for x in l:
+            z = tmp.get(x, [])
+            z.append(1)
+            tmp[x] = z
+    rslt = []
+    for k,v in tmp.items():
+        if len(v) == len(ml):
+            rslt.append(k)
+    return rslt
+
+
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
@@ -43,7 +58,8 @@ class GraphView(gui.Box):
         self.legend = gui.List(self.box, stretch=0)
         self.legend.model.append('pis10sv_e1(f)')
 
-        self.graphdata = GraphDataPanel(self.panel.right_panel, page_label='Data', page_pixmap='worksheet.png')
+        self.graphdata = GraphDataPanel(self.graph, self.panel.right_panel, page_label='Data', page_pixmap='worksheet.png')
+        self.graphdata.connect_project(self.graph.project)
 
     def on_new_column(self):
         pass
@@ -73,18 +89,31 @@ class FolderListModel(HasSignals):
         self.emit('modified')
 
     # ListModel protocol
-    def get(self, row, column):
-        return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
+    def get(self, row, column): return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
+    def get_image(self, row): return 'worksheet.png'
+    def __len__(self): return len(self.contents)
+    def __getitem__(self, row): return self.contents[row]
 
-    def __len__(self):
-        return len(self.contents)
+class ColumnListModel(HasSignals):
+    def __init__(self):
+        self.worksheets = []
+        self.colnames = []
 
-    def __getitem__(self, row):
-        return self.contents[row]
+    def set_worksheets(self, worksheets):
+        self.worksheets = worksheets
+        self.colnames = intersection([w.column_names for w in worksheets])
+        self.emit('modified')
+
+    def get(self, row, column): return self.colnames[row]
+    def get_image(self, row): return None
+    def __len__(self): return len(self.colnames)
+    def __getitem__(self, row): return self.colnames[row]
 
 class GraphDataPanel(gui.Box):
-    def __init__(self, parent, **place):
+    def __init__(self, graph, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
+
+        self.graph = graph
 
         # create widgets 
         btnbox = gui.Box(self, 'horizontal', stretch=0)
@@ -98,11 +127,11 @@ class GraphDataPanel(gui.Box):
 
         gui.Label(self, 'X column', stretch=0)
         self.x_list = gui.List(self)
-        self.x_list.columns = ['vame', 'vavel']
-        self.x_list.model.append('arse')
+        self.x_list.model = ColumnListModel()
 
         gui.Label(self, 'Y column', stretch=0)
         self.y_list = gui.List(self)
+        self.y_list.model = ColumnListModel()
 
         self.project = None
         self.folder = None
@@ -111,14 +140,20 @@ class GraphDataPanel(gui.Box):
         print 'activated:', self.worksheet_list.model[ind]
 
     def on_wslist_select(self):
-        print 'selection:', [self.worksheet_list.model[ind] for ind in self.worksheet_list.selection]
+        selection = [self.worksheet_list.model[ind] for ind in self.worksheet_list.selection]
+        self.x_list.model.set_worksheets(selection)
+        self.y_list.model.set_worksheets(selection)
 
     def set_current_folder(self, folder):
         self.folder = folder
         self.worksheet_list.model = FolderListModel(folder)
 
     def on_add(self):
-        print '1'
+        for ws in self.worksheet_list.selection:
+            worksheet = self.worksheet_list.model[ws]
+            for x in self.x_list.selection:
+                for y in self.y_list.selection:
+                    self.graph.add(worksheet[x], worksheet[y])
 
     def connect_project(self, project):
         self.project = project

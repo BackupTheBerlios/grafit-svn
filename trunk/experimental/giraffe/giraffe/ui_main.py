@@ -23,8 +23,7 @@ class ScriptWindow(Shell):
         self.locals = {}
         Shell.__init__(self, parent, locals=self.locals, **kwds)
 
-        self.run('from giraffe.worksheet.arrays import *')
-        self.run('from giraffe.worksheet.arrays import *')
+        self.run('from giraffe.arrays import *')
         self.run('from giraffe import *')
 
         self.clear()
