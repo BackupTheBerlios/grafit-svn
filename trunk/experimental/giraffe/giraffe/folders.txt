@@ -12,6 +12,8 @@ The following special names are defined:
     >>> from giraffe import Project, Worksheet
     >>> p = Project()
     >>> p.set_dict(globals())
+    >>> p.mkfolder('ass')
+    >>> ass
     >>> w = Worksheet(p, 'data1')
     >>> data1 == w
     True

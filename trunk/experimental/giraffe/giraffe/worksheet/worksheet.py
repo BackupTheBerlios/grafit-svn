@@ -1,5 +1,5 @@
 from giraffe.common.signals import HasSignals
-from giraffe.base.item import Item, NullFolder, wrap_attribute, register_class
+from giraffe.base.item import Item, wrap_attribute, register_class
 from giraffe.worksheet.mkarray import MkArray
 
 class Column(MkArray):
@@ -14,21 +14,17 @@ class Column(MkArray):
 
 class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, id=None):
-        Item.__init__(self, project, id=id)
-
-        if parent is None:
-            parent = self.project.top
+        Item.__init__(self, project, id, parent)
 
         self.columns = []
 
         if id is None:
             self.name = name
-            self.parent = parent.id
         else:
             for i in range(len(self.data.columns)):
                 self.columns.append(Column(self, i))
 
-        self.project.items[self.parent].on_add(self)
+#        self.parent.on_add(self)
 
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])

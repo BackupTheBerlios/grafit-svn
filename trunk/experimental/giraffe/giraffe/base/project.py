@@ -6,7 +6,6 @@ import metakit
 from giraffe.common.commands import Command, command_list
 from giraffe.common.signals import HasSignals
 from giraffe.base.item import Item, Folder, storage_desc
-#from giraffe.base.folder import Folder
 
 # import only in order to register object types
 import giraffe.worksheet
@@ -45,13 +44,13 @@ class Project(HasSignals):
 
         self._dict = {}
 
-        self.this = None
+#        self.this = None
 
 #        try:
 #            id = self.db.getas(storage_desc[Folder]).select(name='top')[0].id
 #            self.top = self.items[id] = Folder(self, id=id)
 #       except IndexError:
-        self.top = Folder(self, 'top')
+        self.top = Folder(self, 'top', _isroot=True)
 
         self.items['']  = self.top
 
@@ -79,6 +78,7 @@ class Project(HasSignals):
             data = view[view.find(id=id)]
 
         self.items[id] = item
+
         return view, data, id
 
     def set_dict(self, d):
