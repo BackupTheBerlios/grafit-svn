@@ -7,8 +7,10 @@ import sets
 from scipy import *
 
 # splash screen message
-try: sys.modules['__main__'].splash_message('loading ImportAscii')
-except: pass
+try: 
+    sys.modules['__main__'].splash_message('loading ImportAscii')
+except: 
+    pass
 
 def most_frequent(seq):
     """returns the element in a sequence that appears the most times"""
