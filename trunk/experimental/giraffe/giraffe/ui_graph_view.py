@@ -78,10 +78,9 @@ class GraphView(gui.Box):
         self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-
+        self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Functions', page_pixmap='function.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
-        self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
         self.style.on_legend_selection()
