@@ -89,8 +89,8 @@ class Column(VarArray, HasSignals, Persistent):
 
 class Worksheet(Item, Persistent):
     def __init__(self, name, parent, id=None):
-        Item.__init__(self, name, parent)
         self.id = identity.register(self, id)
+        Item.__init__(self, name, parent)
         self.columns = []
 
     def get_ncolumns(self):

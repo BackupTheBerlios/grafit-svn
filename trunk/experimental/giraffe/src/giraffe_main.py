@@ -3,6 +3,7 @@ from ui.main import Application
 
 def main():
     p = Project()
+
     app = Application(p)
     app.run()
 
