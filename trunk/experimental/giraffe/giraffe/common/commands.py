@@ -11,10 +11,10 @@ class Command(signals.HasSignals):
     Derived classes must override do() and undo(), and optionally combine().
     A program-wide Command.command_list can be set, and commands added to it using register().
 
-    do() and undo() are replaced with wrappers that emit the appropriate signal and return 
-    self, one can then use commands in a one-liner like:
+    do() and undo() are replaced with wrappers that emit the appropriate signal.
+    One can use commands in a one-liner like:
 
-    FooCommand(param1, param2).do().register()
+    FooCommand(param1, param2).do_and_register()
     """
 
     command_list = None
@@ -25,16 +25,24 @@ class Command(signals.HasSignals):
     def do(self):
         """
         Do whatever the command does.
-        This method is replaced automatically with one that emits 'done' and returns self.
+        This method is replaced automatically with one that emits 'done'.
         """
         raise NotImplementedError
 
     def undo(self):
         """
         Undo whatever the command does.
-        This method is replaced automatically with one that emits 'undone' and returns self.
+        This method is replaced automatically with one that emits 'undone'.
         """
         raise NotImplementedError
+
+    def do_and_register(self):
+        """
+        Shorthand for command.do(); command_register().
+        """
+        self.do()
+        self.register()
+
 
     def combine(self, command):
         """
@@ -51,25 +59,22 @@ class Command(signals.HasSignals):
             raise NotImplementedError
         else:
             self.command_list.add(self)
-        return self
 
-    def _replace_do(self):
+    def _do_wrapper(self):
         self.real_do()
         self.done = True
         self.emit('done')
-        return self
 
-    def _replace_undo(self):
+    def _undo_wrapper(self):
         self.real_undo()
         self.done = False
         self.emit('undone')
-        return self
 
     class __metaclass__(type):
         def __init__(cls, name, bases, dct):
             # replace 'do' and 'undo' by their wrappers
-            cls.real_do, cls.do  = cls.do, cls._replace_do
-            cls.real_undo, cls.undo  = cls.undo, cls._replace_undo
+            cls.real_do, cls.do  = cls.do, cls._do_wrapper
+            cls.real_undo, cls.undo  = cls.undo, cls._undo_wrapper
 
 
 class CompositeCommand(Command):

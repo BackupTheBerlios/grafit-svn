@@ -1,4 +1,5 @@
 import common.signals
+import lib.ElementTree as et
 
 class Item(common.signals.HasSignals):
     def __init__(self, name, parent):
@@ -14,23 +15,22 @@ class Item(common.signals.HasSignals):
         """
         raise NotImplementedError
 
-    def from_element(cls, element):
+    def from_element(element, parent):
         """
-        Class method. Creates an object given its representation
+        Static method. Creates an object given its representation
         as an Element. Must be overridden in subclasses.
         """
         raise NotImplementedError
-    from_element = classmethod(from_element)
+    from_element = staticmethod(from_element)
 
-    def load(element):
+    def create(element, parent=None):
         """
-        Static method. Item.load(element) creates an Item of the
-        corresponding subclass.
+        Static method. Item.create(element) creates an Item of the
+        corresponding subclass. Like __init__(), it has a `parent` argument.
         """
         lookup = dict([(i._element_name, i) for i in Item.__subclasses__() if hasattr(i, '_element_name')])
-        print lookup['Folder']
-        return lookup['Folder'].from_element(element)
-    load = staticmethod(load)
+        return lookup[element.tag].from_element(element, parent)
+    create = staticmethod(create)
 
     def _set_name(self, name):
         if self.parent is not None and not self.parent._is_name_ok(name):
@@ -48,11 +48,6 @@ class Folder(Item):
     def __init__(self, name, parent):
         Item.__init__(self, name, parent)
         self.items = []
-
-    def from_element(cls, element):
-        print 'fe_called'
-        return Folder('new', None)
-    from_element = classmethod(from_element)
 
     def add_item(self, item):
         """
@@ -75,14 +70,13 @@ class Folder(Item):
         item.disconnect('modified', self.on_child_modified)
         self.items.remove(i)
 
-    def desc(self):
-        r = "<Folder %s>" % self.name
-        for i in self.items:
-            r += "".join(["\n    " + l for l in repr(i).splitlines()])
-        return r
+    def _get_subfolders(self):
+        return [i for i in self.items if isinstance(i, Folder)]
+    subfolders = property(_get_subfolders)
 
-    def on_child_modified(self):
-        self.emit('modified')
+    def _get_objects(self):
+        return [i for i in self.items if not isinstance(i, Folder)]
+    objects = property(_get_objects)
 
     def _is_name_ok(self, name):
         """
@@ -93,28 +87,59 @@ class Folder(Item):
             return False
         return True
 
-    def _get_subfolders(self):
-        return [i for i in self.items if isinstance(i, Folder)]
-    subfolders = property(_get_subfolders)
+    def desc(self):
+        r = "<Folder %s>" % self.name
+        for i in self.items:
+            r += "".join(["\n    " + l for l in repr(i).splitlines()])
+        return r
 
-    def _get_objects(self):
-        return [i for i in self.items if not isinstance(i, Folder)]
-    objects = property(_get_objects)
+    def on_child_modified(self):
+        self.emit('modified')
+
+    def from_element(element, parent):
+        folder = Folder(element.get('name'), parent)
+
+        for eitem in element:
+            item = Item.create(eitem, folder)
+        return folder
+    from_element = staticmethod(from_element)
+
+    def to_element(self):
+        elem = et.Element('Folder', name=self.name)
+
+        for item in self.items:
+            elem.append(item.to_element())
+
+        return elem
 
     _element_name = 'Folder'
+
+
+class TrivialItem(Item):
+    """An example: the simplest Item supporting the to_element/from_element protocol"""
+    def to_element(self):
+        return et.Element('TrivialItem', name=self.name)
+
+    def from_element(element, parent):
+        return TrivialItem(element.get('name'), parent)
+    from_element = staticmethod(from_element)
+
+    _element_name = 'TrivialItem'
+
+
 
 if __name__ == '__main__':
     f = Folder('root', None)
     f2 = Folder('child', f)
     f3 = Folder('child2', f)
-    i = Item('item', f3)
+    i = TrivialItem('item', f3)
     f3 = Folder('child5', f)
-    i = Item('item', f3)
-    i = Item('item3', f3)
-    i = Item('item4', f3)
+    i = TrivialItem('item', f3)
+    i = TrivialItem('item3', f3)
+    i = TrivialItem('item4', f3)
     i.emit('modified')
-    print f.desc()
-    print f3.objects
-    print f.subfolders
-    print f.load(None)
-    print f3.load(None)
+    e = f3.to_element()
+
+    print f3.desc()
+    kaa = Item.create(e, f3)
+    print f3.desc()
