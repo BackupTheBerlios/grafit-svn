@@ -69,8 +69,8 @@ class Folder(Item):
                     yield self.project.items[row.id]
 
     def __getitem__(self, key):
-        cn = list(i.name for i in self.contents())
-        ci = list(i.id for i in self.contents())
+        cn = [i.name for i in self.contents()]
+        ci = [i.id for i in self.contents()]
 
         if key in cn:
             return self.project.items[ci[cn.index(key)]]

@@ -5,6 +5,9 @@ import time
 
 from Numeric import *
 
+from giraffe.common.signals import HasSignals
+from giraffe.base.item import Item, wrap_attribute, register_class
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from lib import ftgl
@@ -304,10 +307,9 @@ class Axis(object):
 # - convert drawing to use the above data
 # - move drawing to Axis and Dataset classes
 # - more generic mechanism for symbols, in pyrex if nescessary
-class Graph(object):
-    def __init__(self, name, parent, id=None):#, graph):
-        self.id = identity.register(self, id)
-#        Item.__init__(self, name, parent)
+class Graph(Item, HasSignals):
+    def __init__(self, project, name=None, parent=None, id=None):
+        Item.__init__(self, project, name, parent, id)
     
         # mouse rubberbanding coordinates
         self.sx = None
@@ -639,4 +641,7 @@ class Graph(object):
             self.emit('redraw')
         elif self.rubberband_active():
             self.rubberband_continue(x, y)
+
+
+register_class(Graph, 'graphs[name:S,id:S,parent:S]')
 

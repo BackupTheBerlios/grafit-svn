@@ -195,13 +195,13 @@ class Application(wx.App):
 
     def OnNewWs(self, evt):
         ws = Worksheet(self.project, 'test')
-        ws.add_column('A')
+        ws.add_column('a')
         ws.add_column('other')
-        ws['A'] = [1,2,3]
-        ws['other'] = [2,4,5,6,7,15]
+        ws['a'] = [1,2,3]
+        ws['other'] = range(1000)
 
     def on_new_graph(self, evt):
-        g = Graph('graph1', self.project)
+        g = Graph(self.project, 'graph1')
 
     def OnButton(self, evt):
         self.frame.Close(True)
