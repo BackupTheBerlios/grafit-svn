@@ -42,7 +42,6 @@ def runTest(frame, nb, log):
     wx.StaticText(p2, -1, "Panel Two", (5,5))
 
     p3 = wx.Window(splitter2, -1)
-    p3.SetBackgroundColour(wx.BLUE)
     wx.StaticText(p3, -1, "Panel Three", (5,5))
 
     splitter.SetMinimumPaneSize(20)
@@ -50,6 +49,21 @@ def runTest(frame, nb, log):
 
     splitter2.SetMinimumPaneSize(20)
     splitter2.SplitVertically(p2, p3, 0)
+
+    win = p3
+
+    textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
+    textWindow.SetValue("A window")
+    btn = wx.Button(win, -1, "He")
+
+    box = wx.BoxSizer(wx.HORIZONTAL)
+    box.Add(btn, 1, wx.EXPAND)
+    box.Add(textWindow, 1, wx.EXPAND)
+
+    box.SetSizeHints(win)
+    win.SetSizer(box)
+    win.Layout()
+#        box.Fit(win)
 
 
     return splitter

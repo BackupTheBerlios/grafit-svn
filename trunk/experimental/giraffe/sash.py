@@ -81,20 +81,7 @@ class TestSashWindow(wx.Panel):
         win.SetOrientation(wx.LAYOUT_VERTICAL)
         win.SetAlignment(wx.LAYOUT_LEFT)
         win.SetSashVisible(wx.SASH_RIGHT, True)
-        textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
-        textWindow.SetValue("A window")
-
         self.leftWindow1 = win
-        btn = wx.Button(win, -1, "He")
-
-        box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(btn, 1, wx.EXPAND)
-        box.Add(textWindow, 1, wx.EXPAND)
-
-#        box.SetSizeHints(win)
-        win.SetAutoLayout(True)
-        win.SetSizer(box)
-        box.Fit(win)
 
         # Another window to the left of the client window
         win = wx.SashLayoutWindow(self, self.ID_WINDOW_LEFT2, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
@@ -106,10 +93,26 @@ class TestSashWindow(wx.Panel):
 
         self.leftWindow2 = win
 
+        win = wx.Panel(self.leftWindow1, -1)
+
+        textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
+        textWindow.SetValue("A window")
+        btn = wx.Button(win, -1, "He")
+
+        box = wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(btn, 0)
+        box.Add(textWindow, 1, wx.EXPAND)
+
+#        box.SetSizeHints(win)
+
+        win.SetAutoLayout(True)
+        win.SetSizer(box)
+
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
 
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT1, id2=self.ID_WINDOW_LEFT2)
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT1)
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT2)
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_BOTTOM)
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
