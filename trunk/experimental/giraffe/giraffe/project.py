@@ -70,7 +70,7 @@ class Project(items.Folder, items.Persistent):
 
 import sys
 
-def test():
+def test_project():
     p= Project()
     f = items.Folder('Trivial', p)
     i = items.TrivialItem('opikou', f)

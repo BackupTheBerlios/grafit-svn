@@ -3,7 +3,8 @@ from arrays import *
 from items import Item, WithId, Persistent
 from common.commands import Command, CommandList
 from common.signals import HasSignals
-from lib.ElementTree import Element
+from lib.ElementTree import Element, SubElement
+import cPickle as pickle
 
 Command.command_list = CommandList()
 
@@ -96,7 +97,7 @@ class Worksheet(Item, WithId, Persistent):
     ncolumns = property(get_ncolumns)
 
     def get_nrows(self):
-        return max([len(c) for c in self.column])
+        return max([len(c) for c in self.columns])
     nrows = property(get_nrows)
 
     def add_column(self, name):
@@ -129,7 +130,7 @@ class Worksheet(Item, WithId, Persistent):
     def __setitem__(self, key, value):
         if isinstance(key, int):
             self.columns[key][:] = value
-        elif isinstance(obj, basestring) and key in self.column_names:
+        elif isinstance(key, basestring) and key in self.column_names:
             self.columns[self.column_names.index(key)][:] = value
         else:
             raise IndexError
@@ -145,11 +146,18 @@ class Worksheet(Item, WithId, Persistent):
         return s
 
     def to_element(self):
-        elem = Element('Worksheet', name=self.name, uuid=self.uuid)
+        elem = Element('Worksheet', name=self.name, uuid=self.uuid, 
+                                    rows=str(self.nrows), columns=str(self.ncolumns))
+        elem.text = pickle.dumps(self.get_data())
+        for c in self.columns:
+            SubElement(elem, 'Column', name=c.name)
         return elem
 
     def from_element(element, parent):
         w = Worksheet(element.get('name'), parent)
+        for celem in element:
+            w.add_column(celem.get('name'))
+        w.set_data(pickle.loads(element.text))
         w.uuid = element.get('uuid')
         return w
     from_element = staticmethod(from_element)
@@ -160,10 +168,10 @@ class Worksheet(Item, WithId, Persistent):
         rows = max([len(c) for c in self.columns])
         data = concatenate([[c[:rows]] for c in self.columns])
         return data
+
     def set_data(self, data):
         for i, column in enumerate(data):
             self[i] = column
-    data = property(get_data, set_data)
 
 
 if __name__ == '__main__':
@@ -175,7 +183,7 @@ if __name__ == '__main__':
     w.A[4] = 23
     w.Star = [1,2,4,5,5,5,6,7]
     Command.command_list.undo()
-    saved = w.data
+    saved = w.get_data()
     w.A = [1,2,3,4,]
     w.data = saved
     print w
