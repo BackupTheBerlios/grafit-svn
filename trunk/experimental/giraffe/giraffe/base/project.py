@@ -37,14 +37,22 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None):
 
             def do(self):
                 if not self.__done:
-                    self.__state = do(selb, *self.args, **self.kwds)
+                    ret = do(selb, *self.args, **self.kwds)
+                    if len(ret) > 1 and isinstance(ret, tuple):
+                        self.__state = ret[0]
+                        ret = ret[1:]
+                        if len(ret) == 1 and isinstance(ret, tuple):
+                            ret = ret[0]
+                    else:
+                        self.__state = ret
+                        ret = None
                     self.__done = True
                 else:
-                    redo(selb, self.__state)
-                return self.__state
+                    return redo(selb, self.__state)
+                return ret
 
             def undo(self):
-                undo(selb, self.__state)
+                return undo(selb, self.__state)
 
             if cleanup is not None:
                 def __del__(self):
@@ -115,18 +123,16 @@ class Project(HasSignals):
 
         return view, row, data, id
 
+    # new ##################################
 
     def new(self, cls, *args, **kwds):
         obj = cls(self, *args, **kwds)
-        print >>sys.stderr, "DEVYU, adding %s", obj.id
         self.items[obj.id] = obj
         if obj.parent is self.top:
             self._dict[obj.name] = obj
-
-        return obj
+        return obj, obj
 
     def new_undo(self, obj):
-        print >>sys.stderr, "DEVYU, unadding %s", obj.id
         del self.items[obj.id]
         obj.id = '-'+obj.id
         self.deleted[obj.id] = obj
@@ -147,6 +153,7 @@ class Project(HasSignals):
 
     new = command_from_methods('project_new', new, new_undo, new_redo, new_cleanup)
 
+    # remove ###############################
 
     def remove(self, id):
         obj = self.items[id]
