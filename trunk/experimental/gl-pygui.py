@@ -1,5 +1,3 @@
-#import psyco
-#psyco.full()
 import sys
 import time
 import math
@@ -12,6 +10,19 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from Numeric import *
 from p import makedata
+
+
+import math
+from GUI import Window, Task, application
+from GUI.GL import GLView
+from OpenGL import GL
+
+#----------------------------------------------------------------------------
+
+
+
+
+
 
 class Mouse:
     Left, Right, Middle = range(3)
@@ -106,36 +117,36 @@ def tics(fr, to):
     return []
 
 
-class GLGraphWidget(QGLWidget):
-    def __init__(self,graph,parent=None, name=None):
+class GLGraphWidget(GLView):
+    def __init__(self, *args, **kwds):
         fmt = QGLFormat()
 #        fmt.setDoubleBuffer(False)
-        QGLWidget.__init__(self, fmt, parent, name)
+        GLView.__init__(self, *args, **kwds)
 
         # mouse rubberbanding coordinates
         self.sx = None
         self.px = None
         self.sy = None
         self.py = None
-        self.graph = graph
+#        self.graph = graph
 
 
         self.buf =  False
-        self.res = self.size().width()/100.
+        self.res = self.size[0]/100.
         self.i = 0
 
-        self.x = {}
-        self.y = {}
+        self.xx = {}
+        self.yy = {}
         self.range = {}
 
-        self.x[0] = arange(1000000.)/100000
-        self.y[0] = sin(self.x[0])
+        self.xx[0] = arange(9000.)/1000
+        self.yy[0] = sin(self.xx[0])
 
-        self.x[1] = arange(1000000.)/100000
-        self.y[1] = cos(self.x[1])
+        self.xx[1] = arange(10000.)/1000
+        self.yy[1] = cos(self.xx[1])
 
-        self.x[2] = arange(1000000.)/100000
-        self.y[2] = tan(self.x[2])
+        self.xx[2] = arange(1000.)/1000
+        self.yy[2] = tan(self.xx[2])
 
 
         self.colors = {}
@@ -170,11 +181,11 @@ class GLGraphWidget(QGLWidget):
         #x tics
 
         glPushMatrix()
-        glScalef(1.8/(self.xmax-self.xmin), 1., 1.)
-        glTranslate(-self.xmin, 0, 0)
+        glScalef(1.8/(self.xxmax-self.xxmin), 1., 1.)
+        glTranslate(-self.xxmin, 0, 0)
 
         glBegin(GL_LINES)
-        for x in tics(self.xmin, self.xmax):
+        for x in tics(self.xxmin, self.xxmax):
             glVertex3f(x, 0.0, 0.0)
             glVertex3f(x, 0.03, 0.0)
         glEnd()
@@ -183,11 +194,11 @@ class GLGraphWidget(QGLWidget):
         #y tics
 
         glPushMatrix()
-        glScalef(1., 1.8/(self.ymax-self.ymin), 1.)
-        glTranslate(0, -self.ymin, 0)
+        glScalef(1., 1.8/(self.yymax-self.yymin), 1.)
+        glTranslate(0, -self.yymin, 0)
 
         glBegin(GL_LINES)
-        for y in tics(self.ymin, self.ymax):
+        for y in tics(self.yymin, self.yymax):
             glVertex3f(0, y, 0.0)
             glVertex3f(0.03, y, 0.0)
         glEnd()
@@ -200,30 +211,30 @@ class GLGraphWidget(QGLWidget):
         glTranslatef(-1., -1., 0.)
         glTranslatef(0.1, 0.1, 0.)
 
-        for x in tics(self.xmin, self.xmax):
+        for x in tics(self.xxmin, self.xxmax):
             glPushMatrix()
-            glScalef(1.8/(self.xmax-self.xmin), 1., 1.)
-            glTranslatef(-self.xmin, 0., 0.)
+            glScalef(1.8/(self.xxmax-self.xxmin), 1., 1.)
+            glTranslatef(-self.xxmin, 0., 0.)
 
             glPushMatrix()
             
             glTranslatef(x, -0.07, 0)
-            glScalef((self.xmax-self.xmin)/1.8, 1., 1.)
+            glScalef((self.xxmax-self.xxmin)/1.8, 1., 1.)
             
             output(str(x), 3000)
 
             glPopMatrix()
             glPopMatrix()
 
-        for y in tics(self.ymin, self.ymax):
+        for y in tics(self.yymin, self.yymax):
             glPushMatrix()
-            glScalef(1., 1.8/(self.ymax-self.ymin), 1.)
-            glTranslatef(0, -self.ymin, 0.)
+            glScalef(1., 1.8/(self.yymax-self.yymin), 1.)
+            glTranslatef(0, -self.yymin, 0.)
 
             glPushMatrix()
             
             glTranslatef(-0.07, y, 0)
-            glScalef(1., (self.ymax-self.ymin)/1.8, 1.)
+            glScalef(1., (self.yymax-self.yymin)/1.8, 1.)
             
             output(str(y), 3000)
 
@@ -240,20 +251,20 @@ class GLGraphWidget(QGLWidget):
         glTranslatef(-0.9, -0.9, 0.)
 
         # scale to coordinates
-        glScalef(1.8/(self.xmax-self.xmin), 1.8/(self.ymax-self.ymin), 1)
+        glScalef(1.8/(self.xxmax-self.xxmin), 1.8/(self.yymax-self.yymin), 1)
 
         # go to (0, 0)
-        glTranslatef(-self.xmin, -self.ymin, 0)
+        glTranslatef(-self.xxmin, -self.yymin, 0)
 #
 #            glTranslate(-1., -1., 0)
-#            glScalef(2./(self.xmax-self.xmin), 2./(self.ymax-self.ymin), 1.)
-#            glTranslatef(-self.xmin, -self.ymin, 0)
+#            glScalef(2./(self.xxmax-self.xxmin), 2./(self.yymax-self.yymin), 1.)
+#            glTranslatef(-self.xxmin, -self.yymin, 0)
         
         self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
 
         glPopMatrix()
 
-    def paintGL(self):
+    def render(self):
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
         if not self.buf:
@@ -318,20 +329,21 @@ class GLGraphWidget(QGLWidget):
             glPopMatrix()
 
 
-    def resizeGL(self,width,height):
-        self.w, self.h = width, height
+    def viewport_changed(self):
+        self.w, self.h = self.width, self.height
+        print >>sys.stderr, self.width, self.height
         self.marginx = int(self.w * 0.1)
         self.marginy = int(self.h * 0.1)
-        glViewport( 0, 0, width, height )
+        glViewport( 0, 0, self.width, self.height )
         self.viewport = glGetIntegerv(GL_VIEWPORT)
         self.res = self.w/100.
 
-    def initializeGL(self):
+    def init_context(self):
         glClearColor(1.0, 1.0, 1.0, 1.0)
         glDisable(GL_DEPTH_TEST)
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
-        gluOrtho2D (0, self.size().width(), 0, self.size().height())
+        gluOrtho2D (0, self.width, 0, self.height)
         self.make_data_list()
 
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
@@ -341,14 +353,14 @@ class GLGraphWidget(QGLWidget):
         V3f = glVertex3f
         t = time.time()
 
-        dx =  self.res * (self.xmax-self.xmin)/self.size().width()
-        dy =  self.res * (self.ymax-self.ymin)/self.size().height()
+        dx =  self.res * (self.xxmax-self.xxmin)/self.width
+        dy =  self.res * (self.yymax-self.yymin)/self.height
 
         if False:
             glNewList(1, GL_COMPILE)
-            for k in self.x.keys():
+            for k in self.xx.keys():
                 glBegin(GL_QUADS)
-                for x,y in izip(self.x[k], self.y[k]):
+                for x,y in izip(self.xx[k], self.yy[k]):
                     V3f(x, y, 0)
                     V3f(x+dx, y, 0)
                     V3f(x+dx, y+dy, 0)
@@ -357,12 +369,12 @@ class GLGraphWidget(QGLWidget):
             glEndList()
         else:
             glNewList(1, GL_COMPILE)
-            for k in self.x.keys():
-                makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
+            for k in self.xx.keys():
+                makedata(self.xx[k], self.yy[k], dx, dy)
             glEndList()
  
 
-        print (time.time()-t), "seconds"
+        print 300000./(time.time()-t), "vertices per second"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
@@ -375,16 +387,16 @@ class GLGraphWidget(QGLWidget):
         return x, y
 
     def autoscale(self):
-        self.xmin = min(self.x[0])
-        self.ymin = min(self.y[0])
-        self.xmax = max(self.x[0])
-        self.ymax = max(self.y[0])
+        self.xxmin = min(self.xx[0])
+        self.yymin = min(self.yy[0])
+        self.xxmax = max(self.xx[0])
+        self.yymax = max(self.yy[0])
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
 
     def zoom(self, xmin, xmax, ymin, ymax):
-        self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
+        self.xxmin, self.xxmax, self.yymin, self.yymax = xmin, xmax, ymin, ymax
 
  
     def zoomout(self,x1, x2,x3, x4):
@@ -427,6 +439,13 @@ class GLGraphWidget(QGLWidget):
 #        self.set_range(x, self.to)
 #        self.updateGL()
 #        return
+
+    def mouse_down(self,event, *args, **kwds):
+        print dir(event)
+        print args, kwds
+
+#        for event in self.track_mouse():
+            
 class glGraph(object):
     def __init__(self, parent=None):
         self.win = QTabWidget(parent)
@@ -472,11 +491,11 @@ class glGraph(object):
                 self._ymin, self._ymax = min(self.zfy, self.ziy), max(self.zfy, self.ziy)
 
                 if button == Mouse.Right:
-                    self.xmin, self.xmax = self.gwidget.zoomout(self.xmin, self.xmax, self._xmin, self._xmax)
-                    self.ymin, self.ymax = self.gwidget.zoomout(self.ymin, self.ymax, self._ymin, self._ymax)
+                    self.xxmin, self.xxmax = self.gwidget.zoomout(self.xxmin, self.xxmax, self._xmin, self._xmax)
+                    self.yymin, self.yymax = self.gwidget.zoomout(self.yymin, self.yymax, self._ymin, self._ymax)
                 else:
-                    self.xmin, self.xmax, self.ymin, self.ymax = self._xmin, self._xmax, self._ymin, self._ymax
-                self.gwidget.zoom(self.xmin, self.xmax, self.ymin, self.ymax)
+                    self.xxmin, self.xxmax, self.yymin, self.yymax = self._xmin, self._xmax, self._ymin, self._ymax
+                self.gwidget.zoom(self.xxmin, self.xxmax, self.yymin, self.yymax)
 
                 self.gwidget.make_data_list()
                 self.gwidget.updateGL()
@@ -485,10 +504,19 @@ class glGraph(object):
 
 
 ##############################################################################
-if __name__=='__main__':
-    app=QApplication(sys.argv)
-    g = glGraph()
-    app.setMainWidget(g.win)
-    g.win.show()
-    app.exec_loop()
+view = GLGraphWidget(size = (300, 300))
+win = Window(title = "Gears")
+win.place(view, sticky = "nsew")
+view.become_target()
+win.shrink_wrap()
+win.show()
+
+application().run()
+
+
+#    app=QApplication(sys.argv)
+#    g = glGraph()
+#    app.setMainWidget(g.win)
+#    g.win.show()
+#    app.exec_loop()
 

@@ -261,6 +261,7 @@ class GLGraphWidget(QGLWidget):
             glEnable(GL_CLIP_PLANE1)
             glEnable(GL_CLIP_PLANE2)
             glEnable(GL_CLIP_PLANE3)
+            glEnable(GL_LINE_SMOOTH)
 
             glLoadMatrixd(self.projmatrix)
             glPointSize(5)

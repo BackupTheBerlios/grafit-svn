@@ -78,93 +78,81 @@ def output(text, size):
 
 def tics(fr, to):
     # 5-8 major tics
-    # order of preference: 1eN, 5eN, 4eN, 3eN, 2eN
+    mintics, maxtics = 5, 8
+    prefs = (1,5,4,6,7,8,9,3,2)
+    
     if fr == to:
         return [fr]
     exponent = floor(log10(to-fr)) - 1
 
-    for interval in (1,5,4,6,7,8,9,3,2):
+    for interval in prefs:
         interval = interval * (10**exponent)
         if fr%interval == 0:
             first = fr
         else:
             first = fr + (interval-fr%interval)
         rng = arange(first, to, interval)
-        if 5 <= len(rng) <= 8:
+        if mintics <= len(rng) <= maxtics:
             return rng
 
     exponent += 1
-    for interval in (1,5,4,6,7,8,9,3,2):
+    for interval in prefs:
         interval = interval * (10**exponent)
         if fr%interval == 0:
             first = fr
         else:
             first = fr + (interval-fr%interval)
         rng = arange(first, to, interval)
-        if 5 <= len(rng) <= 8:
+        if mintics <= len(rng) <= maxtics:
             return rng
     return []
 
 
-class GLGraphWidget(QGLWidget):
-    def __init__(self,graph,parent=None, name=None):
+class GraphWidget(QGLWidget):
+    def __init__(self, parent):
         fmt = QGLFormat()
-#        fmt.setDoubleBuffer(False)
-        QGLWidget.__init__(self, fmt, parent, name)
+        QGLWidget.__init__(self, fmt, parent)
+        self.xmin, self.xmax = 0, 1
+        self.ymin, self.ymax = 0, 1
 
-        # mouse rubberbanding coordinates
-        self.sx = None
-        self.px = None
-        self.sy = None
-        self.py = None
-        self.graph = graph
-
-
-        self.buf =  False
-        self.res = self.size().width()/100.
-        self.i = 0
-
-        self.x = {}
-        self.y = {}
-        self.range = {}
-
-        self.x[0] = arange(1000000.)/100000
-        self.y[0] = sin(self.x[0])
-
-        self.x[1] = arange(1000000.)/100000
-        self.y[1] = cos(self.x[1])
-
-        self.x[2] = arange(1000000.)/100000
-        self.y[2] = tan(self.x[2])
-
-
-        self.colors = {}
-        self.colors[0] = (0.0, 0.1, 0.6)
-        self.colors[1] = (0.4, 0.0, 0.1)
-
-        self.set_range(0.0, 100.5)
-        self.autoscale()
- 
-    def paint_axes(self):
+    def initializeGL(self):
+        gluOrtho2D (0, self.size().width(), 0, self.size().height())
+        glDisable(GL_DEPTH_TEST)
+        glClearColor(1.0, 1.0, 1.0, 1.0)
         glLoadIdentity()
 
-        glTranslatef(-1., -1., 0.)
-        glTranslatef(0.1, 0.1, 0.)
+    def paintGL(self):
+        glClear(GL_COLOR_BUFFER_BIT)
+        glColor3f(0.0, 0.0, 0.0)
+        glBegin(GL_LINES)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.4, 0.40, 0.0)
+        glEnd()
+        self.paint_axes()
+
+    def resizeGL(self, width, height):
+        glViewport(0, 0, width, height)
+    
+    def paint_axes(self):
+        ticlength = 0.1
+        
+#        glTranslatef(-1., -1., 0.)
+#        glTranslatef(0.1, 0.1, 0.)
 
         glColor3f(0.0,0.0,0.0)
 
         glBegin(GL_LINES)
-        glVertex3f(    0.0,    0.0, 0.0)
-        glVertex3f(    1.8,    0.0, 0.0)
+        glVertex3f(0.0,    0.0, 0.0)
+        glVertex3f(1.8,    0.0, 0.0)
 
-        glVertex3f(    0.0,    0.0, 0.0)
-        glVertex3f(    0.0,    1.8, 0.0)
+        glVertex3f(0.0,    0.0, 0.0)
+        glVertex3f(0.0,    1.8, 0.0)
 
-        glVertex3f(    0.0,    1.8, 0.0)
-        glVertex3f(    1.8,    1.8, 0.0)
+        glVertex3f(0.0,    1.8, 0.0)
+        glVertex3f(1.8,    1.8, 0.0)
 
-        glVertex3f(    1.8,    1.8, 0.0)
-        glVertex3f(    1.8,    0.0, 0.0)
+        glVertex3f(1.8,    1.8, 0.0)
+        glVertex3f(1.8,    0.0, 0.0)
         glEnd()
 
         #x tics
@@ -253,6 +241,46 @@ class GLGraphWidget(QGLWidget):
 
         glPopMatrix()
 
+
+class GLGraphWidget(QGLWidget):
+    def __init__(self,graph,parent=None, name=None):
+        fmt = QGLFormat()
+#        fmt.setDoubleBuffer(False)
+        QGLWidget.__init__(self, fmt, parent, name)
+
+        # mouse rubberbanding coordinates
+        self.sx = None
+        self.px = None
+        self.sy = None
+        self.py = None
+        self.graph = graph
+
+
+        self.buf =  False
+        self.res = self.size().width()/100.
+        self.i = 0
+
+        self.x = {}
+        self.y = {}
+        self.range = {}
+
+        self.x[0] = arange(10000.)/10000
+        self.y[0] = sin(self.x[0])
+
+        self.x[1] = arange(10000.)/10000
+        self.y[1] = cos(self.x[1])
+
+        self.x[2] = arange(10000.)/10000
+        self.y[2] = tan(self.x[2])
+
+
+        self.colors = {}
+        self.colors[0] = (0.0, 0.1, 0.6)
+        self.colors[1] = (0.4, 0.0, 0.1)
+
+        self.set_range(0.0, 100.5)
+        self.autoscale()
+ 
     def paintGL(self):
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
@@ -358,11 +386,11 @@ class GLGraphWidget(QGLWidget):
         else:
             glNewList(1, GL_COMPILE)
             for k in self.x.keys():
-                makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
+                makedata(self.x[k], self.y[k], dx, dy)
             glEndList()
  
 
-        print (time.time()-t), "seconds"
+        print 300000./(time.time()-t), "vertices per second"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
@@ -487,8 +515,8 @@ class glGraph(object):
 ##############################################################################
 if __name__=='__main__':
     app=QApplication(sys.argv)
-    g = glGraph()
-    app.setMainWidget(g.win)
-    g.win.show()
+    g = GraphWidget(None)
+    app.setMainWidget(g)
+    g.show()
     app.exec_loop()
 

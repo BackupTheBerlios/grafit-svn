@@ -27,6 +27,11 @@ from qt import *
 # Graph.change_axis_scale___(grname, axis, scale)                                           GSCA
 # Graph.change_axis_title___(grname, axis, title)                                           GATI
 
+# Fit.add_fit_function                                                                      FADD
+# Fit.remove_fit_function                                                                   FREM
+# Fit.rename_fit_function                                                                   FREN
+# Fit.change_parameter_value                                                                FCVA
+# Fit.change_fit_setting                                                                    FSET
 
 try: sys.modules['__main__'].splash_message('loading Project')
 except: pass
