@@ -116,18 +116,15 @@ class GraphDataPanel(wx.Panel):
 
         gui.Label(box, 'Worksheet', stretch=0)
         self.worksheet_list = gui.List(box)
-        self.worksheet_list.add_column('name')
-        self.worksheet_list.update()
+        self.worksheet_list.model.append('arse')
 
         gui.Label(box, 'X column', stretch=0)
         self.x_list = gui.List(box)
-        self.x_list.add_column('vame')
-        self.x_list.update()
+        self.x_list.columns = ['vame', 'vavel']
+        self.x_list.model.append('arse')
 
         gui.Label(box, 'Y column', stretch=0)
         self.y_list = gui.List(box)
-        self.y_list.add_column('bame')
-        self.y_list.update()
 
 #
 #        button = gui.Button(k, 'add')
