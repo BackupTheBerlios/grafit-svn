@@ -37,9 +37,13 @@ class Style(object):
 default_style = Style()
 
 class Dataset(object):
-    def __init__(self, x=None, y=None, range=(None,None), style=default_style):
+    def __init__(self, x=None, y=None, range=(None,None), style=default_style,
+                       color=(0, 0, 0, 1.)):
         self._style = Style()
+        self._x = x
+        self._y = y
         self._style.dataset = self
+        self._color = color
 
     def set_style(self, val):
         self._style.line_width = val.line_width
@@ -47,14 +51,23 @@ class Dataset(object):
         return self._style
     style = property(get_style, set_style)
 
-d=Dataset()
-d.style.line_width = 3
-print d.style.line_width
+    def set_x(self, val):
+        self._x = val
+    def get_x(self):
+        return self._x
+    x = property(get_x, set_x)
 
-d2=Dataset()
-d2.style.line_width = 7
-print d2.style.line_width
-print d.style.line_width
+    def set_y(self, val):
+        self._y = val
+    def get_y(self):
+        return self._y
+    y = property(get_y, set_y)
+
+    def set_color(self, val):
+        self._color = val
+    def get_color(self):
+        return self._color
+    color = property(get_color, set_color)
 
 def tics(fr, to):
     # 5-8 major tics
@@ -102,27 +115,15 @@ class GLGraphWidget(QGLWidget):
 
 
         self.buf =  False
-#        self.res = self.size().width()/100.
-        self.i = 0
 
-        self.x = {}
-        self.y = {}
-        self.range = {}
-
-        self.x[0] = arange(10000.)/1000
-        self.y[0] = sin(self.x[0])
-
-        self.x[1] = arange(10000.)/1000
-        self.y[1] = cos(self.x[1])
-
-        self.x[2] = arange(30000.)/1000
-        self.y[2] = tan(self.x[2])
+        self.datasets = []
+        self.datasets.append(Dataset(x = arange(10000.)/1000,
+                                     y = sin(arange(10000.)/1000),
+                                     color = (0.0, 0.1, 0.6, 0.8)))
 
 
-        self.colors = {}
-        self.colors[0] = (0.0, 0.1, 0.6, 0.8)
-        self.colors[1] = (0.4, 0.0, 0.1, 0.8)
-        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
+#        self.colors[1] = (0.4, 0.0, 0.1, 0.8)
+#        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 
         self.set_range(0.0, 100.5)
         self.autoscale()
@@ -423,9 +424,9 @@ class GLGraphWidget(QGLWidget):
         dy =  self.res * (self.ymax-self.ymin)/self.size().height()
 
         glNewList(1, GL_COMPILE)
-        for k in self.x.keys():
-            glColor4f(*self.colors[k])
-            makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
+        for d in self.datasets:
+            glColor4f(*d.color)
+            makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
         glEndList()
 
         print (time.time()-t), "seconds"
@@ -441,10 +442,10 @@ class GLGraphWidget(QGLWidget):
         return x, y
 
     def autoscale(self):
-        self.xmin = min(self.x[0])
-        self.ymin = min(self.y[0])
-        self.xmax = max(self.x[0])
-        self.ymax = max(self.y[0])
+        self.xmin = min(self.datasets[0].x)
+        self.ymin = min(self.datasets[0].y)
+        self.xmax = max(self.datasets[0].x)
+        self.ymax = max(self.datasets[0].y)
         if hasattr(self, 'xscale_pixel'):
             self.set_data_scales()
 
