@@ -108,8 +108,20 @@ class GraphDataPanel(wx.Panel):
 
         box = gui.Box(k, 'vertical')
         sizer.Add(box._widget, 1, wx.EXPAND)
-        button = gui.Button(box, 'add')
-        worksheet_list = gui.List(box)
+
+
+        btnbox = gui.Box(box, 'horizontal', stretch=0)
+        button = gui.Button(btnbox, 'add', stretch=0)
+        button.connect('clicked', self.on_add)
+
+        gui.Label(box, 'Worksheet', stretch=0)
+        self.worksheet_list = gui.List(box)
+
+        gui.Label(box, 'X column', stretch=0)
+        self.x_list = gui.List(box)
+
+        gui.Label(box, 'Y column', stretch=0)
+        self.y_list = gui.List(box)
 
 #
 #        button = gui.Button(k, 'add')
@@ -143,6 +155,9 @@ class GraphDataPanel(wx.Panel):
                 self.worksheet_list.InsertStringItem(0, item.name)
             elif isinstance(item, Folder):
                 self.worksheet_list.InsertStringItem(0, item.name+'/')
+
+    def on_add(self):
+        print '1'
 
     def on_project_changed(self, item):
         if item.parent == self.folder:
