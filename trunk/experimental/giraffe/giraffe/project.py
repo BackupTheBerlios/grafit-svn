@@ -53,7 +53,10 @@ class Project(HasSignals):
     def cd(self, folder):
         # restore dictionary
         for o in self.here.contents():
-            del self._dict[o.name]
+            try:
+                del self._dict[o.name]
+            except KeyError:
+                pass
         self._dict.update(self.save_dict)
         self.save_dict = {}
         

@@ -10,8 +10,8 @@ from giraffe.graph import Graph
 from giraffe.worksheet import Worksheet
 from giraffe.item import Folder
 from giraffe.signals import HasSignals
-from giraffe.graph_view import GraphView
-from giraffe.worksheet_view import WorksheetView
+from giraffe.ui_graph_view import GraphView
+from giraffe.ui_worksheet_view import WorksheetView
 
 
 class ToolPanel(wx.SashLayoutWindow):
@@ -203,7 +203,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.items = {}
 
     def on_add_item(self, item):
-        if self.project_tree.items[item.parent.id] is self.project_tree.current_item:
+        if item.parent == self.project.here:
             self.on_sel_changed(None, self.project_tree.items[item.parent.id])
 
     def on_item_activated(self, event):
@@ -214,9 +214,15 @@ class ProjectExplorer(wx.Panel, HasSignals):
         if item is None:
             item = event.GetItem()
         self.current_dir.ClearAll()
+
+        # find folder
         for k, v in self.project_tree.items.iteritems():
             if v == item:
                 folder = self.project.items[k]
+                
+        print >>sys.stderr, folder
+
+        self.project.cd(folder)
         for i, o in enumerate(folder.contents()):
             self.current_dir.InsertImageStringItem(0, o.name,
                             {Worksheet: self.img_worksheet,
@@ -250,7 +256,6 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
 
         # object.id: treeitemid
-        self.current_item = self.root
         self.items = {}
         self.items[project.top.id] = self.root
 
@@ -259,7 +264,7 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
             treeitem = self.AppendItem(self.items[item.parent.id], item.name)
             self.SetPyData(treeitem, item)
             self.items[item.id] = treeitem
-            self.SetItemImage(self.treeitem, self.wsidx, wx.TreeItemIcon_Normal)
+            self.SetItemImage(treeitem, self.wsidx, wx.TreeItemIcon_Normal)
             item.connect('rename', self.on_rename)
             self.Expand(self.root)
 
@@ -295,6 +300,8 @@ class Application(wx.App):
         self.Bind(wx.EVT_MENU, self.OnNewWs, item)
         item = menu.Append(-1, "New graph (test)", "Test new graph")
         self.Bind(wx.EVT_MENU, self.on_new_graph, item)
+        item = menu.Append(-1, "New folder (test)", "Test new folder")
+        self.Bind(wx.EVT_MENU, self.on_new_folder, item)
         item = menu.Append(-1, "E&xit\tAlt-X", "Exit demo")
         self.Bind(wx.EVT_MENU, self.OnButton, item)
         menuBar.Append(menu, "&File")
@@ -315,12 +322,15 @@ class Application(wx.App):
         return True
 
     def OnNewWs(self, evt):
-        ws = self.project.new(Worksheet, 'test')
+        ws = self.project.new(Worksheet, 'test', self.project.here)
         ws.a = [1,2,3]
         ws.other = arange(100000.)
 
     def on_new_graph(self, evt):
-        g = self.project.new(Graph, 'graph1')
+        g = self.project.new(Graph, 'graph1', self.project.here)
+
+    def on_new_folder(self, evt):
+        self.project.new(Folder, 'folder1', self.project.here)
 
     def OnButton(self, evt):
         self.frame.Close(True)
