@@ -35,6 +35,7 @@ p2 = Project()
 print >>sys.stderr, 'loading...',
 t = time.time()
 p2.load('test.xml')
+print p2
 print time.time()-t, 'seconds'
 print >>sys.stderr, 'ok'
 

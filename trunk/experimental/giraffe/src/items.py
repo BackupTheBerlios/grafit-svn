@@ -1,22 +1,6 @@
 import common.signals
 import lib.ElementTree as et
-import uuid as u
-
-class WithId(object):
-    objects = {}
-    def get(uuid):
-        return WithId.objects[uuid]
-    get = staticmethod(get)
-
-    def register(self, uuid=None):
-        if uuid is None:
-            uuid = u.uuid()
-        self.uuid = uuid
-        WithId.objects[self.uuid] = self
-
-    def unregister(self):
-        del WithId.objects[self.uuid]
-
+import shelf
 
 class Persistent(object):
     def to_element(self):
@@ -63,13 +47,14 @@ class Item(common.signals.HasSignals):
     name = property(_get_name, _set_name)
 
 
-class Folder(Item, Persistent, WithId):
+class Folder(Item, Persistent):
     """A folder. Folders contain items and subfolders"""
     def __init__(self, name, parent, uuid=None):
         Item.__init__(self, name, parent)
-        Persistent.__init__(self, uuid)
+#        Persistent.__init__(self, uuid)
         self.items = []
-        self.register(uuid)
+        self.uuid = uuid
+        shelf.register(self)
 
     def add_item(self, item):
         """

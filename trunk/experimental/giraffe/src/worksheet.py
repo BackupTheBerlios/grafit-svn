@@ -1,18 +1,17 @@
 from arrays import *
 
-from items import Item, WithId, Persistent
+from items import Item, Persistent
+import shelf
 from common.commands import Command, CommandList
 from common.signals import HasSignals
 from lib.ElementTree import Element, SubElement
-import cPickle as pickle
 import base64
-import sys
 
 Command.command_list = CommandList()
 
 class U(object):
     def __div__(self, other):
-        return WithId.get(other)
+        return shelf.get(other)
 U = U()
 
 class worksheet_add_column(Command):
@@ -88,10 +87,10 @@ class Column(VarArray, HasSignals, Persistent):
     _element_name = 'Column'
 
 
-class Worksheet(Item, WithId, Persistent):
+class Worksheet(Item, Persistent):
     def __init__(self, name, parent):
         Item.__init__(self, name, parent)
-        self.register()
+        shelf.register(self)
         self.columns = []
 
     def get_ncolumns(self):
@@ -149,20 +148,22 @@ class Worksheet(Item, WithId, Persistent):
 
     def to_element(self):
         elem = Element('Worksheet', name=self.name, uuid=self.uuid, 
-                                    rows=str(self.nrows), columns=str(self.ncolumns))
+                                    rows=str(self.nrows), columns=str(self.ncolumns),
+                                    column_names=','.join(self.column_names))
 #        elem.text = pickle.dumps(self.get_data())
         elem.text = base64.encodestring(self.get_data().tostring())
-        for c in self.columns:
-            SubElement(elem, 'Column', name=c.name)
+#        for c in self.columns:
+#            SubElement(elem, 'Column', name=c.name)
         return elem
 
     def from_element(element, parent):
         w = Worksheet(element.get('name'), parent)
-        for celem in element:
-            w.add_column(celem.get('name'))
+        for name in element.get('column_names').split(','):
+            w.add_column(name)
 #        w.set_data(pickle.loads(element.text))
         w.set_data(fromstring(base64.decodestring(element.text), shape=(int(element.get('columns')),int(element.get('rows'))), type=Float64))
         w.uuid = element.get('uuid')
+        shelf.register(w)
         return w
     from_element = staticmethod(from_element)
 

@@ -1,4 +1,5 @@
 import items
+import shelf
 import lib.ElementTree as et
 
 class Project(items.Folder, items.Persistent):
@@ -70,7 +71,7 @@ class Project(items.Folder, items.Persistent):
 
 import sys
 
-def test_project():
+def test():
     p= Project()
     f = items.Folder('Trivial', p)
     i = items.TrivialItem('opikou', f)
@@ -111,11 +112,11 @@ def test_project():
     p.load('test.xml')
     print p.desc()
     print p.uuid
-    print items.WithId.get(p.uuid), p
+    print shelf.get(p.uuid), p
 
     p3 = items.Persistent.create(et.parse('test.xml').getroot())
     print p3.uuid
-    print items.WithId.get(p.uuid), p3, p
+    print shelf.get(p.uuid), p3, p
 
 
 if __name__== '__main__':
