@@ -12,14 +12,12 @@ print >>sys.stderr, "ok"
 
 print >>sys.stderr, "loading giraffe...",
 from giraffe import Project
-from giraffe.ui_main import Application
+from giraffe.ui_main import Application, MainWindow
 print >>sys.stderr, "ok"
 
 def main():
-    sys.stderr.write("creating application")
-    p = Project()
-    app = Application()
-    app.main.open_project(p)
+    sys.stderr.write("creating application...")
+    app = Application(MainWindow)
     print >>sys.stderr, "ok"
     app.run()
 
