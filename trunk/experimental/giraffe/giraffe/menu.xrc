@@ -4,46 +4,61 @@
     <object class="wxMenu" name="project">
       <label>&amp;Project</label>
       <object class="wxMenuItem" name="project-new">
-        
         <label>&amp;New</label>
+        <accel>Ctrl+N</accel>
       </object>
       <object class="wxMenuItem" name="project-open">
-        
-        <label>&amp;Open</label>
-      
+        <label>&amp;Open...</label>
+        <accel>Ctrl+O</accel>
       </object>
       <object class="wxMenuItem" name="project-save">
-        
         <label>&amp;Save</label>
-      
+        <accel>Ctrl+S</accel>
       </object>
       <object class="wxMenuItem" name="project-saveas">
-        
-        <label>Save &amp;As</label>
-      
+        <label>Save &amp;As...</label>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="project-quit">
-        
         <label>&amp;Quit</label>
+        <accel>Ctrl+Q</accel>
       </object>
     </object>
+    <object class="wxMenu" name="edit">
+      <label>&amp;Edit</label>
+      <object class="wxMenuItem" name="edit-undo">
+        <label>&amp;Undo</label>
+        <accel>Ctrl+Z</accel>
+      </object>
+      <object class="wxMenuItem" name="edit-redo">
+        <label>&amp;Redo</label>
+        <accel>Ctrl+Y</accel>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+    </object>
+
     <object class="wxMenu" name="object">
       <label>&amp;Object</label>
       <object class="wxMenuItem" name="object-new-folder">
-        
         <label>&amp;Folder</label>
-      
       </object>
       <object class="wxMenuItem" name="object-new-graph">
-        
         <label>&amp;Graph</label>
-      
       </object>
       <object class="wxMenuItem" name="object-new-worksheet">
-        
         <label>&amp;Worksheet</label>
-      
       </object>
     </object>
   </object>

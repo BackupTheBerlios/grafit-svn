@@ -169,11 +169,14 @@ class Grid(object):
 
             glPopMatrix()
 
+AXISFONT = ftgl.FTGLPixmapFont('/home/daniel/giraffe/data/fonts/bitstream-vera/Vera.ttf')
+
 class Axis(object):
     def __init__(self, position, plot):
         assert position in ['left', 'right', 'top', 'bottom'], "illegal value for position: %s" % position
         self.position = position
         self.plot = plot
+        self.font = AXISFONT
 
     def paint(self):
         glPushMatrix()
@@ -232,9 +235,8 @@ class Axis(object):
 
     def paint_text(self):
         glLoadIdentity()
-        f = ftgl.FTGLPixmapFont('/home/daniel/giraffe/data/fonts/bitstream-vera/Vera.ttf')
         h = int(2.6*self.plot.res)
-        f.FaceSize(h)
+        self.font.FaceSize(h)
         if self.position == 'bottom':
             for x in self.tics(self.plot.xmin, self.plot.xmax):
                 glPushMatrix()
@@ -242,9 +244,9 @@ class Axis(object):
                 glScalef(self.plot.xscale_data, self.plot.yscale_mm, 1.)
                 glTranslatef(-self.plot.xmin, 0, 0)
                 
-                w = f.Advance(str(x))
+                w = self.font.Advance(str(x))
                 glRasterPos2f(x-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
-                f.Render(str(x))
+                self.font.Render(str(x))
 
                 glPopMatrix()
         elif self.position == 'left':
@@ -255,10 +257,10 @@ class Axis(object):
                 
                 glTranslatef(0, -self.plot.ymin, 0)
 
-                w = f.Advance(str(y))
+                w = self.font.Advance(str(y))
                 glRasterPos2f(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
                               y-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
-                f.Render(str(y))
+                self.font.Render(str(y))
                 
                 glPopMatrix()
 
@@ -322,15 +324,15 @@ class Graph(Item, HasSignals):
         d.graph = self
         self.datasets.append(d)
 
-        self.datasets.append(Dataset(x = arange(100000.)/100000,
-                                     y = sin(arange(100000.)/100000)))
-        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
-        self.datasets[-1].graph = self
+#        self.datasets.append(Dataset(x = arange(100000.)/100000,
+#                                     y = sin(arange(100000.)/100000)))
+#        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
+#        self.datasets[-1].graph = self
 
-        self.datasets.append(Dataset(x = arange(10000.)/1000,
-                                     y = cos(arange(10000.)/1000)))
-        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
-        self.datasets[-1].graph = self
+#        self.datasets.append(Dataset(x = arange(10000.)/1000,
+#                                     y = cos(arange(10000.)/1000)))
+#        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
+#        self.datasets[-1].graph = self
 
 #        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 

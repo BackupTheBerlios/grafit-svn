@@ -228,9 +228,11 @@ class ProjectExplorer(wx.Panel, HasSignals):
                 if isinstance(item, Folder):
                     yield item
 
+        from itertools import ifilter
+
         def all_subfolders(f):
             yield f
-            for item in subfolders(f):
+            for item in ifilter(lambda obj: isinstance(obj, Folder), f.contents()):
                 for i in all_subfolders(item):
                     yield i
 
