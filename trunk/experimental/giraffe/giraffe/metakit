@@ -4,6 +4,12 @@ class StorageManager(object):
     def request_storage(self, object):
         return view, rownum
 
+class Persistent(object):
+    def __init__(self, storage, view, ):
+        self.storage = storage
+
+    
+
 __init__(self, project, store=(view, rownum))
 self._view is a metakit view.
 self._rownum is the row index.

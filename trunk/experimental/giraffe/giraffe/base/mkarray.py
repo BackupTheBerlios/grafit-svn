@@ -94,8 +94,8 @@ slices have n < m, no extended slices. Missing values (a[:n]) allowed.
 
 
 db = metakit.storage('asshole', 1)
-#v = db.getas('test[ass:B]')
-#v.append(ass='')
+v = db.getas('test[ass:B]')
+v.append()
 
 v = db.view('test')
 

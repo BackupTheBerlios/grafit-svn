@@ -1,0 +1,27 @@
+Project:
+    container, encapsulates a metakit database
+    has a flat structure, may contain several types of Items, each type corresponds to a view
+
+Item:
+    always associated with a Project
+    data is stored in a row of a metakit view in a Project
+    identified by uuid, (self.id)
+
+Folders and paths:
+    Folders are implemented as a type of Item.
+    folder[name:S,id:S,parent:S]
+    item[name:S,id:S,parent:S,other_data...]
+
+    Paths: project.get(path)
+
+    project.get('/pis-0/e1_f')
+    pis0 = Folder(proj, 'pis-0')
+    data = Folder(proj, 'data', pis0)
+
+    or...
+    
+    project.mkfolder('/pis-0')
+    project.mkfolder('/pis-0/e1_f')
+
+    project.rmfolder('/pis-0')
+    project.cd('/')
