@@ -40,7 +40,7 @@ You can remove columns with remove(), like this:
     array([ 1.,  2.,  3.,  4.])
 
     >>> import os
-    >>> os.remove('rikadik.db')
+    >>> #os.remove('rikadik.db')
 
 
 How it works: Internals (subject to change!)

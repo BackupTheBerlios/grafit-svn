@@ -7,6 +7,8 @@ from giraffe.base.mkarray import MkArray
 from giraffe.common.commands import Command, command_list
 from giraffe.item import Item, storage_desc
 
+import giraffe.worksheet
+
 def create_id(*args):
     """
     Generates a universally unique ID.

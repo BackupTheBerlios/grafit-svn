@@ -12,7 +12,6 @@ def wrap_attribute(name):
         setattr(self.data, name, value)
     return property(get_data, set_data)
 
-
 class Item(object):
     def __init__(self, project, id=None):
         self.project = project
