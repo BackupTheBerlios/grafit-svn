@@ -34,6 +34,9 @@ You can remove columns with remove(), like this:
     >>> w.remove_column('A')
     >>> print w.column_names
     ['B']
+    >>> undo()
+    >>> print w.column_names
+    ['A', 'B']
     >>> w.remove_column('C')
     Traceback (most recent call last):
     ...

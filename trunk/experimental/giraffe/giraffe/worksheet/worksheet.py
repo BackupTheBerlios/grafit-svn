@@ -1,3 +1,5 @@
+import sys
+
 from giraffe.common.signals import HasSignals
 from giraffe.common.commands import command_from_methods
 from giraffe.base.item import Item, wrap_attribute, register_class
@@ -9,6 +11,12 @@ class Column(MkArray):
         self.worksheet = worksheet
         self.ind = ind
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
+
+    def set_name(self, name):
+        self.data.name = name
+    def get_name(self):
+        return self.data.name
+    name = property(get_name, set_name)
 
     def __coerce__(self, other):
         print >>sys.stderr, self, other
@@ -28,15 +36,28 @@ class Worksheet(Item, HasSignals):
         self.columns.append(Column(self, ind))
         return name
 
+    def add_column_undo(self, name):
+        ind = self.data.columns.find(name=name)
+        self.data.columns.delete(ind)
+        del self.columns[ind]
+
+    add_column = command_from_methods('worksheet_add_column', add_column, add_column_undo)
+
     def remove_column(self, name):
         ind = self.data.columns.find(name=name)
         if ind == -1:
             raise NameError, "Worksheet does not have a column named %s" % name
         else:
-            self.data.columns.delete(ind)
+            col = self.columns[ind]
+            del self.columns[ind]
+            return [col, ind]
 
-    add_column = command_from_methods('worksheet_add_column', add_column, remove_column)
+    def undo_remove_column(self, c):
+        print >>sys.stderr, c
+        col, ind = c
+        self.columns.insert(ind, col)
 
+    remove_column = command_from_methods('worksheet_remove_column', remove_column, undo_remove_column)
 
     def get_ncolumns(self):
         return len(self.columns)
@@ -71,7 +92,7 @@ class Worksheet(Item, HasSignals):
         
 
     def get_column_names(self):
-        return [c.name for c in self.data.columns]
+        return [c.name for c in self.columns]
     column_names = property(get_column_names)
 
     def set_name(self, n):
