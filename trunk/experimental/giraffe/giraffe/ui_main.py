@@ -177,10 +177,10 @@ class Application(wx.App):
                             wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 3000, None, -1)
         s.Show()
 
-        print >>sys.stderr, 'loading resources'
-        resource = wx.xrc.XmlResource('resouces.xrc')
+        print >>sys.stderr, '.',
+        resource = wx.xrc.XmlResource('resources.xrc')
 
-        print >>sys.stderr, 'creating main window'
+        print >>sys.stderr, '.',
 
         # frame ###################################################################################
         self.frame = frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
@@ -189,7 +189,7 @@ class Application(wx.App):
 
         frame.CreateStatusBar()
 
-        print >>sys.stderr, 'creating toolbar'
+        print >>sys.stderr, '.',
 
         # toolbar #################################################################################
         buttons = [
@@ -211,7 +211,7 @@ class Application(wx.App):
                 tb.Bind(wx.EVT_TOOL, callback, id=tool.GetId())
             
         # menu bar ################################################################################
-        print >>sys.stderr, 'creating menus'
+        print >>sys.stderr, '.',
         frame.SetMenuBar(resource.LoadMenuBar('menubar'))
 
         menuitems = [
@@ -228,7 +228,7 @@ class Application(wx.App):
         for id, func in menuitems:
             self.Bind(wx.EVT_MENU, func, id=wx.xrc.XRCID(id))
 
-        print >>sys.stderr, 'showing'
+        print >>sys.stderr, '.',
 
         # events
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
@@ -329,11 +329,13 @@ class MainPanel(wx.Panel):
 
         # bottom panel
         self.script_window = ScriptWindow(self.bottom_panel.panel)
+        print >>sys.stderr, '.',
         self.bottom_panel.add_page('Script', 'console.png', self.script_window)
         self.script_window.locals['mainwin'] = self
 
         # the left panel
         self.explorer = ProjectExplorer(self.left_panel.panel)
+        print >>sys.stderr, '.',
         self.explorer.connect('activate-object', self.show_object)
         self.left_panel.add_page('Project', 'stock_navigator.png', self.explorer)
 

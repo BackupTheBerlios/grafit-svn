@@ -47,25 +47,33 @@ def wrap_attribute(name):
 
 
 class Item(object):
+    """Base class for all items in a Project"""
     def __init__(self, project, name=None, parent=None, location=None):
         self.project = project
 
         if location is None:
+            # this is a new item, not present in the database 
+            # create an entry for it
             self.view, self.data, self.id = project._create(type(self))
+
+            # we have to handle creation of the top folder as a special case
+            # we cannot specify its parent when we create it!
             if hasattr(self, '_isroot') and self._isroot:
-                # this is the top folder, so we cannot specify 
-                # its parent when we create it!
                 parent = self
 
+            # parent defaults to top-level folder
+            # (XXX: should this be the current folder?)
             if parent is None:
-                # default to top-level folder
                 parent = self.project.top
 
+            # initialize
             self.name = name
             self.parent = parent.id
         else:
+            # this is an item already present in the database
             self.view, self.data, self.id = location
 
+        # enter ourselves in the project dictionary
         self.project.items[self.id] = self
 
         # We have to emit the signal at the end
@@ -76,15 +84,23 @@ class Item(object):
 
 class Folder(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None, _isroot=False):
+        # we have to handle creation of the top folder as a special case
+        # since we cannot specify its parent when we create it. 
+        # see Item.__init__
         self._isroot = _isroot
-        Item.__init__(self, project, name, parent, location)
         self.project = project
+        Item.__init__(self, project, name, parent, location)
 
     def contents(self):
         for desc in storage_desc.values():
             for row in self.project.db.getas(desc):
                 if row.parent == self.id and row.id in self.project.items and row.id != self.id:
                     yield self.project.items[row.id]
+
+    name = wrap_attribute('name')
+    parent = wrap_attribute('parent')
+
+    up = property(lambda self: self.parent)
 
     def __getitem__(self, key):
         cn = [i.name for i in self.contents()]
@@ -104,12 +120,5 @@ class Folder(Item, HasSignals):
 
     def __repr__(self):
         return '<Folder %s>' % self.name
-
-    def get_up(self):
-        return self.parent
-    up = property(get_up)
-
-    name = wrap_attribute('name')
-    parent = wrap_attribute('parent')
 
 register_class(Folder, 'folders[name:S,id:S,parent:S]')

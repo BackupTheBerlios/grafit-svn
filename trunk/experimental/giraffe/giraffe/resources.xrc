@@ -2,7 +2,7 @@
 <resource>
   <object class="wxMenuBar" name="menubar">
     <object class="wxMenu" name="project">
-      <label>&amp;Project</label>
+      <label>&amp;File</label>
       <object class="wxMenuItem" name="project-new">
         
         <label>&amp;New</label>

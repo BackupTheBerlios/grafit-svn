@@ -110,10 +110,11 @@ class Project(HasSignals):
                     view.delete(i)
 
     def _create(self, cls):
-        """Create an entry for a new item of class `cls` in the database
+        """Create a new entry a new item of class `cls` in the database
 
         This method is called from the constructor of all `Item`-derived
-        classes, if the item is not already in the database
+        classes, if the item is not already in the database.
+        Returns the view, row and id of the new item.
         """
         try:
             view = self.db.getas(storage_desc[cls])

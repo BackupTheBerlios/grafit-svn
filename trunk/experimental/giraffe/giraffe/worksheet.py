@@ -1,26 +1,28 @@
 import sys
+import re
 
 from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods
 from giraffe.item import Item, wrap_attribute, register_class, create_id
 
-import arrays
 from giraffe.arrays import MkArray
 
-def evaluate_expression(expression, project, worksheet):
-    namespace = {}
+import arrays
 
-    namespace.update(arrays.__dict__)
-
-    namespace['top'] = project.top
-    namespace['here'] = project.this
-    namespace['this'] = worksheet
-    namespace['up'] = worksheet.parent.parent
-
-    namespace.update(dict([(c.name, c) for c in worksheet.columns]))
-    namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
-
-    return eval(expression, namespace)
+#def evaluate_expression(expression, project, worksheet):
+#    namespace = {}
+#
+#    namespace.update(arrays.__dict__)
+#
+#    namespace['top'] = project.top
+#    namespace['here'] = project.this
+#    namespace['this'] = worksheet
+#    namespace['up'] = worksheet.parent.parent
+#
+#    namespace.update(dict([(c.name, c) for c in worksheet.columns]))
+#    namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
+#
+#    return eval(expression, namespace)
 
 
 class Column(MkArray, HasSignals):
@@ -56,10 +58,16 @@ class Column(MkArray, HasSignals):
     __setitem__ = command_from_methods('column_change_data', __setitem__, undo_setitem)
 
 
-
 class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         self.__attr = False
+
+        if name is None:
+            name = self.create_name()
+
+        if not self.check_name(name, parent):
+            raise NameError
+
         Item.__init__(self, project, name, parent, location)
 
         self.columns = []
@@ -70,7 +78,6 @@ class Worksheet(Item, HasSignals):
                     self.columns.append(Column(self, i))
 
         self.__attr = True
-
 
     def __getattr__(self, name):
         if name in self.column_names:
@@ -92,6 +99,17 @@ class Worksheet(Item, HasSignals):
             self.remove_column(name)
         else:
             object.__delattr__(self, name)
+
+    def check_name(self, name, parent):
+        if not re.match('^[a-zA-Z]\w*$', name):
+            return False
+        if name in [i.name for i in parent.contents()]:
+            return False
+        return True
+
+#    def create_name(self, parent):
+#        for 
+#        name = 
 
     def column_index(self, name):
         return self.data.columns.select(*[{'name': n} for n in self.column_names]).find(name=name)
