@@ -11,6 +11,7 @@ from giraffe.commands import undo, redo
 from giraffe.graph import Graph
 from giraffe.worksheet import Worksheet
 from giraffe.item import Folder
+from giraffe.project import Project
 from giraffe.ui_graph_view import GraphView
 from giraffe.ui_worksheet_view import WorksheetView
 
@@ -231,10 +232,6 @@ class ProjectExplorer(wx.Panel, HasSignals):
                 for i in all_subfolders(item):
                     yield i
 
-
-        for f in all_subfolders(project.top):
-            print >>sys.stderr, f
-
         for f in all_subfolders(project.top):
             if f != project.top:
                 self.on_project_add_item(f)
@@ -351,6 +348,7 @@ class Application(wx.App):
         s = wx.SplashScreen(wx.Image("/home/daniel/grafit/pixmaps/logo.png").ConvertToBitmap(),
                             wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 3000, None, -1)
         s.Show()
+        print >>sys.stderr, 'creating main window'
 
         # frame ###################################################################################
         self.frame = frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
@@ -358,6 +356,8 @@ class Application(wx.App):
         self.SetTopWindow(frame)
 
         frame.CreateStatusBar()
+
+        print >>sys.stderr, 'creating toolbar'
 
         # toolbar #################################################################################
         buttons = [
@@ -379,11 +379,16 @@ class Application(wx.App):
                 tb.Bind(wx.EVT_TOOL, callback, id=tool.GetId())
             
 
+        print >>sys.stderr, 'creating menus'
         # menu bar ################################################################################
         resource = wx.xrc.XmlResource('menu.xrc')
         frame.SetMenuBar(resource.LoadMenuBar('menubar'))
 
         menuitems = [
+            ('project-new', self.on_project_new),
+            ('project-open', self.on_project_open),
+            ('project-save', self.on_project_save),
+            ('project-saveas', self.on_project_saveas),
             ('project-quit', self.OnButton),
             ('object-new-folder', self.on_new_folder),
             ('object-new-worksheet', self.on_new_worksheet),
@@ -393,6 +398,7 @@ class Application(wx.App):
         for id, func in menuitems:
             self.Bind(wx.EVT_MENU, func, id=wx.xrc.XRCID(id))
 
+        print >>sys.stderr, 'showing'
 
         # events
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
@@ -409,6 +415,27 @@ class Application(wx.App):
         ws.a = [1,2,3]
         ws.other = 2*ws.a
 
+    def on_project_open(self, evt):
+        dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+                            defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.OPEN | wx.CHANGE_DIR)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPaths()[0]
+            self.main.close_project()
+            self.main.open_project(Project(str(path)))
+
+        dlg.Destroy()
+
+    def on_project_saveas(self, evt):
+        pass
+
+    def on_project_save(self, evt):
+        pass
+
+    def on_project_new(self, evt):
+        self.main.close_project()
+        self.main.open_project(Project())
+        
     def on_new_graph(self, evt):
         g = self.main.project.new(Graph, 'graph1', self.main.project.here)
 
