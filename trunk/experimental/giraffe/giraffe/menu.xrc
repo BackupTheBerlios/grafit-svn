@@ -1,43 +1,34 @@
 <?xml version="1.0" ?>
 <resource>
   <object class="wxMenuBar" name="menubar">
-    <object class="wxMenu">
+    <object class="wxMenu" name="project">
       <label>&amp;Project</label>
-      <object class="wxMenuItem" name="qww">
+      <object class="wxMenuItem" name="project-new">
         <label>&amp;New</label>
       </object>
-      <object class="wxMenuItem">
+      <object class="wxMenuItem" name="project-open">
         <label>&amp;Open</label>
       </object>
-      <object class="wxMenuItem">
+      <object class="wxMenuItem" name="project-save">
         <label>&amp;Save</label>
       </object>
-      <object class="wxMenuItem">
+      <object class="wxMenuItem" name="project-saveas">
         <label>Save &amp;As</label>
       </object>
       <object class="separator"/>
-      <object class="wxMenuItem" name="menu-quit">
+      <object class="wxMenuItem" name="project-quit">
         <label>&amp;Quit</label>
       </object>
     </object>
-    <object class="wxMenu">
+    <object class="wxMenu" name="object">
       <label>&amp;Object</label>
-      <object class="wxMenuItem">
-        <label></label>
-      </object>
-      <object class="wxMenuItem">
-        <label></label>
-      </object>
-      <object class="wxMenu">
-        <label></label>
-        <object class="wxMenuItem">
-          <label></label>
+      <object class="wxMenu" name="object-new">
+        <label>&amp;New</label>
+        <object class="wxMenuItem" name="object-new-worksheet">
+          <label>&amp;Worksheet</label>
         </object>
-        <object class="wxMenuItem">
-          <label></label>
-        </object>
-        <object class="wxMenuItem">
-          <label></label>
+        <object class="wxMenuItem" name="object-new-graph">
+          <label>&amp;Graph</label>
         </object>
       </object>
     </object>
