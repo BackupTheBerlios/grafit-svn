@@ -1,6 +1,12 @@
 import sys
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
-from giraffe.gui import Window, Button, Box, Application, Shell, List, Splitter, Label, Tree, TreeNode, Notebook, MainPanel
+from giraffe.gui import Window, Button, Box, Application, Shell, List, \
+                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
+                        OpenGLWidget, Table
+
+from giraffe.signals import HasSignals
 
 class ScriptWindow(Shell):
     def __init__(self, parent, **kwds):
@@ -36,6 +42,22 @@ class ProjectExplorer(Box):
         self.tree.append(n)
         self.list2 = List(self.splitter)
 
+class TableData(HasSignals):
+    def get_n_columns(self):
+        return 200
+
+    def get_n_rows(self):
+        return 20000
+
+    def get_column_name(self, col):
+        return 'c'
+
+    def get_row_name(self, row):
+        return 'r'
+
+    def get_data(self, col, row):
+        return str(col + row)
+
 
 # example main window
 class MainWindow(Window):
@@ -51,17 +73,26 @@ class MainWindow(Window):
                                         page_label='explorer', page_pixmap='stock_navigator.png')
 
         book = Notebook(self.main)
-        box = Box(book, 'vertical', page_label='koali.fasmata.data.perthcops.maniquio')
+        box = Box(book, 'vertical', page_label='koali.fasmata.maniquio')
         Label(box, 'periex')
-        for i in xrange(10):
-            koalaki = MainPanel(book, page_label='arrhenius.nr2_5min_2percent.koalaki')
+        koalaki = MainPanel(book, page_label='arrhenius.koalaki')
         Label(koalaki, 'perierxx')
-        self.test = ProjectExplorer(koalaki.right_panel,
-                                    page_label='poulorer', page_pixmap='stock_navigator.png')
-        self.test = ProjectExplorer(koalaki.right_panel,
-                                    page_label='poulouir', page_pixmap='graph.png')
+        self.expl = Table(koalaki.right_panel, TableData(),
+                          page_label='poulorer', page_pixmap='stock_navigator.png')
 
+        self.test = OpenGLWidget(koalaki.right_panel,
+                                 page_label='poulouir', page_pixmap='graph.png')
+        self.test.connect('initialize-gl', self.ini)
+        self.test.connect('paint-gl', self.ini)
+        self.test.connect('resize-gl', self.res)
 
+    def ini(self, x=None, y=None):
+        print 'a', x, y
+        glClearColor(0.4, 0.3, 0.7, 1)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+    def res(self, width, height):
+        glViewport(0, 0, int(width), int(height))
 
 if __name__ == '__main__':
     app = Application(MainWindow)

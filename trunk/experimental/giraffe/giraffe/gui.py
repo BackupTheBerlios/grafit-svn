@@ -1,6 +1,8 @@
 import sys
 import wx
 import wx.py
+import wx.glcanvas
+import wx.grid
 from  wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 
 import sys
@@ -110,7 +112,7 @@ class ListModel(HasSignals):
     def __len__(self):
         return len(self.items)
 
-    # behave as a sequence
+# behave as a sequence
     def append(self, item):
         self.items.append(item)
         self.emit('modified')
@@ -196,7 +198,7 @@ class List(Widget):
     def get_columns(self):
         return self._columns
     columns = property(get_columns, set_columns)
-    
+
     def set_model(self, model):
         if model is None:
             model = ListModel()
@@ -224,6 +226,9 @@ class TreeNode(HasSignals):
     def __str__(self):
         return 'TreeNode'
 
+    def get_pixmap(self):
+        return 'stock_folder.png'
+
     def append(self, child):
         self.children.append(child)
         child.connect('modified', self.on_child_modified)
@@ -237,8 +242,20 @@ class Tree(Widget):
         self._widget = wx.TreeCtrl(parent._widget, -1,
                                    style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
         Widget.__init__(self, parent, **place)
-        self._widget.SetIndent(10)
         self.roots = []
+
+        self._widget.SetIndent(10)
+        self.imagelist = wx.ImageList(16, 16)
+        self._widget.SetImageList(self.imagelist)
+        self.pixmaps = {}
+
+    def getpixmap(self, filename):
+        if filename is None:
+            return None
+        if filename not in self.pixmaps:
+            self.pixmaps[filename] = \
+                    self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+        return self.pixmaps[filename]
 
     def append(self, node):
         self.roots.append(node)
@@ -251,23 +268,20 @@ class Tree(Widget):
         self.on_node_modified()
 
     def _add_node_and_children(self, parent, node):
-        self._widget.AppendItem(parent._nodeid, str(node))
+        self._widget.AppendItem(parent._nodeid, str(node), self.getpixmap(node.get_pixmap()))
         for child in node:
             self._add_node_and_children(node, child)
 
     def on_node_modified(self):
         self._widget.DeleteAllItems()
         for root in self.roots:
-            root._nodeid = self._widget.AddRoot(str(root))
+            root._nodeid = self._widget.AddRoot(str(root), self.getpixmap(root.get_pixmap()))
             for node in root:
                 self._add_node_and_children(root, node)
 
     def clear(self):
         self._widget.DeleteAllItems()
         self.roots = []
-
-
-
 
 
 class Label(Widget):
@@ -373,7 +387,7 @@ class xToolPanel(wx.SashLayoutWindow):
         ind = len(self.contents)
 
         btn = wx.NewId()
-        self.toolbar.AddCheckTool(btn, bmp, bmp, "New", "Long help for 'New'")
+        self.toolbar.AddCheckTool(btn, bmp, bmp)#, "New")
 
         self.contentbox.Add(widget._widget, 1, wx.EXPAND)
         widget.hide()
@@ -528,6 +542,75 @@ class Shell(Widget):
         return self._widget.clear()
 
 
+class OpenGLWidget(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.glcanvas.GLCanvas(parent._widget, -1)
+        Widget.__init__(self, parent, **place)
+
+        self.init = False
+
+        self._widget.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+        self._widget.Bind(wx.EVT_SIZE, self.OnSize)
+        self._widget.Bind(wx.EVT_PAINT, self.OnPaint)
+        
+        for event in (wx.EVT_LEFT_DOWN, wx.EVT_MIDDLE_DOWN, wx.EVT_RIGHT_DOWN):
+            self._widget.Bind(event, self.OnMouseDown)
+        for event in (wx.EVT_LEFT_UP, wx.EVT_MIDDLE_UP, wx.EVT_RIGHT_UP):
+            self._widget.Bind(event, self.OnMouseUp)
+        self._widget.Bind(wx.EVT_MOTION, self.OnMouseMotion)
+
+#        self.SetCursor(wx.CROSS_CURSOR)
+
+    def redraw(self):
+        self._widget.Refresh(False)
+
+    def OnEraseBackground(self, event):
+        pass # Do nothing, to avoid flashing on MSW.
+
+    def InitGL(self):
+        self.emit('initialize-gl')
+        self._widget.SwapBuffers()
+
+    def OnSize(self, event):
+        self.emit('resize-gl', *event.GetSize())
+
+    def OnPaint(self, event):
+        dc = wx.PaintDC(self._widget)
+        self._widget.SetCurrent()
+        if not self.init:
+            self.InitGL()
+            self.init = True
+        self.emit('paint-gl', *self._widget.GetSize())
+        self._widget.SwapBuffers()
+
+    def OnMouseDown(self, evt):
+        self._widget.CaptureMouse()
+        x, y = evt.GetPosition()
+        btn = evt.GetButton()
+        if btn is wx.MOUSE_BTN_LEFT:
+            self.emit('button-pressed', x, y, 1)
+        elif btn is wx.MOUSE_BTN_RIGHT:
+            self.emit('button-pressed', x, y, 3)
+        elif btn is wx.MOUSE_BTN_MIDDLE:
+            self.emit('button-pressed', x, y, 2)
+
+    def OnMouseUp(self, evt):
+        self._widget.ReleaseMouse()
+        x, y = evt.GetPosition()
+        btn = evt.GetButton()
+        if btn is wx.MOUSE_BTN_LEFT:
+            self.emit('button-released', x, y, 1)
+        elif btn is wx.MOUSE_BTN_RIGHT:
+            self.emit('button-released', x, y, 3)
+        elif btn is wx.MOUSE_BTN_MIDDLE:
+            self.emit('button-released', x, y, 2)
+
+    def OnMouseMotion(self, evt):
+        if evt.Dragging():
+            x, y = evt.GetPosition()
+            self.emit('mouse-move', x, y)
+
+
 class Notebook(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.Notebook(parent._widget, -1)
@@ -551,3 +634,165 @@ class Notebook(Widget):
 #
 #    def on_x_button(self, event):
 #        print 'x clicked'
+
+
+
+class TableData(wx.grid.PyGridTableBase):
+    def __init__(self, data):
+        wx.grid.PyGridTableBase.__init__(self)
+        self.data = data
+        self.data.connect('modified', self.ResetView)
+
+        self.normal_attr = wx.grid.GridCellAttr()
+        self.normal_attr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
+
+        self._rows = self.GetNumberRows()
+        self._cols = self.GetNumberCols()
+
+    def GetNumberRows(self):
+        return self.data.get_n_rows()
+
+    def GetNumberCols(self):
+        return self.data.get_n_columns()
+
+#    def IsEmptyCell(self, row, col):
+#        return self.get_data(col, row) is None
+
+    def GetValue(self, row, col):
+        return self.data.get_data(col, row)
+
+#    def SetValue(self, row, col, value):
+#        self.worksheet[col][row] = float(value)
+
+    def ResetView(self, view=None):
+        """
+        Reset the grid view. Call this to update the grid 
+        if rows and columns have been added or deleted
+        """
+        if view is None:
+            view = self.GetView()
+        
+        view.BeginBatch()
+        
+        for current, new, delmsg, addmsg in [
+            (self._rows, self.GetNumberRows(), 
+             wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED),
+            (self._cols, self.GetNumberCols(), 
+             wx.grid.GRIDTABLE_NOTIFY_COLS_DELETED, wx.grid.GRIDTABLE_NOTIFY_COLS_APPENDED), ]:
+            
+            if new < current:
+                msg = wx.grid.GridTableMessage(self, delmsg, new, current-new)
+                view.ProcessTableMessage(msg)
+            elif new > current:
+                msg = wx.grid.GridTableMessage(self, addmsg, new-current)
+                view.ProcessTableMessage(msg)
+                self.UpdateValues(view)
+
+        view.EndBatch()
+
+        self._rows = self.GetNumberRows()
+        self._cols = self.GetNumberCols()
+
+        # update the scrollbars and the displayed part of the grid
+        view.AdjustScrollbars()
+        view.ForceRefresh()
+
+    def UpdateValues(self, view):
+        """Update all displayed values"""
+        # This sends an event to the grid table to update all of the values
+        msg = wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        view.ProcessTableMessage(msg)
+
+    def GetColLabelValue(self, col):
+        return self.data.get_column_name(col)
+
+    def GetRowLabelValue(self, row):
+        return self.data.get_row_name(row)
+
+class WorksheetView(wx.Panel):
+    def __init__(self, parent, worksheet):
+        wx.Panel.__init__(self, parent, -1)
+        self.worksheet = worksheet
+
+        self.box = wx.BoxSizer(wx.VERTICAL)
+        self.SetAutoLayout(True)
+        self.SetSizer(self.box)
+
+        self.toolbar = self.create_toolbar()
+        self.box.Add(self.toolbar, 0, wx.EXPAND)
+
+        self.grid = WorksheetGrid(self, worksheet)
+        self.box.Add(self.grid, 1, wx.EXPAND)
+
+    def toolbar_button_clicked(self, event):
+        if event.GetId() == self.toolbar.new_column:
+            self.worksheet[self.worksheet.suggest_column_name()] = []
+
+    def create_toolbar(self):
+        toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL)
+        toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked)
+
+        bmp = wx.Image('../data/images/stock_insert-columns.png').ConvertToBitmap()
+        toolbar.new_column = toolbar.AddSimpleTool(-1, bmp, "New column").GetId()
+        bmp = wx.Image('../data/images/stock_left.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(-1, bmp, "Left")
+        bmp = wx.Image('../data/images/stock_right.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(-1, bmp, "Right")
+
+        return toolbar
+
+class Table(Widget):
+    def __init__(self, parent, data, **place):
+        self._widget = xGrid(parent._widget, data)
+        Widget.__init__(self, parent, **place)
+
+class xGrid(wx.grid.Grid):
+    def __init__(self, parent, data):
+        wx.grid.Grid.__init__(self, parent, -1)
+
+        self.SetLabelFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.SetDefaultRowSize(20, False)
+
+        table = TableData(data)
+
+        # The second parameter means that the grid is to take ownership of the
+        # table and will destroy it when done.  Otherwise you would need to keep
+        # a reference to it and call it's Destroy method later.
+        self.SetTable(table, True)
+
+        self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
+#        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
+        self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.OnRangeSelect)
+        self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+
+    def OnMouseWheel(self, evt):
+        evt.Skip()
+
+    def OnLabelLeftClick(self, evt):
+#        pass
+        evt.Skip()
+        
+    def OnRangeSelect(self, evt):
+#        print evt, type(evt)
+#        if evt.Selecting():
+#            print >>sys.stderr, (evt.GetTopLeftCoords(), evt.GetBottomRightCoords())
+        evt.Skip()
+
+    def OnKeyDown(self, evt):
+        if evt.KeyCode() != wx.WXK_RETURN:
+            evt.Skip()
+            return
+        if evt.ControlDown():   # the edit control needs this key
+            evt.Skip()
+            return
+
+        self.DisableCellEditControl()
+
+        if not self.MoveCursorDown(True): 
+            # add a new row
+            self.GetTable().worksheet[self.GetGridCursorCol()][self.GetTable().GetNumberRows()] = nan
+
+
+    def OnRightDown(self, event):
+        print "hello"
