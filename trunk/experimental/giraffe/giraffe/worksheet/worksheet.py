@@ -1,4 +1,5 @@
 from giraffe.common.signals import HasSignals
+from giraffe.common.commands import command_from_methods
 from giraffe.base.item import Item, wrap_attribute, register_class
 from giraffe.worksheet.mkarray import MkArray
 
@@ -25,6 +26,17 @@ class Worksheet(Item, HasSignals):
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])
         self.columns.append(Column(self, ind))
+        return name
+
+    def remove_column(self, name):
+        ind = self.data.columns.find(name=name)
+        if ind == -1:
+            raise NameError, "Worksheet does not have a column named %s" % name
+        else:
+            self.data.columns.delete(ind)
+
+    add_column = command_from_methods('worksheet_add_column', add_column, remove_column)
+
 
     def get_ncolumns(self):
         return len(self.columns)
@@ -37,12 +49,6 @@ class Worksheet(Item, HasSignals):
             return 0
     nrows = property(get_nrows)
 
-    def remove_column(self, name):
-        ind = self.data.columns.find(name=name)
-        if ind == -1:
-            raise NameError, "Worksheet does not have a column named %s" % name
-        else:
-            self.data.columns.delete(ind)
 
     def __getitem__(self, key):
         if isinstance(key, int):

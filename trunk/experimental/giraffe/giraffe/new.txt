@@ -8,19 +8,26 @@ This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
     >>> from giraffe import Project, Worksheet, Folder
+    >>> from giraffe.common.commands import undo, redo
     >>> p = Project()
 
 Now use it:
 
     >>> w = p.new(Worksheet, 'data1')
     >>> p.remove(w.id)
-    >>> w = p.new(Worksheet, 'data1')
     >>> w = p.new(Worksheet, 'data2')
     >>> w.add_column('A')
     >>> w.add_column('B')
-    >>> p = Project('rikadik.db')
     >>> print w.column_names
     ['A', 'B']
+    >>> undo()
+    >>> print w.column_names
+    ['A']
+    >>> redo()
+    >>> print w.column_names
+    ['A', 'B']
+
+
 
 You can remove columns with remove(), like this:
 

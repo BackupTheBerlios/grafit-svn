@@ -3,6 +3,7 @@ Command / Undo framework
 """
 
 import signals
+import sys
 
 class Command(signals.HasSignals):
     """
@@ -39,6 +40,7 @@ class Command(signals.HasSignals):
         """
         ret = self.do()
         self.register()
+        print >>sys.stderr, self
         return ret
 
 
@@ -117,6 +119,9 @@ class CommandList(signals.HasSignals):
         if not self.enabled:
             return 
 
+        while len(self.commands) > 0 and not self.commands[-1].done:
+            self.pop()
+
         if self.composite is not None:
             self.composite.add(command)
         else:
@@ -162,6 +167,7 @@ class CommandList(signals.HasSignals):
         for com in self.commands:
             if not com.done:
                 break
+        print >>sys.stderr, 'REDO:', com, [(type(c).__name__, c.done) for c in self.commands]
         if com and not com.done:
             e = self.enabled
             self.disable()
@@ -186,6 +192,7 @@ class CommandList(signals.HasSignals):
             finally:
                 if e:
                     self.enable()
+            print >>sys.stderr, 'UNDO:', com
 #            return True
 #        else:
 #            return False
@@ -198,7 +205,7 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None):
                 self.__done = False
 
             def do(self):
-                if not self.__done:
+                if not self.__done or redo is None:
                     ret = do(selb, *self.args, **self.kwds)
                     if len(ret) > 1 and isinstance(ret, tuple):
                         self.__state = ret[0]
