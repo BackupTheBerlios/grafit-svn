@@ -48,27 +48,31 @@ class VListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
         ListCtrlAutoWidthMixin.__init__(self)
-        self.lst
+        self.lst = lst
 
     def OnGetItemText(self, item, col):
-        return self.lst.model.get(self, row, self.lst.columns[column])
+        return self.lst.model.get(item, self.lst.columns[col])
 
 class ListModel(object):
     def get(self, row, column):
+        print row, column
         return str(row) + '^' + str(column)
 
     def __len__(self):
         return 20
 
 class List(Widget):
-    def __init__(self, parent, model=None, columns=[], **kwds):
-        self._widget = VListCtrl(parent._widget, -1, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_NO_HEADER)
+    def __init__(self, parent, model=None, columns=None, **kwds):
+        self._widget = VListCtrl(self, parent._widget, -1, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_NO_HEADER)
         Widget.__init__(self, parent, **kwds)
 
-        self.model = model
-        self.columns = columns
         if model is None:
             model = ListModel()
+
+        if columns is None:
+            columns = []
+        self.columns = columns
+        self.model = model
 
         self.update()
 
