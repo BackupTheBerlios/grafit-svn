@@ -99,7 +99,10 @@ class Worksheet(Item, Persistent):
     ncolumns = property(get_ncolumns)
 
     def get_nrows(self):
-        return max([len(c) for c in self.columns])
+        try:
+            return max([len(c) for c in self.columns])
+        except ValueError:
+            return 0
     nrows = property(get_nrows)
 
     def add_column(self, name):

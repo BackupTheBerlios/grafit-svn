@@ -9,6 +9,7 @@ import wx.py
 import wx.lib.buttons
 
 from giraffe.ui.shapes import PlotCanvas, Plot
+from giraffe.ui.worksheet_view import WorksheetView
 from giraffe.common import identity
 from giraffe.worksheet import Worksheet
 print >>sys.stderr, "ok"
@@ -132,19 +133,28 @@ class ToolPanel(wx.SashLayoutWindow):
         return new.instancemethod(button_clicked_callback, self, self.__class__)
 
 class ProjectTree(wx.TreeCtrl):
-    def __init__(self, parent, project): 
+    def __init__(self, parent, project, mainwin): 
         wx.TreeCtrl.__init__(self, parent, -1, 
                              style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS)
         self.SetIndent(10)
         self.project = project
+        self.mainwin = mainwin
         self.project.connect('add-item', self.on_add_item)
 
         self.root  = self.AddRoot('Project')
         self.items = {}
 
+        self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
+
     def on_add_item(self, item):
         self.items[item.id] = self.AppendItem(self.root, item.name)
 
+    def on_double_click(self, event):
+        item, flags = self.HitTest(event.GetPosition())
+        for k, v in self.items.iteritems():
+            if v == item:
+                self.mainwin.show_object(identity.lookup(k))
+        event.Skip()
 
 class Application(wx.App):
     def __init__(self, project):
@@ -187,6 +197,10 @@ class Application(wx.App):
 
     def OnNewWs(self, evt):
         ws = Worksheet('test', self.project)
+        ws.add_column('A')
+        ws.add_column('other')
+        ws.A = [1,2,3]
+        ws.other = [2,4,5,6,7,15]
 
     def OnButton(self, evt):
         self.frame.Close(True)
@@ -198,12 +212,10 @@ class Application(wx.App):
         self.MainLoop()
 
 class MainWindow(wx.Panel):
-    ID_WINDOW_LEFT2  = 5102
-    ID_WINDOW_BOTTOM = 5103
-
     def __init__(self, parent, project):
         wx.Panel.__init__(self, parent, -1)
         self.project = project
+        self.view = None
 
         self.bottom_panel = ToolPanel(self, 'bottom')
         self.script_window = wx.py.shell.Shell(self.bottom_panel.panel, -1, introText='Welcome to giraffe')
@@ -214,23 +226,32 @@ class MainWindow(wx.Panel):
     
         # the left panel
         self.left_panel = ToolPanel(self, 'left')
-        self.project_tree = ProjectTree(self.left_panel.panel, self.project)
+        self.project_tree = ProjectTree(self.left_panel.panel, self.project, self)
         self.left_panel.add_page(self.project_tree)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
 
-        self.graph = Plot()
-        self.graphw = PlotCanvas(self.remainingSpace, self.graph)
-
-        box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(self.graphw, 1, wx.EXPAND)
-        self.remainingSpace.SetSizer(box)
+        self.main_box = wx.BoxSizer(wx.HORIZONTAL)
+        self.remainingSpace.SetSizer(self.main_box)
 
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.left_panel.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.right_panel.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.bottom_panel.GetId())
         self.Bind(wx.EVT_SIZE, self.OnSize)
+
+    def show_object(self, obj):
+        if self.view is not None:
+            self.main_box.Remove(self.view)
+            self.view.Destroy()
+
+        if isinstance(obj, Plot):
+            self.view =  PlotCanvas(self.remainingSpace, obj)
+        elif isinstance(obj, Worksheet):
+            self.view = WorksheetView(self.remainingSpace, obj)
+
+        self.main_box.Add(self.view, 1, wx.EXPAND)
+        self.remainingSpace.Layout()
 
     def OnSashDrag(self, event):
         if event.GetDragStatus() == wx.SASH_STATUS_OUT_OF_RANGE:

@@ -84,16 +84,21 @@ class TableData(grid.PyGridTableBase):
 
 
 class WorksheetView(grid.Grid):
-    def __init__(self, parent):
+    def __init__(self, parent, worksheet):
         grid.Grid.__init__(self, parent, -1)
 
-        w = Worksheet('hello', None)
-        w.add_column('A')
-        w.add_column('B')
-        w.A = [1,2,3,4]
-        w.B = [1,4,9,16]
+        if worksheet:
+            self.worksheet = worksheet
+        else:
+            w = Worksheet('hello', None)
+            w.add_column('A')
+            w.add_column('B')
+            w.A = [1,2,3,4]
+            w.B = [1,4,9,16]
+            self.worksheet = w
 
-        table = TableData(w)
+     
+        table = TableData(self.worksheet)
 
         # The second parameter means that the grid is to take ownership of the
         # table and will destroy it when done.  Otherwise you would need to keep
