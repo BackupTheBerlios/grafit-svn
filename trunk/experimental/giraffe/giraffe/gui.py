@@ -508,6 +508,11 @@ class Toolbar(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.ToolBar(parent._widget)
         Widget.__init__(self, parent, **place)
+        self._widget.Bind(wx.EVT_TOOL, self.on_tool)
+        self.tools = {}
+
+    def on_tool(self, event):
+        print event
 
 class Window(Widget):
     def __init__(self, position=(50,50), size=(640,480), menubar=False, statusbar=False, toolbar=False):
@@ -644,8 +649,6 @@ class Notebook(Widget):
 #    def on_x_button(self, event):
 #        print 'x clicked'
 
-
-
 class TableData(wx.grid.PyGridTableBase):
     def __init__(self, data):
         wx.grid.PyGridTableBase.__init__(self)
@@ -717,38 +720,6 @@ class TableData(wx.grid.PyGridTableBase):
 
     def GetRowLabelValue(self, row):
         return self.data.get_row_name(row)
-
-class WorksheetView(wx.Panel):
-    def __init__(self, parent, worksheet):
-        wx.Panel.__init__(self, parent, -1)
-        self.worksheet = worksheet
-
-        self.box = wx.BoxSizer(wx.VERTICAL)
-        self.SetAutoLayout(True)
-        self.SetSizer(self.box)
-
-        self.toolbar = self.create_toolbar()
-        self.box.Add(self.toolbar, 0, wx.EXPAND)
-
-        self.grid = WorksheetGrid(self, worksheet)
-        self.box.Add(self.grid, 1, wx.EXPAND)
-
-    def toolbar_button_clicked(self, event):
-        if event.GetId() == self.toolbar.new_column:
-            self.worksheet[self.worksheet.suggest_column_name()] = []
-
-    def create_toolbar(self):
-        toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL)
-        toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked)
-
-        bmp = wx.Image('../data/images/stock_insert-columns.png').ConvertToBitmap()
-        toolbar.new_column = toolbar.AddSimpleTool(-1, bmp, "New column").GetId()
-        bmp = wx.Image('../data/images/stock_left.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(-1, bmp, "Left")
-        bmp = wx.Image('../data/images/stock_right.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(-1, bmp, "Right")
-
-        return toolbar
 
 class Table(Widget):
     def __init__(self, parent, data, **place):
