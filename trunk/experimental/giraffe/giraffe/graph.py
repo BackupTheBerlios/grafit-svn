@@ -7,7 +7,8 @@ from OpenGL.GLU import *
 
 from giraffe.signals import HasSignals
 from giraffe.item import Item, wrap_attribute, register_class
-from giraffe.lib import ftgl
+
+import ftgl
 
 from giraffe.graph_render import makedata
 

@@ -4,6 +4,7 @@ import sys
 
 DATADIR = os.path.normpath(os.path.dirname(os.path.realpath(os.path.abspath(__file__)))+'/../')+'/'
 sys.path.append(DATADIR)
+sys.path.append(DATADIR+'lib/')
 
 from giraffe import Project
 from giraffe.main import Application
