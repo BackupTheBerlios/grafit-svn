@@ -1,7 +1,7 @@
 import items
 import lib.ElementTree as et
 
-class Project(items.Folder, items.Item):
+class Project(items.Folder, items.Saveable):
     """
     """
     def __init__(self):
@@ -31,7 +31,7 @@ class Project(items.Folder, items.Item):
         self.new()
         element = et.parse(filename).getroot()
         for child in element:
-            items.Item.create(child, self)
+            items.Saveable.create(child, self)
         
     def save(self):
         """

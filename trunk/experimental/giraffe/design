@@ -33,8 +33,12 @@ class UndoList:
 Should we give commands uuid's?
 
 class Object:
+    __init__(folder)
+
+    move(newfolder)
+
     save()
-    load(string)
+    load(element)
     
     name
     make_name
@@ -42,20 +46,38 @@ class Object:
     signal 'renamed', oldname, newname
     signal 'modified'
 
-class Project:
+Objects exist only in folders.
+References between objects are always relative to the current folder.
+Objects can only reference objects in the current folder and subfolders, but _not_ parent folders.
+That way, you can move and save (only) folders independently. The only check is, when deleting
+a folder, to check if anything in the parent folder depends on the  one we're deleting.
+
+Projects do not exist. 
+
+class Folder:
+    __init__(name, folder)
+
     add(object)
     remove(object)
     clear()
 
+    subfolders [property]
+    items [property]
+
     save()
-    load(string)
+    load(element)
+
+    getattr
+
+Relation of folders to the file system?
+
+- Folders are only internal to projects?
+- Folders _are_ directories with a special grafit.dir file? (but can be zipped?)
+
 
 class ui.MainWindow:
     statusbar_message(str, time)
     progressbar_set(progress)
-
-    
-
 
 Plot: a single plot, containing:
     plot has min, max, scale

@@ -1,13 +1,7 @@
 import common.signals
 import lib.ElementTree as et
 
-class Item(common.signals.HasSignals):
-    def __init__(self, name, parent):
-        self.parent = parent
-        self.name = name
-        if self.parent is not None:
-            parent.add_item(self)
-
+class Saveable(object):
     def to_element(self):
         """
         Convert the item to an Element. Must be overridden
@@ -25,12 +19,20 @@ class Item(common.signals.HasSignals):
 
     def create(element, parent=None):
         """
-        Static method. Item.create(element) creates an Item of the
+        Static method. Saveable.create(element) creates an object of the
         corresponding subclass. Like __init__(), it has a `parent` argument.
         """
-        lookup = dict([(i._element_name, i) for i in Item.__subclasses__() if hasattr(i, '_element_name')])
+        lookup = dict([(i._element_name, i) for i in Saveable.__subclasses__() if hasattr(i, '_element_name')])
         return lookup[element.tag].from_element(element, parent)
     create = staticmethod(create)
+
+
+class Item(common.signals.HasSignals):
+    def __init__(self, name, parent):
+        self.parent = parent
+        self.name = name
+        if self.parent is not None:
+            parent.add_item(self)
 
     def _set_name(self, name):
         if self.parent is not None and not self.parent._is_name_ok(name):
@@ -43,7 +45,7 @@ class Item(common.signals.HasSignals):
     name = property(_get_name, _set_name)
 
 
-class Folder(Item):
+class Folder(Item, Saveable):
     """A folder. Folders contain items and subfolders"""
     def __init__(self, name, parent):
         Item.__init__(self, name, parent)
@@ -101,7 +103,7 @@ class Folder(Item):
         folder = Folder(element.get('name'), parent)
 
         for eitem in element:
-            item = Item.create(eitem, folder)
+            item = Saveable.create(eitem, folder)
         return folder
     from_element = staticmethod(from_element)
 
@@ -116,7 +118,7 @@ class Folder(Item):
     _element_name = 'Folder'
 
 
-class TrivialItem(Item):
+class TrivialItem(Item, Saveable):
     """An example: the simplest Item supporting the to_element/from_element protocol"""
     def to_element(self):
         return et.Element('TrivialItem', name=self.name)
@@ -142,5 +144,5 @@ if __name__ == '__main__':
     e = f3.to_element()
 
     print f3.desc()
-    kaa = Item.create(e, f3)
+    kaa = Saveable.create(e, f3)
     print f3.desc()

@@ -113,4 +113,6 @@ class HasSignals(object):
             try:
                 slot(*args, **kwds)
             except ReferenceError:
+                # We can't do self.signals[signal].remove(slot) because that calls slot.__eq__
+                # and raises another ReferenceError. So we might as well remove all expired slots.
                 self.signals[signal] = [s for s in self.signals[signal] if not s.is_expired()]
