@@ -156,6 +156,8 @@ class MainWindow(Window):
         self.book = Notebook(self.main)
         self.book.connect('page-changed', self.on_page_changed)
 
+        self.main.left_panel.open(self.explorer)
+
         actions = {
             'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
             'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),

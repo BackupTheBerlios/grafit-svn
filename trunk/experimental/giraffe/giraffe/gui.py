@@ -18,6 +18,22 @@ from giraffe.signals import HasSignals
 #        self.name = name
 #        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
 
+
+class FrameMixIn(wx.Window): 
+    def prepareFrame(self, closeEventHandler=None): 
+        self._closeHandler = closeEventHandler 
+        wx.EVT_CLOSE(self, self.closeFrame) 
+
+    def closeFrame(self, event): 
+        win = wx.Window_FindFocus() 
+        if win != None: 
+            win.Disconnect(-1, -1, wxEVT_KILL_FOCUS) 
+        if self._closeHandler != None: 
+            apply(self._closeHandler, [event]) 
+        else: 
+            event.Skip() 
+
+
 class xApplication(wx.App):
     def __init__(self, mainwinclass, *args, **kwds):
         self.mainwinclass = mainwinclass
@@ -208,9 +224,67 @@ class ListModel(HasSignals):
     def index(self, value):
         return self.items.index(value)
 
-class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix):
+class DropTarget(wx.DropTarget):
+    def __init__(self, window):
+        super (DropTarget, self).__init__ ()
+        self.window = window
+        self.dataFormat = wx.CustomDataFormat("ItemUUID")
+        self.data = wx.CustomDataObject(self.dataFormat)
+        self.SetDataObject(self.data)
+
+    def OnDrop(self, x, y):
+        return self.window.OnRequestDrop(x, y)
+
+    def OnData(self, x, y, d):
+        if self.GetData():
+            itemUUID = self.data.GetData()
+            self.window.AddItem(itemUUID)
+        return d
+
+    def OnDragOver(self, x, y, d):
+        self.window.OnHover(x, y)
+        return d
+
+    def OnEnter(self, x, y, d):
+        self.enterTime = time.time()
+        return d
+
+
+
+class DropReceiveWidget (object):
+    def __init__(self, *arguments, **keywords):
+        super (DropReceiveWidget, self).__init__ (*arguments, **keywords)
+        self.dropTarget = DropTarget(self)
+        self.SetDropTarget(self.dropTarget)
+
+    def OnRequestDrop(self, x, y):
+        """
+          Override this to decide whether or not to accept a dropped
+        item.
+        """
+        print 'request'
+        return True
+
+    def AddItem(self, itemUUID):
+        """
+          Override this to add the dropped item to your widget.
+        """
+        print 'add'
+        pass
+
+    def OnHover(self, x, y):
+        """
+          Override this to perform an action when a drag action is
+        hovering over the widget.
+        """
+        print 'hover'
+        pass
+
+
+class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix, DropReceiveWidget):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
+        DropReceiveWidget.__init__(self)
         ListCtrlAutoWidthMixin.__init__(self)
         ListCtrlSelectionManagerMix.__init__(self)
         self.lst = lst
@@ -221,6 +295,20 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
         self.SetImageList(self.imagelist, wx.IMAGE_LIST_SMALL)
         self.pixmaps = {}
 
+        self.Bind(wx.EVT_LIST_BEGIN_DRAG, self.on_begin_drag)
+
+
+    def on_begin_drag(self, event):
+        print event.GetItem(),
+        dropSource = wx.DropSource(self)
+        data = wx.CustomDataObject(wx.CustomDataFormat("ItemUUID"))
+        data.SetData('pikou')
+        dropSource.SetData(data)
+        result = dropSource.DoDragDrop(wx.Drag_AllowMove)
+        print result
+
+#        event.Allow()
+        
     def getpixmap(self, filename):
         if filename is None:
             return None
@@ -355,7 +443,9 @@ class Tree(Widget):
 
         self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
 
+        self.tree = self._widget
         self.selection = None
+
 
     def on_sel_changed(self, evt):
         from itertools import chain
@@ -424,6 +514,12 @@ class ToolPanel(Widget):
     def _add(self, widget, page_label='', page_pixmap=''):
         widget._widget.Reparent(self._widget.panel)
         self._widget.add_page(page_label, page_pixmap, widget)
+
+    def open(self, id):
+        self._widget.open(id)
+
+    def close(self, id=None):
+        self._widget.close(id)
 
 class xToolPanel(wx.SashLayoutWindow):
     """The areas on the left, top and bottom of the window holding tabs."""
@@ -516,6 +612,7 @@ class xToolPanel(wx.SashLayoutWindow):
         widget.hide()
         self.contentbox.Layout()
 
+        widget._id = len(self.contents)
         self.contents.append(widget)
         self.buttons.append(btn)
 
@@ -527,9 +624,10 @@ class xToolPanel(wx.SashLayoutWindow):
             self.SetDefaultSize((-1, self.toolbar.GetSize()[1] + margin))
 
     def open(self, id):
+        if hasattr(id, '_id'):
+            id = id._id
         for i, btn in enumerate(self.buttons):
-            if i != id:
-                self.toolbar.ToggleTool(btn, False)
+            self.toolbar.ToggleTool(btn, i==id)
 
         for i, widget in enumerate(self.contents):
             if i != id:
@@ -549,9 +647,15 @@ class xToolPanel(wx.SashLayoutWindow):
         self.parent.remainingSpace.Refresh()
 
     def close(self, id=None):
+        if hasattr(id, '_id'):
+            id = id._id
         if id is not None:
             self.contentbox.Hide(self.contents[id]._widget)
         self.contentbox.Layout()
+
+        for i, btn in enumerate(self.buttons):
+            self.toolbar.ToggleTool(btn, False)
+
         if self.position in ['left', 'right']:
             self.last_width = self.GetSize()[0]
             margin = self.GetEdgeMargin(wx.SASH_RIGHT)
@@ -680,7 +784,12 @@ class Menu(object):
                 help = action.desc
             else:
                 help = ''
-            self._menu.Append(id, name, help)
+#            self._menu.Append(id, name, help)
+            item = wx.MenuItem(self._menu, id, name, help)
+            if action.pixmap is not None:
+                item.SetBitmap(wx.Image('../data/images/'+action.pixmap).ConvertToBitmap())
+            self._menu.AppendItem(item)
+
             self.menubar.items[id] = action
     def on_menu(self, event):
         self.items[event.GetId()]()
