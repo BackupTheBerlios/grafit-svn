@@ -313,6 +313,38 @@ class GLGraphWidget(QGLWidget):
     def paintGL(self):
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
+
+        self.pika = False
+        if self.pika:
+            glPushMatrix()
+            glLoadIdentity()
+
+            glColor3f(1.0,1.0,0.0)
+            glLineStipple (1, 0x4444) # dotted
+            glEnable(GL_LINE_STIPPLE)
+            glLogicOp(GL_XOR)
+            glEnable(GL_COLOR_LOGIC_OP)
+
+            glBegin(GL_LINE_LOOP)
+            glVertex3f(self.ix, self.iy, 0.0)
+            glVertex3f(self.ix, self.py, 0.0)
+            glVertex3f(self.px, self.py, 0.0)
+            glVertex3f(self.px, self.iy, 0.0)
+            glEnd()
+
+            glBegin(GL_LINE_LOOP)
+            glVertex3f(self.ix, self.iy, 0.0)
+            glVertex3f(self.ix, self.sy, 0.0)
+            glVertex3f(self.sx, self.sy, 0.0)
+            glVertex3f(self.sx, self.iy, 0.0)
+            glEnd()
+
+            glDisable(GL_LINE_STIPPLE)
+            glDisable(GL_COLOR_LOGIC_OP)
+            glPopMatrix()
+
+ 
+        
         if not self.buf:
             glClear(GL_COLOR_BUFFER_BIT)
             self.paint_axes()
@@ -440,7 +472,6 @@ class GLGraphWidget(QGLWidget):
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
         self.make_data_list()
-
 
     def make_data_list(self):
 #        t = time.time()
