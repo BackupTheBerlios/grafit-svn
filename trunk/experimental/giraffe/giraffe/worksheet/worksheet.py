@@ -1,4 +1,4 @@
-from giraffe.base.item import Item, wrap_attribute, register_class
+from giraffe.base.item import Item, NullFolder, wrap_attribute, register_class
 from giraffe.worksheet.mkarray import MkArray
 
 class Column(MkArray):
@@ -9,13 +9,13 @@ class Column(MkArray):
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
 
 class Worksheet(Item):
-    def __init__(self, project, name=None, folder=None, id=None):
+    def __init__(self, project, name=None, parent=NullFolder, id=None):
         Item.__init__(self, project, id)
 
         self.columns = []
         if id is None:
             self.name = name
-            self.folder = folder
+            self.parent = parent.id
         else:
             for i in range(len(self.data.columns)):
                 self.columns.append(Column(self, i))
@@ -42,6 +42,6 @@ class Worksheet(Item):
     column_names = property(get_column_names)
 
     name = wrap_attribute('name')
-    folder = wrap_attribute('folder')
+    parent = wrap_attribute('parent')
 
-register_class(Worksheet, 'worksheets[name:S,id:S,folder:S,columns[name:S,data:B]]')
+register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,data:B]]')

@@ -20,5 +20,29 @@ class Item(object):
     def _update(self, id):
         self.view, self.data, self.id = self.project.add(self, id)
 
-    description = 'items[name:S,id:S]'
+
+class NullFolder(object):
+    id = None
+    def contents(self):
+        return iter([])
+NullFolder = NullFolder()
+
+class Folder(Item):
+    def __init__(self, project, name=None, parent=None, id=None):
+        Item.__init__(self, project, id)
+        self.project = project
+
+        if id is None: # new item
+            self.name = name
+        else: # existing item
+            pass
+
+    def contents(self):
+        for desc in storage_desc.values():
+            for row in self.project.db.getas(desc):
+                if row.parent == self.id and not row.id.startswith('-'):
+                    yield self.project.items[row.id]
+
     name = wrap_attribute('name')
+
+register_class(Folder, 'folders[name:S,id:S,parent:S]')

@@ -4,8 +4,8 @@ import time, random, socket, md5
 import metakit
 
 from giraffe.common.commands import Command, command_list
-from giraffe.base.item import Item, storage_desc
-from giraffe.base.folder import Folder
+from giraffe.base.item import Item, Folder, storage_desc
+#from giraffe.base.folder import Folder
 
 # import only in order to register object types
 import giraffe.worksheet
