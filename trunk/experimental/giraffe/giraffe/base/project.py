@@ -43,13 +43,28 @@ class Project(HasSignals):
         self.items = {}
         self.deleted = {}
 
+        self._dict = {}
+
+        self.this = None
+
+#        try:
+#            id = self.db.getas(storage_desc[Folder]).select(name='top')[0].id
+#            self.top = self.items[id] = Folder(self, id=id)
+#       except IndexError:
+        self.top = Folder(self, 'top')
+
+        self.items['']  = self.top
+
+        self.this = self.top
+
         # create objects
         for cls, desc in storage_desc.iteritems():
             for row in self.db.getas(desc):
-                if not row.id.startswith('-'):
-                    self.items[row.id] = cls(self, id=row.id)
-                else:
-                    self.deleted[row.id] = cls(self, id=row.id)
+                if row.id != self.top.id:
+                    if not row.id.startswith('-'):
+                        self.items[row.id] = cls(self, id=row.id)
+                    else:
+                        self.deleted[row.id] = cls(self, id=row.id)
 
 
     def add(self, item, id=None):
@@ -66,6 +81,9 @@ class Project(HasSignals):
         self.items[id] = item
         return view, data, id
 
+    def set_dict(self, d):
+        self._dict = d
+
     def remove(self, id):
         obj = self.items[id]
         ind = obj.view.find(id=id)
@@ -75,6 +93,9 @@ class Project(HasSignals):
             obj.data.id = obj.id = '-'+obj.id 
             del self.items[id]
             self.deleted[id] = obj
+
+    def mkfolder(self, path):
+        Folder(self, path)
 
     def save(self):
         self.db.commit()

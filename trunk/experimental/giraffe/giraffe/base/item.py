@@ -12,6 +12,13 @@ def wrap_attribute(name):
         setattr(self.data, name, value)
     return property(get_data, set_data)
 
+class NullFolder(object):
+    id = None
+    def contents(self):
+        return iter([])
+NullFolder = NullFolder()
+
+
 class Item(object):
     def __init__(self, project, id=None):
         self.project = project
@@ -25,16 +32,9 @@ class Item(object):
     def _update(self, id):
         self.view, self.data, self.id = self.project.add(self, id)
 
-
-class NullFolder(object):
-    id = None
-    def contents(self):
-        return iter([])
-NullFolder = NullFolder()
-
 class Folder(Item):
     def __init__(self, project, name=None, parent=None, id=None):
-        Item.__init__(self, project, id)
+        Item.__init__(self, project, id=id)
         self.project = project
 
         if id is None: # new item
@@ -48,6 +48,11 @@ class Folder(Item):
                 if row.parent == self.id and not row.id.startswith('-'):
                     yield self.project.items[row.id]
 
+    def on_add(self, item):
+        if self.project.this is self:
+            self.project._dict[item.name] = item
+
     name = wrap_attribute('name')
+    parent = wrap_attribute('parent')
 
 register_class(Folder, 'folders[name:S,id:S,parent:S]')

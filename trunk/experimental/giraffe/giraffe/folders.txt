@@ -1,0 +1,17 @@
+Nothing
+-------
+
+The following special names are defined:
+
+* `here`: the current folder
+
+* `up`: the parent of the current folder
+
+* `top`: the top-level folder
+
+    >>> from giraffe import Project, Worksheet
+    >>> p = Project()
+    >>> p.set_dict(globals())
+    >>> w = Worksheet(p, 'data1')
+    >>> data1 == w
+    True
