@@ -190,7 +190,7 @@ class xPopup(wx.PopupWindow):
 class Choose(Widget):
     def __init__(self, parent, **place):
         bimp = wx.Image('../data/images/'+'arrow.png').ConvertToBitmap()
-        self._widget = wx.BitmapButton(parent._widget, -1, bimp)
+        self._widget = wx.BitmapButton(parent._widget, -1, bimp, style=wx.BU_EXACTFIT)
         Widget.__init__(self, parent, **place) 
         self.imagelist = wx.ImageList(16, 16)
 

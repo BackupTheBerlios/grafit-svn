@@ -483,6 +483,10 @@ class Graph(Item, HasSignals):
         self.fr, self.to  = fr, to
 
     def zoom(self, xmin, xmax, ymin, ymax):
+        eps = 1e-24
+        print xmin, xmax, ymin, ymax
+        if abs(xmin-xmax)<=eps or abs(ymin-ymax)<=eps:
+            return
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
         self.set_data_scales()
  

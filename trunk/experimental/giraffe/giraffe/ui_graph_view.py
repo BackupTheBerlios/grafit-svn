@@ -141,10 +141,10 @@ class GraphStylePanel(gui.Box):
         grid = gui.Grid(self, 2, 2, expand=True, stretch=1.)
         gui.Label(grid,  'Symbol', pos=(0,0))
         c = gui.Choose(grid, pos=(0,1))
-        c._widget.SetSizeHints(-1, 30, 60, -1)
-        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
-                      'diamond', 'pentagon', 'star', 'cross', 'x']:
-            c.append(shape)
+        c._widget.SetSizeHints(-1, 20, 60, 30)
+#        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
+#                      'diamond', 'pentagon', 'star', 'cross', 'x']:
+#            c.append(shape)
 
         gui.Label(grid,  'Color', pos=(1,0))
         c = gui.ColorSelect(grid, pos=(1,1))
