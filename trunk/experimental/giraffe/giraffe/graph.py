@@ -87,28 +87,37 @@ class Dataset(HasSignals):
         dy =  res * (ymax-ymin)/height * self.style.size / 5.
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
-        x = asarray(self.x[:])
-        y = asarray(self.y[:])
+        xx = asarray(self.x[:])
+        yy = asarray(self.y[:])
 
-        x = array([xi for (xi, yi) in zip(x, y) if xi is not nan and yi is not nan])
-        y = array([yi for (xi, yi) in zip(x, y) if xi is not nan and yi is not nan])
+        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
+        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
         z = zeros(len(x))
 
-        x = array([1,2,3,4,5])
-        y = array([1,2,3,4,5])
-        z = array([0,0,0,0,0])
+#        x = array([1,2,3,4,5])
+#        y = array([1,2,3,4,5])
+#        z = array([0,0,0,0,0])
 
-        glMap1f(GL_MAP1_VERTEX_3, 0., 1., array([x-xmin, y-ymin, z]))
-        glEnable(GL_MAP1_VERTEX_3)
+        N = len(x)
+
+        self.nurb = nurb = gluNewNurbsRenderer()
+        gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, True)
+        gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
+        gluBeginCurve(nurb)
+        gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
+        gluEndCurve(nurb)
+
+#        glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, transpose(array([x-xmin, y-ymin, z])))
+#        glEnable(GL_MAP1_VERTEX_3)
 #        glBegin(GL_LINE_STRIP)
 #        for i in xrange(100):
 #            print i/100.
 #            glEvalCoord1f(i/100.)
 #        glEnd()
-        glMapGrid1f(100, 0.0, 1.0)
-        glEvalMesh1(GL_LINE, 0, 100)
-        glDisable(GL_MAP1_VERTEX_3)
-#        render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
+#        glMapGrid1f(100, 0.0, 1.0)
+#        glEvalMesh1(GL_LINE, 0, 100)
+#        glDisable(GL_MAP1_VERTEX_3)
+        render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
         self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
