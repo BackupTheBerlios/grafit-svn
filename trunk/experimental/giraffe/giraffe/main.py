@@ -178,9 +178,15 @@ class MainWindow(Window):
 
     def on_item_activated(self, item):
         if isinstance(item, Graph):
-            GraphView(self.book, item, page_label=item.name)
+            if item in [view.graph for view in self.book.pages if hasattr(view, 'graph')]:
+                return
+            else:
+                GraphView(self.book, item, page_label=item.name)
         elif isinstance(item, Worksheet):
-            WorksheetView(self.book, item, page_label=item.name)
+            if item in [view.worksheet for view in self.book.pages if hasattr(view, 'worksheet')]:
+                return
+            else:
+                WorksheetView(self.book, item, page_label=item.name)
 
     def close_project(self):
         for panel in (self.shell, self.explorer):
