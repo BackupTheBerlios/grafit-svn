@@ -128,13 +128,13 @@ class GLGraphWidget(QGLWidget):
         self.y = {}
         self.range = {}
 
-        self.x[0] = arange(1000000.)/100000
+        self.x[0] = arange(100000.)/10000
         self.y[0] = sin(self.x[0])
 
-        self.x[1] = arange(1000000.)/100000
+        self.x[1] = arange(100000.)/10000
         self.y[1] = cos(self.x[1])
 
-        self.x[2] = arange(1000000.)/100000
+        self.x[2] = arange(100000.)/10000
         self.y[2] = tan(self.x[2])
 
 
@@ -210,7 +210,9 @@ class GLGraphWidget(QGLWidget):
             glTranslatef(x, -0.07, 0)
             glScalef((self.xmax-self.xmin)/1.8, 1., 1.)
             
-            output(str(x), 3000)
+#            output(str(x), 3000)
+            f = QFont('Times', self.res/10)
+            self.renderText(0, 0, 0, str(x), f)
 
             glPopMatrix()
             glPopMatrix()
