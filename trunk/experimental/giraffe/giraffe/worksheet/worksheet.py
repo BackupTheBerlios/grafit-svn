@@ -9,6 +9,9 @@ class Column(MkArray):
         self.ind = ind
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
 
+    def __coerce__(self, other):
+        print >>sys.stderr, self, other
+
 class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=NullFolder, id=None):
         Item.__init__(self, project, id)

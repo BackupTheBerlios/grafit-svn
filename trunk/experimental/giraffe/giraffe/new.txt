@@ -35,7 +35,7 @@ You can remove columns with remove(), like this:
     >>> w['B'] = [1,2,3,4] 
     >>> w['B']
     array([ 1.,  2.,  3.,  4.])
-
+    >>> w['B'] + 1
     >>> import os
     >>> #os.remove('rikadik.db')
 
@@ -53,3 +53,15 @@ Items are created in two ways:
 * By the project, when loading the database
 
 * By the user, when adding a new object to the project
+
+
+Nothing
+-------
+
+>>> p = Project()
+>>> f = Folder(p, 'pis_silica')
+>>> w = Worksheet(f, 'data1')
+>>> p.dir()
+['pis_silica' : <Folder pis_silica>]
+>>> p.pis_silica.dir()
+['data1' : <Worksheet data1>]
