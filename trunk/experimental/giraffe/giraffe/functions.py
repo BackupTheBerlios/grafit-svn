@@ -27,11 +27,26 @@ class Function(HasSignals):
     parameters = mod_property('parameters')
 
     def to_xml(self, f):
-        elem = Element('Function', name=self.name, text=self.text, extra=self.extra)
+        elem = Element('Function', name=self.name, text=repr(self.text), extra=repr(self.extra))
         for p in self.parameters:
             SubElement(elem, 'Parameter', name=p)
         ElementTree(elem).write(f)
-        
+
+    def to_module(self):
+        st = []
+        st.append('from numarray import *\n')
+
+        st.append('def func(x, '+', '.join(self.parameters)+'):\n')
+        for line in self.text.splitlines():
+            st.append('    '+line+'\n')
+        st.append('    return y\n\n')
+        st.append(self.extra+'\n')
+
+        st = ''.join(st)
+        exec st
+        print func
+
+        print >>sys.stderr, st
 
 class FunctionsWindow(gui.Window):
     def __init__(self):
@@ -77,11 +92,17 @@ class FunctionsWindow(gui.Window):
         self.update_gui()
 
     def on_remove(self):
-        print self.function
+        os.remove(self.function.filename)
+        self.scan('functions')
 
     def on_save(self):
-        self.function.to_xml()
-        sys.stdout.flush()
+        self.function.name = self.name.text
+        self.function.parameters = [p.strip() for p in self.params.text.split(',')]
+        self.function.extra = self.extra.text
+        self.function.text = self.text.text
+
+        self.function.to_xml(self.function.filename)
+        self.function.to_module()
         self.scan('functions')
 
     def update_gui(self):
@@ -92,22 +113,22 @@ class FunctionsWindow(gui.Window):
 
     def add(self, function):
         self.functions.append(function)
-        print function
         self.category.model.append(function.name)
 
     def scan(self, dir):
         self.functions = []
         del self.category.model[:]
         for f in os.listdir(dir):
-            print dir + '/' + f
             try:
                 e = parse(dir + '/' + f).getroot()
             except IOError:
                 continue
-            self.add(Function(e.get('name'),
-                              [c.get('name') for c in e.getchildren()],
-                              e.get('text'),
-                              e.get('extra')))
+            func = Function(e.get('name'),
+                            [c.get('name') for c in e.getchildren()],
+                            eval(e.get('text')),
+                            eval(e.get('extra')))
+            func.filename = dir + '/' + f
+            self.add(func)
 
     def on_select_function(self):
         try:
