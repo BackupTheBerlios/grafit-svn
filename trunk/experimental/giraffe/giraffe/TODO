@@ -1,6 +1,5 @@
-* add toolbar
+* make a MainWindow.switch_to_project(proj) and use this on new / load project load 
 * make worksheetview Enter behave properly
 * create actionlist window
 * disallow objects with the same name in the same folder
 * automatically create names for new items
-* put new item creation in menu/toolbar (where?)
