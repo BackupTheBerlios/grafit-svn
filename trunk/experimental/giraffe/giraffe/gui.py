@@ -241,6 +241,8 @@ class List(Widget):
         if columns is None:
             columns = [None]
 
+        self.selection = []
+
         self._columns = columns
         self._model = model
         self._model.connect('modified', self.update)
@@ -251,7 +253,6 @@ class List(Widget):
         for event in (wx.EVT_LIST_ITEM_SELECTED, wx.EVT_LIST_ITEM_DESELECTED, wx.EVT_LIST_ITEM_FOCUSED):
             self._widget.Bind(event, self.on_update_selection)
 
-        self.selection = []
 
     def on_item_activated(self, event):
         self.emit('item-activated', event.m_itemIndex)
@@ -301,10 +302,14 @@ class List(Widget):
 
     def update(self):
         self._widget.Freeze()
+        sel = self.selection
         self._widget.ClearAll()
         self._widget.SetItemCount(len(self.model))
         for num, name in enumerate(self.columns):
             self._widget.InsertColumn(num, str(name))
+        self.selection = sel
+        for item in sel:
+            self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_MASK_STATE)
         self._widget.Thaw()
 
 
@@ -345,12 +350,17 @@ class Tree(Widget):
 
         self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
 
+        self.selection = None
+
     def on_sel_changed(self, evt):
         from itertools import chain
         for item in chain(self.items, self.roots):
             if self._widget.IsSelected(item._nodeid):
                 self.emit('selected', item)
+                self.selection = item
                 return
+        self.selection = None
+
 
     def getpixmap(self, filename):
         if filename is None:
@@ -370,7 +380,8 @@ class Tree(Widget):
         self.on_node_modified()
 
     def _add_node_and_children(self, parent, node):
-        node._nodeid = self._widget.AppendItem(parent._nodeid, str(node), self.getpixmap(node.get_pixmap()))
+        node._nodeid = self._widget.AppendItem(parent._nodeid, str(node), 
+                                               self.getpixmap(node.get_pixmap()))
         self._widget.Expand(node._nodeid)
         self.items.append(node)
         for child in node:
