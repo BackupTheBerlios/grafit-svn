@@ -2,8 +2,17 @@
 
 import doctest
 
+red = '\x1b[91m'
+green = '\x1b[92m'
+default = '\x1b[0m'
+
+
 def _test():
-    doctest.testfile('new.txt')
+    failed, total =  doctest.testfile('new.txt')
+    if failed == 0:
+        print green+'ok!, '+ str(total)+ ' tests passed' + default
+    else:
+        print red+str(failed), 'tests failed'+default
 
 if __name__=='__main__':
     _test()

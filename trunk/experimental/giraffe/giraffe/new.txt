@@ -7,11 +7,12 @@ Using ``Worksheet``
 This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
-    >>> from new import Project, Worksheet
+    >>> from giraffe.project import Project
     >>> p = Project()
 
 Now use it:
 
+    >>> from giraffe.worksheet import Worksheet
     >>> w = Worksheet(p, 'data1')
     >>> p.remove(w.id)
     >>> w = Worksheet(p, 'data1')
