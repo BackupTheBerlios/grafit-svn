@@ -25,10 +25,29 @@ class Style(HasSignals):
         self._line_style = line_style
         self._line_width = line_width
 
+    colors = []
+    for r in range(0, 256, 64): 
+        for g in range(0, 256, 64): 
+            for b in range(0, 256, 64):
+                colors.append((r,g,b))
+
+    symbols = []
+    for interior in ['o', 'f']:
+        for symbol in ['circle', 'square', 'diamond', 'uptriangle', 
+                      'downtriangle', 'lefttriangle', 'righttriangle']:
+            symbols.append(symbol+'-'+interior)
+    line_types = ['none', 'straight', 'bspline']
+    line_styles = ['solid', 'dotted', 'dashed']
+
     def __repr__(self):
-        return "Style(symbol='%s', color=%s, symbol_size=%d, line_type='%s', line_style='%s', line_width=%d)" % (self.symbol, str(self.color), self.symbol_size, self.line_type, self.line_style, self.line_width)
+        return "Style(symbol='%s', color=%s, symbol_size=%d, " \
+               "line_type='%s', line_style='%s', line_width=%d)" \
+               % (self.symbol, str(self.color), self.symbol_size, 
+                  self.line_type, self.line_style, self.line_width)
 
     def set_line_style(self, val):
+        if isinstance(val, int):
+            val = self.line_styles[val % len(self.line_styles)]
         self._line_style = val
         self.emit('modified')
     def get_line_style(self):
@@ -37,6 +56,8 @@ class Style(HasSignals):
 
 
     def set_line_type(self, val):
+        if isinstance(val, int):
+            val = self.line_types[val % len(self.line_types)]
         self._line_type = val
         self.emit('modified')
     def get_line_type(self):
@@ -51,6 +72,8 @@ class Style(HasSignals):
     line_width = property(get_line_width, set_line_width)
 
     def set_symbol(self, val):
+        if isinstance(val, int):
+            val = self.symbols[val]
         self._symbol = val
         self.emit('modified')
     def get_symbol(self):
@@ -66,6 +89,8 @@ class Style(HasSignals):
 
 
     def set_color(self, val):
+        if isinstance(val, int):
+            val = self.colors[val % len(self.colors)]
         self._color = val
         self.emit('modified')
     def get_color(self):

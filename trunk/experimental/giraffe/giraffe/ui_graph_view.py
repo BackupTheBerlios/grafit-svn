@@ -2,6 +2,7 @@ import sys
 import sets
 
 from giraffe import Worksheet, Folder
+from giraffe.graph import Style
 from giraffe.signals import HasSignals
 
 from giraffe import gui
@@ -113,51 +114,38 @@ class GraphStylePanel(gui.Box):
         self.graph = graph
         self.view = view
 
-        labels = []
-
         # Symbol
         self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
         grid = self.symbol_grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
         grid.layout.AddGrowableCol(2)
 
         # symbol type
-        labels.append(gui.Label(grid,  'Symbol', pos=(0,1)))
-        self.shape = gui.PixmapChoice(grid, pos=(0,2))
-        self.shape.check = gui.Checkbox(grid, pos=(0,0))
-        self.shape.check.connect('modified', lambda state: self.on_check(self.shape, state), True)
-        self.shape.min_size = (10, self.shape.min_size[1])
-#        self.shapes = ['uptriangle-f', 'square-f', 'circle-f', 'diamond-f']
-        self.shapes = []
-        for interior in ['o', 'f']:
-            for shape in ['circle', 'square', 'diamond', 'uptriangle', 
-                          'downtriangle', 'lefttriangle', 'righttriangle']:
-                self.shape.append(shape+'-'+interior+'.png')
-                self.shapes.append(shape+'-'+interior)
-        self.shape.selection = 0
-        self.shape.connect('select', self.on_select_shape)
+        self.symbol = gui.PixmapChoice(grid, pos=(0,2))
+        self.symbol.label = gui.Label(grid,  'Symbol', pos=(0,1))
+        self.symbol.check = gui.Checkbox(grid, pos=(0,0))
+        self.symbol.min_size = (10, self.symbol.min_size[1])
+        for symbol in Style.symbols:
+            self.symbol.append(symbol+'.png')
+        self.symbol.value = 0
+        self.symbol.connect('select', lambda value: self.on_select_property('symbol', value), True)
 
         # symbol color
-        labels.append(gui.Label(grid,  'Color', pos=(1,1)))
         self.color = gui.PixmapChoice(grid, pos=(1,2))
+        self.color.label = gui.Label(grid,  'Color', pos=(1,1))
         self.color.check = gui.Checkbox(grid, pos=(1,0))
         self.color.min_size = (10, self.color.min_size[1])
-        self.colors = []
-        for r in range(0, 256, 64):
-            for g in range(0, 256, 64):
-                for b in range(0, 256, 64):
-                    self.color.append(self.color.create_colored_bitmap((20, 10), (r, g, b)))
-                    self.colors.append((r,g,b))
-        self.color.selection = 0
-        self.color.connect('select', self.on_select_color)
+        for color in Style.colors:
+            self.color.append(self.color.create_colored_bitmap((20, 10), color))
+        self.color.value = 0
+        self.color.connect('select', lambda value: self.on_select_property('color', value), True)
 
         # symbol size
-        labels.append(gui.Label(grid, 'Size', pos=(2,1)))
-
-        self.size = gui.Spin(grid, pos=(2,2))
-        self.size.check = gui.Checkbox(grid, pos=(2,0))
-        self.size.min_size = (10, self.size.min_size[1])
-        self.size.connect('modified', self.on_select_size)
-        self.size.value = 5
+        self.symbol_size = gui.Spin(grid, pos=(2,2))
+        self.symbol_size.label = gui.Label(grid, 'Size', pos=(2,1))
+        self.symbol_size.check = gui.Checkbox(grid, pos=(2,0))
+        self.symbol_size.min_size = (10, self.symbol_size.min_size[1])
+        self.symbol_size.value = 5
+        self.symbol_size.connect('modified', lambda value: self.on_select_property('symbol_size', value), True)
 
         # Line
         self.line = gui.Frame(self, 'vertical', title='Line', stretch=0.)
@@ -165,133 +153,121 @@ class GraphStylePanel(gui.Box):
         grid.layout.AddGrowableCol(2)
 
         # Line type
-        labels.append(gui.Label(grid, 'Type', pos=(0,1)))
         self.line_type = gui.Choice(grid, pos=(0,2))
+        self.line_type.label = gui.Label(grid, 'Type', pos=(0,1))
         self.line_type.check = gui.Checkbox(grid, pos=(0,0))
         self.line_type.min_size = (10, self.line_type.min_size[1])
-        self.linetypes = []
-        for shape in ['none', 'straight', 'bspline']:
-            self.line_type.append(shape)
-            self.linetypes.append(shape)
-        self.line_type.selection = 0
-        self.line_type.connect('select', self.on_select_line_type)
+        for t in Style.line_types:
+            self.line_type.append(t)
+        self.line_type.value = 0
+        self.line_type.connect('select', lambda value: self.on_select_property('line_type', value), True)
 
         # Line style
-        labels.append(gui.Label(grid,  'Style', pos=(1,1)))
         self.line_style = gui.Choice(grid, pos=(1,2))
+        self.line_style.label = gui.Label(grid,  'Style', pos=(1,1))
         self.line_style.check = gui.Checkbox(grid, pos=(1,0))
         self.line_style.min_size = (10, self.line_style.min_size[1])
-        self.linestyles = []
-        for p in ['solid', 'dashed', 'dotted',]:
+        for p in Style.line_styles:
             self.line_style.append(p)
-            self.linestyles.append(p)
-        self.line_style.selection = 0
-        self.line_style.connect('select', self.on_select_line_style)
+        self.line_style.value = 0
+        self.line_style.connect('select', lambda value: self.on_select_property('line_style', value), True)
 
         # Line width
-        labels.append(gui.Label(grid, 'Width', pos=(2,1)))
         self.line_width = gui.Spin(grid, pos=(2,2))
+        self.line_width.label = gui.Label(grid, 'Width', pos=(2,1))
         self.line_width.check = gui.Checkbox(grid, pos=(2,0))
         self.line_width.min_size = (10, self.line_width.min_size[1])
         self.line_width.value = 1
-        self.line_width.connect('modified', self.on_select_line_width)
+        self.line_width.connect('modified', lambda value: self.on_select_property('line_width', value), True)
 
-        self.settings_widgets = [self.shape, self.color, self.size, 
+        self.settings_widgets = [self.symbol, self.color, self.symbol_size, 
                                  self.line_type, self.line_style, self.line_width]
 
-        self.hide_checks()
+        self.show_checks(False)
+
+        self.symbol.prop = 'symbol'
+        self.symbol_size.prop = 'symbol_size'
+        self.color.prop = 'color'
+        self.line_width.prop = 'line_width'
+        self.line_type.prop = 'line_type'
+        self.line_style.prop = 'line_style'
 
         b = gui.Box(self, 'horizontal', expand=True, stretch=0)
-        labels.append(gui.Label(b, 'Group', stretch=0))
+        gui.Label(b, 'Group', stretch=0)
         self.multi = gui.Choice(b, stretch=1)
         self.multi.append('identical')
         self.multi.append('series')
-        self.multi.selection = 0
+        self.multi.value = 0
         self.multi.connect('select', self.on_select_multi)
 
-        maxminw = max([l._widget.GetBestSize()[0] for l in labels])
-        for l in labels:
-            l.min_size = (maxminw, l.min_size[1])
+
+        maxminw = max([w.label._widget.GetBestSize()[0] for w in self.settings_widgets])
+        for widget in self.settings_widgets:
+            widget.check.connect('modified', lambda state, widget=widget: self.on_check(widget, state), True)
+            widget.label.min_size = (maxminw, widget.label.min_size[1])
+
 
     def on_legend_selection(self):
         datasets = [self.view.legend.model[i] for i in self.view.legend.selection]
 
         style = datasets[0].style
-        self.color.selection = self.colors.index(style.color)
-        self.shape.selection = self.shapes.index(style.symbol)
-        self.size.value = style.symbol_size
-        self.line_type.selection = self.linetypes.index(style.line_type)
-        self.line_style.selection = self.linestyles.index(style.line_style)
+        self.color.value = Style.colors.index(style.color)
+        self.symbol.value = Style.symbols.index(style.symbol)
+        self.symbol_size.value = style.symbol_size
+        self.line_type.value = Style.line_types.index(style.line_type)
+        self.line_style.value = Style.line_styles.index(style.line_style)
         self.line_width.value = style.line_width
 
         if len(datasets) > 1:
-            self.show_checks()
+            if self.multi.value == 0: # identical
+                self.show_checks(True)
+                for control in self.settings_widgets:
+                    control.check.state = all_the_same([getattr(d.style, control.prop) for d in datasets])
+                    control.active = control.label.active = control.check.state
 
-            if self.multi.selection == 0: # identical
-                self.color.check.state =  all_the_same([self.colors.index(d.style.color) for d in datasets])
-                self.shape.check.state = all_the_same([d.style.symbol for d in datasets])
-                self.size.check.state = all_the_same([d.style.symbol_size for d in datasets])
+            elif self.multi.value == 1: # series
+                self.show_checks(False)
+                self.symbol_grid.layout.Show(self.color.check._widget)
+                self.symbol_grid.layout.Layout()
 
-                self.line_type.check.state = all_the_same([d.style.line_type for d in datasets])
-                self.line_style.check.state = all_the_same([d.style.line_style for d in datasets])
-                self.line_width.check.state = all_the_same([d.style.line_width for d in datasets])
+                for control in self.settings_widgets:
+                    control.active = control.label.active = control.check.state = False
 
-                for control in [self.color, self.shape, self.size, 
-                                self.line_type, self.line_style, self.line_width]:
-                    control.active = control.check.state
-
-            elif self.multi.selection == 1: # series
-                colors = [self.colors.index(d.style.color) for d in datasets]
+                colors = [Style.colors.index(d.style.color) for d in datasets]
                 c0 = colors[0]
-                self.color.check.state = colors == [c % len(self.colors) for c in range(c0, c0+len(colors))]
+                self.color.check.state = colors == [c % len(Style.colors) for c in range(c0, c0+len(colors))]
+                self.color.active = self.color.label.active = self.color.check.state
         else:
-            self.hide_checks()
+            for control in self.settings_widgets:
+                control.active = control.label.active = True
+            self.show_checks(False)
 
     def on_select_multi(self, sel):
         self.on_legend_selection()
 
     def on_check(self, widget, state):
-        print widget, state
+        widget.active = state
+        widget.label.active = state
+        self.on_select_property(widget.prop, widget.value)
 
-    def hide_checks(self):
-        for w in [self.shape,self.color,self.size]:
-            self.symbol_grid.layout.Hide(w.check._widget)
+    def show_checks(self, visible):
+        for w in [self.symbol,self.color,self.symbol_size]:
+            self.symbol_grid.layout.Show(w.check._widget, visible)
         for w in [self.line_type, self.line_style, self.line_width]:
-            self.line_grid.layout.Hide(w.check._widget)
+            self.line_grid.layout.Show(w.check._widget, visible)
         self.symbol_grid.layout.Layout()
         self.line_grid.layout.Layout()
 
-    def show_checks(self):
-        for w in [self.shape,self.color,self.size]:
-            self.symbol_grid.layout.Show(w.check._widget)
-        for w in [self.line_type, self.line_style, self.line_width]:
-            self.line_grid.layout.Show(w.check._widget)
-        self.symbol_grid.layout.Layout()
-        self.line_grid.layout.Layout()
-
-    def on_select_color(self, ind):
-        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.color = self.colors[ind]
-
-    def on_select_shape(self, ind):
-        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.symbol = self.shapes[ind]
-
-    def on_select_size(self, size):
-        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.symbol_size = size
-
-    def on_select_line_type(self, ind):
-        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.line_type = self.linetypes[ind]
-
-    def on_select_line_style(self, ind):
-        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.line_style = self.linestyles[ind]
-
-    def on_select_line_width(self, width):
-        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.line_width = width
+    def on_select_property(self, prop, value):
+        datasets = [self.graph.datasets[s] for s in self.view.legend.selection]
+        if len(datasets) == 1:
+            setattr(d[0].style, prop, value)
+        elif self.multi.value == 0:
+            for d in datasets:
+                setattr(d.style, prop, value)
+        elif self.multi.value == 1:
+            for i, d in enumerate(datasets):
+                d.style.color = (value + i) % len(Style.colors)
 
 
 ###############################################################################

@@ -260,12 +260,12 @@ class Choice(Widget):
     def append(self, s):
         self._widget.Append(s)
 
-    def get_selection(self): return self._widget.GetSelection()
-    def set_selection(self, sel): self._widget.SetSelection(sel)
-    selection = property(get_selection, set_selection)
+    def get_value(self): return self._widget.GetSelection()
+    def set_value(self, sel): self._widget.SetSelection(sel)
+    value = property(get_value, set_value)
 
     def on_choice(self, event):
-        self.emit('select', self.selection)
+        self.emit('select', self.value)
 
 
 class xPopup(wx.PopupWindow):
@@ -341,7 +341,7 @@ class PixmapChoice(Widget):
         self._widget.SetBitmapLabel(bitmap)
     def get_selection(self):
         return self._selection
-    selection = property(get_selection, set_selection)
+    value = property(get_selection, set_selection)
 
     def on_kill_focus(self, event):
         try:
