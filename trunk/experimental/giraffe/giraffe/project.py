@@ -23,6 +23,11 @@ def create_id(*args):
     return data
 
 
+storage_desc = {}
+
+def register_class(cls, description):
+    storage_desc[cls] = description
+
 def wrap_attribute(name):
     def get_data(self):
         return getattr(self.data, name)
@@ -34,7 +39,10 @@ def wrap_attribute(name):
 class Item(object):
     def __init__(self, project, id=None):
         self.project = project
-        self.view, self.data, self.id = project.add(self, id)
+        self._update(id)
+
+    def _update(self, id):
+        self.view, self.data, self.id = self.project.add(self, id)
 
     description = 'items[name:S,id:S]'
     name = wrap_attribute('name')
@@ -52,14 +60,19 @@ class Project(object):
             self.db = metakit.storage(self.filename, 1)
 
         self.items = {}
+        self.deleted = {}
 
-        from worksheet import Worksheet
-        for row in self.db.getas(Worksheet.description):
-            if not row.id.startswith('-'):
-                self.items[row.id] = Worksheet(self, row.name, row.id)
+        # create objects
+        for cls, desc in storage_desc.iteritems():
+            for row in self.db.getas(desc):
+                if not row.id.startswith('-'):
+                    self.items[row.id] = cls(self, id=row.id)
+                else:
+                    self.deleted[row.id] = cls(self, id=row.id)
+
 
     def add(self, item, id=None):
-        view = self.db.getas(item.description)
+        view = self.db.getas(storage_desc[type(item)])
 
         # get the row
         if id is None:
@@ -80,6 +93,7 @@ class Project(object):
         else:
             obj.data.id = obj.id = '-'+obj.id 
             del self.items[id]
+            self.deleted[id] = obj
 
     def save(self):
         self.db.commit()

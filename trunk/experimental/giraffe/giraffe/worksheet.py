@@ -1,4 +1,4 @@
-from giraffe.project import Item, wrap_attribute
+from giraffe.project import Item, wrap_attribute, register_class
 from giraffe.base.mkarray import MkArray
 
 class Column(MkArray):
@@ -9,10 +9,15 @@ class Column(MkArray):
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
 
 class Worksheet(Item):
-    def __init__(self, project, name, id=None):
+    def __init__(self, project, name=None, id=None):
         Item.__init__(self, project, id)
-        self.name = name
+
         self.columns = []
+        if id is None:
+            self.name = name
+        else:
+            for i in range(len(self.data.columns)):
+                self.columns.append(Column(self, i))
 
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])
@@ -35,6 +40,6 @@ class Worksheet(Item):
         return [c.name for c in self.data.columns]
     column_names = property(get_column_names)
 
-    description = 'worksheets[name:S,id:S,columns[name:S,data:B]]'
-
     name = wrap_attribute('name')
+
+register_class(Worksheet, 'worksheets[name:S,id:S,columns[name:S,data:B]]')

@@ -8,19 +8,19 @@ This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
     >>> from giraffe.project import Project
+    >>> from giraffe.worksheet import Worksheet
     >>> p = Project('rikadik.db')
 
 Now use it:
 
-    >>> from giraffe.worksheet import Worksheet
     >>> w = Worksheet(p, 'data1')
     >>> p.remove(w.id)
     >>> w = Worksheet(p, 'data1')
     >>> w = Worksheet(p, 'data2')
-    >>> print sorted([_.name for _ in p.items.values()])
-    ['data1', 'data2']
     >>> w.add_column('A')
     >>> w.add_column('B')
+    >>> p.db.commit()
+    >>> p = Project('rikadik.db')
     >>> print w.column_names
     ['A', 'B']
     >>> p.save()
@@ -38,6 +38,9 @@ You can remove columns with remove(), like this:
     >>> w['B'] = [1,2,3,4] 
     >>> w['B']
     array([ 1.,  2.,  3.,  4.])
+
+    >>> #import os
+    >>> #os.remove('rikadik.db')
 
 
 How it works: Internals (subject to change!)
