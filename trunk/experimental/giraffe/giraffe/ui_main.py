@@ -26,11 +26,15 @@ class WorksheetDragData(object):
 
     def get_data(self, format):
         if format == 'filename':
+            if isinstance(self.worksheet, Worksheet):
+                filename = self.worksheet.name + '.txt'
+            elif isinstance(self.worksheet, Graph):
+                filename = self.worksheet.name + '.ps'
             d = tempfile.mkdtemp()
-            f = open(d+'/ascii.txt', 'wb')
+            f = open(d+'/'+filename, 'wb')
             self.worksheet.export_ascii(f)
             f.close()
-            return [d+'/ascii.txt']
+            return [d+'/'+filename]
         elif format == 'grafit-object':
             return self.worksheet.id
 
