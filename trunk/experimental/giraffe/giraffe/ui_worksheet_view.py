@@ -95,8 +95,17 @@ class WorksheetView(wx.Panel):
         self.grid = WorksheetGrid(self, worksheet)
         self.box.Add(self.grid, 1, wx.EXPAND)
 
+    def toolbar_button_clicked(self, id):
+        def button_clicked_callback(self, event):
+            if self.toolbar.GetToolState(self.buttons[id]):
+                self.open(id)
+            else:
+                self.close(id)
+        return new.instancemethod(button_clicked_callback, self, self.__class__)
+
     def create_toolbar(self):
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL)
+        toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked(ind))
 
         bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
         toolbar.AddSimpleTool(10, bmp, "New")
