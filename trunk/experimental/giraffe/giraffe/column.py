@@ -5,17 +5,6 @@ from common.commands import Command, CommandList
 from common.signals import HasSignals
 from lib.ElementTree import Element
 
-
-import shelf
-
-"""
-A Worksheet contains Columns.
-
-A Column is a VarArray which has a name, belongs to a Worksheet
-and keeps track of changes to itself by registering Commands
-and emitting signals.
-"""
-
 Command.command_list = CommandList()
 
 class U(object):
@@ -69,7 +58,6 @@ class Column(VarArray, HasSignals, Persistent):
     def __init__(self, worksheet, name):
         VarArray.__init__(self)
         self.worksheet = worksheet
-        self.uuid = shelf.register(self)
         self.name = name
 
     def set_name(self, name):
@@ -79,13 +67,12 @@ class Column(VarArray, HasSignals, Persistent):
     name = property(get_name, set_name)
 
     def to_element(self):
-        e = Element('Column', name=self.name, uuid=self.uuid)
+        e = Element('Column', name=self.name)
         e.text = self.data.tostring()
         return e
 
     def from_element(element, parent):
         c = Column(parent, element.get('name'))
-        c.uuid = element.get('uuid')
         c.data = fromstring(element.text, Float64)
         return c
     from_element = staticmethod(from_element)
@@ -121,42 +108,39 @@ class Worksheet(Item, WithId):
     def __getattr__(self, name):
         if name in self.__dict__:
             return self.__dict__[name]
-        elif name in [c.name for c in self.columns]:
+        elif 'columns' in self.__dict__ and name in [c.name for c in self.columns]:
             return self.columns[[c.name for c in self.columns].index(name)]
 
-#        if name not in self.__dict__ and name in [c.name for c in self.columns]:
-#            return self.columns[[c.name for c in self.columns].index(name)]
-#        else:
-#            return object.__getattr__(self, name, value)
+    def __setattr__(self, name, value):
+        if 'columns' in self.__dict__ and name in [c.name for c in self.columns]:
+            getattr(self, name)[:] = value
+        else:
+            return object.__setattr__(self, name, value)
 
-#    def __setattr__(self, name, value):
-#        if name in [c.name for c in self.columns]:
-#            getattr(self, name)[:] = value
-#        else:
-#            return object.__setattr__(self, name, value)
+    def __getitem__(self, key):
+        return self.columns[self.column_names.index(key)] 
+
     def __setitem__(self, key, value):
         if key in self.column_names:
             self.columns[self.column_names.index(key)][:] = value
-
         
     def get_column_names(self):
         return [c.name for c in self.columns]
     column_names = property(get_column_names)
         
-#        if name.startswith('_') or hasattr(self.__class__, name):
-
     def __str__(self):
         s = "Worksheet:"
         for c in self.columns:
             s += '\n   ' + c.name + ": " + str(c)
         return s
 
-
-w = Worksheet()
-w.add_column('A')
-w.add_column('Star')
-w.Star[4] = 13
-w.A[4] = 23
-w['Star'] = [1,2,nan,6,7]
-print sin(w.Star) + sin(array([1,2,3,4,5,6,7,]))
-print w
+if __name__ == '__main__':
+    w = Worksheet()
+    w.add_column('A')
+    w.add_column('Star')
+    w.Star[4] = 13
+    w.A[4] = 23
+    w.Star = [1,2,4,5,5,5,6,7]
+    print w
+    Command.command_list.undo()
+    print w
