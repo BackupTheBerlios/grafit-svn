@@ -9,7 +9,10 @@ When creating the object, use something like:
     def __init__(self, id=None):
         self.id = identity.register(self, id)
 
-We handle this as follows: We can get a reference to the object with
+If __init__ is called with the `id` parameter, the object assumes
+the identity `id`, otherwise a new identity is created for it.
+
+We can get a reference to the object with
 
     ref = obj.id
 
@@ -17,8 +20,8 @@ and retrieve the object with
 
     obj = identity.lookup(ref)
 
-Identity uses weak references, so the object must be referenced
-elsewhere for it not to be deleted.
+Identity uses weak references, so the object can be deleted, in which
+case the reference disappears.
 """
 
 import weakref

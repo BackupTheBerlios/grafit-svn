@@ -37,17 +37,15 @@ class Project(items.Folder, items.Persistent):
     def save(self):
         """
         Save the project.
-        Returns
-        - True: project saved succesfully
-        - False: no file name. Set a file name, and call save again.
         """
         if self.filename is None:
-            print >>sys.stderr, self.emit('ask-for-filename')
-            return False
-        else:
-            self.saveas(self.filename)
-            self.modified = False
-            return True
+            try:
+                self.filename = self.emit('filename?')[0]
+            except IndexError:
+                return False
+        self.saveas(self.filename)
+        self.modified = False
+        return True
 
     def saveas(self, filename):
         """Save the project to a file."""
@@ -55,6 +53,12 @@ class Project(items.Folder, items.Persistent):
 
     def new(self):
         """Clear the project."""
+        try:
+            ask = self.emit('save-changes?')[0]
+        except IndexError:
+            ask = False
+        if ask:
+            self.save()
         for i in self.items[:]:
             self.remove_item(i)
         self.modified = False
@@ -72,16 +76,24 @@ class Project(items.Folder, items.Persistent):
 
 import sys
 
+def ask():
+    return raw_input('filename: ')
+
+def ask_change():
+    return raw_input('save changes: ').startswith('y')
+
 def test():
     p= Project()
     f = items.Folder('Trivial', p)
     i = items.TrivialItem('opikou', f)
     i.emit('modified')
+    p.connect('filename?', ask)
+    p.connect('save-changes?', ask_change)
 
     p.save()
     p.filename = 'test.xml'
     p.save()
-    p.new()
+#    p.new()
 
     p2 = Project()
 #    f = items.Folder('Trivial', p2)
