@@ -90,6 +90,59 @@ class Dataset(object):
         makedata(self.x, self.y, dx, dy, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax)
         glEndList()
 
+class Grid(object):
+    def __init__(self, orientation, plot):
+        assert orientation in ['horizontal', 'vertical']
+        self.orientation = orientation
+        self.plot = plot
+
+    def paint(self):
+        if self.orientation == 'horizontal':
+            self = self.plot
+            glLoadIdentity()
+            glPushMatrix()
+            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+            glScalef(self.xscale_data, self.yscale_mm, 1.)
+            glTranslate(-self.xmin, 0, 0)
+
+            plot_height_mm = (self.h - self.marginb - self.margint)/self.res
+            plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
+
+            glLineStipple (1, 0x4444) # dotted
+            glEnable(GL_LINE_STIPPLE)
+            glColor3f(0.3, 0.3, 0.3)
+            glBegin(GL_LINES)
+            for x in self.axis_bottom.tics(self.xmin, self.xmax):
+                glVertex3f(x, 0.0, 0.0)
+                glVertex3f(x, plot_height_mm, 0.0)
+            glEnd()
+            glDisable(GL_LINE_STIPPLE)
+            glColor3f(0.0, 0.0, 0.0)
+
+            glPopMatrix()
+        elif self.orientation == 'vertical':
+            self = self.plot
+            glPushMatrix()
+            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+            glScalef(self.xscale_mm, self.yscale_data, 1.)
+            glTranslate(0, -self.ymin, 0)
+
+            plot_height_mm = (self.h - self.marginb - self.margint)/self.res
+            plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
+
+            glLineStipple (1, 0x4444) # dotted
+            glEnable(GL_LINE_STIPPLE)
+            glColor3f(0.3, 0.3, 0.3)
+            glBegin(GL_LINES)
+            for y in self.axis_left.tics(self.ymin, self.ymax):
+                glVertex3f(0, y, 0.0)
+                glVertex3f(plot_width_mm, y, 0.0)
+            glEnd()
+            glDisable(GL_LINE_STIPPLE)
+            glColor3f(0.0, 0.0, 0.0)
+
+            glPopMatrix()
+
 class Axis(object):
     def __init__(self, position, plot):
         assert position in ['left', 'right', 'top', 'bottom'], "illegal value for position: %s" % position
@@ -121,6 +174,83 @@ class Axis(object):
 
         glPopMatrix()
 
+        if self.position == 'bottom':
+            glPushMatrix()
+            glLoadIdentity()
+            glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
+            glScalef(self.plot.xscale_data, self.plot.yscale_mm, 1.)
+            glTranslate(-self.plot.xmin, 0, 0)
+
+            glBegin(GL_LINES)
+            for x in self.tics(self.plot.xmin, self.plot.xmax):
+                glVertex3f(x, 0.0, 0.0)
+                glVertex3f(x, 2, 0.0)
+            glEnd()
+            glPopMatrix()
+
+#        glBegin(GL_LINES)
+#        tx  = tics(self.xmin, self.xmax)
+#        for xx in [(tx[n], tx[n+1]) for n in xrange(len(tx)-1)]:
+#            for x in tics(xx[0], xx[1]):
+#                glVertex3f(x, 0.0, 0.0)
+#                glVertex3f(x, 0.6, 0.0)
+#        glEnd()
+
+ 
+        elif self.position == 'left':
+            glPushMatrix()
+            glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
+            glScalef(self.plot.xscale_mm, self.plot.yscale_data, 1.)
+            glTranslate(0, -self.plot.ymin, 0)
+
+            glBegin(GL_LINES)
+            for y in self.tics(self.plot.ymin, self.plot.ymax):
+                glVertex3f(0, y, 0.0)
+                glVertex3f(2, y, 0.0)
+            glEnd()
+#        glBegin(GL_LINES)
+#        ty  = tics(self.ymin, self.ymax)
+#        for yy in [(ty[n], ty[n+1]) for n in xrange(len(ty)-1)]:
+#            for y in tics(yy[0], yy[1]):
+#                glVertex3f(0, y, 0.0)
+#                glVertex3f(0.6, y, 0.0)
+#        glEnd()
+        self.paint_text()
+
+    def paint_text(self):
+        glLoadIdentity()
+        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/Vera.ttf')
+        h = int(2.6*self.plot.res)
+        f.FaceSize(h)
+        if self.position == 'bottom':
+            for x in self.tics(self.plot.xmin, self.plot.xmax):
+                glPushMatrix()
+                glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
+                glScalef(self.plot.xscale_data, self.plot.yscale_mm, 1.)
+                glTranslatef(-self.plot.xmin, 0, 0)
+                
+                w = f.Advance(str(x))
+                glRasterPos2f(x-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
+                f.Render(str(x))
+
+                glPopMatrix()
+        elif self.position == 'left':
+            for y in self.tics(self.plot.ymin, self.plot.ymax):
+                glPushMatrix()
+                glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
+                glScalef(self.plot.xscale_mm, self.plot.yscale_data, 1.)
+                
+                glTranslatef(0, -self.plot.ymin, 0)
+
+                w = f.Advance(str(y))
+                glRasterPos2f(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
+                              y-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
+                f.Render(str(y))
+                
+                glPopMatrix()
+
+ 
+
     def tics(self, fr, to):
         # 5-8 major tics
         if fr == to:
@@ -149,9 +279,6 @@ class Axis(object):
                 return rng
         return []
 
-def tics(fr, to):
-    return Axis.tics(Axis('bottom', None), fr, to)
-
 # matrix_physical: starting at lower left corner of plot; units in mm
 # matrix_data: starting at data (0, 0); units are data
 # resolution: pixels per mm (but we _should not care about pixels_!)
@@ -162,7 +289,7 @@ def tics(fr, to):
 # - more generic mechanism for symbols, in pyrex if nescessary
 
 
-class Shapes(GLScene,
+class Plot(GLScene,
              GLSceneButton,
              GLSceneButtonMotion):
     
@@ -189,8 +316,8 @@ class Shapes(GLScene,
         d.graph = self
         self.datasets.append(d)
 
-        self.datasets.append(Dataset(x = arange(1000.)/100,
-                                     y = sin(arange(1000.)/100)))
+        self.datasets.append(Dataset(x = arange(10000.)/100,
+                                     y = sin(arange(10000.)/100)))
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
         self.datasets[-1].graph = self
 
@@ -207,6 +334,9 @@ class Shapes(GLScene,
         self.axis_left = Axis('left', self)
 
         self.axes = [self.axis_bottom, self.axis_top, self.axis_right, self.axis_left]
+
+        self.grid_h = Grid('horizontal', self)
+        self.grid_v = Grid('vertical', self)
 
         self.set_range(0.0, 100.5)
         self.autoscale()
@@ -237,132 +367,16 @@ class Shapes(GLScene,
         for a in self.axes:
             a.paint()
 
-        #x tics
-
-        glLoadIdentity()
-        glPushMatrix()
-        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-        glScalef(self.xscale_data, self.yscale_mm, 1.)
-        glTranslate(-self.xmin, 0, 0)
-
-        glBegin(GL_LINES)
-        for x in tics(self.xmin, self.xmax):
-            glVertex3f(x, 0.0, 0.0)
-            glVertex3f(x, 2, 0.0)
-        glEnd()
-
-#        glBegin(GL_LINES)
-#        tx  = tics(self.xmin, self.xmax)
-#        for xx in [(tx[n], tx[n+1]) for n in xrange(len(tx)-1)]:
-#            for x in tics(xx[0], xx[1]):
-#                glVertex3f(x, 0.0, 0.0)
-#                glVertex3f(x, 0.6, 0.0)
-#        glEnd()
-
-        plot_height_mm = (self.h - self.marginb - self.margint)/self.res
-        plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
-
-        glLineStipple (1, 0x4444) # dotted
-        glEnable(GL_LINE_STIPPLE)
-        glColor3f(0.3, 0.3, 0.3)
-        glBegin(GL_LINES)
-        for x in tics(self.xmin, self.xmax):
-            glVertex3f(x, 0.0, 0.0)
-            glVertex3f(x, plot_height_mm, 0.0)
-        glEnd()
-        glDisable(GL_LINE_STIPPLE)
-        glColor3f(0.0, 0.0, 0.0)
-
-        glPopMatrix()
-
-        #y tics
-
-        glPushMatrix()
-        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-        glScalef(self.xscale_mm, self.yscale_data, 1.)
-        glTranslate(0, -self.ymin, 0)
-
-        glBegin(GL_LINES)
-        for y in tics(self.ymin, self.ymax):
-            glVertex3f(0, y, 0.0)
-            glVertex3f(2, y, 0.0)
-        glEnd()
-
-#        glBegin(GL_LINES)
-#        ty  = tics(self.ymin, self.ymax)
-#        for yy in [(ty[n], ty[n+1]) for n in xrange(len(ty)-1)]:
-#            for y in tics(yy[0], yy[1]):
-#                glVertex3f(0, y, 0.0)
-#                glVertex3f(0.6, y, 0.0)
-#        glEnd()
-
-        glLineStipple (1, 0x4444) # dotted
-        glEnable(GL_LINE_STIPPLE)
-        glColor3f(0.3, 0.3, 0.3)
-        glBegin(GL_LINES)
-        for y in tics(self.ymin, self.ymax):
-            glVertex3f(0, y, 0.0)
-            glVertex3f(plot_width_mm, y, 0.0)
-        glEnd()
-        glDisable(GL_LINE_STIPPLE)
-        glColor3f(0.0, 0.0, 0.0)
-
-        glPopMatrix()
-
-        glLoadIdentity()
-
-#        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/VeraSe.ttf')
-#        f = ftgl.FTGLPixmapFont('fonts/xsuni.ttf')
-        f = ftgl.FTGLPixmapFont('fonts/Cyberbit.ttf')
-        h = int(2.6*self.res)
-        f.FaceSize(h)
-        for x in tics(self.xmin, self.xmax):
-            glPushMatrix()
-            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-            glScalef(self.xscale_data, self.yscale_mm, 1.)
-            glTranslatef(-self.xmin, 0, 0)
-            
-            w = f.Advance(str(x))
-            glRasterPos2f(x-(self.xscale_pixel/self.xscale_data)*(w/2.), -3)
-            f.Render(str(x))
-
-            glPopMatrix()
-
-        for y in tics(self.ymin, self.ymax):
-            glPushMatrix()
-            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-            glScalef(self.xscale_mm, self.yscale_data, 1.)
-            
-            glTranslatef(0, -self.ymin, 0)
-
-            w = f.Advance(str(y))
-            glRasterPos2f(-2.-(self.xscale_pixel/self.xscale_mm)*w, 
-                          y-(self.xscale_pixel/self.xscale_data)*(h*0.35277138/4.))
-            f.Render(str(y))
-            
-            glPopMatrix()
-
+        self.grid_h.paint()
+        self.grid_v.paint()
 
         glPushMatrix()
         glLoadIdentity()
-
         self.initmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
-
-        # go to origin
-        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-
-        # scale to coordinates
-        glScalef(self.xscale_data, self.yscale_data, 1)
-
-        # go to (0, 0)
-        glTranslatef(-self.xmin, -self.ymin, 0)
-#
-#            glTranslate(-1., -1., 0)
-#            glScalef(2./(self.xmax-self.xmin), 2./(self.ymax-self.ymin), 1.)
-#            glTranslatef(-self.xmin, -self.ymin, 0)
-        
+        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0) # go to origin
+        glScalef(self.xscale_data, self.yscale_data, 1) # scale to coordinates
+        glTranslatef(-self.xmin, -self.ymin, 0) # go to (0, 0)
         self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
-
         glPopMatrix()
 
     def set_data_scales(self):
@@ -602,24 +616,18 @@ class Shapes(GLScene,
         if self.rubberband_active():
             self.rubberband_continue(event.x, event.y)
 
-class ShapesWindow(gtk.Window):
+class PlotWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
         
         # Set self attfibutes.
-        self.set_title('Shapes')
-#        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+        self.set_title('Plot')
         self.connect('destroy', lambda quit: gtk.main_quit())
-#        if sys.platform != 'win32':
-#            self.set_resize_mode(gtk.RESIZE_IMMEDIATE)
-#        self.set_reallocate_redraws(gtk.TRUE)
         
         # Create the table that will hold everything.
         self.box = gtk.VBox()
         self.box.show()
         self.add(self.box)
-
-       
         
         self.table = gtk.HBox()
 #        self.table.set_border_width(5)
@@ -629,9 +637,6 @@ class ShapesWindow(gtk.Window):
         self.box.pack_start(self.table)
 #        self.add(self.table)
 
-        # The Shapes scene and the
-        # GLArea widget to
-        # display it.
         self.toolbar = gtk.Toolbar()
         self.toolbar.set_border_width(0)
         self.toolbar.set_orientation(gtk.ORIENTATION_VERTICAL)
@@ -652,81 +657,35 @@ class ShapesWindow(gtk.Window):
         self.toolbar.show()
         self.table.pack_start(self.toolbar, expand=False)
  
-        self.shape = Shapes(self)
+        self.shape = Plot(self)
         self.glarea = GLArea(self.shape)
         self.glarea.set_size_request(200,100)
         self.glarea.show()
         self.table.pack_start(self.glarea)
 
-        self.legendstore = gtk.ListStore(str)
-        self.legendstore.append(['this'])
-        self.legendstore.append(['that'])
-        self.listbox = gtk.TreeView(model=self.legendstore)
-        self.listbox.set_headers_visible(False)
-        column = gtk.TreeViewColumn('What')
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, True)
-        column.add_attribute(cell, 'text', 0)
-        self.listbox.append_column(column)
-        self.listbox.show()
-        self.table.pack_start(self.listbox, expand=False)
+        self.legend = Legend(self)
+        self.legend.show()
+        self.table.pack_start(self.legend, expand=False)
 
         
-    def shapeChanged(self, option):
-        self.shape.currentShape = self.shape.availableShapes[option.get_history()]
-        self.glarea.queue_draw()
-    
-    def shapeSolidityToggled(self, button):
-        self.shape.is_solid = not self.shape.is_solid
-        self.glarea.queue_draw()
-    
-    def changeColourBg(self, button):
-        dialog = gtk.ColorSelectionDialog("Changing colour of Background")
-        dialog.set_transient_for(self)
-        
-        colorsel = dialog.colorsel
-        colorsel.set_has_palette(gtk.TRUE)
-        
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            colour = colorsel.get_current_color()
-            self.shape.colourBg = [colour.red/65535.0, colour.green/65535.0, colour.blue/65535.0]
-            self.glarea.queue_draw()
-        
-        dialog.destroy()
-    
-    def changeColourFg(self, button):
-        dialog = gtk.ColorSelectionDialog("Choose colour of Object")
-        dialog.set_transient_for(self)
-        
-        colorsel = dialog.colorsel
-        colorsel.set_has_palette(gtk.TRUE)
-        
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            colour = colorsel.get_current_color()
-            self.shape.colourFg = [colour.red/65535.0, colour.green/65535.0, colour.blue/65535.0]
-            self.glarea.queue_draw()
-        
-        dialog.destroy()
-    
-    def zchanged(self, zadj):
-        self.shape.rotz = zadj.value
-        self.glarea.queue_draw()
-    
-    def xchanged(self, zadj):
-        self.shape.rotx = zadj.value
-        self.glarea.queue_draw()
-    
-    def ychanged(self, yadj):
-        self.shape.roty = yadj.value
-        self.glarea.queue_draw()
-    
     def run(self):
         self.show()
         gtk.main()
 
+class Legend(gtk.TreeView):
+    def __init__(self, plot):
+        self.plot = plot
+        self.store = gtk.ListStore(str)
+        gtk.TreeView.__init__(self, model=self.store)
+        self.set_headers_visible(False)
+        column = gtk.TreeViewColumn('What')
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.add_attribute(cell, 'text', 0)
+        self.append_column(column)
+
+        self.store.append(['that'])
 
 if __name__ == '__main__':
-    app = ShapesWindow()
+    app = PlotWindow()
     app.run()
