@@ -34,9 +34,8 @@ def wrap_attribute(name):
 class Item(object):
     def __init__(self, project, id=None):
         self.project = project
-        self.view, self.data, self.id = project.add(self)
+        self.view, self.data, self.id = project.add(self, id)
 
-    viewname = 'items'
     description = 'items[name:S,id:S]'
     name = wrap_attribute('name')
 
@@ -54,18 +53,19 @@ class Project(object):
 
         self.items = {}
 
+        from worksheet import Worksheet
+        for row in self.db.getas(Worksheet.description):
+            if not row.id.startswith('-'):
+                self.items[row.id] = Worksheet(self, row.name, row.id)
+
     def add(self, item, id=None):
-        # create or get the view
-        if item.viewname in self.db.contents().properties().keys():
-            view = self.db.view(item.viewname)
-        else:
-            view = self.db.getas(item.description)
+        view = self.db.getas(item.description)
 
         # get the row
         if id is None:
             id = create_id()
-            view.append(id=id)
-            data = view[view.find(id=id)]
+            row = view.append(id=id)
+            data = view[row]
         else:
             data = view[view.find(id=id)]
 
@@ -78,12 +78,8 @@ class Project(object):
         if ind == -1:
             raise NameError
         else:
-#            obj.view.delete(ind)
             obj.data.id = obj.id = '-'+obj.id 
             del self.items[id]
 
-    def dump(self):
-        itemviews = [ 'worksheets', 'items' ]
-        ids = []
-        for n in itemviews:
-           ids.append([r.id for r in self.db.view(n)])
+    def save(self):
+        self.db.commit()

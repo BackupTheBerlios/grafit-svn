@@ -2,8 +2,8 @@
 
 import doctest
 
-red = '\x1b[91m'
-green = '\x1b[92m'
+red = '\x1b[31m'
+green = '\x1b[32m'
 default = '\x1b[0m'
 
 

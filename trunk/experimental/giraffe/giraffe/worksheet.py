@@ -35,7 +35,6 @@ class Worksheet(Item):
         return [c.name for c in self.data.columns]
     column_names = property(get_column_names)
 
-    viewname = 'worksheets'
     description = 'worksheets[name:S,id:S,columns[name:S,data:B]]'
 
     name = wrap_attribute('name')

@@ -8,7 +8,7 @@ This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
     >>> from giraffe.project import Project
-    >>> p = Project()
+    >>> p = Project('rikadik.db')
 
 Now use it:
 
@@ -16,11 +16,14 @@ Now use it:
     >>> w = Worksheet(p, 'data1')
     >>> p.remove(w.id)
     >>> w = Worksheet(p, 'data1')
+    >>> w = Worksheet(p, 'data2')
+    >>> print sorted([_.name for _ in p.items.values()])
+    ['data1', 'data2']
     >>> w.add_column('A')
     >>> w.add_column('B')
-    >>> p.dump()
     >>> print w.column_names
     ['A', 'B']
+    >>> p.save()
 
 You can remove columns with remove(), like this:
 
