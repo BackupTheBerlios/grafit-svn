@@ -270,7 +270,17 @@ class Axis(object):
         glTranslated(-1., -1., 0.)         # starting at bottom left corner
         glScaled(self.plot.xscale_pixel, self.plot.yscale_pixel, 1.) # pixel scale
 
-        glColor3f(0.0,0.0,0.0) # axis color
+        glColor3d(0.98, 0.97, 0.94) # background color
+        if self.position == 'bottom':
+            glRectd(0, 0, self.plot.w, self.plot.marginb)
+        elif self.position == 'right':
+            glRectd(self.plot.w, 0, self.plot.w - self.plot.marginr, self.plot.h)
+        elif self.position == 'top':
+            glRectd(0, self.plot.h, self.plot.w, self.plot.h - self.plot.margint)
+        elif self.position == 'left':
+            glRectd(0, 0, self.plot.marginl, self.plot.h)
+
+        glColor3d(0.0, 0.0, 0.0) # axis color
 
         # Axis lines
         glBegin(GL_LINES)
@@ -537,11 +547,19 @@ class Graph(Item, HasSignals):
 
         glColor3f(1.0,1.0,1.0)      # black
 
-        glBegin(GL_QUADS)
+        glBegin(GL_LINES)
         glVertex3d(self.marginl, self.marginb, 0.0)
         glVertex3d(self.w - self.marginr, self.marginb, 0.0)
+
+        glVertex3d(self.w - self.marginr, self.marginb, 0.0)
+        glVertex3d(self.w - self.marginr, self.h - self.margint, 0.0)
+
         glVertex3d(self.w - self.marginr, self.h - self.margint, 0.0)
         glVertex3d(self.marginl, self.h - self.margint, 0.0)
+
+        glVertex3d(self.marginl, self.h - self.margint, 0.0)
+        glVertex3d(self.marginl, self.marginb, 0.0)
+
         glEnd()
 
         glPopMatrix()
@@ -555,16 +573,6 @@ class Graph(Item, HasSignals):
 
         self.grid_h.paint()
         self.grid_v.paint()
-
-        glPushMatrix()
-        glLoadIdentity()
-        self.initmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
-        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0) # go to origin
-        glScaled(self.xscale_data, self.yscale_data, 1) # scale to coordinates
-        self.projmatrix0 = glGetDoublev(GL_PROJECTION_MATRIX)
-        glTranslated(-self.xmin, -self.ymin, 0) # go to (0, 0)
-        self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
-        glPopMatrix()
 
     def set_data_scales(self):
         self.xscale_data = self.xscale_pixel * ((self.w-self.marginl-self.marginr)/(self.xmax-self.xmin))
@@ -646,7 +654,16 @@ class Graph(Item, HasSignals):
         gluOrtho2D (0, width, 0, height)
         if not self.buf:
             glClear(GL_COLOR_BUFFER_BIT)
-            self.paint_axes()
+
+            glPushMatrix()
+            glLoadIdentity()
+            self.initmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
+            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0) # go to origin
+            glScaled(self.xscale_data, self.yscale_data, 1) # scale to coordinates
+            self.projmatrix0 = glGetDoublev(GL_PROJECTION_MATRIX)
+            glTranslated(-self.xmin, -self.ymin, 0) # go to (0, 0)
+            self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
+            glPopMatrix()
 
             glPushMatrix()
             glLoadIdentity()
@@ -654,6 +671,8 @@ class Graph(Item, HasSignals):
             for d in self.datasets:
                 d.paint()
             glPopMatrix()
+
+            self.paint_axes()
         else:
             glPushMatrix()
             glLoadIdentity()

@@ -86,11 +86,21 @@ class GraphView(gui.Box):
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
-        style = [self.legend.model[i] for i in self.legend.selection][0].style
+        selection = [self.legend.model[i] for i in self.legend.selection]
+
+        if len(selection) > 1:
+            self.style.show_checks()
+
+            colors = [self.style.colors.index(d.style.color) for d in selection]
+            c0 = colors[0]
+            print colors, [c % len(self.style.colors) for c in range(c0, c0+len(colors))]
+        else:
+            self.style.hide_checks()
+
+        style = selection[0].style
         self.style.color.selection = self.style.colors.index(style.color)
         self.style.shape.selection = self.style.shapes.index(style.symbol)
         self.style.size.value = style.symbol_size
-
         self.style.line_type.selection = self.style.linetypes.index(style.line_type)
         self.style.line_style.selection = self.style.linestyles.index(style.line_style)
         self.style.line_width.value = style.line_width
@@ -235,11 +245,7 @@ class GraphStylePanel(gui.Box):
         self.settings_widgets = [self.shape, self.color, self.size, 
                                  self.line_type, self.line_style, self.line_width]
 
-        for w in [self.shape,self.color,self.size]:
-            self.symbol_grid.layout.Hide(w.check._widget)
-        for w in [self.line_type, self.line_style, self.line_width]:
-            self.line_grid.layout.Hide(w.check._widget)
-
+        self.hide_checks()
 
         b = gui.Box(self, 'horizontal', expand=True, stretch=0)
         labels.append(gui.Label(b, 'Group', stretch=0))
@@ -252,6 +258,21 @@ class GraphStylePanel(gui.Box):
         for l in labels:
             l.min_size = (maxminw, l.min_size[1])
 
+    def hide_checks(self):
+        for w in [self.shape,self.color,self.size]:
+            self.symbol_grid.layout.Hide(w.check._widget)
+        for w in [self.line_type, self.line_style, self.line_width]:
+            self.line_grid.layout.Hide(w.check._widget)
+        self.symbol_grid.layout.Layout()
+        self.line_grid.layout.Layout()
+
+    def show_checks(self):
+        for w in [self.shape,self.color,self.size]:
+            self.symbol_grid.layout.Show(w.check._widget)
+        for w in [self.line_type, self.line_style, self.line_width]:
+            self.line_grid.layout.Show(w.check._widget)
+        self.symbol_grid.layout.Layout()
+        self.line_grid.layout.Layout()
 
     def on_select_color(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
