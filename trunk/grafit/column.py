@@ -18,11 +18,11 @@ def different_size_binary_operation(oper):
         try:
             lx = len(x)
             ly = len(y)
-        except TypeError:  # one of the two is a scalar
+        except TypeError:  
+            # one of the two is a scalar
             return oper(x, y)
-        if hasattr(x, 'shape') and len(x.shape) == 0:
-            return oper(x, y)
-        if hasattr(y, 'shape') and len(y.shape) == 0:
+        if (hasattr(x, 'shape') and len(x.shape) == 0) or (hasattr(y, 'shape') and len(y.shape) == 0):
+            # one of the two is a zero-dimensional array
             return oper(x, y)
         length = max(lx, ly)
         x = concatenate([x, array([nan]*(length-lx))])
@@ -30,17 +30,24 @@ def different_size_binary_operation(oper):
         return oper(x, y)
     return newoper
 
+# XXX: problem: sin(x) + sin(y) fails!
+
 # setup operations to be used by columns
+
+# simple arithmetic operators 
 add_d = different_size_binary_operation(add)
+subtract_d = different_size_binary_operation(subtract)
 multiply_d = different_size_binary_operation(multiply)
 divide_d = different_size_binary_operation(divide)
 power_d = different_size_binary_operation(power)
+
+# comparison operators
 not_equal_d = different_size_binary_operation(not_equal)
 less_d = different_size_binary_operation(less)
 less_equal_d = different_size_binary_operation(less_equal)
 greater_d = different_size_binary_operation(greater)
 greater_equal_d = different_size_binary_operation(greater_equal)
-subtract_d = different_size_binary_operation(subtract)
+
 
 class ShapeError(Exception):
     pass

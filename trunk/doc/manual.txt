@@ -57,6 +57,11 @@ working with graphs
     - for multiple datasets
 - ranges
 
+data manipulation
+-----------------
+- filters
+- moving and deleting points
+
 fitting
 -------
 - selecting datasets
