@@ -154,61 +154,56 @@ class GraphStylePanel(gui.Box):
 
         # Symbol
         self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
-        grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
+        grid = self.symbol_grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
         grid.layout.AddGrowableCol(2)
 
         # symbol type
         labels.append(gui.Label(grid,  'Symbol', pos=(0,1)))
-        b = gui.Checkbox(grid, pos=(1,0))
-        grid.layout.Hide(b._widget)
-        self.shape = c = gui.PixmapChoice(grid, pos=(0,2))
-        c.min_size = (10, c.min_size[1])
+        self.shape = gui.PixmapChoice(grid, pos=(0,2))
+        self.shape.check = gui.Checkbox(grid, pos=(0,0))
+        self.shape.min_size = (10, self.shape.min_size[1])
 #        self.shapes = ['uptriangle-f', 'square-f', 'circle-f', 'diamond-f']
         self.shapes = []
         for interior in ['o', 'f']:
             for shape in ['circle', 'square', 'diamond', 'uptriangle', 
                           'downtriangle', 'lefttriangle', 'righttriangle']:
-                c.append(shape+'-'+interior+'.png')
+                self.shape.append(shape+'-'+interior+'.png')
                 self.shapes.append(shape+'-'+interior)
-        c.selection = 0
-        c.connect('select', self.on_select_shape)
+        self.shape.selection = 0
+        self.shape.connect('select', self.on_select_shape)
 
         # symbol color
         labels.append(gui.Label(grid,  'Color', pos=(1,1)))
-        c = self.color = gui.PixmapChoice(grid, pos=(1,2))
-        b = gui.Checkbox(grid, pos=(2,0))
-        grid.layout.Hide(b._widget)
-        c.min_size = (10, c.min_size[1])
+        self.color = gui.PixmapChoice(grid, pos=(1,2))
+        self.color.check = gui.Checkbox(grid, pos=(1,0))
+        self.color.min_size = (10, self.color.min_size[1])
         self.colors = []
         for r in range(0, 256, 64):
             for g in range(0, 256, 64):
                 for b in range(0, 256, 64):
-                    c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
+                    self.color.append(self.color.create_colored_bitmap((20, 10), (r, g, b)))
                     self.colors.append((r,g,b))
-        c.selection = 0
-        c.connect('select', self.on_select_color)
+        self.color.selection = 0
+        self.color.connect('select', self.on_select_color)
 
         # symbol size
         labels.append(gui.Label(grid, 'Size', pos=(2,1)))
-        b = gui.Checkbox(grid, pos=(0,0))
-        grid.layout.Hide(b._widget)
 
         self.size = gui.Spin(grid, pos=(2,2))
-        self.size.min_size = (10, c.min_size[1])
+        self.size.check = gui.Checkbox(grid, pos=(2,0))
+        self.size.min_size = (10, self.size.min_size[1])
         self.size.connect('modified', self.on_select_size)
         self.size.value = 5
 
-
         # Line
         self.line = gui.Frame(self, 'vertical', title='Line', stretch=0.)
-        grid = gui.Grid(self.line, 3, 3)#, expand=True, stretch=1.)
+        grid = self.line_grid = gui.Grid(self.line, 3, 3)#, expand=True, stretch=1.)
         grid.layout.AddGrowableCol(2)
 
         # Line type
         labels.append(gui.Label(grid, 'Type', pos=(0,1)))
-        b = gui.Checkbox(grid, pos=(0,0))
-        grid.layout.Hide(b._widget)
         self.line_type = gui.Choice(grid, pos=(0,2))
+        self.line_type.check = gui.Checkbox(grid, pos=(0,0))
         self.line_type.min_size = (10, self.line_type.min_size[1])
         self.linetypes = []
         for shape in ['none', 'straight', 'bspline']:
@@ -219,9 +214,8 @@ class GraphStylePanel(gui.Box):
 
         # Line style
         labels.append(gui.Label(grid,  'Style', pos=(1,1)))
-        b = gui.Checkbox(grid, pos=(1,0))
-        grid.layout.Hide(b._widget)
         self.line_style = gui.Choice(grid, pos=(1,2))
+        self.line_style.check = gui.Checkbox(grid, pos=(1,0))
         self.line_style.min_size = (10, self.line_style.min_size[1])
         self.linestyles = []
         for p in ['solid', 'dashed', 'dotted',]:
@@ -232,12 +226,20 @@ class GraphStylePanel(gui.Box):
 
         # Line width
         labels.append(gui.Label(grid, 'Width', pos=(2,1)))
-        b = gui.Checkbox(grid, pos=(2,0))
-        grid.layout.Hide(b._widget)
         self.line_width = gui.Spin(grid, pos=(2,2))
+        self.line_width.check = gui.Checkbox(grid, pos=(2,0))
         self.line_width.min_size = (10, self.line_width.min_size[1])
         self.line_width.value = 1
         self.line_width.connect('modified', self.on_select_line_width)
+
+        self.settings_widgets = [self.shape, self.color, self.size, 
+                                 self.line_type, self.line_style, self.line_width]
+
+        for w in [self.shape,self.color,self.size]:
+            self.symbol_grid.layout.Hide(w.check._widget)
+        for w in [self.line_type, self.line_style, self.line_width]:
+            self.line_grid.layout.Hide(w.check._widget)
+
 
         b = gui.Box(self, 'horizontal', expand=True, stretch=0)
         labels.append(gui.Label(b, 'Group', stretch=0))
