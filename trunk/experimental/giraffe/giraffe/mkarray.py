@@ -1,13 +1,10 @@
 import sys
-#print >>sys.stderr, 'starting...',
-
-import metakit
 import time
 import struct
+
+import metakit
 from numarray import *
 from numarray.ieeespecial import nan
-
-#print >>sys.stderr, 'ok'
 
 class MkArray(object):
     def __init__(self, view, prop, row, start=None, end=None):
