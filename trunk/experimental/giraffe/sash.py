@@ -114,7 +114,9 @@ class TestSashWindow(wx.Panel):
             self.leftWindow1.SetDefaultSize((300, -1))
         else:
             self.textWindow.Hide()
-            self.leftWindow1.SetDefaultSize((self.btn.GetSize()[0], -1))
+#            self.leftWindow1.Fit()
+            self.leftWindow1.SetDefaultSize((self.btn.GetBestSize()[0], -1))
+#            self.leftWindow1.SetDefaultSize((self.leftWindow1.GetMinimumSizeX(), -1))
 
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
         self.remainingSpace.Refresh()

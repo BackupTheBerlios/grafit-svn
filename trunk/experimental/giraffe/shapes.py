@@ -317,13 +317,23 @@ class Axis(object):
 # - move drawing to Axis and Dataset classes
 # - more generic mechanism for symbols, in pyrex if nescessary
 
-
-class Plot(GLScene,
-             GLSceneButton,
-             GLSceneButtonMotion):
-    
+class GraphWidget(GLScene, GLSceneButton, GLSceneButtonMotion):
     def __init__(self, graph):
         GLScene.__init__(self, gtk.gdkgl.MODE_DOUBLE)
+        self.graph = graph
+
+    def reshape(self, width, height):
+        return self.graph.reshape(width, height)
+
+    def display(self, width, height):
+        return self.graph.display(width, height)
+
+    def init(self):
+        return self.graph.init()
+
+class Plot(object):
+    def __init__(self, graph):
+        self.widget = GraphWidget(self)
     
         # mouse rubberbanding coordinates
         self.sx = None
@@ -701,7 +711,7 @@ class PlotWindow(gtk.Window):
         self.table.pack_start(self.toolbar, expand=False)
  
         self.shape = Plot(self)
-        self.glarea = GLArea(self.shape)
+        self.glarea = GLArea(self.shape.widget)
         self.glarea.set_size_request(200,100)
         self.glarea.show()
         self.table.pack_start(self.glarea)
