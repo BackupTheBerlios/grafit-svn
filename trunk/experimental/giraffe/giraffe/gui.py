@@ -40,7 +40,7 @@ class MySplashScreen(wx.SplashScreen):
         # This is a recipe to a the screen.
         # Modify the following variables as necessary.
         aBitmap = wx.Image(name = "../data/images/logo.png").ConvertToBitmap()
-        splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT
+        splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT | wx.NO_BORDER
         splashDuration = 1000 # milliseconds
         splashCallback = None
         # Call the constructor with the above arguments in exactly the

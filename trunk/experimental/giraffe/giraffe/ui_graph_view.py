@@ -160,8 +160,9 @@ class GraphStylePanel(gui.Box):
         c.min_size = (10, c.min_size[1])
 #        self.shapes = ['uptriangle-f', 'square-f', 'circle-f', 'diamond-f']
         self.shapes = []
-        for shape in ['circle', 'square', 'diamond']:
-            for interior in ['o', 'f']:
+        for interior in ['o', 'f']:
+            for shape in ['circle', 'square', 'diamond', 'uptriangle', 
+                          'downtriangle', 'lefttriangle', 'righttriangle']:
                 c.append(shape+'-'+interior+'.png')
                 self.shapes.append(shape+'-'+interior)
         c.selection = 0

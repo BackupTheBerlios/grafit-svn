@@ -169,7 +169,7 @@ class Grid(object):
                 gl2psLineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
-            for x in self.axis_bottom.tics(self.xmin, self.xmax):
+            for x in self.axis_bottom.tics(self.xmin, self.xmax)[0]:
                 glVertex3d(x-self.xmin, 0.0, 0.0)
                 glVertex3d(x-self.xmin, plot_height_mm, 0.0)
             glEnd()
@@ -197,7 +197,7 @@ class Grid(object):
                 gl2psLineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
-            for y in self.axis_left.tics(self.ymin, self.ymax):
+            for y in self.axis_left.tics(self.ymin, self.ymax)[0]:
                 glVertex3d(0, y-self.ymin, 0.0)
                 glVertex3d(plot_width_mm, y-self.ymin, 0.0)
             glEnd()
@@ -252,9 +252,14 @@ class Axis(object):
 #            glTranslate(-self.plot.xmin, 0, 0)
 
             glBegin(GL_LINES)
-            for x in self.tics(self.plot.xmin, self.plot.xmax):
+            major, minor = self.tics(self.plot.xmin, self.plot.xmax)
+
+            for x in major:
                 glVertex3d(x-self.plot.xmin, 0.0, 0.0)
                 glVertex3d(x-self.plot.xmin, 2, 0.0)
+            for x in minor:
+                glVertex3d(x-self.plot.xmin, 0.0, 0.0)
+                glVertex3d(x-self.plot.xmin, 1, 0.0)
             glEnd()
 
             glPopMatrix()
@@ -266,9 +271,13 @@ class Axis(object):
 #            glTranslate(0, -self.plot.ymin, 0)
 
             glBegin(GL_LINES)
-            for y in self.tics(self.plot.ymin, self.plot.ymax):
+            major, minor = self.tics(self.plot.ymin, self.plot.ymax)
+            for y in major:
                 glVertex3d(0, y-self.plot.ymin, 0.0)
                 glVertex3d(2, y-self.plot.ymin, 0.0)
+            for y in minor:
+                glVertex3d(0, y-self.plot.ymin, 0.0)
+                glVertex3d(1, y-self.plot.ymin, 0.0)
             glEnd()
 
             glPopMatrix()
@@ -279,7 +288,7 @@ class Axis(object):
         h = int(2.6*self.plot.res)
         self.font.FaceSize(h)
         if self.position == 'bottom':
-            for x in self.tics(self.plot.xmin, self.plot.xmax):
+            for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
                 glPushMatrix()
                 glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
                 glScaled(self.plot.xscale_data, self.plot.yscale_mm, 1.)
@@ -296,7 +305,7 @@ class Axis(object):
 
                 glPopMatrix()
         elif self.position == 'left':
-            for y in self.tics(self.plot.ymin, self.plot.ymax):
+            for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
                 glPushMatrix()
                 glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
                 glScaled(self.plot.xscale_mm, self.plot.yscale_data, 1.)
@@ -314,36 +323,42 @@ class Axis(object):
                 
                 glPopMatrix()
 
- 
-
     def tics(self, fr, to):
-        # 5-8 major tics
+        # 3-8 major tics
         if fr == to:
             return [fr]
         exponent = floor(log10(to-fr)) - 1
 
-        for interval in (1,5,2,4,6,7,8,9,3):
+        for interval in (1,5,2):#,4,6,7,8,9,3):
             interval = interval * (10**exponent)
             if fr%interval == 0:
                 first = fr
             else:
                 first = fr + (interval-fr%interval)
             rng = arange(first, to, interval)
-            if 5 <= len(rng) <= 8:
-#                print 'from %f to %f:'%(fr, to), rng
-                return rng
+            if 3 <= len(rng) <= 8:
+                minor = []
+                for n in rng:
+                    minor.extend(arange(n, n+interval, interval/5))
 
+                return rng, minor
+#
         exponent += 1
-        for interval in (1,5,2,4,6,7,8,9,3):
+        for interval in (1,5,2):#,4,6,7,8,9,3):
             interval = interval * (10**exponent)
             if fr%interval == 0:
                 first = fr
             else:
                 first = fr + (interval-fr%interval)
             rng = arange(first, to, interval)
-            if 5 <= len(rng) <= 8:
+            if 3 <= len(rng) <= 8:
 #                print 'from %f to %f:'%(fr, to), rng
-                return rng
+                minor = []
+                for n in rng:
+                    minor.extend(arange(n, n+interval, interval/5))
+
+                return rng, minor
+        print "cannot tick", fr, to, len(rng)
         return []
 
 # matrix_physical: starting at lower left corner of plot; units in mm
@@ -562,6 +577,7 @@ class Graph(Item, HasSignals):
 #        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         glDisable(GL_DEPTH_TEST)
+        glShadeModel(GL_FLAT)
 
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()

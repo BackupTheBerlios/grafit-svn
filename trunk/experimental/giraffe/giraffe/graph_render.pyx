@@ -74,12 +74,6 @@ cdef extern from "numarray/libnumarray.h":
 
 import_libnumarray()
 
-cdef extern from "GL/glu.h":
-
-    void gluDisk(void* quad, double inner, double outer, int slices, int loops)
-    void* gluNewQuadric()
-
-
 cdef extern from "GL/gl.h":
 
     void glVertex3d(double x, double y, double z)
@@ -99,7 +93,7 @@ def makedata(_numarray sx, _numarray sy,
              double dx, double dy, symbol):
 #             shape, vertices):
     cdef int n, m, l
-    cdef double x, y
+    cdef double x, y, xnext, ynext
     cdef double *xd, *yd
     cdef int xbucket, ybucket
     cdef int xbucket_s, ybucket_s
@@ -107,8 +101,13 @@ def makedata(_numarray sx, _numarray sy,
     cdef double xinterval, yinterval
     cdef double pi
     cdef int sym
-    cdef void *quad
 
+    pi = 3.14159265358979
+    cdef double circlex[11], circley[11]
+
+    for n from 0<=n<11:
+        circlex[n] = cos(n*2*pi/10)*dx
+        circley[n] = sin(n*2*pi/10)*dy
 
     if symbol == 'square-f' or symbol == 'square-o':
         sym = 1
@@ -126,10 +125,7 @@ def makedata(_numarray sx, _numarray sy,
         shape = GL_QUADS
     elif symbol == 'circle-o':
         sym = -100
-        shape = -1
-        print 'j'
-        quad = gluNewQuadric()
-        print 'k'
+        shape = GL_LINES
     else:
         print 'unknown symbol', symbol
         return 0
@@ -151,14 +147,10 @@ def makedata(_numarray sx, _numarray sy,
     xinterval = (xmax-xmin)/1000.
     yinterval = (ymax-ymin)/1000.
 
-#        glVertex3d(x-xmin, y-ymin, 0.)
-#        glVertex3d(x-xmin+sin(i*2*pi/m)*dx, y-ymin+cos(i*2*pi/m)*dy, 0.)
-#        glVertex3d(x-xmin+sin((i+1)*2*pi/m)*dx, y-ymin+cos((i+1)*2*pi/m)*dy, 0.)
-#    
-
     l = sx.dimensions[0]
-    if shape != -1:
-        glBegin(shape)
+
+    # draw symbols
+    glBegin(shape)
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
@@ -175,7 +167,6 @@ def makedata(_numarray sx, _numarray sy,
         if (xbucket == xbucket_s) and (ybucket == ybucket_s):
             continue
 
-#        for i from 0 <= i < m:
         if sym == 1:
             glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
             glVertex3d(x-xmin+dx/2, y-ymin-dy/2, 0)
@@ -193,23 +184,30 @@ def makedata(_numarray sx, _numarray sy,
             glVertex3d(x-xmin+dx/2, y-ymin, 0)
             glVertex3d(x-xmin, y-ymin+dy/2, 0)
         elif sym == -100:
-            gluDisk(quad, 1, 3, 10, 10)
+            for m from 0<=m<10:
+                glVertex3d(x-xmin+circlex[m], y-ymin+circley[m], 0)
+                glVertex3d(x-xmin+circlex[m+1], y-ymin+circley[m+1], 0)
             
+    glEnd()
 
-
-#        for v in vertices:
-#            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)
-    if shape != -1:
-        glEnd()
-
-        
+    # draw lines
     glBegin(GL_LINE_STRIP)
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
+
         # skip if outside limits
-        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
-            continue
+        if n < l-1:
+            xnext = xd[n-1]
+            ynext = yd[n-1]
+            if (x <= xmin and xnext <= xmin) or \
+               (x >= xmax and xnext >= xmax) or \
+               (y <= ymin and ynext <= ymin) or \
+               (y >= ymax and ynext >= ymax):
+                continue
+        else:
+            if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
+                continue
 
         # skip if we would land within 1/1000th of the graph from the previous point
         xbucket_s = xbucket
