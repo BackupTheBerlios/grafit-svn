@@ -29,6 +29,7 @@ class LegendModel(HasSignals):
     def __init__(self, graph):
         self.graph = graph
         self.graph.connect('add-dataset', self.on_modified)
+        self.graph.connect('remove-dataset', self.on_modified)
 
     def on_modified(self, dataset):
         self.emit('modified')
@@ -74,7 +75,7 @@ class GraphView(gui.Box):
 
         self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
 
-        self.graphdata = GraphDataPanel(self.graph, self.panel.right_panel, 
+        self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
         self.graphdata.connect_project(self.graph.project)
 
@@ -131,10 +132,11 @@ class ColumnListModel(HasSignals):
     def __getitem__(self, row): return self.colnames[row]
 
 class GraphDataPanel(gui.Box):
-    def __init__(self, graph, parent, **place):
+    def __init__(self, graph, view, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
 
         self.graph = graph
+        self.view = view
 
         # create widgets 
 #        btnbox = gui.Box(self, 'horizontal', stretch=0)
@@ -143,7 +145,7 @@ class GraphDataPanel(gui.Box):
         self.toolbar.append(gui.Action('Add', 'Add datasets to the graph', 
                                        self.on_add, 'add.png'))
         self.toolbar.append(gui.Action('Remove', 'Remove datasets from the graph', 
-                                       self.on_add, 'remove.png'))
+                                       self.on_remove, 'remove.png'))
 #        button.connect('clicked', self.on_add)
 
         gui.Label(self, 'Worksheet', stretch=0)
@@ -178,6 +180,10 @@ class GraphDataPanel(gui.Box):
             for x in self.x_list.selection:
                 for y in self.y_list.selection:
                     self.graph.add(worksheet[x], worksheet[y])
+
+    def on_remove(self):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            self.graph.remove(d)
 
     def connect_project(self, project):
         self.project = project

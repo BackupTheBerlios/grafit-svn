@@ -313,6 +313,7 @@ class List(Widget):
         self.selection = sel
         for item in sel:
             self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_MASK_STATE)
+        self._widget.resizeLastColumn(-1)
         self._widget.Thaw()
 
 

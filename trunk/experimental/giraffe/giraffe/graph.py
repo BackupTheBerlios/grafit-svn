@@ -431,6 +431,11 @@ class Graph(Item, HasSignals):
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
 
+    def remove(self, dataset):
+        self.datasets.remove(dataset)
+        dataset.disconnect('modified', self.on_dataset_modified)
+        self.emit('remove-dataset', dataset)
+
     def on_dataset_modified(self, d):
         d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
         self.emit('redraw')
