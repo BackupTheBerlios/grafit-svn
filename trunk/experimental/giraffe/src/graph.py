@@ -9,6 +9,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from lib import ftgl
 
+from items import Item, Persistent
+from common import identity
+
 from render import makedata
 
 sys.path.append('/home/daniel/grafit/functions')
@@ -301,8 +304,10 @@ class Axis(object):
 # - convert drawing to use the above data
 # - move drawing to Axis and Dataset classes
 # - more generic mechanism for symbols, in pyrex if nescessary
-class Graph(HasSignals):
-    def __init__(self):#, graph):
+class Graph(Item, Persistent):
+    def __init__(self, name, parent, id=None):#, graph):
+        self.id = identity.register(self, id)
+        Item.__init__(self, name, parent)
     
         # mouse rubberbanding coordinates
         self.sx = None

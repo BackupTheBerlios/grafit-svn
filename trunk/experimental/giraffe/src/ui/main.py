@@ -168,6 +168,8 @@ class Application(wx.App):
         menu = wx.Menu()
         item = menu.Append(-1, "New Workshee (test)", "Test new worksheet")
         self.Bind(wx.EVT_MENU, self.OnNewWs, item)
+        item = menu.Append(-1, "New graph (test)", "Test new graph")
+        self.Bind(wx.EVT_MENU, self.on_new_graph, item)
         item = menu.Append(-1, "E&xit\tAlt-X", "Exit demo")
         self.Bind(wx.EVT_MENU, self.OnButton, item)
         menuBar.Append(menu, "&File")
@@ -193,6 +195,9 @@ class Application(wx.App):
         ws.add_column('other')
         ws.A = [1,2,3]
         ws.other = [2,4,5,6,7,15]
+
+    def on_new_graph(self, evt):
+        g = Graph('graph1', self.project)
 
     def OnButton(self, evt):
         self.frame.Close(True)
