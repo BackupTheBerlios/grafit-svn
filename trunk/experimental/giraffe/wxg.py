@@ -266,8 +266,8 @@ def _test():
     class MyApp(wxApp):
         def OnInit(self):
             frame = wxFrame(None, -1, "GL Demos", wxDefaultPosition, wxSize(600,300))
-            #win = ConeCanvas(frame)
-            MySplitter(frame)
+            win = ConeCanvas(frame)
+#            MySplitter(frame)
             frame.Show(True)
             self.SetTopWindow(frame)
             return True
