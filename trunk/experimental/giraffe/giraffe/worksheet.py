@@ -119,11 +119,20 @@ class Worksheet(Item, WithId, Persistent):
             return object.__setattr__(self, name, value)
 
     def __getitem__(self, key):
-        return self.columns[self.column_names.index(key)] 
+        if isinstance(key, int):
+            return self.columns[key]
+        elif isinstance(obj, basestring) and key in self.column_names:
+            return self.columns[self.column_names.index(key)] 
+        else:
+            raise IndexError
 
     def __setitem__(self, key, value):
-        if key in self.column_names:
+        if isinstance(key, int):
+            self.columns[key][:] = value
+        elif isinstance(obj, basestring) and key in self.column_names:
             self.columns[self.column_names.index(key)][:] = value
+        else:
+            raise IndexError
         
     def get_column_names(self):
         return [c.name for c in self.columns]
@@ -145,13 +154,28 @@ class Worksheet(Item, WithId, Persistent):
         return w
     from_element = staticmethod(from_element)
 
+    _element_name = 'Worksheet'
+
+    def get_data(self):
+        rows = max([len(c) for c in self.columns])
+        data = concatenate([[c[:rows]] for c in self.columns])
+        return data
+    def set_data(self, data):
+        for i, column in enumerate(data):
+            self[i] = column
+    data = property(get_data, set_data)
+
+
 if __name__ == '__main__':
     w = Worksheet('test', None)
     w.add_column('A')
     w.add_column('Star')
+
     w.Star[4] = 13
     w.A[4] = 23
     w.Star = [1,2,4,5,5,5,6,7]
-    print w
     Command.command_list.undo()
+    saved = w.data
+    w.A = [1,2,3,4,]
+    w.data = saved
     print w

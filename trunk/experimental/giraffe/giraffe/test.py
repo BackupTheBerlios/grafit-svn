@@ -1,3 +1,4 @@
+from items import Persistent
 from project import Project
 from worksheet import Worksheet
 from lib.ElementTree import dump
@@ -10,3 +11,8 @@ data1.A = [1, 2, 40]
 
 project.filename = 'test.xml'
 project.save()
+
+p2 = Project()
+p2.load('test.xml')
+print p2
+p2.save()
