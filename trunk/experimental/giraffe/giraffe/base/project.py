@@ -3,9 +3,8 @@ import time, random, socket, md5
 
 import metakit
 
-from giraffe.base.mkarray import MkArray
 from giraffe.common.commands import Command, command_list
-from giraffe.item import Item, storage_desc
+from giraffe.base.item import Item, storage_desc
 
 import giraffe.worksheet
 

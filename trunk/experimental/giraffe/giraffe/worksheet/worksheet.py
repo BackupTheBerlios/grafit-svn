@@ -1,5 +1,5 @@
-from giraffe.item import Item, wrap_attribute, register_class
-from giraffe.base.mkarray import MkArray
+from giraffe.base.item import Item, wrap_attribute, register_class
+from giraffe.worksheet.mkarray import MkArray
 
 class Column(MkArray):
     def __init__(self, worksheet, ind):

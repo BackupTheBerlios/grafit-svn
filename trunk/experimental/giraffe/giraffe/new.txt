@@ -7,7 +7,7 @@ Using ``Worksheet``
 This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
-    >>> from giraffe.project import Project
+    >>> from giraffe.base.project import Project
     >>> from giraffe.worksheet import Worksheet
     >>> p = Project('rikadik.db')
 
