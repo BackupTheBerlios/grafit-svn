@@ -20,6 +20,8 @@ class ToolPanel(wx.SashLayoutWindow):
     """The areas on the left, top and bottom of the window holding tabs."""
 
     def __init__(self, parent, position):
+        """`position` is one of 'left', 'right', 'top' or 'bottom'"""
+
         wx.SashLayoutWindow.__init__(self, parent, -1, wx.DefaultPosition,
                                      (200, 30), wx.NO_BORDER|wx.SW_3D)
 
@@ -96,7 +98,7 @@ class ToolPanel(wx.SashLayoutWindow):
 
         btn = wx.NewId()
         self.toolbar.AddCheckTool(btn, bmp, bmp, "New", "Long help for 'New'")
-        self.toolbar.Bind(wx.EVT_TOOL, self.button_clicked(ind))
+        self.toolbar.Bind(wx.EVT_TOOL, self.make_button_callback(ind))
 
         self.contentbox.Add(widget, 1, wx.EXPAND)
         widget.Hide()
@@ -146,7 +148,7 @@ class ToolPanel(wx.SashLayoutWindow):
         wx.LayoutAlgorithm().LayoutWindow(self.parent, self.parent.remainingSpace)
         self.parent.remainingSpace.Refresh()
 
-    def button_clicked(self, id):
+    def make_button_callback(self, id):
         def button_clicked_callback(self, event):
             if self.toolbar.GetToolState(self.buttons[id]):
                 self.open(id)
@@ -162,28 +164,10 @@ class ProjectExplorer(wx.Panel, HasSignals):
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # buttons
-#        toolbar = wx.ToolBar(explorer, -1)
-#
-#        bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(-1, bmp, "New").GetId()
-#        bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(-1, bmp, "Delete").GetId()
-#        bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(-1, bmp, "Up").GetId()
-#
-#        bmp = wx.Image('../data/images/stock_undo.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(-1, bmp, "Undo").GetId()
-#        bmp = wx.Image('../data/images/stock_redo.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(-1, bmp, "Redo").GetId()
-#
-#        sizer.Add(toolbar, 0, wx.EXPAND)
-
         splitter = wx.SplitterWindow(self)
 
         # tree control
         self.project_tree = ProjectTree(splitter, self.project)
-#        self.project_tree.connect('activate-object', self.on_activate)
 
         # list control
         self.current_dir = wx.ListCtrl(splitter, -1,
@@ -310,55 +294,63 @@ class Application(wx.App):
 
     def OnInit(self):
         wx.Log_SetActiveTarget(wx.LogStderr())
+
+        # splash screen ###########################################################################
         s = wx.SplashScreen(wx.Image("/home/daniel/grafit/pixmaps/logo.png").ConvertToBitmap(),
                             wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 3000, None, -1)
         s.Show()
 
+        # frame ###################################################################################
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
+        self.SetTopWindow(frame)
+
         frame.CreateStatusBar()
 
-        # toolbar
+        # toolbar #################################################################################
+        buttons = [
+            ('stock_undo', 'Undo', 'Undo the last action', self.on_undo),
+            ('stock_redo', 'Redo', 'Redo the last action that was undone', self.on_redo),
+            ('worksheet', 'New worksheet', 'Create a new worksheet', self.on_new_worksheet),
+            ('graph', 'New graph', 'Create a new graph', self.on_new_graph),
+        ] 
+
         tb = frame.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
-        tool = tb.AddSimpleTool(-1, wx.Image("/home/daniel/giraffe/data/images/stock_undo.png").ConvertToBitmap(),
-                                "Undo", "Undo the last action")
-        tb.Bind(wx.EVT_TOOL, self.on_undo, id=tool.GetId())
+        for image, help_s, help_l, callback in buttons:
+            bitmap = wx.Image('/home/daniel/giraffe/data/images/'+image+'.png').ConvertToBitmap()
+            tool = tb.AddSimpleTool(-1, bitmap, help_s, help_l)
+            tb.Bind(wx.EVT_TOOL, callback, id=tool.GetId())
+        
 
-        tool = tb.AddSimpleTool(-1, wx.Image("/home/daniel/giraffe/data/images/stock_redo.png").ConvertToBitmap(),
-                                "Redo", "Redo the last action that was undone")
-        tb.Bind(wx.EVT_TOOL, self.on_redo, id=tool.GetId())
-#        tb.Hide()
-
-        # menu bar
+        # menu bar ################################################################################
         resource = wx.xrc.XmlResource('menu.xrc')
         frame.SetMenuBar(resource.LoadMenuBar('menubar'))
-        for id, func in [
-                     ('project-quit', self.OnButton),
-                     ('object-new-folder', self.on_new_folder),
-                     ('object-new-worksheet', self.on_new_worksheet),
-                     ('object-new-graph', self.on_new_graph), 
-                    ]:
+
+        menuitems = [
+            ('project-quit', self.OnButton),
+            ('object-new-folder', self.on_new_folder),
+            ('object-new-worksheet', self.on_new_worksheet),
+            ('object-new-graph', self.on_new_graph), 
+        ]
+
+        for id, func in menuitems:
             self.Bind(wx.EVT_MENU, func, id=wx.xrc.XRCID(id))
 
-        # other events
+
+        # events
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 
-        win = MainWindow(frame, self.project)
+        main = MainPanel(frame, self.project)
+        main.SetFocus()
 
         frame.SetSize((640, 480))
-        win.SetFocus()
-        self.window = win
-        frect = frame.GetRect()
-
-        self.SetTopWindow(frame)
-        self.frame = frame
         frame.Show(True)
         return True
 
     def on_new_worksheet(self, evt):
         ws = self.project.new(Worksheet, 'test', self.project.here)
         ws.a = [1,2,3]
-        ws.other = arange(100000.)
+        ws.other = 2*ws.a
 
     def on_new_graph(self, evt):
         g = self.project.new(Graph, 'graph1', self.project.here)
@@ -375,8 +367,9 @@ class Application(wx.App):
     def run(self):
         self.MainLoop()
 
+# TODO: make script window a separate class
 
-class MainWindow(wx.Panel):
+class MainPanel(wx.Panel):
     def __init__(self, parent, project):
         wx.Panel.__init__(self, parent, -1)
         self.project = project
@@ -418,10 +411,10 @@ class MainWindow(wx.Panel):
         self.remainingSpace.SetSizer(self.main_box)
 
 
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.left_panel.GetId())
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.right_panel.GetId())
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.bottom_panel.GetId())
-        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.left_panel.GetId())
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.right_panel.GetId())
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.bottom_panel.GetId())
+        self.Bind(wx.EVT_SIZE, self.on_size)
 
         self.project.connect('remove-item', self.on_project_remove_item)
 
@@ -451,8 +444,9 @@ class MainWindow(wx.Panel):
 
         self.remainingSpace.Layout()
 
+    # wx stuff
 
-    def OnSashDrag(self, event):
+    def on_sash_drag(self, event):
         if event.GetDragStatus() == wx.SASH_STATUS_OUT_OF_RANGE:
             return
 
@@ -468,5 +462,5 @@ class MainWindow(wx.Panel):
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
         self.remainingSpace.Refresh()
 
-    def OnSize(self, event):
+    def on_size(self, event):
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)

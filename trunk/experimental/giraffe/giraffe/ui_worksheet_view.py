@@ -103,11 +103,11 @@ class WorksheetView(wx.Panel):
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL)
         toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked)
 
-        bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
+        bmp = wx.Image('../data/images/stock_insert-columns.png').ConvertToBitmap()
         toolbar.new_column = toolbar.AddSimpleTool(-1, bmp, "New").GetId()
-        bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
+        bmp = wx.Image('../data/images/stock_left.png').ConvertToBitmap()
         toolbar.AddSimpleTool(-1, bmp, "Delete")
-        bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
+        bmp = wx.Image('../data/images/stock_right.png').ConvertToBitmap()
         toolbar.AddSimpleTool(-1, bmp, "Up")
 
         return toolbar
