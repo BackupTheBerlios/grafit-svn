@@ -51,8 +51,11 @@ all deleted objects.
 Items are created in two ways:
 
 * By the project, when loading the database
+    
+    This should call Item.__init__(self, name, folder, ..., location)
+
+    This is not subject to undo, since it does not change the project. No actions are registered.
 
 * By the user, when adding a new object to the project
 
-
-
+    This should create a row in the database, and call 

@@ -1,4 +1,5 @@
 from giraffe.common.commands import Command, command_list
+import sys
 
 # The layout of the metakit project database.
 # For each type of object (worksheet, graph etc) we call
@@ -28,21 +29,24 @@ def wrap_attribute(name):
 
 
 class Item(object):
-    def __init__(self, project, name=None, folder=None, id=None):
+    def __init__(self, project, name=None, parent=None, location=None):
         self.project = project
-        self._update(id)
 
-        if hasattr(self, '_isroot') and self._isroot:
-            folder = self
+        if location is None:
+            self.view, self.row, self.data, self.id = project.create(type(self))
+        else:
+            self.view, self.row, self.data, self.id = location
 
-        if folder is None:
-            folder = self.project.top
+        self.project.items[self.id] = self
 
-        if id is None: # new item
+        if location is None:
+            if hasattr(self, '_isroot') and self._isroot:
+                folder = self
+            elif parent is None:
+                folder = self.project.top
+
             self.name = name
             self.parent = folder
-        else: # existing item
-            pass
 
         if (not (hasattr(self, '_isroot') and self._isroot)) and self.parent is self.project.top:
             self.project._dict[self.name] = self
@@ -52,12 +56,12 @@ class Item(object):
         # We can't emit in project.add()
         self.project.emit('add-item', self)
 
-    def _update(self, id):
-        self.view, self.data, self.id = self.project.add(self, id)
+#    def _update(self, id):
+#        self.view, self.data, self.id = self.project.add(self, id)
 
 
 class Folder(Item):
-    def __init__(self, project, name=None, parent=None, id=None, _isroot=False):
+    def __init__(self, project, name=None, parent=None, id=None, _isroot=False, location=None):
         self._isroot = _isroot
         Item.__init__(self, project, name, parent, id)
         self.project = project

@@ -28,6 +28,12 @@ def create_id(*args):
     return data
 
 
+"""
+Simplest case:
+a command whose do() function calls a single method of an object
+and the undo() another method:
+"""
+
 class Project(HasSignals):
     def __init__(self, filename=None):
         self.filename = filename
@@ -54,31 +60,49 @@ class Project(HasSignals):
 
         # create objects
         for cls, desc in storage_desc.iteritems():
-            for row in self.db.getas(desc):
+            view = self.db.getas(desc)
+            for i, row in enumerate(view):
                 if row.id != self.top.id:
                     if not row.id.startswith('-'):
-                        self.items[row.id] = cls(self, id=row.id)
+                        self.items[row.id] = cls(self, location=(view, i, row, row.id))
                     else:
-                        self.deleted[row.id] = cls(self, id=row.id)
+                        self.deleted[row.id] = cls(self, location=(view, i, row, row.id))
 
+    def set_dict(self, d):
+        self._dict = d
+
+    def create(self, cls, **kwds):
+        try:
+            view = self.db.getas(storage_desc[cls])
+        except KeyError:
+            raise TypeError, "project cannot create an item of type '%s'" % cls
+
+        id = create_id()
+        row = view.append(id=id)
+        data = view[row]
+
+        return view, row, data, id
 
     def add(self, item, id=None):
+        # the view corresponding to the item's type
         view = self.db.getas(storage_desc[type(item)])
 
-        # get the row
+        # the item's row
         if id is None:
+            # This is a new object. We must create a new
+            # id for it and add a row to the view
             id = create_id()
             row = view.append(id=id)
             data = view[row]
         else:
+            # This is an object which exists in the database,
+            # so we are only adding it to project.items
             data = view[view.find(id=id)]
 
         self.items[id] = item
 
         return view, data, id
 
-    def set_dict(self, d):
-        self._dict = d
 
     def remove(self, id):
         obj = self.items[id]
