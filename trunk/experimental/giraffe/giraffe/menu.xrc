@@ -30,6 +30,9 @@
         <object class="wxMenuItem" name="object-new-graph">
           <label>&amp;Graph</label>
         </object>
+        <object class="wxMenuItem" name="object-new-folder">
+          <label>&amp;Folder</label>
+        </object>
       </object>
     </object>
   </object>

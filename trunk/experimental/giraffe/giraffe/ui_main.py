@@ -298,34 +298,25 @@ class Application(wx.App):
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
         frame.CreateStatusBar()
+
+        # toolbar
         tb = frame.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
         tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_TOOLBAR), "New", "Long help for 'New'")
         tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR), "New", "Long help for 'New'")
-
         tb.Hide()
 
-#        menuBar = wx.MenuBar()
-#        menu = wx.Menu()
-#        item = menu.Append(-1, "New Workshee (test)", "Test new worksheet")
-#        self.Bind(wx.EVT_MENU, self.OnNewWs, item)
-#        item = menu.Append(-1, "New graph (test)", "Test new graph")
-#        self.Bind(wx.EVT_MENU, self.on_new_graph, item)
-#        item = menu.Append(-1, "New folder (test)", "Test new folder")
-#        self.Bind(wx.EVT_MENU, self.on_new_folder, item)
-#        item = menu.Append(-1, "E&xit\tAlt-X", "Exit demo")
-#        self.Bind(wx.EVT_MENU, self.OnButton, item)
-#        menuBar.Append(menu, "&File")
-#
-#        frame.SetMenuBar(menuBar)
-
-
+        # menu bar
         resource = wx.xrc.XmlResource('menu.xrc')
         frame.SetMenuBar(resource.LoadMenuBar('menubar'))
-
-	for id, func in [('project-quit', self.OnButton),
-                         ('object-new-worksheet', self.OnNewWs), ]:
+        for id, func in [
+                     ('project-quit', self.OnButton),
+                     ('object-new-folder', self.on_new_folder),
+                     ('object-new-worksheet', self.on_new_worksheet),
+                     ('object-new-graph', self.on_new_graph), 
+                    ]:
             self.Bind(wx.EVT_MENU, func, id=wx.xrc.XRCID(id))
 
+        # other events
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 
         win = MainWindow(frame, self.project)
@@ -340,7 +331,7 @@ class Application(wx.App):
         frame.Show(True)
         return True
 
-    def OnNewWs(self, evt):
+    def on_new_worksheet(self, evt):
         ws = self.project.new(Worksheet, 'test', self.project.here)
         ws.a = [1,2,3]
         ws.other = arange(100000.)
@@ -359,6 +350,7 @@ class Application(wx.App):
 
     def run(self):
         self.MainLoop()
+
 
 class MainWindow(wx.Panel):
     def __init__(self, parent, project):
