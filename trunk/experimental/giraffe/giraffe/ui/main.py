@@ -58,7 +58,7 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_height = 120
 
     def add_page(self, widget):
-        bmp = wx.Image("graph.png").ConvertToBitmap()
+        bmp = wx.Image("../data/images/graph.png").ConvertToBitmap()
 #        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
         ind = len(self.contents)
 

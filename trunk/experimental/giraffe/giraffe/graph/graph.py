@@ -236,7 +236,7 @@ class Axis(object):
 
     def paint_text(self):
         glLoadIdentity()
-        f = ftgl.FTGLPixmapFont('../fonts/bitstream-vera/Vera.ttf')
+        f = ftgl.FTGLPixmapFont('../data/fonts/bitstream-vera/Vera.ttf')
         h = int(2.6*self.plot.res)
         f.FaceSize(h)
         if self.position == 'bottom':
