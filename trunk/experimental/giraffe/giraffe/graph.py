@@ -99,17 +99,10 @@ class Style(HasSignals):
 
 default_style = Style()
 
+class DrawWithStyle(HasSignals):
+    def __init__(self, graph, data):
 
-class Dataset(HasSignals):
-    def __init__(self, graph, ind):
-        self.graph, self.ind = graph, ind
-        self.data = self.graph.data.datasets[ind]
-
-        self.worksheet = self.graph.project.items[self.data.worksheet]
-        self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
-
-        self.x.connect('data-changed', self.on_data_changed)
-        self.y.connect('data-changed', self.on_data_changed)
+        self.graph, self.data = graph, data
 
         self.style = Style()
 
@@ -137,6 +130,56 @@ class Dataset(HasSignals):
         self.style.line_width = self.data.linewidth
         
         self.style.connect('modified', self.on_style_modified)
+
+    def change_style_do(self, item, value, old):
+        if item == 'color':
+            self.data.color = (self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256)
+        elif item == 'symbol':
+            self.data.symbol = self.style.symbol
+        elif item == 'symbol_size':
+            self.data.size = self.style.symbol_size
+        elif item == 'line_type':
+            self.data.linetype = self.style.line_type
+        elif item == 'line_style':
+            self.data.linestyle = self.style.line_style
+        elif item == 'line_width':
+            self.data.linewidth = self.style.line_width
+
+        return [item, value, old]
+
+    def change_style_redo(self, state):
+        item, value, old = state
+        setattr(self.style, item, value)
+
+    def change_style_undo(self, state):
+        item, value, old = state
+        setattr(self.style, item, old)
+
+    def change_style_combine(self, state, other):
+        print state, other
+        return False
+
+    change_style = command_from_methods('dataset-change-style', change_style_do, 
+                                        change_style_undo, change_style_redo,
+                                        combine=change_style_combine)
+
+    def on_style_modified(self, item, value, old):
+        self.change_style(item, value, old)
+        self.emit('modified', self)
+
+
+class Dataset(DrawWithStyle):
+    def __init__(self, graph, ind):
+        self.graph, self.ind = graph, ind
+        self.data = self.graph.data.datasets[ind]
+
+        DrawWithStyle.__init__(self, graph, self.data)
+
+        self.worksheet = self.graph.project.items[self.data.worksheet]
+        self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
+
+        self.x.connect('data-changed', self.on_data_changed)
+        self.y.connect('data-changed', self.on_data_changed)
 
     def __repr__(self):
         return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
@@ -199,42 +242,6 @@ class Dataset(HasSignals):
         self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
 
     def on_data_changed(self):
-        self.emit('modified', self)
-
-    def change_style_do(self, item, value, old):
-        if item == 'color':
-            self.data.color = (self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256)
-        elif item == 'symbol':
-            self.data.symbol = self.style.symbol
-        elif item == 'symbol_size':
-            self.data.size = self.style.symbol_size
-        elif item == 'line_type':
-            self.data.linetype = self.style.line_type
-        elif item == 'line_style':
-            self.data.linestyle = self.style.line_style
-        elif item == 'line_width':
-            self.data.linewidth = self.style.line_width
-
-        return [item, value, old]
-
-    def change_style_redo(self, state):
-        item, value, old = state
-        setattr(self.style, item, value)
-
-    def change_style_undo(self, state):
-        item, value, old = state
-        setattr(self.style, item, old)
-
-    def change_style_combine(self, state, other):
-        print state, other
-        return False
-
-    change_style = command_from_methods('dataset-change-style', change_style_do, 
-                                        change_style_undo, change_style_redo,
-                                        combine=change_style_combine)
-
-    def on_style_modified(self, item, value, old):
-        self.change_style(item, value, old)
         self.emit('modified', self)
 
     def __str__(self):
@@ -940,4 +947,4 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph,
-'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I]]')
+'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I],functions[id:S,func:S,name:S,params:S,lock:S,color:I,linetype:S,linestyle:S,linewidth:S]]')

@@ -628,10 +628,17 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
         return self.pixmaps[filename]
 
     def OnGetItemText(self, item, col):
-        return self.lst.model.get(item, self.lst.columns[col])
+        if hasattr(self.lst.model, 'get'):
+            return str(self.lst.model.get(item, self.lst.columns[col]))
+        else:
+            if col == 0:
+                return str(self.lst.model[item])
+            else:
+                raise AttributeError
 
     def OnGetItemImage(self, item):
-        return self.getpixmap(self.lst.model.get_image(item))
+        if hasattr(self.lst.model, 'get_image'):
+            return self.getpixmap(self.lst.model.get_image(item))
 
 
 class List(Widget):
@@ -655,7 +662,8 @@ class List(Widget):
 
         self._columns = columns
         self._model = model
-        self._model.connect('modified', self.update)
+        if hasattr(self._model, 'connect'):
+            self._model.connect('modified', self.update)
 
         self.update()
 
@@ -710,7 +718,8 @@ class List(Widget):
         if model is None:
             model = ListModel()
         self._model = model
-        self._model.connect('modified', self.update)
+        if hasattr(self._model, 'connect'):
+            self._model.connect('modified', self.update)
         self.update()
     def get_model(self):
         return self._model
@@ -718,7 +727,7 @@ class List(Widget):
 
     def setsel(self, sel):
         for item in sel:
-            self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_MASK_STATE)
+            self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 
     def update(self):
         self._widget.Freeze()
@@ -729,7 +738,7 @@ class List(Widget):
             self._widget.InsertColumn(num, str(name))
         self.selection = sel
         for item in sel:
-            self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_MASK_STATE)
+            self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
         self._widget.resizeLastColumn(-1)
         self._widget.Thaw()
 

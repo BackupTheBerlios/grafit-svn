@@ -32,6 +32,9 @@ class Function(HasSignals):
             SubElement(elem, 'Parameter', name=p)
         ElementTree(elem).write(f)
 
+    def __str__(self):
+        return self.name
+
     def to_module(self):
         st = []
         st.append('from numarray import *\n')
@@ -114,7 +117,7 @@ class FunctionsWindow(gui.Window):
 
     def add(self, function):
         self.functions.append(function)
-        self.category.model.append(function.name)
+        self.category.model.append(function)
 
     def scan(self, dir):
         self.functions = []
@@ -136,12 +139,12 @@ class FunctionsWindow(gui.Window):
 
     def on_select_function(self):
         try:
-            name = self.category.model[self.category.selection[0]]
+            self.function = self.category.model[self.category.selection[0]]
         except IndexError:
             return
 #        if self.function is not None:
 #            print 'are you sure?'
-        self.function = [f for f in self.functions if f.name == name][0]
+#        self.function = [f for f in self.functions if f.name == name][0]
         self.update_gui()
 
 
