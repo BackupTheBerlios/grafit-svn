@@ -3,7 +3,9 @@ import wx.py
 
 from giraffe import Graph, Worksheet, Folder
 from giraffe.signals import HasSignals
- 
+
+
+# this can be rewritten in terms of giraffe.gui 
 class ProjectExplorer(wx.Panel, HasSignals):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -161,6 +163,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.project_tree.SetItemText(self.treeitems[item.id], name)
 
 
+# this must be put into giraffe.gui
 class ScriptWindow(wx.py.shell.Shell):
     def __init__(self, parent):
         self.locals = {}

@@ -4,6 +4,34 @@
 * make worksheetview Enter behave properly
 * create actionlist window
 
+The core grafit application should _not_ use wx directly
+but only the grafit.gui toolkit.
+grafit.gui contains all the calls to the toolkit (wx, qt, whatever), so:
+    - y
+
+grafit.gui provides 
+-------------------
+
+- the basic controls:
+    - Button
+    - List
+    - Combo
+    - Label
+    - Entry
+
+- layout containers:
+    - Box
+    - Grid
+
+- main window and panels
+    - Window
+    - MainWindow
+
+- specific widgets for grafit
+    - GraphWidget (standard OpenGL widget)
+    - WorksheetWidget (standard grid/table widget)
+    - Shell (python shell)
+
 Window
 ------
 

@@ -1,4 +1,5 @@
 import wx
+import wx.py
 from  wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 
 import sys
@@ -7,6 +8,29 @@ sys.path.append('../lib')
 from giraffe.signals import HasSignals
 
 # this module absolutely needs documentation!
+
+class xApplication(wx.App):
+    def __init__(self, mainwinclass, *args, **kwds):
+        self.mainwinclass = mainwinclass
+        self.initargs, self.initkwds = args, kwds
+        wx.App.__init__(self, redirect=False)
+
+    def OnInit(self):
+        self.mainwin = self.mainwinclass(*self.initargs, **self.initkwds)
+        self.SetTopWindow(self.mainwin._widget)
+        self.mainwin.show_all()
+        return True
+
+class Application(object):
+    def __init__(self, mainwinclass, *args, **kwds):
+        self._app = xApplication(mainwinclass, *args, **kwds)
+
+    def get_mainwin(self):
+        return self._app.mainwin
+    mainwin = property(get_mainwin)
+
+    def run(self):
+        return self._app.MainLoop()
 
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
@@ -45,31 +69,133 @@ class Box(Widget):
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
         self.layout.SetSizeHints(self._widget)
 
-class xApplication(wx.App):
-    def __init__(self, mainwinclass, *args, **kwds):
-        self.mainwinclass = mainwinclass
-        self.initargs, self.initkwds = args, kwds
-        wx.App.__init__(self, redirect=False)
 
-    def OnInit(self):
-        self.mainwin = self.mainwinclass(*self.initargs, **self.initkwds)
-        self.SetTopWindow(self.mainwin._widget)
-        self.mainwin.show_all()
-        return True
+class Button(Widget):
+    def __init__(self, parent, text, **kwds):
+        self._widget = wx.Button(parent._widget, -1, text)
+        Widget.__init__(self, parent, **kwds)
+        self._widget.Bind(wx.EVT_BUTTON, self.on_clicked)
 
-class Application(object):
-    def __init__(self, mainwinclass, *args, **kwds):
-        self._app = xApplication(mainwinclass, *args, **kwds)
+    def on_clicked(self, evt):
+        self.emit('clicked')
 
-    def get_mainwin(self):
-        return self._app.mainwin
-    mainwin = property(get_mainwin)
+class ListModel(HasSignals):
+    def __init__(self):
+        self.items = []
+        
+    # list model interface
+    def get(self, row, column):
+        return str(self.items[row])
 
-    def run(self):
-        return self._app.MainLoop()
+    def __len__(self):
+        return len(self.items)
+
+    # behave as a sequence
+    def append(self, item):
+        self.items.append(item)
+        self.emit('modified')
+
+    def __setitem__(self, key, value):
+        self.items[key] = value
+        self.emit('modified')
+
+    def __getitem__(self, key):
+        return self.items[key]
+
+class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
+    def __init__(self, lst, *args, **kwds):
+        wx.ListCtrl.__init__(self, *args, **kwds)
+        ListCtrlAutoWidthMixin.__init__(self)
+        self.lst = lst
+
+    def OnGetItemText(self, item, col):
+        return self.lst.model.get(item, self.lst.columns[col])
+
+class List(Widget):
+    def __init__(self, parent, model=None, columns=None, headers=False, editable=False, **kwds):
+        flags = wx.LC_REPORT|wx.LC_VIRTUAL|wx.BORDER_SUNKEN
+        if not headers:
+            flags |= wx.LC_NO_HEADER
+        if editable:
+            flags |= wx.LC_EDIT_LABELS
+
+        self._widget = xListCtrl(self, parent._widget, -1, style=flags)
+        Widget.__init__(self, parent, **kwds)
+
+        if model is None:
+            model = ListModel()
+
+        if columns is None:
+            columns = [None]
+
+        self._columns = columns
+        self._model = model
+        self._model.connect('modified', self.update)
+
+        self.update()
+
+        self._widget.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
+        for event in (wx.EVT_LIST_ITEM_SELECTED, wx.EVT_LIST_ITEM_DESELECTED, wx.EVT_LIST_ITEM_FOCUSED):
+            self._widget.Bind(event, self.on_update_selection)
+
+        self.selection = []
+
+    def on_item_activated(self, event):
+        self.emit('item-activated', event.m_itemIndex)
+
+    def on_update_selection(self, event):
+        # we can't update the selection here since if the event is ITEM_FOCUSED
+        # the selection hasn't been updated yet
+        wx.CallAfter(self.update_selection)
+        event.Skip()
+
+    def update_selection(self):
+        # we have to work around the fact that a virtual ListCtrl does _not_
+        # send ITEM_SELECTED or ITEM_DESELECTED events when multiple items
+        # are selected / deselected
+        selection = []
+
+        item = -1
+        while True:
+            item = self._widget.GetNextItem(item, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+            if item == -1:
+                break
+            selection.append(item)
+
+        if selection != self.selection:
+            self.selection = selection
+            self.emit('selection-changed')
+
+    def set_columns(self, columns):
+        self._columns = columns
+        self.update()
+    def get_columns(self):
+        return self._columns
+    columns = property(get_columns, set_columns)
+    
+    def set_model(self, model):
+        if model is None:
+            model = ListModel()
+        self._model = model
+        self._model.connect('modified', self.update)
+        self.update()
+    def get_model(self):
+        return self._model
+    model = property(get_model, set_model)
+
+    def update(self):
+        self._widget.ClearAll()
+        self._widget.SetItemCount(len(self.model))
+        for num, name in enumerate(self.columns):
+            self._widget.InsertColumn(num, str(name))
+
+class Label(Widget):
+    def __init__(self, parent, text, **kwds):
+        self._widget = wx.StaticText(parent._widget, -1, text)
+        Widget.__init__(self, parent, **kwds)
 
 
-# tool panels and main window
+# stuff for tool panels and main window
 # long and ugly but it works nicely
 
 class ToolPanel(Widget):
@@ -265,7 +391,8 @@ class MainPanel(wx.Panel):
 
 
 class Window(Widget):
-    def __init__(self, position=None, size=None, menubar=False, statusbar=False, toolbar=False, **kwds):
+    def __init__(self, position=None, size=None, menubar=False, statusbar=False, toolbar=False, 
+                 panels = '', **kwds):
         self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
         if toolbar:
@@ -279,16 +406,14 @@ class Window(Widget):
             menubar.Append(menu, '&Spring')
             self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None, **kwds)
+
         self.main = MainPanel(self._widget)
-        self.bottom_panel = self.main.bottom_panel
-        self.left_panel = self.main.left_panel
-        self.right_panel = self.main.right_panel
-
-        # for example
-        self.b = Button(self.bottom_panel, 'arse', 
-                        page_label='ass', page_pixmap='console.png')
-
-        self.m = Button(self, 'papa')
+        if 'b' in panels:
+            self.bottom_panel = self.main.bottom_panel
+        if 'l' in panels:
+            self.left_panel = self.main.left_panel
+        if 'r' in panels:
+            self.right_panel = self.main.right_panel
 
     def _add(self, widget, expand=True, stretch=1.0):
         widget._widget.Reparent(self.main.remainingSpace)
@@ -299,138 +424,60 @@ class Window(Widget):
         self.main.main_box.Add(widget._widget, stretch, wx.EXPAND)
         self.main.main_box.SetSizeHints(widget._widget)
 
-
-
-
-class Button(Widget):
-    def __init__(self, parent, text, **kwds):
-        self._widget = wx.Button(parent._widget, -1, text)
+class Shell(Widget):
+    def __init__(self, parent, locals, **kwds):
+        self._widget = wx.py.shell.Shell(parent._widget, -1, locals=locals)
         Widget.__init__(self, parent, **kwds)
-        self._widget.Bind(wx.EVT_BUTTON, self.on_clicked)
+        self._widget.setLocalShell()
+        self._widget.zoom(-1)
 
-    def on_clicked(self, evt):
-        self.emit('clicked')
+    def run(self, cmd):
+        return self._widget.push(cmd)
 
-class ListModel(HasSignals):
-    def __init__(self):
-        self.items = []
-        
-    # list model interface
-    def get(self, row, column):
-        return str(self.items[row])
+    def prompt(self):
+        return self._widget.prompt()
 
-    def __len__(self):
-        return len(self.items)
+    def clear(self):
+        return self._widget.clear()
 
-    # behave as a sequence
-    def append(self, item):
-        self.items.append(item)
-        self.emit('modified')
 
-    def __setitem__(self, key, value):
-        self.items[key] = value
-        self.emit('modified')
+# this must be put into giraffe.gui
+class ScriptWindow(Shell):
+    def __init__(self, parent, **kwds):
+        self.locals = {}
+        Shell.__init__(self, parent, locals=self.locals, **kwds)
 
-    def __getitem__(self, key):
-        return self.items[key]
+        self.run('from giraffe.worksheet.arrays import *')
+        self.run('from giraffe.worksheet.arrays import *')
+        self.run('from giraffe import *')
 
-class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
-    def __init__(self, lst, *args, **kwds):
-        wx.ListCtrl.__init__(self, *args, **kwds)
-        ListCtrlAutoWidthMixin.__init__(self)
-        self.lst = lst
+        self.clear()
+        self.prompt()
 
-    def OnGetItemText(self, item, col):
-        return self.lst.model.get(item, self.lst.columns[col])
+    def connect_project(self, project):
+        self.project = project
+        self.locals.update({'project': project})
+        self.push('project.set_dict(globals())')
 
-class List(Widget):
-    def __init__(self, parent, model=None, columns=None, headers=False, editable=False, **kwds):
-        flags = wx.LC_REPORT|wx.LC_VIRTUAL|wx.BORDER_SUNKEN
-        if not headers:
-            flags |= wx.LC_NO_HEADER
-        if editable:
-            flags |= wx.LC_EDIT_LABELS
+    def disconnect_project(self):
+        self.locals.update({'project': None})
+        self.project.unset_dict()
+        self.project = None
 
-        self._widget = xListCtrl(self, parent._widget, -1, style=flags)
-        Widget.__init__(self, parent, **kwds)
 
-        if model is None:
-            model = ListModel()
-
-        if columns is None:
-            columns = [None]
-
-        self._columns = columns
-        self._model = model
-        self._model.connect('modified', self.update)
-
-        self.update()
-
-        self._widget.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
-        for event in (wx.EVT_LIST_ITEM_SELECTED, wx.EVT_LIST_ITEM_DESELECTED, wx.EVT_LIST_ITEM_FOCUSED):
-            self._widget.Bind(event, self.on_update_selection)
-
-        self.selection = []
-
-    def on_item_activated(self, event):
-        self.emit('item-activated', event.m_itemIndex)
-
-    def on_update_selection(self, event):
-        # we can't update the selection here since if the event is ITEM_FOCUSED
-        # the selection hasn't been updated yet
-        wx.CallAfter(self.update_selection)
-        event.Skip()
-
-    def update_selection(self):
-        # we have to work around the fact that a virtual ListCtrl does _not_
-        # send ITEM_SELECTED or ITEM_DESELECTED events when multiple items
-        # are selected / deselected
-        selection = []
-
-        item = -1
-        while True:
-            item = self._widget.GetNextItem(item, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
-            if item == -1:
-                break
-            selection.append(item)
-
-        if selection != self.selection:
-            self.selection = selection
-            self.emit('selection-changed')
-
-    def set_columns(self, columns):
-        self._columns = columns
-        self.update()
-    def get_columns(self):
-        return self._columns
-    columns = property(get_columns, set_columns)
-    
-    def set_model(self, model):
-        if model is None:
-            model = ListModel()
-        self._model = model
-        self._model.connect('modified', self.update)
-        self.update()
-    def get_model(self):
-        return self._model
-    model = property(get_model, set_model)
-
-    def update(self):
-        self._widget.ClearAll()
-        self._widget.SetItemCount(len(self.model))
-        for num, name in enumerate(self.columns):
-            self._widget.InsertColumn(num, str(name))
-
-class Label(Widget):
-    def __init__(self, parent, text, **kwds):
-        self._widget = wx.StaticText(parent._widget, -1, text)
-        Widget.__init__(self, parent, **kwds)
-
+# example main window
 class MainWindow(Window):
     def __init__(self):
-        Window.__init__(self, menubar=True, statusbar=True)
-#        box = Box(self, 'vertical')
-#        button = Button(box, 'button', expand=False, stretch=0)
+        Window.__init__(self, menubar=True, statusbar=True, panels='br')
+
+        # for example
+        self.shell = ScriptWindow(self.bottom_panel,
+                                  page_label='console', page_pixmap='console.png')
+
+        box = Box(self, 'vertical')
+        self.m = Button(box, 'periex')
+        self.m2 = Button(box, 'px')
+
 
 if __name__ == '__main__':
     app = Application(MainWindow)
