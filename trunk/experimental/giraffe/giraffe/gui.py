@@ -112,7 +112,7 @@ class ListModel(HasSignals):
     def __len__(self):
         return len(self.items)
 
-# behave as a sequence
+    # behave as a sequence
     def append(self, item):
         self.items.append(item)
         self.emit('modified')
@@ -243,18 +243,31 @@ class Tree(Widget):
                                    style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
         Widget.__init__(self, parent, **place)
         self.roots = []
+        self.items = {}
 
         self._widget.SetIndent(10)
         self.imagelist = wx.ImageList(16, 16)
         self._widget.SetImageList(self.imagelist)
         self.pixmaps = {}
+        self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
+
+    def on_sel_changed(self, evt):
+        item = None
+        for i in self.items.keys():
+            if evt.GetItem() == i:
+                item = self.items[i]
+        if item is None:
+            for r in self.roots:
+                if r._nodeid == evt.GetItem():
+                    item = r
+
+        self.emit('selected', item)
 
     def getpixmap(self, filename):
         if filename is None:
             return None
         if filename not in self.pixmaps:
-            self.pixmaps[filename] = \
-                    self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
 
     def append(self, node):
@@ -265,10 +278,12 @@ class Tree(Widget):
     def remove(self, node):
         self.roots.remove(node)
         node.disconnect('modified', self.on_node_modified)
+        del self.items[node._nodeid]
         self.on_node_modified()
 
     def _add_node_and_children(self, parent, node):
-        self._widget.AppendItem(parent._nodeid, str(node), self.getpixmap(node.get_pixmap()))
+        node._nodeid = self._widget.AppendItem(parent._nodeid, str(node), self.getpixmap(node.get_pixmap()))
+        self.items[node._nodeid] = node
         for child in node:
             self._add_node_and_children(node, child)
 
@@ -276,12 +291,14 @@ class Tree(Widget):
         self._widget.DeleteAllItems()
         for root in self.roots:
             root._nodeid = self._widget.AddRoot(str(root), self.getpixmap(root.get_pixmap()))
+            self._widget.Expand(root._nodeid)
             for node in root:
                 self._add_node_and_children(root, node)
 
     def clear(self):
         self._widget.DeleteAllItems()
         self.roots = []
+        self.items = {}
 
 
 class Label(Widget):

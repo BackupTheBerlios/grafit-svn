@@ -8,6 +8,8 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
 
 from giraffe.signals import HasSignals
 
+from giraffe import *
+
 class ScriptWindow(Shell):
     def __init__(self, parent, **kwds):
         self.locals = {}
@@ -23,24 +25,68 @@ class ScriptWindow(Shell):
     def connect_project(self, project):
         self.project = project
         self.locals.update({'project': project})
-        self.push('project.set_dict(globals())')
+        self.run('project.set_dict(globals())')
 
     def disconnect_project(self):
         self.locals.update({'project': None})
         self.project.unset_dict()
         self.project = None
 
+
+class FolderTreeNode(HasSignals):
+    """Adapter from a folder to a Tree node"""
+
+    def __init__(self, folder, isroot=False):
+        self.folder = folder
+        if isroot:
+            self.folder.project.connect('add-item', self.on_modified)
+            self.folder.project.connect('remove-item', self.on_modified)
+
+    def __iter__(self):
+        for item in self.folder.contents():
+            if isinstance(item, Folder):
+                yield FolderTreeNode(item)
+    
+    def __str__(self): 
+        return self.folder.name
+
+    def get_pixmap(self): 
+        return 'stock_folder.png'
+
+    def on_modified(self, item): 
+        self.emit('modified')
+
+
 class ProjectExplorer(Box):
     def __init__(self, parent, **kwds):
         Box.__init__(self, parent, 'horizontal', **kwds)
         self.splitter = Splitter(self, 'horizontal')
         self.tree = Tree(self.splitter)
-        n = TreeNode()
-        n.append(TreeNode())
-        n.append(TreeNode())
-        n.append(TreeNode())
-        self.tree.append(n)
-        self.list2 = List(self.splitter)
+        self.list = List(self.splitter)
+        self.tree.connect('selected', self.on_tree_selected)
+
+    def on_tree_selected(self, item):
+        self.list.model = FolderListData(item.folder)
+        print item.folder
+
+    def connect_project(self, project):
+        self.project = project
+        self.tree.append(FolderTreeNode(self.project.top, isroot=True))
+
+    def disconnect_project(self):
+        self.project = None
+        self.tree.clear()
+
+class FolderListData(HasSignals):
+    def __init__(self, folder):
+        self.folder = folder
+
+    def __len__(self):
+        return len(list(self.folder.contents()))
+
+    def get(self, row, column):
+        return list(self.folder.contents())[row].name
+
 
 class TableData(HasSignals):
     def get_n_columns(self):
@@ -107,6 +153,29 @@ class MainWindow(Window):
 
         self.toolbar = Toolbar(self)
         self.toolbar.append(actions['edit-undo'])
+
+        self.project = Project()
+        self.project.new(Worksheet, 'brse')
+        self.project.new(Graph, 'crse')
+        self.project.new(Folder, 'arse')
+        self.project.new(Folder, 'erse')
+
+        self.open_project(self.project)
+        f = self.project.new(Folder, 'drse')
+        self.project.new(Folder, 'frse', f)
+        self.project.new(Folder, 'qrse', f)
+
+    def open_project(self, project):
+        self.project = project
+        for panel in (self.shell, self.explorer):
+            panel.connect_project(self.project)
+#        self.project.connect('remove-item', self.on_project_remove_item)
+#        command_list.clear()
+
+    def close_project(self):
+        for panel in (self.shell, self.explorer):
+            panel.disconnect_project()
+#        self.project.disconnect('remove-item', self.on_project_remove_item)
 
     def act(self, x, y):
         print 'patataki'
