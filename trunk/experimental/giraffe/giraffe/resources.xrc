@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="ascii"?>
+<resource>
+  <object class="wxMenuBar" name="menubar">
+    <object class="wxMenu" name="project">
+      <label>&amp;Project</label>
+      <object class="wxMenuItem" name="project-new">
+        
+        <label>&amp;New</label>
+        
+        <accel>Ctrl+N</accel>
+      </object>
+      <object class="wxMenuItem" name="project-open">
+        
+        <label>&amp;Open...</label>
+        
+        <accel>Ctrl+O</accel>
+      </object>
+      <object class="wxMenuItem" name="project-save">
+        
+        <label>&amp;Save</label>
+        
+        <accel>Ctrl+S</accel>
+      </object>
+      <object class="wxMenuItem" name="project-saveas">
+        
+        <label>Save &amp;As...</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="project-quit">
+        
+        <label>&amp;Quit</label>
+        
+        <accel>Ctrl+Q</accel>
+      </object>
+    </object>
+    <object class="wxMenu" name="edit">
+      <label>&amp;Edit</label>
+      <object class="wxMenuItem" name="edit-undo">
+        
+        <label>&amp;Undo</label>
+        
+        <accel>Ctrl+Z</accel>
+      </object>
+      <object class="wxMenuItem" name="edit-redo">
+        
+        <label>&amp;Redo</label>
+        
+        <accel>Ctrl+Y</accel>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="edit-cut">
+        
+        <label>Cut</label>
+      
+        <accel>Ctrl+X</accel>
+      </object>
+      <object class="wxMenuItem" name="edit-copy">
+        
+        <label>&amp;Copy</label>
+      
+        <accel>Ctrl+C</accel>
+      </object>
+      <object class="wxMenuItem" name="edit-paste">
+        
+        <label>&amp;Paste</label>
+      
+        <accel>Ctrl+V</accel>
+      </object>
+      <object class="wxMenuItem" name="edit-delete">
+        
+        <label>&amp;Delete</label>
+      
+        <accel>Ctrl+D</accel>
+      </object>
+    </object>
+    <object class="wxMenu" name="object">
+      <label>&amp;Object</label>
+      <object class="wxMenuItem" name="object-new-folder">
+        
+        <label>New &amp;Folder</label>
+      </object>
+      <object class="wxMenuItem" name="object-new-graph">
+        
+        <label>New &amp;Graph</label>
+      </object>
+      <object class="wxMenuItem" name="object-new-worksheet">
+        
+        <label>New &amp;Worksheet</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="help">
+      <label>&amp;Help</label>
+      <object class="wxMenuItem" name="help-about">
+        <label>&amp;About...</label>
+      </object>
+    </object>
+  </object>
+  <object class="wxDialog" name="about">
+    <title>About</title>
+    <centered>1</centered>
+    <style></style>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxStaticBitmap">
+          <bitmap>/home/daniel/grafit/pixmaps/logo.png</bitmap>
+        </object>
+      </object>
+      <object class="sizeritem">
+        <object class="wxButton">
+          <label>&amp;Ok</label>
+          <default>1</default>
+          <style>wxBU_BOTTOM</style>
+        </object>
+        <flag>wxEXPAND</flag>
+      </object>
+    </object>
+  </object>
+</resource>

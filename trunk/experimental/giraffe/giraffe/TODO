@@ -1,4 +1,5 @@
-* make worksheetview Enter behave properly
-* create actionlist window
 * disallow objects with the same name in the same folder
 * automatically create names for new items
+* disable undo/redo buttons when nesessary
+* make worksheetview Enter behave properly
+* create actionlist window
