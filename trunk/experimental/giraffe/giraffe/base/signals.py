@@ -78,45 +78,45 @@ class HasSignals(object):
         Connect a signal to a slot.  'signal' is a string, `slot` is any callable.
         """
 #        print "CONNECT: ", self, signal, slot
-        if not hasattr(self, 'signals'):
-            self.signals = {}
-        if signal not in self.signals:
-            self.signals[signal] = []
-        self.signals[signal].append(Slot(slot))
+        if not hasattr(self, '_signals'):
+            self._signals = {}
+        if signal not in self._signals:
+            self._signals[signal] = []
+        self._signals[signal].append(Slot(slot))
 
     def disconnect(self, signal, slot):
         """
         Disconnect a slot from a signal.
         """
 #        print "DISCONNECT: ", self, signal, slot
-        if not hasattr(self, 'signals'):
+        if not hasattr(self, '_signals'):
             raise NameError, "TODO"
-        if signal not in self.signals:
+        if signal not in self._signals:
             raise NameError, "TODO"
-        if slot not in self.signals[signal]:
+        if slot not in self._signals[signal]:
             raise NameError, "TODO"
-        self.signals[signal].remove(slot)
+        self._signals[signal].remove(slot)
 
     def emit(self, signal, *args, **kwds):
         """
         Emit a signal. All slots connected to the signal will be called.
         *args and **kwds are passed to the slot unmodified.
         """
-#        print >>sys.stderr, "SIGNAL:", self, "emitted", signal
-        if not hasattr(self, 'signals'):
+        print >>sys.stderr, "SIGNAL:", self, "emitted", signal
+        if not hasattr(self, '_signals'):
             return []
-        if signal not in self.signals:
+        if signal not in self._signals:
             return []
 
         results = []
-        for slot in self.signals[signal]:
+        for slot in self._signals[signal]:
             # Lazy handling of expired slots.
             # We don't care about them until they are called,
             # then we remove them from the slots list.
             try:
                 results.append(slot(*args, **kwds))
             except ReferenceError:
-                # We can't do self.signals[signal].remove(slot) because that calls slot.__eq__
+                # We can't do self._signals[signal].remove(slot) because that calls slot.__eq__
                 # and raises another ReferenceError. So we might as well remove all expired slots.
-                self.signals[signal] = [s for s in self.signals[signal] if not s.is_expired()]
+                self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
         return results

@@ -185,11 +185,18 @@ class ProjectExplorer(wx.Panel, HasSignals):
 
         # tree control
         self.project_tree = ProjectTree(splitter, self.project)
-        self.project_tree.connect('activate-object', self.on_activate)
+#        self.project_tree.connect('activate-object', self.on_activate)
 
+        # list control
         self.current_dir = wx.ListCtrl(splitter, -1, 
-                   style= wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS |wx.LC_HRULES|wx.LC_SINGLE_SEL)
-        self.current_dir.InsertColumn(0, 'name')
+                   style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS|wx.LC_HRULES|wx.LC_SINGLE_SEL)
+
+        self.il = wx.ImageList(16, 16)
+        self.img_graph = self.il.Add(wx.Image('../data/images/graph.png').ConvertToBitmap())
+        self.img_worksheet = self.il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
+        self.img_folder = self.il.Add(wx.Image('../data/images/stock_folder.png').ConvertToBitmap())
+
+        self.current_dir.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 
         splitter.SplitHorizontally(self.project_tree, self.current_dir)
         sizer.Add(splitter, 1, wx.EXPAND)
@@ -198,26 +205,38 @@ class ProjectExplorer(wx.Panel, HasSignals):
         sizer.SetSizeHints(self)
 
         self.project_tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
+
+        self.current_dir.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
         self.on_sel_changed(None, self.project_tree.root)
         self.project.connect('add-item', self.on_add_item)
+        self.items = {}
 
     def on_add_item(self, item):
         if self.project_tree.items[item.parent.id] is self.project_tree.current_item:
             self.on_sel_changed(None, self.project_tree.items[item.parent.id])
 
-    def on_activate(self, item):
-        self.emit('activate-object', item)
+    def on_item_activated(self, event):
+#        for k, v in self.project_tree.items.iteritems():
+#            if v == event.GetItem().GetText():
+        self.emit('activate-object', self.project.here[event.GetItem().GetText()])
+
+#    def on_activate(self, item):
+#        self.emit('activate-object', item)
 
     def on_sel_changed(self, event, item=None):
+        self.items = {}
         if item is None:
             item = event.GetItem()
         self.current_dir.ClearAll()
         for k, v in self.project_tree.items.iteritems():
-            print v, item
             if v == item:
                 folder = self.project.items[k]
         for i, o in enumerate(folder.contents()):
-            self.current_dir.InsertStringItem(0, o.name)
+            item = self.current_dir.InsertImageStringItem(0, o.name, {Worksheet: self.img_worksheet, Graph: self.img_graph, Folder: self.img_folder}[type(o)])
+            self.items[o.name] = o
+
+
+
                 
 class ProjectTree(wx.TreeCtrl, HasSignals):
     def __init__(self, parent, project): 
@@ -238,36 +257,39 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.SetImageList(il)
 
         self.root = self.AddRoot('Project')
+        self.SetPyData(self.root, self.project.top)
+
         self.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
         self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
 
         # object.id: treeitemid
-        self.items = {}
-        self.items[self.project.top.id] = self.root
-
         self.current_item = self.root
+        self.items = {}
+        self.items[project.top.id] = self.root
 
-        self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
+#        self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
 
     def on_add_item(self, item):
         if type(item) == Folder:
-            self.items[item.id] = self.AppendItem(self.items[item.parent.id], item.name)
-            self.SetItemImage(self.items[item.id], self.wsidx, wx.TreeItemIcon_Normal)
+            treeitem = self.AppendItem(self.items[item.parent.id], item.name)
+            self.SetPyData(treeitem, item)
+            self.items[item.id] = treeitem
+            self.SetItemImage(self.treeitem, self.wsidx, wx.TreeItemIcon_Normal)
             item.connect('rename', self.on_rename)
             self.Expand(self.root)
 
-    def on_double_click(self, event):
-        item, flags = self.HitTest(event.GetPosition())
-        for k, v in self.items.iteritems():
-            if v == item:
-                self.emit('activate-object', self.project.items[k])
+#    def on_double_click(self, event):
+#        item, flags = self.HitTest(event.GetPosition())
+#        for k, v in self.items.iteritems():
+#            if v == item:
+#                self.emit('activate-object', self.project.items[k])
 #                self.mainwin.show_object(self.project.items[k])
-                if self.current_item != v:
-                    if self.current_item is not None:
-                        self.SetItemBold(self.current_item, False)
-                    self.SetItemBold(v, True)
-                    self.current_item = v
-        event.Skip()
+#                if self.current_item != v:
+#                    if self.current_item is not None:
+#                        self.SetItemBold(self.current_item, False)
+#                    self.SetItemBold(v, True)
+#                    self.current_item = v
+#        event.Skip()
 
     def on_rename(self, name, item):
         self.SetItemText(self.items[item.id], name)
@@ -366,7 +388,7 @@ class MainWindow(wx.Panel):
         # project explorer
         explorer = ProjectExplorer(self.left_panel.panel, self.project)
         explorer.connect('activate-object', self.show_object)
-        self.left_panel.add_page('Project', 'closed-folder.png', explorer)
+        self.left_panel.add_page('Project', 'stock_navigator.png', explorer)
 
    
          # will occupy the space not used by the Layout Algorithm
@@ -389,7 +411,11 @@ class MainWindow(wx.Panel):
         if isinstance(obj, Graph):
             self.view =  GraphView(self.remainingSpace, obj)
         elif isinstance(obj, Worksheet):
+            print >>sys.stderr, "creating wsv"
             self.view = WorksheetView(self.remainingSpace, obj)
+            print >>sys.stderr, "created wsv"
+        else:
+            raise TypeError
 
         self.main_box.Add(self.view, 1, wx.EXPAND)
         self.remainingSpace.Layout()

@@ -14,13 +14,18 @@ class TableData(grid.PyGridTableBase):
     def __init__(self, worksheet):
         grid.PyGridTableBase.__init__(self)
         self.worksheet = worksheet
+        print >>sys.stderr, 1
         self.worksheet.connect('data-changed', self.ResetView)
+        print >>sys.stderr, 2
 
         self.normal_attr = grid.GridCellAttr()
         self.normal_attr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
+        print >>sys.stderr, 3
         self._rows = self.GetNumberRows()
+        print >>sys.stderr, 4
         self._cols = self.GetNumberCols()
+        print >>sys.stderr, 5
 
  #   def GetAttr(self, row, col, kind):
  #       print >>sys.stderr, 'GetAttr', row, col, '#', kind
@@ -108,19 +113,11 @@ class WorksheetView(grid.Grid):
     def __init__(self, parent, worksheet):
         grid.Grid.__init__(self, parent, -1)
 
-        if worksheet:
-            self.worksheet = worksheet
-        else:
-            w = Worksheet('hello', None)
-            w.add_column('A')
-            w.add_column('B')
-            w.A = [1,2,3,4]
-            w.B = [1,4,9,16]
-            self.worksheet = w
+
+        self.worksheet = worksheet
 
         self.SetLabelFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
         self.SetDefaultRowSize(20, False)
-#        self.SetSelectionMode(wx.grid.Grid.SelectColumns)
 
         table = TableData(self.worksheet)
 

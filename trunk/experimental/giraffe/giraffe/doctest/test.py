@@ -12,7 +12,7 @@ default = '\x1b[0m'
 def _test():
     for f in [fn for fn in os.listdir('doctest/') if fn.endswith('.txt')]:
         print >>sys.stderr, 'Testing', f,
-        failed, total = doctest.testfile('doctest/'+f)
+        failed, total = doctest.testfile(f)
         if failed == 0:
             print >>sys.stderr, green+'ok!, '+ str(total)+ ' tests passed' + default
         else:
