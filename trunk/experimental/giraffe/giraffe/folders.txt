@@ -23,6 +23,6 @@ The following special names are defined:
     >>> p.rmfolder('hole')
     Traceback (most recent call last):
     NameError: folder 'hole' does not exist
-    >>> w = Worksheet(p, 'data1')
+    >>> w = p.new(Worksheet, 'data1')
     >>> data1 == w
     True

@@ -56,6 +56,8 @@ class Project(HasSignals):
         except IndexError:
             self.top = Folder(self, 'top', _isroot=True)
 
+        self.cleanup()
+
         self.this = self.top
 
         # create objects
@@ -71,6 +73,13 @@ class Project(HasSignals):
     def set_dict(self, d):
         self._dict = d
 
+    def cleanup(self):
+        for cls, desc in storage_desc.iteritems():
+            view = self.db.getas(desc)
+            for i, row in enumerate(view):
+                if row.id.startswith('-'):
+                    view.delete(i)
+
     def create(self, cls):
         try:
             view = self.db.getas(storage_desc[cls])
@@ -83,10 +92,27 @@ class Project(HasSignals):
 
         return view, row, data, id
 
+
     def new(self, cls, *args, **kwds):
         obj = cls(self, *args, **kwds)
         self.items[obj.id] = obj
-        return obj.id
+        args = (obj,)
+        return obj
+
+    def new_undo(self, obj):
+        del self.items[obj.id]
+        self.deleted[obj.id] = obj
+        obj.id = '-'+obj.id
+
+    def new_redo(self, obj):
+        del self.deleted[obj.id]
+        self.items[obj.id] = obj
+        obj.id = obj.id[1:]
+
+    def new_cleanup(self, obj):
+        del self.deleted[obj.id]
+        obj.view.remove(obj.row)
+
 
     def remove(self, id):
         obj = self.items[id]
@@ -110,7 +136,6 @@ class Project(HasSignals):
             self.remove(self.this[path].id)
         else:
             raise NameError, "folder '%s' does not exist" % path
-
 
     def save(self):
         self.db.commit()

@@ -12,10 +12,10 @@ This is an example text file in reStructuredText format.  First import
 
 Now use it:
 
-    >>> w = Worksheet(p, 'data1')
+    >>> w = p.new(Worksheet, 'data1')
     >>> p.remove(w.id)
-    >>> w = Worksheet(p, 'data1')
-    >>> w = Worksheet(p, 'data2')
+    >>> w = p.new(Worksheet, 'data1')
+    >>> w = p.new(Worksheet, 'data2')
     >>> w.add_column('A')
     >>> w.add_column('B')
     >>> p = Project('rikadik.db')
