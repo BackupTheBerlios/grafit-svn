@@ -24,9 +24,10 @@ class Coordinates:
     Pixel, Data, Physical = range(3)
 
 class Style(object):
-    def __init__(self):
+    def __init__(self, color=(0,0,0,1)):
         print 'init'
         self._line_width = 0
+        self._color = color
 
     def set_line_width(self, val):
         self._line_width = val
@@ -34,22 +35,34 @@ class Style(object):
         return self._line_width
     line_width = property(get_line_width, set_line_width)
 
+    def set_color(self, val):
+        self._color = val
+    def get_color(self):
+        return self._color
+    color = property(get_color, set_color)
+
+
 default_style = Style()
 
 class Dataset(object):
-    def __init__(self, x=None, y=None, range=(None,None), style=default_style,
-                       color=(0, 0, 0, 1.)):
+    def __init__(self, x=None, y=None, range=(None,None), style=default_style):
         self._style = Style()
         self._x = x
         self._y = y
         self._style.dataset = self
-        self._color = color
 
     def set_style(self, val):
         self._style.line_width = val.line_width
+        self._style.color = val.color
     def get_style(self):
         return self._style
     style = property(get_style, set_style)
+
+    def set_range(self, val):
+        self._range.line_width = val.line_width
+    def get_range(self):
+        return self._range
+    range = property(get_range, set_range)
 
     def set_x(self, val):
         self._x = val
@@ -63,15 +76,8 @@ class Dataset(object):
         return self._y
     y = property(get_y, set_y)
 
-    def set_color(self, val):
-        self._color = val
-    def get_color(self):
-        return self._color
-    color = property(get_color, set_color)
-
 def tics(fr, to):
     # 5-8 major tics
-    # order of preference: 1eN, 5eN, 4eN, 3eN, 2eN
     if fr == to:
         return [fr]
     exponent = floor(log10(to-fr)) - 1
@@ -118,8 +124,9 @@ class GLGraphWidget(QGLWidget):
 
         self.datasets = []
         self.datasets.append(Dataset(x = arange(10000.)/1000,
-                                     y = sin(arange(10000.)/1000),
-                                     color = (0.0, 0.1, 0.6, 0.8)))
+                                     y = sin(arange(10000.)/1000)))
+
+        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
 
 
 #        self.colors[1] = (0.4, 0.0, 0.1, 0.8)
@@ -259,7 +266,7 @@ class GLGraphWidget(QGLWidget):
             glTranslatef(0, -self.ymin, 0)
 
             w = f.Advance(str(y))
-            glRasterPos2f(-3.-(self.xscale_pixel/self.xscale_mm)*w, 
+            glRasterPos2f(-2.-(self.xscale_pixel/self.xscale_mm)*w, 
                           y-(self.xscale_pixel/self.xscale_data)*(h*0.35277138/4.))
             f.Render(str(y))
             
@@ -425,7 +432,7 @@ class GLGraphWidget(QGLWidget):
 
         glNewList(1, GL_COMPILE)
         for d in self.datasets:
-            glColor4f(*d.color)
+            glColor4f(*d.style.color)
             makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
         glEndList()
 
