@@ -198,7 +198,7 @@ class Application(wx.App):
         ws.add_column('a')
         ws.add_column('other')
         ws['a'] = [1,2,3]
-        ws['other'] = range(10000)
+        ws['other'] = range(1000000)
 
     def on_new_graph(self, evt):
         g = self.project.new(Graph, 'graph1')

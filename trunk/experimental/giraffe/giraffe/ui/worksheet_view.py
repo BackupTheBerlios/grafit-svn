@@ -21,6 +21,9 @@ class TableData(grid.PyGridTableBase):
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
 
+        self._cached_col = None
+        self._cached_data = None
+
 
     def GetAttr(self, row, col, kind):
         attr = self.normal_attr
@@ -82,6 +85,12 @@ class TableData(grid.PyGridTableBase):
         msg = grid.GridTableMessage(self, grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         view.ProcessTableMessage(msg)
 
+    def GetColLabelValue(self, col):
+        return self.worksheet.column_names[col]
+
+    def GetRowLabelValue(self, row):
+        return str(row)
+
 
 class WorksheetView(grid.Grid):
     def __init__(self, parent, worksheet):
@@ -106,7 +115,6 @@ class WorksheetView(grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
-        self.AutoSizeRows()
 
     def OnRightDown(self, event):
         print "hello"
@@ -114,6 +122,7 @@ class WorksheetView(grid.Grid):
             self.GetTable().worksheet.add_column('col'+str(l))
         self.GetTable().worksheet.A[999] = 14
         print self.GetSelectedRows()
+
 
 class TestFrame(wx.Frame):
     def __init__(self, parent, log):
@@ -128,4 +137,3 @@ if __name__ == '__main__':
     frame = TestFrame(None, sys.stdout)
     frame.Show(True)
     app.MainLoop()
-
