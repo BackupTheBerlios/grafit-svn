@@ -13,10 +13,6 @@ from gl2ps import *
 
 from giraffe.graph_render import makedata
 
-sys.path.append('/home/daniel/grafit/functions')
-sys.path.append('/home/daniel/grafit')
-import hn
-
 class Style(object):
     def __init__(self, color=(0,0,0,1)):
         self._line_width = 0
@@ -36,10 +32,6 @@ class Style(object):
 
 default_style = Style()
 
-def create_list_id(start=[100]):
-    start[0] += 1
-    return start[0]
-
 
 class Dataset(HasSignals):
     def __init__(self, graph, ind):
@@ -53,7 +45,12 @@ class Dataset(HasSignals):
         self.y.connect('data-changed', self.on_data_changed)
 
         self.style = default_style
-        self.listid = create_list_id()
+        self.listid = self.create_list_id()
+
+    def create_list_id(start=[100]):
+        start[0] += 1
+        return start[0]
+    create_list_id = staticmethod(create_list_id)
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id

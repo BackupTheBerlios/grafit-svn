@@ -244,7 +244,7 @@ class MainWindow(Window):
             return
 
     def ask_savechanges(self):
-        dlg = wx.MessageDialog(self._widget, 'Save <b>changes?</b>', 'Save?',
+        dlg = wx.MessageDialog(self._widget, 'Save changes to this project?', 'Save?',
                                wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
         result = dlg.ShowModal()
         if result == wx.ID_YES:

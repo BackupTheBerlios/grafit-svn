@@ -1,3 +1,12 @@
+* add wx.FlexGridSizer to gui module
+* create gui for graph style panel
+* make add/remove datasets into commands
+* make data entry possible in worksheetview
+
+
+
+
+
 for grafit M1:
 --------------
 - explorer
@@ -16,13 +25,8 @@ for grafit M1:
     - save/load datasets and zooming 
     
     
-
-
-- disallow objects with the same name in the same folder
-- automatically create names for new items
 * disable undo/redo buttons when nesessary
 * make worksheetview Enter behave properly
-* create actionlist window
 
 The core grafit application should _not_ use wx directly
 but only the grafit.gui toolkit.
@@ -50,30 +54,3 @@ grafit.gui provides
 - main window and panels
     - Window
     - MainWindow
-
-Window
-------
-
-w = Window()
-w.menubar = MenuBar()
-
-m = Menu()
-m.append('file-new', '&New')
-m.append('file-open', '&Open')
-
-actions = { 
-    'file-new': gui.Action('New', 'Create a new project', self.on_new_project, 'new.png', 'Ctrl+N'),
-    'file-open': gui.Action('Open', 'Open a project', self.on_open_project),
-    }
-
-filemenu = [['file-new', '&New'],
-            ['file-open', '&Open'],
-            ['file-save', '&Save'],
-            ['file-saveas', '&Save as...'],
-            ['check-item?', 'check'],
-            None,
-            ['file-quit', '&Quit', 'Ctrl+Q'],
-           ]
-m = Menu(filemenu)
-
-w.menubar.append('')
