@@ -85,6 +85,10 @@ class Folder(Item):
         self.emit('modified')
 
     def _is_name_ok(self, name):
+        """
+        Check if `name` is ok for a child of this folder.
+        `name` must not be the name of any existing child.
+        """
         if name in [s.name for s in self.items]:
             return False
         return True
