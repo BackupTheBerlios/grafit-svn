@@ -13,10 +13,10 @@ from giraffe.signals import HasSignals
 
 # this module absolutely needs documentation!
 
-class Pixmap(object):
-    def __init__(self, name):
-        self.name = name
-        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
+#class Pixmap(object):
+#    def __init__(self, name):
+#        self.name = name
+#        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
 
 class xApplication(wx.App):
     def __init__(self, mainwinclass, *args, **kwds):
@@ -311,9 +311,9 @@ class Tree(Widget):
         self.items = []
         for root in self.roots:
             root._nodeid = self._widget.AddRoot(str(root), self.getpixmap(root.get_pixmap()))
-            self._widget.Expand(root._nodeid)
             for node in root:
                 self._add_node_and_children(root, node)
+            self._widget.Expand(root._nodeid)
 
     def clear(self):
         self._widget.DeleteAllItems()

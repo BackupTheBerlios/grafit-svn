@@ -6,6 +6,8 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                         OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
 
+from giraffe.ui_worksheet_view import WorksheetView
+
 import wx
 import os
 
@@ -70,10 +72,14 @@ class ProjectExplorer(Box):
         self.tree = Tree(self.splitter)
         self.list = List(self.splitter)
         self.tree.connect('selected', self.on_tree_selected)
+        self.list.connect('item-activated', self.on_list_item_activated)
 
     def on_tree_selected(self, item):
         self.list.model = FolderListData(item.folder)
         self.project.cd(item.folder)
+
+    def on_list_item_activated(self, item):
+        print self.list.model[item]
 
     def connect_project(self, project):
         self.project = project
@@ -89,6 +95,9 @@ class FolderListData(HasSignals):
 
     def __len__(self): 
         return len(list(self.folder.contents()))
+
+    def __getitem__(self, key):
+        return list(self.folder.contents())[key]
 
     def get(self, row, column): 
         return list(self.folder.contents())[row].name
@@ -128,9 +137,21 @@ class MainWindow(Window):
         self.explorer = ProjectExplorer(self.main.left_panel,
                                         page_label='explorer', page_pixmap='stock_navigator.png')
 
+        self.project = Project()
+        self.project.new(Folder, 'arse')
+        self.project.new(Worksheet, 'brse')
+        self.project.new(Graph, 'crse')
+        self.project.new(Folder, 'drse')
+
+        self.open_project(self.project)
+        f = self.project.new(Folder, 'erse')
+        self.project.new(Folder, 'frse', f)
+        self.project.new(Folder, 'grse', f)
+
+
         book = Notebook(self.main)
         box = Box(book, 'vertical', page_label='window1')
-        Label(box, 'periex')
+        WorksheetView(box, self.project.new(Worksheet, 'a'))
         koalaki = MainPanel(book, page_label='window2')
         Label(koalaki, 'perierxx')
         self.expl = Table(koalaki.right_panel, TableData(),
@@ -170,17 +191,6 @@ class MainWindow(Window):
         self.toolbar = Toolbar(self)
         for item in ['object-new-folder', 'object-new-worksheet', 'object-new-graph']:
             self.toolbar.append(actions[item])
-
-        self.project = Project()
-        self.project.new(Folder, 'arse')
-        self.project.new(Worksheet, 'brse')
-        self.project.new(Graph, 'crse')
-        self.project.new(Folder, 'drse')
-
-        self.open_project(self.project)
-        f = self.project.new(Folder, 'erse')
-        self.project.new(Folder, 'frse', f)
-        self.project.new(Folder, 'grse', f)
 
     def open_project(self, project):
         self.project = project
