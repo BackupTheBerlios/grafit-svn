@@ -40,7 +40,6 @@ class Command(signals.HasSignals):
         """
         ret = self.do()
         self.register()
-        print >>sys.stderr, self
         return ret
 
 
