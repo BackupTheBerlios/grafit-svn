@@ -8,7 +8,6 @@ from giraffe.arrays import MkArray
 
 import arrays
 
-
 class Column(MkArray, HasSignals):
     def __init__(self, worksheet, ind):
         self.data = worksheet.data.columns[ind]
@@ -57,7 +56,7 @@ class Worksheet(Item, HasSignals):
 
         self.__attr = True
 
-    def eval(self, expression):
+    def evaluate(self, expression):
         project = self.project
         worksheet = self
         namespace = {}

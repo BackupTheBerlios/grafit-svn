@@ -319,11 +319,33 @@ class Graph(Item, HasSignals):
         self.grid_v = Grid('vertical', self)
 
         self.set_range(0.0, 100.5)
-        self.xmin, self.ymin = 0,0  
-        self.ymax, self.xmax = 10, 10
+        if location is None:
+            self.xmin, self.ymin = 0,0  
+            self.ymax, self.xmax = 10, 10
 #        self.autoscale()
 
     default_name_prefix = 'graph'
+
+    def get_xmin(self): 
+        try: return float(self._zoom.split()[0])
+        except IndexError: return 0.0
+    def get_xmax(self): 
+        try: return float(self._zoom.split()[1])
+        except IndexError: return 1.0
+    def get_ymin(self): 
+        try: return float(self._zoom.split()[2])
+        except IndexError: return 0.0
+    def get_ymax(self): 
+        try: return float(self._zoom.split()[3])
+        except IndexError: return 1.0
+    def set_xmin(self, value): self._zoom = ' '.join([str(f) for f in [value, self.xmax, self.ymin, self.ymax]])
+    def set_xmax(self, value): self._zoom = ' '.join([str(f) for f in [self.xmin, value, self.ymin, self.ymax]])
+    def set_ymin(self, value): self._zoom = ' '.join([str(f) for f in [self.xmin, self.xmax, value, self.ymax]])
+    def set_ymax(self, value): self._zoom = ' '.join([str(f) for f in [self.xmin, self.xmax, self.ymin, value]])
+    xmin = property(get_xmin, set_xmin)
+    xmax = property(get_xmax, set_xmax)
+    ymin = property(get_ymin, set_ymin)
+    ymax = property(get_ymax, set_ymax)
 
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
@@ -452,7 +474,6 @@ class Graph(Item, HasSignals):
     def zoom(self, xmin, xmax, ymin, ymax):
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
         self.set_data_scales()
-
  
     def zoomout(self,x1, x2,x3, x4):
         a = (x2-x1)/(x4-x3)
@@ -705,6 +726,7 @@ class Graph(Item, HasSignals):
 
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
+    _zoom = wrap_attribute('zoom')
 
 
-register_class(Graph, 'graphs[name:S,id:S,parent:S,datasets[id:S,worksheet:S,x:S,y:S]]')
+register_class(Graph, 'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S]]')

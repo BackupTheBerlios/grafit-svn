@@ -27,7 +27,7 @@ class TableData(HasSignals):
             self.worksheet[col][row] = f
         except ValueError:
             try:
-                self.worksheet[col] = self.worksheet.eval(value)
+                self.worksheet[col] = self.worksheet.evaluate(value)
             except:
                 raise
 

@@ -12,14 +12,14 @@ for grafit M1:
     * delete objects
 
 - worksheets
-    * change column names
-    * change data from gui
+    - change column names
+    - change data from gui
 
 - graphs
     - working legend
     - add data from worksheet
     - remove data from worksheet
-    * save/load datasets and zooming 
+    - save/load datasets and zooming 
     
     
 * disable undo/redo buttons when nesessary
