@@ -136,8 +136,8 @@ class Shapes(GLScene,
         d.graph = self
         self.datasets.append(d)
 
-        self.datasets.append(Dataset(x = arange(1000000.)/100000,
-                                     y = sin(arange(1000000.)/100000)))
+        self.datasets.append(Dataset(x = arange(1000.)/100,
+                                     y = sin(arange(1000.)/100)))
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
 
         self.datasets.append(Dataset(x = arange(10000.)/1000,
@@ -581,15 +581,15 @@ class ShapesWindow(gtk.Window):
 
         iconw = gtk.Image() # icon widget
         iconw.set_from_file("../../pixmaps/range.png")
-        self.toolbar.append_item("Range", "Set range", "what is this?", iconw, None)
+        self.toolbar.append_element(gtk.TOOLBAR_CHILD_BUTTON, None, "Range", "Set range", "what is this?", iconw, None, None)
 
         iconw = gtk.Image()
         iconw.set_from_file("../../pixmaps/zoom.png")
-        self.toolbar.append_item("Zoom", "Zoom", "what is this?", iconw, None)
+        self.toolbar.append_element(gtk.TOOLBAR_CHILD_BUTTON, None, "Zoom", "Zoom", "what is this?", iconw, None, None)
 
         iconw = gtk.Image()
         iconw.set_from_file("../../pixmaps/hand.png")
-        self.toolbar.append_item("Zoom", "Zoom", "what is this?", iconw, None)
+        self.toolbar.append_element(gtk.TOOLBAR_CHILD_BUTTON,None, "Zoom", "Zoom", "what is this?", iconw, None, None)
 
         self.toolbar.show()
         self.table.pack_start(self.toolbar, expand=False)
