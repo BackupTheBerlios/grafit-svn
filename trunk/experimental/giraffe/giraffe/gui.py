@@ -167,12 +167,21 @@ class Grid(Widget):
         Widget.__init__(self, parent, **place)
         self.layout = wx.GridBagSizer(rows, columns)
         self._widget.SetSizerAndFit(self.layout)
+#        self.layout.SetSizeHints(self._widget)
         self._widget.SetAutoLayout(True)
 
     def _add(self, widget, pos, span=(1,1), expand=False):
         self.layout.Add(widget._widget, pos, span, flag=wx.EXPAND)
-        self.layout.SetSizeHints(self._widget)
+        self.layout.CalcMin()
+        self.layout.RecalcSizes()
+#        self.layout.SetSizeHints(self._widget)
+        self._widget.Layout()
 
+class Spin(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.SpinCtrl(parent._widget, -1)
+        Widget.__init__(self, parent, **place) 
+    
 class Choice(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.Choice(parent._widget, -1)
@@ -186,6 +195,7 @@ class xPopup(wx.PopupWindow):
 #    def ProcessLeftDown(self, event):
 #        self.lst.ProcessEvent(event)
 #        return False
+
 
 class Choose(Widget):
     def __init__(self, parent, **place):
@@ -264,6 +274,32 @@ class ColorSelect(Widget):
         self._widget = ColourSelect(parent._widget, -1, size=(100, 10))
         Widget.__init__(self, parent, **place)
 
+class Frame(Widget):
+    def __init__(self, parent, orientation, **kwds):
+        self._widget = wx.Panel(parent._widget, -1)
+        self._box = wx.StaticBox(self._widget, -1, 'static')
+        Widget.__init__(self, parent, **kwds)
+        if orientation == 'horizontal':
+            self.layout = wx.StaticBoxSizer(self._box, wx.HORIZONTAL)
+        elif orientation == 'vertical':
+            self.layout = wx.StaticBoxSizer(self._box, wx.VERTICAL)
+        else:
+            raise NameError
+        self._widget.SetSizer(self.layout)
+        self._widget.SetAutoLayout(True)
+
+    def _add(self, widget, expand=True, stretch=1.0):
+#        widget._widget.Reparent(self.parent._widget)
+        if expand:
+            expand = wx.EXPAND
+        else:
+            expand = 0
+        self.layout.Add(widget._widget, stretch, wx.EXPAND)
+#        self.layout.SetSizeHints(self._widget)
+        self._widget.Layout()
+
+
+
 class Box(Widget):
     def __init__(self, parent, orientation, **kwds):
         self._widget = wx.Panel(parent._widget, -1)
@@ -283,7 +319,7 @@ class Box(Widget):
         else:
             expand = 0
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
-        self.layout.SetSizeHints(self._widget)
+#        self.layout.SetSizeHints(self._widget)
 
 
 class Button(Widget):
@@ -739,7 +775,6 @@ class _xToolPanel(wx.SashLayoutWindow):
         self.btnbox.Add(self.toolbar, 1)
         self.toolbar.Bind(wx.EVT_TOOL, self.on_toolbar)
 
-        self.panel.SetAutoLayout(True)
         self.panel.SetSizer(self.box)
         self.panel.SetAutoLayout(True)
 
@@ -870,7 +905,7 @@ class MainPanel(Widget):
         else:
             expand = 0
         self._widget.main_box.Add(widget._widget, stretch, wx.EXPAND)
-        self._widget.main_box.SetSizeHints(widget._widget)
+#        self._widget.main_box.SetSizeHints(widget._widget)
 
 
 class _xMainPanel(wx.Panel):

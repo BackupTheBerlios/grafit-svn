@@ -115,7 +115,10 @@ def makedata(_numarray sx, _numarray sy,
         xbucket = <int>((x-xmin)/xinterval)
         ybucket = <int>((y-ymin)/yinterval)
         if (xbucket == xbucket_s) and (ybucket == ybucket_s):
+#            print 'not ok'
             continue
+#        else:
+#            print 'ok'
 
         for v in vertices:
             glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)

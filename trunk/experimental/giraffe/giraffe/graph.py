@@ -1,7 +1,8 @@
 import sys
 import time
 
-from numarray import *
+#from numarray import *
+from giraffe.arrays import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -472,10 +473,10 @@ class Graph(Item, HasSignals):
 
     def autoscale(self):
         if len(self.datasets):
-            self.xmin = min(self.datasets[0].x)
-            self.ymin = min(self.datasets[0].y)
-            self.xmax = max(self.datasets[0].x)
-            self.ymax = max(self.datasets[0].y)
+            self.xmin = array(self.datasets[0].x).min()
+            self.ymin = array(self.datasets[0].y).min()
+            self.xmax = array(self.datasets[0].x).max()
+            self.ymax = array(self.datasets[0].y).max()
             if hasattr(self, 'xscale_pixel'):
                 self.set_data_scales()
 
@@ -484,7 +485,6 @@ class Graph(Item, HasSignals):
 
     def zoom(self, xmin, xmax, ymin, ymax):
         eps = 1e-24
-        print xmin, xmax, ymin, ymax
         if abs(xmin-xmax)<=eps or abs(ymin-ymax)<=eps:
             return
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
@@ -549,19 +549,19 @@ class Graph(Item, HasSignals):
             glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
             glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
 
-            glEnable(GL_CLIP_PLANE0)
-            glEnable(GL_CLIP_PLANE1)
-            glEnable(GL_CLIP_PLANE2)
-            glEnable(GL_CLIP_PLANE3)
+#            glEnable(GL_CLIP_PLANE0)
+#            glEnable(GL_CLIP_PLANE1)
+#            glEnable(GL_CLIP_PLANE2)
+#            glEnable(GL_CLIP_PLANE3)
 
             glLoadMatrixd(self.projmatrix0)
             for d in self.datasets:
                 d.paint()
 
-            glDisable(GL_CLIP_PLANE0)
-            glDisable(GL_CLIP_PLANE1)
-            glDisable(GL_CLIP_PLANE2)
-            glDisable(GL_CLIP_PLANE3)
+#            glDisable(GL_CLIP_PLANE0)
+#            glDisable(GL_CLIP_PLANE1)
+#            glDisable(GL_CLIP_PLANE2)
+#            glDisable(GL_CLIP_PLANE3)
 
             glPopMatrix()
         else:
@@ -697,31 +697,29 @@ class Graph(Item, HasSignals):
 #                      GLint buffersize, FILE *stream,
 #                      const char *filename )
 
-
-            print >>sys.stderr, "exporting...",
-            f = file('arxi.eps', 'w')
-            gl2psBeginPage("Title", "Producer", 
-                           self.viewport,
-                           GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,
-                           GL_RGBA, -1,
-                           0,
-                           0, 0, 0,
-                           21055000, f,
-                           "arxi.eps")
-            self.ps = True
-            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            self.display()
-            self.ps = False
-
-            gl2psEndPage()
-            f.close()
-            print >>sys.stderr, "done"
+#
+#            print >>sys.stderr, "exporting...",
+#            f = file('arxi.eps', 'w')
+#            gl2psBeginPage("Title", "Producer", 
+#                           self.viewport,
+#                           GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,
+#                           GL_RGBA, -1,
+#                           0,
+#                           0, 0, 0,
+#                           21055000, f,
+#                           "arxi.eps")
+#            self.ps = True
+#            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+#            self.display()
+#            self.ps = False
+#
+#            gl2psEndPage()
+#            f.close()
+#            print >>sys.stderr, "done"
                            
-
-
-#            self.autoscale()
-#            self.make_data_list()
-#            self.queue_draw()
+            self.autoscale()
+            self.make_data_list()
+            self.emit('redraw')
         elif button == 1 or button == 3:
             zix, ziy, zfx, zfy = self.rubberband_end(x, y)
 
