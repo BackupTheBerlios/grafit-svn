@@ -8,7 +8,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import ftgl
 from Numeric import *
-from p import makedata
+from render import makedata
 
 class Mouse:
     Left, Right, Middle = range(3)
@@ -76,13 +76,13 @@ class GLGraphWidget(QGLWidget):
         self.y = {}
         self.range = {}
 
-        self.x[0] = arange(1000.)/1000
+        self.x[0] = arange(10000.)/1000
         self.y[0] = sin(self.x[0])
 
-        self.x[1] = arange(1000.)/1000
+        self.x[1] = arange(1000000.)/10000
         self.y[1] = cos(self.x[1])
 
-        self.x[2] = arange(1000.)/1000
+        self.x[2] = arange(30000.)/1000
         self.y[2] = tan(self.x[2])
 
 
