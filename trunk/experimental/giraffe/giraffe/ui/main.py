@@ -59,7 +59,26 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_height = 120
 
     def add_page(self, widget):
-        bmp = wx.Image("../data/images/graph.png").ConvertToBitmap()
+        bimp = wx.Image("../data/images/console.png").ConvertToBitmap()
+        text = 'Console'
+
+        dc = wx.MemoryDC()
+        w, h = dc.GetTextExtent(text)
+        wb, hb = bimp.GetSize()
+        bmp = wx.EmptyBitmap(w + wb, max([h, hb]))
+        dc.SelectObject(bmp)
+
+        dc.BeginDrawing()
+        dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
+        dc.Clear()
+        dc.SetFont(self.GetFont())
+        dc.DrawBitmap(bimp, 0, 0)
+        dc.DrawText(text, wb+5, 0)
+        dc.EndDrawing()
+
+        if self.position in ['left', 'right']:
+            bmp = bmp.ConvertToImage().Rotate90(False).ConvertToBitmap()
+
 #        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
         ind = len(self.contents)
 

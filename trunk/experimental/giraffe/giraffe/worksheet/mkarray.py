@@ -7,6 +7,21 @@ from numarray import *
 from numarray.ieeespecial import nan
 
 class MkArray(object):
+    """
+    a = MkArray(view, prop, col)
+
+    Supports at least:
+
+    a[n] = 134
+    a[n:m] = 2
+    a[n:m] = [3,4,5]    # sequence must have correct size
+
+    a[n]      # if n is out of range, returns nan
+    a[n:m]    # padded with nan's if out of range
+
+    slices have n < m, no extended slices. Missing values (a[:n]) allowed.
+    """    
+
     def __init__(self, view, prop, row, start=None, end=None):
         self.view, self.prop, self.row = view, prop, row
         self.start, self.end = start, end
@@ -24,9 +39,6 @@ class MkArray(object):
             start = key
             length = 1
         elif isinstance(key, slice):
-            if key.start is None and key.stop is None:
-                setattr(self.view[self.row], self.prop.name, asarray(value, typecode=Float64).tostring())
-
             if key.start is None:
                 start = 0
             else:
@@ -49,7 +61,11 @@ class MkArray(object):
             arr = asarray([value]*length, typecode=Float64)
         buf = arr.tostring()
 
-        self.view.modify(self.prop, self.row, buf, start * 8)
+        if isinstance(key, slice) and key.start is None and key.stop is None:
+            setattr(self.view[self.row], self.prop.name, buf)
+        else:
+            self.view.modify(self.prop, self.row, buf, start * 8)
+
 
     def get_length(self):
         return self.view.itemsize(self.prop, self.row)/8
@@ -83,36 +99,3 @@ class MkArray(object):
         return repr(data).replace('nan', '--')
 
 
-"""
-a = MkArray(view, prop, col)
-
-Supports at least:
-
-a[n] = 134
-a[n:m] = 2
-a[n:m] = [3,4,5]    # sequence must have correct size
-
-a[n]      # if n is out of range, returns nan
-a[n:m]    # padded with nan's if out of range
-
-slices have n < m, no extended slices. Missing values (a[:n]) allowed.
-"""
-
-
-if __name__=='__main__':
-    db = metakit.storage('asshole', 1)
-    v = db.getas('test[ass:B]')
-    v.append()
-
-    v = db.view('test')
-
-    a = MkArray(v, v.ass, 0)
-
-    a[10000:10005] = 3.33
-#a[0] = 13
-#a[24]  = 5
-#a[30:35] = arange(5)
-    print a
-    print a[31]
-
-    db.commit()

@@ -1,7 +1,10 @@
-import  wx
+import sys
+
+import wx
+import wx.grid as grid
+
 from giraffe.worksheet.mkarray import nan
 from giraffe.worksheet import Worksheet
-import wx.grid as grid
 
 class TableData(grid.PyGridTableBase):
     """
@@ -113,6 +116,21 @@ class WorksheetView(grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
+        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
+        
+    def OnKeyDown(self, evt):
+        if evt.KeyCode() != wx.WXK_RETURN:
+            evt.Skip()
+            return
+        if evt.ControlDown():   # the edit control needs this key
+            evt.Skip()
+            return
+
+        self.DisableCellEditControl()
+
+        if not self.MoveCursorDown(True): 
+            # add a new row
+            self.GetTable().worksheet[self.GetGridCursorCol()][self.GetTable().GetNumberRows()] = nan
 
     def OnRightDown(self, event):
         print "hello"

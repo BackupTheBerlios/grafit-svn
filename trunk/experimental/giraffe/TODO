@@ -1,0 +1,5 @@
+user interface:
+- add toolbar
+- make worksheetview not hang on large selection
+- make worksheetview Enter behave properly
+- create actionlist window
