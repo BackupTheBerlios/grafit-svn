@@ -82,6 +82,7 @@ class FolderListData(HasSignals):
         self.folder = folder
 
     def __len__(self):
+        print len(list(self.folder.contents()))
         return len(list(self.folder.contents()))
 
     def get(self, row, column):
@@ -155,15 +156,15 @@ class MainWindow(Window):
         self.toolbar.append(actions['edit-undo'])
 
         self.project = Project()
+        self.project.new(Folder, 'arse')
         self.project.new(Worksheet, 'brse')
         self.project.new(Graph, 'crse')
-        self.project.new(Folder, 'arse')
-        self.project.new(Folder, 'erse')
+        self.project.new(Folder, 'drse')
 
         self.open_project(self.project)
-        f = self.project.new(Folder, 'drse')
+        f = self.project.new(Folder, 'erse')
         self.project.new(Folder, 'frse', f)
-        self.project.new(Folder, 'qrse', f)
+        self.project.new(Folder, 'grse', f)
 
     def open_project(self, project):
         self.project = project

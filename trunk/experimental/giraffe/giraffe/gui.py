@@ -249,7 +249,7 @@ class Tree(Widget):
                                    style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
         Widget.__init__(self, parent, **place)
         self.roots = []
-        self.items = {}
+        self.items = []
 
         self._widget.SetIndent(10)
         self.imagelist = wx.ImageList(16, 16)
@@ -258,16 +258,11 @@ class Tree(Widget):
         self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
 
     def on_sel_changed(self, evt):
-        item = None
-        for i in self.items.keys():
-            if evt.GetItem() == i:
-                item = self.items[i]
-        if item is None:
-            for r in self.roots:
-                if r._nodeid == evt.GetItem():
-                    item = r
-
-        self.emit('selected', item)
+        from itertools import chain
+        for item in chain(self.items, self.roots):
+            if self._widget.IsSelected(item._nodeid):
+                self.emit('selected', item)
+                return
 
     def getpixmap(self, filename):
         if filename is None:
@@ -284,12 +279,11 @@ class Tree(Widget):
     def remove(self, node):
         self.roots.remove(node)
         node.disconnect('modified', self.on_node_modified)
-        del self.items[node._nodeid]
         self.on_node_modified()
 
     def _add_node_and_children(self, parent, node):
         node._nodeid = self._widget.AppendItem(parent._nodeid, str(node), self.getpixmap(node.get_pixmap()))
-        self.items[node._nodeid] = node
+        self.items.append(node)
         for child in node:
             self._add_node_and_children(node, child)
 
@@ -304,7 +298,7 @@ class Tree(Widget):
     def clear(self):
         self._widget.DeleteAllItems()
         self.roots = []
-        self.items = {}
+        self.items = []
 
 
 class Label(Widget):
