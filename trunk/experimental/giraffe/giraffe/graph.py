@@ -9,7 +9,7 @@ from giraffe.signals import HasSignals
 from giraffe.item import Item, wrap_attribute, register_class
 from giraffe.lib import ftgl
 
-from render import makedata
+from giraffe.graph_render import makedata
 
 sys.path.append('/home/daniel/grafit/functions')
 sys.path.append('/home/daniel/grafit')
