@@ -13,20 +13,19 @@ import sys
 #sys.path.append(DATADIR)
 #sys.path.append(DATADIR+'lib/')
 
-print >>sys.stderr, "loading wx...",
 import wx
-print >>sys.stderr, "ok"
+from giraffe import gui
 
-print >>sys.stderr, "loading giraffe...",
-from giraffe import Project
-from giraffe.ui_main import Application, MainWindow
-print >>sys.stderr, "ok"
+#print >>sys.stderr, "loading giraffe...",
+#from giraffe import Project
+#from giraffe.ui_main import Application, MainWindow
+#print >>sys.stderr, "ok"
 
 def main():
-    sys.stderr.write("creating application...")
-    app = Application(MainWindow)
-    print >>sys.stderr, "ok"
-    app.run()
+    app = gui.Application()
+    app.splash()
+    from giraffe.ui_main import MainWindow
+    app.run(MainWindow)
 
 if __name__ == '__main__':
     main()

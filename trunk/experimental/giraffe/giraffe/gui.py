@@ -32,18 +32,54 @@ class _xFrameMixIn(wx.Window):
         else: 
             event.Skip() 
 
+class MySplashScreen(wx.SplashScreen):
+    """
+    Create a splash screen widget.
+    """
+    def __init__(self):
+        # This is a recipe to a the screen.
+        # Modify the following variables as necessary.
+        aBitmap = wx.Image(name = "../data/images/logo.png").ConvertToBitmap()
+        splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT
+        splashDuration = 1000 # milliseconds
+        splashCallback = None
+        # Call the constructor with the above arguments in exactly the
+        # following order.
+        wx.SplashScreen.__init__(self, aBitmap, splashStyle,
+                                 splashDuration, splashCallback)
+#        self.Bind(wx.EVT_CLOSE, self.OnExit)
+
+        wx.Yield()
+#----------------------------------------------------------------------#
+
+#    def OnExit(self, evt):
+#        self.Hide()
+        # MyFrame is the main frame.
+#        MyFrame = MyGUI(None, -1, "Hello from wxPython")
+#        app.SetTopWindow(MyFrame)
+#        MyFrame.Show(True)
+        # The program will freeze without this line.
+#        evt.Skip()  # Make sure the default handler runs too...
+#----------------------------------------------------------------------#
+
 
 class _xApplication(wx.App):
-    def __init__(self, mainwinclass, *args, **kwds):
-        self.mainwinclass = mainwinclass
-        self.initargs, self.initkwds = args, kwds
+    def __init__(self):
+#        self.mainwinclass = mainwinclass
+#        self.initargs, self.initkwds = args, kwds
         wx.App.__init__(self, redirect=False)
 
-    def OnInit(self):
-        self.mainwin = self.mainwinclass(*self.initargs, **self.initkwds)
+#    def OnInit(self):
+#        self.mainwin = self.mainwinclass(*self.initargs, **self.initkwds)
+#        self.SetTopWindow(self.mainwin._widget)
+#        self.mainwin.show_all()
+#        return True
+
+    def run(self, mainwinclass, *args, **kwds):
+        self.mainwin = mainwinclass(*args, **kwds)
         self.SetTopWindow(self.mainwin._widget)
         self.mainwin.show_all()
-        return True
+
 
 class Borg(object):
     _state = {}
@@ -53,15 +89,20 @@ class Borg(object):
         return self
 
 class Application(Borg):
-    def __init__(self, mainwinclass, *args, **kwds):
-        self._app = _xApplication(mainwinclass, *args, **kwds)
+    def __init__(self):
+        self._app = _xApplication()
 
     def get_mainwin(self):
         return self._app.mainwin
     mainwin = property(get_mainwin)
 
-    def run(self):
+    def run(self, mainwinclass, *args, **kwds):
+        self._app.run(mainwinclass, *args, **kwds)
         return self._app.MainLoop()
+
+    def splash(self):
+        splash = MySplashScreen()
+        splash.Show()
 
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):

@@ -768,4 +768,5 @@ class Graph(Item, HasSignals):
     _zoom = wrap_attribute('zoom')
 
 
-register_class(Graph, 'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S]]')
+register_class(Graph,
+'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:S,size:I,linetype:S,linestyle:S,linewidth:S]]')

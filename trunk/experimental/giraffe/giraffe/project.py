@@ -206,9 +206,9 @@ class Project(HasSignals):
             for i, row in enumerate(view):
                 if row.id != self.top.id:
                     if not row.id.startswith('-'):
-                        print 'loading', cls, row.id,
+#                        print 'loading', cls, row.id,
                         self.items[row.id] = cls(self, location=(view, row, row.id))
-                        print 'end'
+#                        print 'end'
                     else:
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
 

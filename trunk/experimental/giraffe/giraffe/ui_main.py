@@ -1,9 +1,4 @@
 import sys
-
-from giraffe.gui import Window, Button, Box, Application, Shell, List, \
-                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
-                        OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
-
 from giraffe.ui_worksheet_view import WorksheetView
 from giraffe.ui_graph_view import GraphView
 from giraffe.import_ascii import import_ascii
@@ -16,6 +11,12 @@ from giraffe.signals import HasSignals
 from giraffe.commands import command_list, undo, redo
 
 from giraffe import Graph, Worksheet, Folder, Project
+
+
+from giraffe.gui import Window, Button, Box, Application, Shell, List, \
+                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
+                        OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
+from giraffe.signals import HasSignals
 
 class WorksheetDragData(object):
     def __init__(self, worksheet):
@@ -372,7 +373,3 @@ class MainWindow(Window):
     def on_new_folder(self):
         self.project.new(Folder, None, self.project.here)
 
-
-if __name__ == '__main__':
-    app = Application(MainWindow)
-    app.run()
