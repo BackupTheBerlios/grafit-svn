@@ -7,6 +7,7 @@ from OpenGL.GLU import *
 
 from giraffe.signals import HasSignals
 from giraffe.project import Item, wrap_attribute, register_class, create_id
+from giraffe.commands import command_from_methods
 
 import ftgl
 from gl2ps import *
@@ -330,13 +331,36 @@ class Graph(Item, HasSignals):
         d.connect('modified', self.on_dataset_modified)
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
+        return ind
+
+    def undo_add(self, ind):
+        d = self.datasets[ind]
+        del self.datasets[ind]
+#        d.disconnect('modified', self.on_dataset_modified)
+        self.emit('remove-dataset', d)
+        self.data.datasets.delete(ind)
+        self.emit('redraw')
+
+    add = command_from_methods('graph_add_dataset', add, undo_add)
 
     def remove(self, dataset):
-        # XXX
+        ind = self.datasets.index(dataset)
+        dataset.id = '-'+dataset.id
         self.datasets.remove(dataset)
         dataset.disconnect('modified', self.on_dataset_modified)
         self.emit('redraw')
         self.emit('remove-dataset', dataset)
+        return (dataset, ind), None
+
+    def undo_remove(self, data):
+        dataset, ind = data
+        dataset.id = dataset.id[1:]
+        self.datasets.insert(ind, dataset)
+        dataset.connect('modified', self.on_dataset_modified)
+        self.emit('add-dataset', dataset)
+        self.emit('redraw')
+
+    remove = command_from_methods('graph_remove_dataset', remove, undo_remove)
 
     def on_dataset_modified(self, d):
         d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)

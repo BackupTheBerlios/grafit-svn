@@ -240,10 +240,10 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None):
             def do(self):
                 if not self.__done or redo is None:
                     ret = do(selb, *self.args, **self.kwds)
-                    if len(ret) > 1 and isinstance(ret, tuple):
+                    if isinstance(ret, tuple) and len(ret) > 1:
                         self.__state = ret[0]
                         ret = ret[1:]
-                        if len(ret) == 1 and isinstance(ret, tuple):
+                        if isinstance(ret, tuple) and len(ret) == 1:
                             ret = ret[0]
                     else:
                         self.__state = ret

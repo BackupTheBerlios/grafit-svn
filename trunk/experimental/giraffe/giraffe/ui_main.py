@@ -11,7 +11,7 @@ import wx
 import os
 
 from giraffe.signals import HasSignals
-from giraffe.commands import command_list
+from giraffe.commands import command_list, undo, redo
 
 from giraffe import *
 
@@ -161,8 +161,8 @@ class MainWindow(Window):
             'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png'),
             'file-save': Action('Save', 'Save the project', self.on_project_save, 'save.png'),
             'file-saveas': Action('Save As', 'Save the project with a new name', self.on_project_saveas, 'saveas.png'),
-            'edit-undo': Action('Undo', 'Undo the last action', object, 'stock_undo.png'),
-            'edit-redo': Action('Redo', 'Redo the last action', object),
+            'edit-undo': Action('Undo', 'Undo the last action', undo, 'stock_undo.png'),
+            'edit-redo': Action('Redo', 'Redo the last action', redo, 'stock_redo.png'),
             'edit-copy': Action('Copy', 'Undo the last action', object),
             'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
                                            self.on_new_worksheet, 'worksheet.png'),
@@ -183,7 +183,8 @@ class MainWindow(Window):
 
         self.toolbar = Toolbar(self)
         for item in ['file-new', 'file-open', 'file-save', 'file-saveas', None,
-                     'object-new-folder', 'object-new-worksheet', 'object-new-graph']:
+                     'object-new-folder', 'object-new-worksheet', 'object-new-graph', None,
+                     'edit-undo', 'edit-redo']:
             self.toolbar.append(actions[item])
 
     def open_project(self, project):
