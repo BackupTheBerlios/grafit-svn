@@ -21,7 +21,7 @@ from giraffe.signals import HasSignals
 
 
 
-class FrameMixIn(wx.Window): 
+class __xFrameMixIn(wx.Window): 
     def prepareFrame(self, closeEventHandler=None): 
         self._closeHandler = closeEventHandler 
         wx.EVT_CLOSE(self, self.closeFrame) 
@@ -36,7 +36,7 @@ class FrameMixIn(wx.Window):
             event.Skip() 
 
 
-class xApplication(wx.App):
+class __xApplication(wx.App):
     def __init__(self, mainwinclass, *args, **kwds):
         self.mainwinclass = mainwinclass
         self.initargs, self.initkwds = args, kwds
@@ -57,7 +57,7 @@ class Borg(object):
 
 class Application(Borg):
     def __init__(self, mainwinclass, *args, **kwds):
-        self._app = xApplication(mainwinclass, *args, **kwds)
+        self._app = __xApplication(mainwinclass, *args, **kwds)
 
     def get_mainwin(self):
         return self._app.mainwin
@@ -84,14 +84,14 @@ class Widget(HasSignals):
     def hide(self):
         self._widget.Hide()
 
-# http://wiki.wxpython.org/index.cgi/ProportionalSplitterWindow
-class ProportionalSplitter(wx.SplitterWindow):
+# http://wiki.wxpython.org/index.cgi/__xProportionalSplitterWindow
+class __xProportionalSplitter(wx.SplitterWindow):
         def __init__(self,parent, id = -1, proportion=0.33, size = wx.DefaultSize):
                 wx.SplitterWindow.__init__(self,parent,id,wx.Point(0, 0),size,0)
                 self.SetMinimumPaneSize(50) #the minimum size of a pane.
                 self.proportion = proportion
                 if not 0 < self.proportion < 1:
-                        raise ValueError, "proportion value for ProportionalSplitter must be between 0 and 1."
+                        raise ValueError, "proportion value for __xProportionalSplitter must be between 0 and 1."
                 self.ResetSash()
                 self.Bind(wx.EVT_SIZE, self.OnReSize)
                 self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSashChanged, id=id)
@@ -143,7 +143,7 @@ class ProportionalSplitter(wx.SplitterWindow):
 
 class Splitter(Widget):
     def __init__(self, parent, orientation, proportion=0.33, **place):
-        self._widget = ProportionalSplitter(parent._widget, -1, proportion=proportion)
+        self._widget = __xProportionalSplitter(parent._widget, -1, proportion=proportion)
         Widget.__init__(self, parent, **place)
         self.first = None
         self.second = None
@@ -244,7 +244,7 @@ class ListModel(HasSignals):
 #http://wiki.wxpython.org/index.cgi/TreeCtrlDnD
 #http://wiki.wxpython.org/index.cgi/LongRunningTasks
 
-class xDropTarget(wx.DropTarget):
+class __xDropTarget(wx.DropTarget):
     def __init__(self, window):
         wx.DropTarget.__init__(self)
         self.window = window
@@ -283,7 +283,7 @@ def create_wx_data_object(formats, data=None):
 
     return compobj, indivi
 
-class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix):
+class __xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
         ListCtrlAutoWidthMixin.__init__(self)
@@ -300,7 +300,7 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
 
 
     def on_begin_drag(self, event):
-        data = self.lst.emit('begin-drag', event.GetItem().GetId())
+        data = self.lst.emit('drag-begin', event.GetIndex())
         if len(data) != 1:
 #            event.Deny()
             return
@@ -334,7 +334,7 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
         if not (flags & wx.LIST_HITTEST_ONITEM):
             item = -1
 
-        result = self.lst.emit('drop', item)
+        result = self.lst.emit('drop-ask', item)
         if True in result:
             return True
         else:
@@ -362,9 +362,6 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
                         break
 
         result = self.lst.emit('dropped', item, format, data)
-#        print 'end'
-#        self.lst.setup_drop()
-#        print 'endlich'
 
     def getpixmap(self, filename):
         if filename is None:
@@ -388,7 +385,7 @@ class List(Widget):
         if editable:
             flags |= wx.LC_EDIT_LABELS
 
-        self._widget = xListCtrl(self, parent._widget, -1, style=flags)
+        self._widget = __xListCtrl(self, parent._widget, -1, style=flags)
         Widget.__init__(self, parent, **kwds)
 
         if model is None:
@@ -418,7 +415,7 @@ class List(Widget):
         self.setup_drop()
 
     def setup_drop(self):
-        target = xDropTarget(self._widget)
+        target = __xDropTarget(self._widget)
         composite, self.dropobjs = create_wx_data_object(self.formats)
         target.SetDataObject(composite)
         self._widget.SetDropTarget(target)
@@ -578,7 +575,7 @@ class Label(Widget):
 
 class ToolPanel(Widget):
     def __init__(self, parent, position, *args, **kwds):
-        self._widget = xToolPanel(parent, position)
+        self._widget = __xToolPanel(parent, position)
         Widget.__init__(self, parent, *args, **kwds)
 
     def _add(self, widget, page_label='', page_pixmap=''):
@@ -591,7 +588,7 @@ class ToolPanel(Widget):
     def close(self, id=None):
         self._widget.close(id)
 
-class xToolPanel(wx.SashLayoutWindow):
+class __xToolPanel(wx.SashLayoutWindow):
     """The areas on the left, top and bottom of the window holding tabs."""
 
     def __init__(self, parent, position):
@@ -747,7 +744,7 @@ class xToolPanel(wx.SashLayoutWindow):
 
 class MainPanel(Widget):
     def __init__(self, parent, **place):
-        self._widget = xMainPanel(parent._widget)
+        self._widget = __xMainPanel(parent._widget)
         Widget.__init__(self, parent, **place)
         self.bottom_panel = self._widget.bottom_panel
         self.left_panel = self._widget.left_panel
@@ -763,7 +760,7 @@ class MainPanel(Widget):
         self._widget.main_box.SetSizeHints(widget._widget)
 
 
-class xMainPanel(wx.Panel):
+class __xMainPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
         self.bottom_panel = ToolPanel(self, 'bottom')
@@ -1019,7 +1016,7 @@ class Notebook(Widget):
         else:
             raise NameError
 
-class TableData(wx.grid.PyGridTableBase):
+class __xTableData(wx.grid.PyGridTableBase):
     def __init__(self, data):
         wx.grid.PyGridTableBase.__init__(self)
         self.data = data
@@ -1097,10 +1094,10 @@ class TableData(wx.grid.PyGridTableBase):
 
 class Table(Widget):
     def __init__(self, parent, data, **place):
-        self._widget = xGrid(parent._widget, data)
+        self._widget = __xGrid(parent._widget, data)
         Widget.__init__(self, parent, **place)
 
-class xLabelEditor(wx.TextCtrl, HasSignals):
+class __xLabelEditor(wx.TextCtrl, HasSignals):
     def __init__(self, parent, column):
         wx.TextCtrl.__init__(self, parent, -1, parent.GetTable().data.get_column_name(column), 
                              style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
@@ -1128,14 +1125,14 @@ class xLabelEditor(wx.TextCtrl, HasSignals):
             self.destroyed = True
             self.Destroy()
 
-class xGrid(wx.grid.Grid):
+class __xGrid(wx.grid.Grid):
     def __init__(self, parent, data):
         wx.grid.Grid.__init__(self, parent, -1)
 
         self.SetLabelFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
         self.SetDefaultRowSize(20, False)
 
-        table = TableData(data)
+        table = __xTableData(data)
 
         # The second parameter means that the grid is to take ownership of the
         # table and will destroy it when done.  Otherwise you would need to keep
@@ -1154,7 +1151,7 @@ class xGrid(wx.grid.Grid):
         if evt.GetRow() != -1:
             return
         if hasattr(self.GetTable().data, 'label_edited'):
-            self.edit = xLabelEditor(self, evt.GetCol())
+            self.edit = __xLabelEditor(self, evt.GetCol())
 
     def OnMouseWheel(self, evt):
         evt.Skip()

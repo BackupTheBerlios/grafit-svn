@@ -71,8 +71,15 @@ class Dataset(HasSignals):
         glColor4f(*self.style.color)
         makedata(asarray(self.x[:]), asarray(self.y[:]), 
                  xmin, xmax, ymin, ymax, 
-                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)])
+#                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]) # squares
+                 GL_QUADS, [(dx,0), (0,dy), (-dx,0), (0,-dy)]) # squares
+#                 GL_TRIANGLES, [(0,dy), (-dx,-dy), (dx, -dy), (0, dx), (dx, dy), (0, 0)])
+#                 GL_POLYGONS, [(0,dy), (-dx,-dy), (dx, -dy)])
         glEndList()
+
+# square
+# up triangle
+# down triangle
 
     def on_data_changed(self):
         self.emit('modified', self)
@@ -97,8 +104,8 @@ class Grid(object):
             glLoadIdentity()
             glPushMatrix()
             glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-            glScalef(self.xscale_data, self.yscale_mm, 1.)
-            glTranslate(-self.xmin, 0, 0)
+            glScaled(self.xscale_data, self.yscale_mm, 1.)
+#            glTranslate(-self.xmin, 0, 0)
 
             plot_height_mm = (self.h - self.marginb - self.margint)/self.res
             plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
@@ -111,8 +118,8 @@ class Grid(object):
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for x in self.axis_bottom.tics(self.xmin, self.xmax):
-                glVertex3f(x, 0.0, 0.0)
-                glVertex3f(x, plot_height_mm, 0.0)
+                glVertex3d(x-self.xmin, 0.0, 0.0)
+                glVertex3d(x-self.xmin, plot_height_mm, 0.0)
             glEnd()
             if self.ps:
                 gl2psDisable(GL2PS_LINE_STIPPLE)
@@ -125,8 +132,8 @@ class Grid(object):
             self = self.plot
             glPushMatrix()
             glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
-            glScalef(self.xscale_mm, self.yscale_data, 1.)
-            glTranslate(0, -self.ymin, 0)
+            glScaled(self.xscale_mm, self.yscale_data, 1.)
+#            glTranslate(0, -self.ymin, 0)
 
             plot_height_mm = (self.h - self.marginb - self.margint)/self.res
             plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
@@ -139,8 +146,8 @@ class Grid(object):
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for y in self.axis_left.tics(self.ymin, self.ymax):
-                glVertex3f(0, y, 0.0)
-                glVertex3f(plot_width_mm, y, 0.0)
+                glVertex3d(0, y-self.ymin, 0.0)
+                glVertex3d(plot_width_mm, y-self.ymin, 0.0)
             glEnd()
             glDisable(GL_LINE_STIPPLE)
             if self.ps:
@@ -162,24 +169,25 @@ class Axis(object):
     def paint(self):
         glPushMatrix()
         glLoadIdentity()
-        glTranslatef(-1., -1., 0.)         # starting at bottom left corner
-        glScalef(self.plot.xscale_pixel, self.plot.yscale_pixel, 1.) # pixel scale
+        glTranslated(-1., -1., 0.)         # starting at bottom left corner
+        glScaled(self.plot.xscale_pixel, self.plot.yscale_pixel, 1.) # pixel scale
 
-        glColor3f(0.0,0.0,0.0)      # black
+        glColor3f(0.0,0.0,0.0) # axis color
 
+        # Axis lines
         glBegin(GL_LINES)
         if self.position == 'bottom':
-            glVertex3f(self.plot.marginl, self.plot.marginb, 0.0)
-            glVertex3f(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
+            glVertex3d(self.plot.marginl, self.plot.marginb, 0.0)
+            glVertex3d(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
         elif self.position == 'right':
-            glVertex3f(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
-            glVertex3f(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
+            glVertex3d(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
+            glVertex3d(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
         elif self.position == 'top':
-            glVertex3f(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
-            glVertex3f(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
+            glVertex3d(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
+            glVertex3d(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
         elif self.position == 'left':
-            glVertex3f(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
-            glVertex3f(self.plot.marginl, self.plot.marginb, 0.0)
+            glVertex3d(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
+            glVertex3d(self.plot.marginl, self.plot.marginb, 0.0)
         glEnd()
 
         glPopMatrix()
@@ -188,13 +196,13 @@ class Axis(object):
             glPushMatrix()
             glLoadIdentity()
             glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-            glScalef(self.plot.xscale_data, self.plot.yscale_mm, 1.)
-            glTranslate(-self.plot.xmin, 0, 0)
+            glScaled(self.plot.xscale_data, self.plot.yscale_mm, 1.)
+#            glTranslate(-self.plot.xmin, 0, 0)
 
             glBegin(GL_LINES)
             for x in self.tics(self.plot.xmin, self.plot.xmax):
-                glVertex3f(x, 0.0, 0.0)
-                glVertex3f(x, 2, 0.0)
+                glVertex3d(x-self.plot.xmin, 0.0, 0.0)
+                glVertex3d(x-self.plot.xmin, 2, 0.0)
             glEnd()
 
             glPopMatrix()
@@ -202,13 +210,13 @@ class Axis(object):
         elif self.position == 'left':
             glPushMatrix()
             glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-            glScalef(self.plot.xscale_mm, self.plot.yscale_data, 1.)
-            glTranslate(0, -self.plot.ymin, 0)
+            glScaled(self.plot.xscale_mm, self.plot.yscale_data, 1.)
+#            glTranslate(0, -self.plot.ymin, 0)
 
             glBegin(GL_LINES)
             for y in self.tics(self.plot.ymin, self.plot.ymax):
-                glVertex3f(0, y, 0.0)
-                glVertex3f(2, y, 0.0)
+                glVertex3d(0, y-self.plot.ymin, 0.0)
+                glVertex3d(2, y-self.plot.ymin, 0.0)
             glEnd()
 
             glPopMatrix()
@@ -222,11 +230,11 @@ class Axis(object):
             for x in self.tics(self.plot.xmin, self.plot.xmax):
                 glPushMatrix()
                 glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-                glScalef(self.plot.xscale_data, self.plot.yscale_mm, 1.)
-                glTranslatef(-self.plot.xmin, 0, 0)
+                glScaled(self.plot.xscale_data, self.plot.yscale_mm, 1.)
+#                glTranslated(-self.plot.xmin, 0, 0)
                 
                 w = self.font.Advance(str(x))
-                glRasterPos2f(x-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
+                glRasterPos2d(x-self.plot.xmin-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
                 if self.plot.ps:
                     gl2psText(str(x), "Times-Roman", h)
                 self.font.Render(str(x))
@@ -236,13 +244,13 @@ class Axis(object):
             for y in self.tics(self.plot.ymin, self.plot.ymax):
                 glPushMatrix()
                 glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-                glScalef(self.plot.xscale_mm, self.plot.yscale_data, 1.)
+                glScaled(self.plot.xscale_mm, self.plot.yscale_data, 1.)
                 
-                glTranslatef(0, -self.plot.ymin, 0)
+#                glTranslated(0, -self.plot.ymin, 0)
 
                 w = self.font.Advance(str(y))
-                glRasterPos2f(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
-                              y-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
+                glRasterPos2d(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
+                              y-self.plot.ymin-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
                 if self.plot.ps:
                     gl2psText(str(y), "TimesRoman", h)
                 self.font.Render(str(y))
@@ -265,6 +273,7 @@ class Axis(object):
                 first = fr + (interval-fr%interval)
             rng = arange(first, to, interval)
             if 5 <= len(rng) <= 8:
+#                print 'from %f to %f:'%(fr, to), rng
                 return rng
 
         exponent += 1
@@ -276,6 +285,7 @@ class Axis(object):
                 first = fr + (interval-fr%interval)
             rng = arange(first, to, interval)
             if 5 <= len(rng) <= 8:
+#                print 'from %f to %f:'%(fr, to), rng
                 return rng
         return []
 
@@ -404,16 +414,16 @@ class Graph(Item, HasSignals):
     def paint_frame(self):
         glPushMatrix()
         glLoadIdentity()
-        glTranslatef(-1., -1., 0.)         # starting at bottom left corner
-        glScalef(self.xscale_pixel, self.yscale_pixel, 1.)
+        glTranslated(-1., -1., 0.)         # starting at bottom left corner
+        glScaled(self.xscale_pixel, self.yscale_pixel, 1.)
 
         glColor3f(1.0,1.0,1.0)      # black
 
         glBegin(GL_QUADS)
-        glVertex3f(self.marginl, self.marginb, 0.0)
-        glVertex3f(self.w - self.marginr, self.marginb, 0.0)
-        glVertex3f(self.w - self.marginr, self.h - self.margint, 0.0)
-        glVertex3f(self.marginl, self.h - self.margint, 0.0)
+        glVertex3d(self.marginl, self.marginb, 0.0)
+        glVertex3d(self.w - self.marginr, self.marginb, 0.0)
+        glVertex3d(self.w - self.marginr, self.h - self.margint, 0.0)
+        glVertex3d(self.marginl, self.h - self.margint, 0.0)
         glEnd()
 
         glPopMatrix()
@@ -432,8 +442,9 @@ class Graph(Item, HasSignals):
         glLoadIdentity()
         self.initmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
         glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0) # go to origin
-        glScalef(self.xscale_data, self.yscale_data, 1) # scale to coordinates
-        glTranslatef(-self.xmin, -self.ymin, 0) # go to (0, 0)
+        glScaled(self.xscale_data, self.yscale_data, 1) # scale to coordinates
+        self.projmatrix0 = glGetDoublev(GL_PROJECTION_MATRIX)
+        glTranslated(-self.xmin, -self.ymin, 0) # go to (0, 0)
         self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
         glPopMatrix()
 
@@ -539,7 +550,7 @@ class Graph(Item, HasSignals):
             glEnable(GL_CLIP_PLANE2)
             glEnable(GL_CLIP_PLANE3)
 
-            glLoadMatrixd(self.projmatrix)
+            glLoadMatrixd(self.projmatrix0)
             for d in self.datasets:
                 d.paint()
 
@@ -564,17 +575,17 @@ class Graph(Item, HasSignals):
 
             if (self.px, self.py) != (None, None):
                 glBegin(GL_LINE_LOOP)
-                glVertex3f(self.ix, self.iy, 0.0)
-                glVertex3f(self.ix, self.py, 0.0)
-                glVertex3f(self.px, self.py, 0.0)
-                glVertex3f(self.px, self.iy, 0.0)
+                glVertex3d(self.ix, self.iy, 0.0)
+                glVertex3d(self.ix, self.py, 0.0)
+                glVertex3d(self.px, self.py, 0.0)
+                glVertex3d(self.px, self.iy, 0.0)
                 glEnd()
 
             glBegin(GL_LINE_LOOP)
-            glVertex3f(self.ix, self.iy, 0.0)
-            glVertex3f(self.ix, self.sy, 0.0)
-            glVertex3f(self.sx, self.sy, 0.0)
-            glVertex3f(self.sx, self.iy, 0.0)
+            glVertex3d(self.ix, self.iy, 0.0)
+            glVertex3d(self.ix, self.sy, 0.0)
+            glVertex3d(self.sx, self.sy, 0.0)
+            glVertex3d(self.sx, self.iy, 0.0)
             glEnd()
             self.px, self.py = self.sx, self.sy
 
@@ -605,7 +616,7 @@ class Graph(Item, HasSignals):
         # set margins (in pixels)
         self.marginb = int(self.h * 0.1)# + self.excessh
         self.margint = int(self.h * 0.05)
-        self.marginl = int(self.w * 0.1)
+        self.marginl = int(self.w * 0.15)
         self.marginr = int(self.w * 0.05)
 
 

@@ -97,9 +97,9 @@ class ProjectExplorer(Box):
 
         self.list.connect('drop-hover', self.on_drop_hover)
         self.list.connect('dropped', self.on_dropped)
-        self.list.connect('drop', self.on_drop)
+        self.list.connect('drop-ask', self.on_drop)
 
-        self.list.connect('begin-drag', self.on_begin_drag)
+        self.list.connect('drag-begin', self.on_begin_drag)
 
     def on_drop_hover(self, item):
         if item != -1:
@@ -171,15 +171,9 @@ class FolderListData(HasSignals):
     def on_folder_modified(self):
         self.emit('modified')
 
-    def __len__(self): 
-        return len(list(self.folder.contents()))
-
-    def __getitem__(self, key):
-        return list(self.folder.contents())[key]
-
-    def get(self, row, column): 
-        return list(self.folder.contents())[row].name
-
+    def __len__(self): return len(list(self.folder.contents()))
+    def __getitem__(self, key): return list(self.folder.contents())[key]
+    def get(self, row, column): return list(self.folder.contents())[row].name
     def get_image(self, row): 
         return { Worksheet: 'worksheet.png',
                  Graph: 'graph.png',

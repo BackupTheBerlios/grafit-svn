@@ -118,5 +118,5 @@ def makedata(_numarray sx, _numarray sy,
             continue
 
         for v in vertices:
-            glVertex3d(x+v[0], y+v[1], 0.)
+            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)
     glEnd()
