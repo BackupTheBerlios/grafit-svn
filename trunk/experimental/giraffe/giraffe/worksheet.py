@@ -39,7 +39,7 @@ class Column(MkArray, HasSignals):
 
     def set_id(self, id):
         self.data.id = id
-    def get_id(self, id):
+    def get_id(self):
         return self.data.id
     id = property(get_id, set_id)
 

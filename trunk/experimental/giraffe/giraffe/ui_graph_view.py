@@ -88,3 +88,41 @@ class GraphView(wx.glcanvas.GLCanvas):
         if evt.Dragging():
             x, y = evt.GetPosition()
             self.graph.button_motion(x, y)
+
+
+class GraphDataPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        # create widgets 
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        buttons = wx.BoxSizer(wx.HORIZONTAL)
+        buttons.Add(wx.Button(self, -1, "add"), 0, wx.EXPAND)
+        sizer.Add(buttons, 0, wx.EXPAND)
+
+        sizer.Add(wx.StaticText(self, -1, 'Worksheet'), 0, wx.EXPAND)
+        self.worksheet_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
+        sizer.Add(self.worksheet_list, 1, wx.EXPAND)
+
+        sizer.Add(wx.StaticText(self, -1, 'X column'), 0, wx.EXPAND)
+        self.x_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
+        sizer.Add(self.x_list, 1, wx.EXPAND)
+
+        sizer.Add(wx.StaticText(self, -1, 'Y column'), 0, wx.EXPAND)
+        self.y_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
+        sizer.Add(self.y_list, 1, wx.EXPAND)
+
+        self.SetSizer(sizer)
+        sizer.SetSizeHints(self)
+
+    def connect_project(self, project):
+        pass
+
+    def disconnect_project(self):
+        pass
+
+    def on_open(self):
+        print 'on_open'
+
+

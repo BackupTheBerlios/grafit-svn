@@ -3,7 +3,7 @@ import wx.py
 
 from giraffe import Graph, Worksheet, Folder
 from giraffe.signals import HasSignals
-
+ 
 class ProjectExplorer(wx.Panel, HasSignals):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)

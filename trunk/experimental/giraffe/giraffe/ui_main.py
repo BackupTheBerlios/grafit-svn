@@ -8,7 +8,7 @@ import wx.xrc
 from giraffe import Graph, Worksheet, Folder, Project
 from giraffe.signals import HasSignals
 from giraffe.commands import undo, redo, command_list
-from giraffe.ui_graph_view import GraphView
+from giraffe.ui_graph_view import GraphView, GraphDataPanel
 from giraffe.ui_worksheet_view import WorksheetView
 from giraffe.ui_panels import ProjectExplorer, ScriptWindow
 
@@ -62,6 +62,7 @@ class ToolPanel(wx.SashLayoutWindow):
         self.toolbar = wx.ToolBar(self.panel, -1, 
                                   style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
         self.btnbox.Add(self.toolbar, 1)
+        self.toolbar.Bind(wx.EVT_TOOL, self.on_toolbar)
 
         self.panel.SetAutoLayout(True)
         self.panel.SetSizer(self.box)
@@ -99,7 +100,6 @@ class ToolPanel(wx.SashLayoutWindow):
 
         btn = wx.NewId()
         self.toolbar.AddCheckTool(btn, bmp, bmp, "New", "Long help for 'New'")
-        self.toolbar.Bind(wx.EVT_TOOL, self.make_button_callback(ind))
 
         self.contentbox.Add(widget, 1, wx.EXPAND)
         widget.Hide()
@@ -115,21 +115,25 @@ class ToolPanel(wx.SashLayoutWindow):
             margin = self.GetEdgeMargin(wx.SASH_TOP)
             self.SetDefaultSize((-1, self.toolbar.GetSize()[1] + margin))
 
-
     def open(self, id):
+        for i, btn in enumerate(self.buttons):
+            if i != id:
+                self.toolbar.ToggleTool(btn, False)
+
         for i, widget in enumerate(self.contents):
             if i != id:
                 self.contentbox.Hide(widget)
-        for i, btn in enumerate(self.buttons):
-            if i != id:
-                btn.SetToggle(False)
-        self.contentbox.Show(self.contents[id])
-        self.contentbox.Layout()
+
+        self.contentbox.Show(self.contents[id]) 
+        if hasattr(self.contents[id], 'on_open'):
+            self.contents[id].on_open()
+
         if self.position in ['left', 'right']:
             self.SetDefaultSize((self.last_width, -1))
         else:
             self.SetDefaultSize((-1, self.last_height))
 
+        self.contentbox.Layout()
         wx.LayoutAlgorithm().LayoutWindow(self.parent, self.parent.remainingSpace)
         self.parent.remainingSpace.Refresh()
 
@@ -149,13 +153,12 @@ class ToolPanel(wx.SashLayoutWindow):
         wx.LayoutAlgorithm().LayoutWindow(self.parent, self.parent.remainingSpace)
         self.parent.remainingSpace.Refresh()
 
-    def make_button_callback(self, id):
-        def button_clicked_callback(self, event):
-            if self.toolbar.GetToolState(self.buttons[id]):
-                self.open(id)
-            else:
-                self.close(id)
-        return new.instancemethod(button_clicked_callback, self, self.__class__)
+    def on_toolbar(self, event):
+        num = self.buttons.index(event.GetId())
+        if self.toolbar.GetToolState(self.buttons[num]):
+            self.open(num)
+        else:
+            self.close(num)
 
 
 class Application(wx.App):
@@ -340,6 +343,12 @@ class MainPanel(wx.Panel):
         self.explorer.connect('activate-object', self.show_object)
         self.left_panel.add_page('Project', 'stock_navigator.png', self.explorer)
 
+        # the right panel
+        self.e = GraphDataPanel(self.right_panel.panel)
+        self.right_panel.add_page('Data', 'worksheet.png', self.e)
+
+        self.f = ProjectExplorer(self.right_panel.panel)
+        self.right_panel.add_page('Style', 'console.png', self.f)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
