@@ -98,6 +98,9 @@ class FolderListModel(HasSignals):
     def __len__(self):
         return len(self.contents)
 
+    def __getitem__(self, row):
+        return self.contents[row]
+
 class GraphDataPanel(gui.Box):
     def __init__(self, parent):
         # wrapper for wx parent widget
@@ -113,8 +116,9 @@ class GraphDataPanel(gui.Box):
         button.connect('clicked', self.on_add)
 
         gui.Label(self, 'Worksheet', stretch=0)
-        self.worksheet_list = gui.List(self)
-        self.worksheet_list.model.append('arse')
+        self.worksheet_list = gui.List(self, editable=False)
+        self.worksheet_list.connect('item-activated', self.on_wslist_activated)
+        self.worksheet_list.connect('selection-changed', self.on_wslist_select)
 
         gui.Label(self, 'X column', stretch=0)
         self.x_list = gui.List(self)
@@ -126,6 +130,12 @@ class GraphDataPanel(gui.Box):
 
         self.project = None
         self.folder = None
+
+    def on_wslist_activated(self, ind):
+        print 'activated:', self.worksheet_list.model[ind]
+
+    def on_wslist_select(self):
+        print 'selection:', [self.worksheet_list.model[ind] for ind in self.worksheet_list.selection]
 
     def set_current_folder(self, folder):
         self.folder = folder

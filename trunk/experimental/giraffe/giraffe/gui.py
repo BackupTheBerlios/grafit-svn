@@ -100,6 +100,38 @@ class List(Widget):
 
         self.update()
 
+        self._widget.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
+        for event in (wx.EVT_LIST_ITEM_SELECTED, wx.EVT_LIST_ITEM_DESELECTED, wx.EVT_LIST_ITEM_FOCUSED):
+            self._widget.Bind(event, self.on_update_selection)
+
+        self.selection = []
+
+    def on_item_activated(self, event):
+        self.emit('item-activated', event.m_itemIndex)
+
+    def on_update_selection(self, event):
+        # we can't update the selection here since if the event is ITEM_FOCUSED
+        # the selection hasn't been updated yet
+        wx.CallAfter(self.update_selection)
+        event.Skip()
+
+    def update_selection(self):
+        # we have to work around the fact that a virtual ListCtrl does _not_
+        # send ITEM_SELECTED or ITEM_DESELECTED events when multiple items
+        # are selected / deselected
+        selection = []
+
+        item = -1
+        while True:
+            item = self._widget.GetNextItem(item, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+            if item == -1:
+                break
+            selection.append(item)
+
+        if selection != self.selection:
+            self.selection = selection
+            self.emit('selection-changed')
+
     def set_columns(self, columns):
         self._columns = columns
         self.update()

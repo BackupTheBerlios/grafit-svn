@@ -3,3 +3,10 @@
 * disable undo/redo buttons when nesessary
 * make worksheetview Enter behave properly
 * create actionlist window
+
+Window
+------
+
+w = Window()
+w.menubar = MenuBar()
+w.menubar.append()
