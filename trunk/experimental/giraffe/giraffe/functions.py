@@ -5,6 +5,20 @@ from signals import HasSignals
 from ElementTree import Element, SubElement, ElementTree, parse
 import StringIO
 
+class FunctionsRegistry(HasSignals):
+    def __init__(self, dir):
+        """Create a new function registry from a directory"""
+
+    def rescan(self):
+        """Rescan the directory and check for changed functions"""
+
+    def __getitem__(self, name):
+        """"""
+
+    """emits 'modified'(function) : a function definition has been modified"""
+
+functions = []
+
 def mod_property(name):
     def mod_get(self):
         return getattr(self, '_'+name)
@@ -27,6 +41,7 @@ class Function(HasSignals):
     parameters = mod_property('parameters')
 
     def to_xml(self, f):
+        
         elem = Element('Function', name=self.name, text=repr(self.text), extra=repr(self.extra))
         for p in self.parameters:
             SubElement(elem, 'Parameter', name=p)
@@ -82,7 +97,7 @@ class FunctionsWindow(gui.Window):
         extra = gui.Box(book, 'vertical', page_label='extra')
         self.extra = gui.Text(extra, multiline=True, stretch=1)
 
-        self.functions = []
+        self.functions = functions
         self.function = None
 
 #        self.function = Function('Dielectric/Havriliak-Negami', ['logf0', 'de', 'a', 'b'], 'y=hn(x)', 'import Numeric\ndef')

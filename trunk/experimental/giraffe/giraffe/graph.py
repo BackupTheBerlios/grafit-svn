@@ -156,7 +156,7 @@ class DrawWithStyle(HasSignals):
         setattr(self.style, item, old)
 
     def change_style_combine(self, state, other):
-        print state, other
+#        print state, other
         return False
 
     change_style = command_from_methods('dataset-change-style', change_style_do, 
@@ -167,38 +167,26 @@ class DrawWithStyle(HasSignals):
         self.change_style(item, value, old)
         self.emit('modified', self)
 
-
-class Dataset(DrawWithStyle):
-    def __init__(self, graph, ind):
-        self.graph, self.ind = graph, ind
-        self.data = self.graph.data.datasets[ind]
-
-        DrawWithStyle.__init__(self, graph, self.data)
-
-        self.worksheet = self.graph.project.items[self.data.worksheet]
-        self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
-
-        self.x.connect('data-changed', self.on_data_changed)
-        self.y.connect('data-changed', self.on_data_changed)
-
-    def __repr__(self):
-        return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
-                                                         self.worksheet.name, self.x.name, self.y.name)
-
-    def set_id(self, id): self.data.id = id
-    def get_id(self): return self.data.id
-    id = property(get_id, set_id)
-
-    def set_worksheet(self, ws): self.data.worksheet = ws.id
-    def get_worksheet(self): return self.graph.project.items[self.data.worksheet]
-
-    def paint(self):
+    def paint_symbols(self, x, y):
         res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
 
-        x = asarray(self.x[:])
-        y = asarray(self.y[:])
+        z = zeros(len(x))
+
+        if self.style.symbol != 'none':
+            gl2psPointSize(self.data.size)
+            if self.data.size != 0:
+                glPointSize(self.data.size)
+            dx =  res * (xmax-xmin)/width * self.style.symbol_size / 5.
+            dy =  res * (ymax-ymin)/height * self.style.symbol_size / 5.
+            render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
+
+
+    def paint_lines(self, x, y):
+        res, xmin, xmax, ymin, ymax, width, height = self.paintdata
+        glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
+                  self.style.color[2]/256., 1.)
 
 #        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
 #        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
@@ -230,27 +218,76 @@ class Dataset(DrawWithStyle):
 
         glDisable(GL_LINE_STIPPLE)
 
-        if self.style.symbol != 'none':
-            gl2psPointSize(self.data.size)
-            if self.data.size != 0:
-                glPointSize(self.data.size)
-            dx =  res * (xmax-xmin)/width * self.style.symbol_size / 5.
-            dy =  res * (ymax-ymin)/height * self.style.symbol_size / 5.
-            render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
-
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
         self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
 
-    def on_data_changed(self):
-        self.emit('modified', self)
 
-    def __str__(self):
-        return self.x.worksheet.name+':'+self.y.name+'('+self.x.name+')'
+
+class Dataset(DrawWithStyle):
+    def __init__(self, graph, ind):
+        self.graph, self.ind = graph, ind
+        self.data = self.graph.data.datasets[ind]
+
+        DrawWithStyle.__init__(self, graph, self.data)
+
+        self.worksheet = self.graph.project.items[self.data.worksheet]
+        self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
+
+        self.x.connect('data-changed', lambda: self.emit('modified', self), True)#self.on_data_changed)
+        self.y.connect('data-changed', lambda: self.emit('modified', self), True)#self.on_data_changed)
+
+    def __repr__(self):
+        return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
+                                                         self.worksheet.name, self.x.name, self.y.name)
+
+    def paint(self):
+        x = asarray(self.x[:])
+        y = asarray(self.y[:])
+        self.paint_lines(x, y)
+        self.paint_symbols(x, y)
+
+    def set_id(self, id): self.data.id = id
+    def get_id(self): return self.data.id
+    id = property(get_id, set_id)
 
     # this is nescessary! see graph.remove
     def __eq__(self, other):
         return self.id == other.id
 
+    def set_worksheet(self, ws): self.data.worksheet = ws.id
+    def get_worksheet(self): return self.graph.project.items[self.data.worksheet]
+
+    def __str__(self):
+        return self.x.worksheet.name+':'+self.y.name+'('+self.x.name+')'
+
+
+class Function(DrawWithStyle):
+    def __init__(self, graph, ind):
+        self.graph, self.ind = graph, ind
+        self.data = self.graph.data.functions[ind]
+
+        DrawWithStyle.__init__(self, graph, self.data)
+        self.style.line_style = 'solid'
+        self.style.line_type = 'straight'
+
+        self.func = sin
+
+    def paint(self):
+        x = arange(self.graph.xmin, self.graph.xmax, (self.graph.xmax-self.graph.xmin)/100)
+        y = self.func(x)
+
+        self.paint_lines(x, y)
+
+#    def set_function(self, func):
+#        self._func = func
+
+    def set_id(self, id): self.data.id = id
+    def get_id(self): return self.data.id
+    id = property(get_id, set_id)
+
+    # this is nescessary! see graph.remove
+    def __eq__(self, other):
+        return self.id == other.id
 
 class Grid(object):
     def __init__(self, orientation, plot):
@@ -508,6 +545,14 @@ class Graph(Item, HasSignals):
                     self.datasets.append(d)
                     d.connect('modified', self.on_dataset_modified)
 
+        self.functions = []
+        if location is not None:
+            for i in range(len(self.data.functions)):
+                if not self.data.functions[i].id.startswith('-'):
+                    f = Function(self, i)
+                    self.functions.append(f)
+                    f.connect('modified', self.on_dataset_modified)
+
         self.ps = False
 
         self.axis_top = Axis('top', self)
@@ -552,6 +597,11 @@ class Graph(Item, HasSignals):
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
 
+    def newf(self):
+        ind = self.data.functions.append(id=create_id())
+        f = Function(self, ind)
+        self.functions.append(f)
+        return f
 
     # add and remove datasets
 
@@ -663,6 +713,9 @@ class Graph(Item, HasSignals):
         for d in self.datasets:
             d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
 
+        for f in self.functions:
+            f.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
+
 #        print (time.time()-t), "seconds"
 
     def mouse_to_ident(self, xm, ym):
@@ -749,6 +802,8 @@ class Graph(Item, HasSignals):
             glLoadMatrixd(self.projmatrix0)
             for d in self.datasets:
                 d.paint()
+            for f in self.functions:
+                f.paint()
             glPopMatrix()
 
             self.paint_axes()
@@ -947,4 +1002,4 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph,
-'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I],functions[id:S,func:S,name:S,params:S,lock:S,color:I,linetype:S,linestyle:S,linewidth:S]]')
+'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I],functions[id:S,func:S,name:S,params:S,lock:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:S]]')

@@ -25,7 +25,7 @@ def parse_float(st):
         return nan
 
 def isnan(x):
-    return x is nan
+    return [xi is nan for xi in x]
      
 def import_ascii(str, delimiter=None, decimal_symbol='.', max_lines = None):
     """Read data from a delimited ascii file. Returns the data and header.
