@@ -1,6 +1,6 @@
 import sys
 
-from giraffe.gui import Window, Button, Box, Application, Shell, List, Splitter, Label, Tree, TreeNode
+from giraffe.gui import Window, Button, Box, Application, Shell, List, Splitter, Label, Tree, TreeNode, Notebook
 
 class ScriptWindow(Shell):
     def __init__(self, parent, **kwds):
@@ -40,19 +40,26 @@ class ProjectExplorer(Box):
 # example main window
 class MainWindow(Window):
     def __init__(self):
-        Window.__init__(self, menubar=True, statusbar=True, panels='brl')
+        sys.stderr.write('main')
+        Window.__init__(self, menubar=True, statusbar=True, toolbar=True, panels='brl')
 
         # for example
+        sys.stderr.write('script')
         self.shell = ScriptWindow(self.bottom_panel,
                                   page_label='console', page_pixmap='console.png')
+        sys.stderr.write('explorer')
         self.explorer = ProjectExplorer(self.left_panel,
                                         page_label='explorer', page_pixmap='stock_navigator.png')
+        sys.stderr.write('ok')
 
-        box = Box(self, 'vertical')
+        book = Notebook(self)
+        box = Box(book, 'vertical', page_label='koali')
         Label(box, 'periex')
-        Label(box, 'px')
+        box = Box(book, 'vertical', page_label='petaloudi')
+        Label(box, 'perierxx')
 
 
 if __name__ == '__main__':
+    sys.stderr.write('ok\n')
     app = Application(MainWindow)
     app.run()

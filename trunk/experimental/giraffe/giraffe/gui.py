@@ -475,14 +475,18 @@ class MainPanel(wx.Panel):
 
 
 class Window(Widget):
-    def __init__(self, position=None, size=None, menubar=False, statusbar=False, toolbar=False, 
+    def __init__(self, position=(50,50), size=(640,480), menubar=False, statusbar=False, toolbar=False, 
                  panels = '', **kwds):
         self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
         if toolbar:
             self._widget.CreateToolBar()
+            tb = self._widget.GetToolBar()
+            bitmap = wx.Image('/home/daniel/giraffe/data/images/console.png').ConvertToBitmap()
+            tool = tb.AddSimpleTool(-1, bitmap, 'help_s',' help_l')
         if statusbar:
             self._widget.CreateStatusBar()
+
         if menubar:
             menubar = wx.MenuBar()
             menu = wx.Menu()
@@ -525,4 +529,17 @@ class Shell(Widget):
         return self._widget.clear()
 
 
+class Notebook(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.Notebook(parent._widget, -1)
+        Widget.__init__(self, parent, **place)
+        self.ass = wx.Button(self._widget.GetParent(), -1, 'x')
+        self.ass.SetSize((25, 25))
+        self.ass.SetPosition((300, 0))
+        self.il = wx.ImageList(16, 16)
+        self.wsidx = self.il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
+        self._widget.SetImageList(self.il)
 
+    def _add(self, widget, page_label):
+        self._widget.AddPage(widget._widget, page_label)
+        self._widget.SetPageImage(self._widget.GetPageCount()-1, self.wsidx)
