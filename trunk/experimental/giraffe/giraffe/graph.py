@@ -323,6 +323,7 @@ class Graph(Item, HasSignals):
         d.style.color =  (0.3, 0.4, 0.7, 0.8)
         d.graph = self
         self.datasets.append(d)
+        self._shape = (-1, -1)
 
 #        self.datasets.append(Dataset(x = arange(100000.)/100000,
 #                                     y = sin(arange(100000.)/100000)))
@@ -456,9 +457,12 @@ class Graph(Item, HasSignals):
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
-        self.make_data_list()
- 
+        self.dl = False
+
     def display(self, width, height):
+        if not self.dl:
+            self.make_data_list()
+            self.dl = True
 
         gluOrtho2D (0, width, 0, height)
         if not self.buf:
@@ -531,6 +535,7 @@ class Graph(Item, HasSignals):
 
     
     def reshape(self, width, height):
+        self._shape = (width, height)
         # aspect ratio to keep 
         ratio = 4./3.
 

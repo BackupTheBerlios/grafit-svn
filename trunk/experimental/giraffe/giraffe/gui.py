@@ -43,7 +43,10 @@ class Application(object):
 
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
-        self.parent = parent
+        if parent is not None:
+            self.parent = weakref.proxy(parent)
+        else:
+            self.parent = None
         if hasattr(parent, '_add'):
             parent._add(self, **kwds)
 
@@ -56,9 +59,66 @@ class Widget(HasSignals):
     def hide(self):
         self._widget.Hide()
 
+# http://wiki.wxpython.org/index.cgi/ProportionalSplitterWindow
+class ProportionalSplitter(wx.SplitterWindow):
+        def __init__(self,parent, id = -1, proportion=0.33, size = wx.DefaultSize):
+                wx.SplitterWindow.__init__(self,parent,id,wx.Point(0, 0),size,0)
+                self.SetMinimumPaneSize(50) #the minimum size of a pane.
+                self.proportion = proportion
+                if not 0 < self.proportion < 1:
+                        raise ValueError, "proportion value for ProportionalSplitter must be between 0 and 1."
+                self.ResetSash()
+                self.Bind(wx.EVT_SIZE, self.OnReSize)
+                self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSashChanged, id=id)
+                ##hack to set sizes on first paint event
+                self.Bind(wx.EVT_PAINT, self.OnPaint)
+                self.firstpaint = True
+
+        def SplitHorizontally(self, win1, win2):
+                if self.GetParent() is None: return False
+                return wx.SplitterWindow.SplitHorizontally(self, win1, win2,
+                        int(round(self.GetParent().GetSize().GetHeight() * self.proportion)))
+
+        def SplitVertically(self, win1, win2):
+                if self.GetParent() is None: return False
+                return wx.SplitterWindow.SplitVertically(self, win1, win2,
+                        int(round(self.GetParent().GetSize().GetWidth() * self.proportion)))
+
+        def GetExpectedSashPosition(self):
+                if self.GetSplitMode() == wx.SPLIT_HORIZONTAL:
+                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().height)
+                else:
+                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().width)
+                return int(round(tot * self.proportion))
+
+        def ResetSash(self):
+                self.SetSashPosition(self.GetExpectedSashPosition())
+
+        def OnReSize(self, event):
+                "Window has been resized, so we need to adjust the sash based on self.proportion."
+                self.ResetSash()
+                event.Skip()
+
+        def OnSashChanged(self, event):
+                "We'll change self.proportion now based on where user dragged the sash."
+                pos = float(self.GetSashPosition())
+                if self.GetSplitMode() == wx.SPLIT_HORIZONTAL:
+                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().height)
+                else:
+                        tot = max(self.GetMinimumPaneSize(),self.GetParent().GetClientSize().width)
+                self.proportion = pos / tot
+                event.Skip()
+
+        def OnPaint(self,event):
+                if self.firstpaint:
+                        if self.GetSashPosition() != self.GetExpectedSashPosition():
+                                self.ResetSash()
+                        self.firstpaint = False
+                event.Skip()
+
 class Splitter(Widget):
     def __init__(self, parent, orientation, **place):
-        self._widget = wx.SplitterWindow(parent._widget, -1)
+        self._widget = ProportionalSplitter(parent._widget, -1)
         Widget.__init__(self, parent, **place)
         self.first = None
         self.second = None
@@ -216,7 +276,7 @@ class List(Widget):
                     break
                 selection.append(item)
         except wx.PyDeadObjectError:
-            return
+            pass
 
         if selection != self.selection:
             self.selection = selection
@@ -240,10 +300,12 @@ class List(Widget):
     model = property(get_model, set_model)
 
     def update(self):
+        self._widget.Freeze()
         self._widget.ClearAll()
         self._widget.SetItemCount(len(self.model))
         for num, name in enumerate(self.columns):
             self._widget.InsertColumn(num, str(name))
+        self._widget.Thaw()
 
 
 class TreeNode(HasSignals):
@@ -562,7 +624,7 @@ class Toolbar(Widget):
 
     def append(self, action):
         if action is None:
-            self._widget.AppendSeparator()
+            self._widget.AddSeparator()
         else:
             bitmap = wx.Image('/home/daniel/giraffe/data/images/'+action.pixmap).ConvertToBitmap()
             id = wx.NewId()
@@ -652,6 +714,7 @@ class OpenGLWidget(Widget):
         for event in (wx.EVT_LEFT_UP, wx.EVT_MIDDLE_UP, wx.EVT_RIGHT_UP):
             self._widget.Bind(event, self.OnMouseUp)
         self._widget.Bind(wx.EVT_MOTION, self.OnMouseMotion)
+        self._lastsize = (-1, -1)
 
 #        self.SetCursor(wx.CROSS_CURSOR)
 
@@ -666,7 +729,8 @@ class OpenGLWidget(Widget):
         self._widget.SwapBuffers()
 
     def OnSize(self, event):
-        self.emit('resize-gl', *event.GetSize())
+#        self.emit('resize-gl', *event.GetSize())
+        pass
 
     def OnPaint(self, event):
         dc = wx.PaintDC(self._widget)
@@ -674,7 +738,11 @@ class OpenGLWidget(Widget):
         if not self.init:
             self.InitGL()
             self.init = True
-        self.emit('paint-gl', *self._widget.GetSize())
+        size = self._widget.GetSize()
+        if self._lastsize != size:
+            self.emit('resize-gl', *size)
+            self._lastsize = size
+        self.emit('paint-gl', *size)
         self._widget.SwapBuffers()
 
     def OnMouseDown(self, evt):
@@ -709,31 +777,42 @@ class Notebook(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.Notebook(parent._widget, -1)
         Widget.__init__(self, parent, **place)
-#        self.ass = wx.Button(self._widget.GetParent(), -1, 'x')
-#        self.ass.SetSize((25, 25))
-#        self.ass.SetPosition((300, 0))
-#        self.ass.Bind(wx.EVT_BUTTON, self.on_x_button)
-#        self._widget.Bind(wx.EVT_SIZE, self.on_resized)
-        self.il = wx.ImageList(16, 16)
-        self.wsidx = self.il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
-        self._widget.SetImageList(self.il)
+
+        # item images
+        self.imagelist = wx.ImageList(16, 16)
+        self._widget.SetImageList(self.imagelist)
+        self.pixmaps = {}
+
         self.pages = []
 
-    def _add(self, widget, page_label):
+    def getpixmap(self, filename):
+        if filename is None:
+            return None
+        if filename not in self.pixmaps:
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+        return self.pixmaps[filename]
+
+    def _add(self, widget, page_label, page_pixmap=None):
         self._widget.AddPage(widget._widget, page_label)
-        self._widget.SetPageImage(self._widget.GetPageCount()-1, self.wsidx)
+        if page_pixmap is not None:
+            self._widget.SetPageImage(self._widget.GetPageCount()-1, self.getpixmap(page_pixmap))
         self.pages.append(widget)
+
+    def on_page_changed(self, evt):
+        self.emit('page-changed', self.pages[evt.GetSelection()])
+        evt.Skip()
 
     def delete(self, widget):
         self._widget.DeletePage(self.pages.index(widget))
         self.pages.remove(widget)
 
-#    def on_resized(self, event):
-#        self.ass.SetPosition((event.GetSize()[0] - 25, 0))
-#        event.Skip()
-#
-#    def on_x_button(self, event):
-#        print 'x clicked'
+    def select(self, widget):
+        if widget in range(len(self.pages)):
+            self._widget.SetSelection(widget)
+        elif widget in self.pages:
+            self._widget.SetSelection(self.pages.index(widget))
+        else:
+            raise NameError
 
 class TableData(wx.grid.PyGridTableBase):
     def __init__(self, data):

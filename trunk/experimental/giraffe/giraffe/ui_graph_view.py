@@ -26,7 +26,8 @@ class GraphView(gui.Box):
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
                                        self.on_close, 'remove.png'))
 
-        self.box = gui.Box(self, 'horizontal')
+        self.panel = gui.MainPanel(self)
+        self.box = gui.Box(self.panel, 'horizontal')
         self.glwidget = gui.OpenGLWidget(self.box)
 
         self.glwidget.connect('initialize-gl', self.graph.init)
@@ -42,10 +43,22 @@ class GraphView(gui.Box):
         self.legend = gui.List(self.box, stretch=0)
         self.legend.model.append('pis10sv_e1(f)')
 
+        self.graphdata = GraphDataPanel(self.panel.right_panel, page_label='Data', page_pixmap='worksheet.png')
+
     def on_new_column(self):
         pass
 
     def on_close(self):
+        self.glwidget.disconnect('initialize-gl', self.graph.init)
+        self.glwidget.disconnect('resize-gl', self.graph.reshape)
+        self.glwidget.disconnect('paint-gl', self.graph.display)
+
+        self.glwidget.disconnect('button-pressed', self.graph.button_press)
+        self.glwidget.disconnect('button-released', self.graph.button_release)
+        self.glwidget.disconnect('mouse-moved', self.graph.button_motion)
+
+        self.graph.disconnect('redraw', self.glwidget.redraw)
+
         self.parent.delete(self)
 
 class FolderListModel(HasSignals):
@@ -70,13 +83,8 @@ class FolderListModel(HasSignals):
         return self.contents[row]
 
 class GraphDataPanel(gui.Box):
-    def __init__(self, parent):
-        # wrapper for wx parent widget
-        class k: pass
-        k = k()
-        k.__dict__.update({'_widget': parent })
-
-        gui.Box.__init__(self, k, 'vertical')
+    def __init__(self, parent, **place):
+        gui.Box.__init__(self, parent, 'vertical', **place)
 
         # create widgets 
         btnbox = gui.Box(self, 'horizontal', stretch=0)
@@ -121,4 +129,5 @@ class GraphDataPanel(gui.Box):
         self.project = None
 
     def on_open(self):
-        self.set_current_folder(self.project.here)
+        #`self.set_current_folder(self.project.here)
+        pass

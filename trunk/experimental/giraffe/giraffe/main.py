@@ -82,7 +82,9 @@ class ProjectExplorer(Box):
 
     def connect_project(self, project):
         self.project = project
-        self.tree.append(FolderTreeNode(self.project.top, isroot=True))
+        root = FolderTreeNode(self.project.top, isroot=True)
+        self.tree.append(root)
+        self.on_tree_selected(root)
 
     def disconnect_project(self):
         self.project = None
@@ -139,12 +141,14 @@ class MainWindow(Window):
 
 
         self.book = Notebook(self.main)
+        self.book.connect('page-changed', self.on_page_changed)
 
         menubar = Menubar(self)
         actions = {
-            'file-new': Action('New', 'Create a new project', self.on_project_new),
-            'file-open': Action('Open', 'Open a project', self.on_project_open),
-            'file-save': Action('Save', 'Save the project', self.on_project_save),
+            'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png'),
+            'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png'),
+            'file-save': Action('Save', 'Save the project', self.on_project_save, 'save.png'),
+            'file-saveas': Action('Save As', 'Save the project with a new name', self.on_project_saveas, 'saveas.png'),
             'edit-undo': Action('Undo', 'Undo the last action', self.koal, 'stock_undo.png'),
             'edit-redo': Action('Redo', 'Redo the last action', self.koal),
             'edit-copy': Action('Copy', 'Undo the last action', self.koal),
@@ -158,7 +162,7 @@ class MainWindow(Window):
         }
 
         menu = Menu(menubar, '&File')
-        for item in ['file-new', 'file-open', None, 'file-save']:
+        for item in ['file-new', 'file-open', None, 'file-save', 'file-saveas']:
             menu.append(actions[item])
 
         menu = Menu(menubar, '&Edit')
@@ -166,7 +170,8 @@ class MainWindow(Window):
             menu.append(actions[item])
 
         self.toolbar = Toolbar(self)
-        for item in ['object-new-folder', 'object-new-worksheet', 'object-new-graph']:
+        for item in ['file-new', 'file-open', 'file-save', 'file-saveas', None,
+                     'object-new-folder', 'object-new-worksheet', 'object-new-graph']:
             self.toolbar.append(actions[item])
 
     def open_project(self, project):
@@ -178,15 +183,24 @@ class MainWindow(Window):
 
     def on_item_activated(self, item):
         if isinstance(item, Graph):
-            if item in [view.graph for view in self.book.pages if hasattr(view, 'graph')]:
-                return
-            else:
-                GraphView(self.book, item, page_label=item.name)
+            for view in [v for v in self.book.pages if hasattr(v, 'graph')]:
+                if item == view.graph:
+                    self.book.select(view)
+                    return
+            w = GraphView(self.book, item, page_label=item.name, page_pixmap='graph.png')
+            self.book.select(w)
         elif isinstance(item, Worksheet):
-            if item in [view.worksheet for view in self.book.pages if hasattr(view, 'worksheet')]:
-                return
-            else:
-                WorksheetView(self.book, item, page_label=item.name)
+            for view in [v for v in self.book.pages if hasattr(v, 'worksheet')]:
+                if item == view.worksheet:
+                    self.book.select(view)
+                    return
+            w = WorksheetView(self.book, item, page_label=item.name, page_pixmap='worksheet.png')
+            self.book.select(w)
+
+    def on_page_changed(self, item):
+#        if isinstance(item, GraphView):
+#            item.graph.emit('redraw')
+        pass
 
     def close_project(self):
         for panel in (self.shell, self.explorer):
@@ -207,7 +221,7 @@ class MainWindow(Window):
                 self.on_project_save()
 
             dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
-                                defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.OPEN | wx.CHANGE_DIR)
+                                defaultFile="", wildcard="All Files|*.*|Projects|*.gt", style=wx.OPEN | wx.CHANGE_DIR)
             if dlg.ShowModal() == wx.ID_OK:
                 path = dlg.GetPaths()[0]
                 self.close_project()
