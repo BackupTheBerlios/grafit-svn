@@ -1,8 +1,8 @@
 import sys
 print >>sys.stderr, 'initializing...',
-from arrays import *
+from base.arrays import *
 print >>sys.stderr, 'a',
-from items import Persistent
+from base.items import Persistent
 print >>sys.stderr, 'i',
 from project import Project
 print >>sys.stderr, 'p',
