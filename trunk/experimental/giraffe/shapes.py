@@ -85,9 +85,37 @@ class Dataset(object):
         dx =  self.graph.res * (self.graph.xmax-self.graph.xmin)/self.graph.w
         dy =  self.graph.res * (self.graph.ymax-self.graph.ymin)/self.graph.h
 
+        p = 0.5
+
+        glNewList(1001, GL_COMPILE)
+        glPushMatrix()
+        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
+
+        glBegin(GL_QUADS)
+        glVertex3d(-p, -p, 0)
+        glVertex3d(-p, p, 0)
+        glVertex3d(p, p, 0)
+        glVertex3d(p, -p, 0)
+        glEnd()
+        glPopMatrix()
+        glEndList()
+
+        glNewList(1002, GL_COMPILE)
+        glPushMatrix()
+        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
+        glBegin(GL_POLYGON)
+        n = 20
+        for i in xrange(n):
+            c = p*exp(i*2j*pi/n)
+            glVertex(c.real, c.imag, 0)
+        glEnd()
+        glPopMatrix()
+
+        glEndList()
+
         glNewList(self.id, GL_COMPILE)
         glColor4f(*self.style.color)
-        makedata(self.x, self.y, dx, dy, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax)
+        makedata(self.x, self.y, dx, dy, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 1001)
         glEndList()
 
 class Grid(object):
@@ -316,8 +344,8 @@ class Plot(GLScene,
         d.graph = self
         self.datasets.append(d)
 
-        self.datasets.append(Dataset(x = arange(10000.)/100,
-                                     y = sin(arange(10000.)/100)))
+        self.datasets.append(Dataset(x = arange(1000.)/1000,
+                                     y = sin(arange(1000.)/1000)))
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
         self.datasets[-1].graph = self
 
@@ -384,7 +412,7 @@ class Plot(GLScene,
         self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
 
     def make_data_list(self):
-#        t = time.time()
+        t = time.time()
 
 #        dx =  self.res * (self.xmax-self.xmin)/self.w
 #        dy =  self.res * (self.ymax-self.ymin)/self.h
@@ -397,7 +425,7 @@ class Plot(GLScene,
         for d in self.datasets:
             d.build_display_list()
 
-#        print (time.time()-t), "seconds"
+        print (time.time()-t), "seconds"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
@@ -477,20 +505,19 @@ class Plot(GLScene,
             glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
             glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
 
-            glEnable(GL_CLIP_PLANE0)
-            glEnable(GL_CLIP_PLANE1)
-            glEnable(GL_CLIP_PLANE2)
-            glEnable(GL_CLIP_PLANE3)
+#            glEnable(GL_CLIP_PLANE0)
+#            glEnable(GL_CLIP_PLANE1)
+#            glEnable(GL_CLIP_PLANE2)
+#            glEnable(GL_CLIP_PLANE3)
 
             glLoadMatrixd(self.projmatrix)
-#            glPointSize(5)
             for d in self.datasets:
                 d.paint()
 
-            glDisable(GL_CLIP_PLANE0)
-            glDisable(GL_CLIP_PLANE1)
-            glDisable(GL_CLIP_PLANE2)
-            glDisable(GL_CLIP_PLANE3)
+##            glDisable(GL_CLIP_PLANE0)
+##            glDisable(GL_CLIP_PLANE1)
+##            glDisable(GL_CLIP_PLANE2)
+##            glDisable(GL_CLIP_PLANE3)
 
             glPopMatrix()
         else:

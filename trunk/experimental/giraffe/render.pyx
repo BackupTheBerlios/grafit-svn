@@ -18,14 +18,16 @@ cdef extern from "Numeric/arrayobject.h":
 
 cdef extern from "GL/gl.h":
 
-    void glVertex3f(float x, float y, float z)
+    void glVertex3d(double x, double y, double z)
     void glBegin(int mode)
     void glEnd()
+    void glCallList(int id)
+    void glTranslated(double x, double y, double z)
     int GL_COMPILE, GL_QUADS, GL_LINES
 
 
 def makedata(ArrayType sx, ArrayType sy, double dx, double dy, 
-             double xmin, double xmax, double ymin, double ymax):
+             double xmin, double xmax, double ymin, double ymax, int displaylist):
     cdef int n, l
     cdef double x, y
     cdef double *xd, *yd
@@ -42,7 +44,6 @@ def makedata(ArrayType sx, ArrayType sy, double dx, double dy,
     yinterval = (ymax-ymin)/1000.
 
     l = sx.dimensions[0]
-    glBegin(GL_QUADS)
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
@@ -59,9 +60,6 @@ def makedata(ArrayType sx, ArrayType sy, double dx, double dy,
         if (xbucket == xbucket_s) and (ybucket == ybucket_s):
             continue
 
-        glVertex3f(x, y, 0)
-#        glTranslate()
-        glVertex3f(x+dx, y, 0)
-        glVertex3f(x+dx, y+dy, 0)
-        glVertex3f(x, y+dy, 0)
-    glEnd()
+        glTranslated(x, y, 0)
+        glCallList(displaylist)
+        glTranslated(-x, -y, 0)
