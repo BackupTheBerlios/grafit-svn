@@ -19,8 +19,16 @@ class Column(MkArray):
     name = property(get_name, set_name)
 
     def __setitem__(self, key, value):
+        prev = self[key]
         MkArray.__setitem__(self, key, value)
         self.worksheet.emit('data-changed')
+        return [key, value, prev]
+
+    def undo_setitem(self, state):
+        key, value, prev = state
+        self[key] = prev
+
+    __setitem__ = command_from_methods('column_change_data', __setitem__, undo_setitem)
 
 
 class Worksheet(Item, HasSignals):
@@ -59,6 +67,9 @@ class Worksheet(Item, HasSignals):
         else:
             object.__delattr__(self, name)
 
+    def column_index(self, name):
+        return self.data.columns.select(*[{'name': n} for n in self.column_names]).find(name=name)
+
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])
         print >>sys.stderr, 'appended', ind
@@ -67,7 +78,7 @@ class Worksheet(Item, HasSignals):
         return name
 
     def add_column_undo(self, name):
-        ind = self.data.columns.find(name=name)
+        ind = self.column_index(name=name)
         print >>sys.stderr, 'found', ind
         self.data.columns.delete(ind)
         del self.columns[ind]
@@ -77,7 +88,7 @@ class Worksheet(Item, HasSignals):
 
 
     def remove_column(self, name):
-        ind = self.data.columns.find(name=name)
+        ind = self.column_index(name)
         if ind == -1:
             raise NameError, "Worksheet does not have a column named %s" % name
         else:

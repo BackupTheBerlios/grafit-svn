@@ -24,6 +24,9 @@ class MkArray(object):
             start = key
             length = 1
         elif isinstance(key, slice):
+            if key.start is None and key.stop is None:
+                setattr(self.view[self.row], self.prop.name, asarray(value, typecode=Float64).tostring())
+
             if key.start is None:
                 start = 0
             else:
@@ -36,6 +39,7 @@ class MkArray(object):
             else:
                 length = abs(key.start - key.stop)
 
+        # adjust size
         if start > self.length:
             buf = array([nan]*(start-self.length), type=Float64).tostring()
             self.view.modify(self.prop, self.row, buf, self.length*8)
@@ -43,7 +47,6 @@ class MkArray(object):
         arr = asarray(value, typecode=Float64)
         if arr.shape == ():
             arr = asarray([value]*length, typecode=Float64)
-
         buf = arr.tostring()
 
         self.view.modify(self.prop, self.row, buf, start * 8)
@@ -56,6 +59,7 @@ class MkArray(object):
         return self.length
 
     def __getitem__(self, key):
+        # integer and (non-extended) slice keys supported
         if isinstance(key, int):
             if key >= self.length:
                 return nan
