@@ -332,7 +332,8 @@ class Graph(Item, HasSignals):
     # add and remove datasets
 
     def add(self, x, y):
-        ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), x=x.name, y=y.name)
+        ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), 
+                                        x=x.name.encode('utf-8'), y=y.name.encode('utf-8'))
         d = Dataset(self, ind)
         self.datasets.append(d)
         d.connect('modified', self.on_dataset_modified)

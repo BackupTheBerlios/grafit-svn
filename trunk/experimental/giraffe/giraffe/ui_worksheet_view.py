@@ -21,7 +21,16 @@ class TableData(HasSignals):
     def label_edited(self, col, value): self.worksheet.columns[col].name = value
     def get_row_name(self, row): return str(row)
     def get_data(self, col, row): return str(self.worksheet[col][row]).replace('nan', '')
-    def set_data(self, col, row, value): self.worksheet[col][row] = float(value)
+    def set_data(self, col, row, value): 
+        try:
+            f = float(value)
+            self.worksheet[col][row] = f
+        except ValueError:
+            try:
+                self.worksheet[col] = self.worksheet.eval(value)
+            except:
+                raise
+
 
 class WorksheetView(gui.Box):
     def __init__(self, parent, worksheet, **place):

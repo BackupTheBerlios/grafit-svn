@@ -8,21 +8,6 @@ from giraffe.arrays import MkArray
 
 import arrays
 
-#def evaluate_expression(expression, project, worksheet):
-#    namespace = {}
-#
-#    namespace.update(arrays.__dict__)
-#
-#    namespace['top'] = project.top
-#    namespace['here'] = project.this
-#    namespace['this'] = worksheet
-#    namespace['up'] = worksheet.parent.parent
-#
-#    namespace.update(dict([(c.name, c) for c in worksheet.columns]))
-#    namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
-#
-#    return eval(expression, namespace)
-
 
 class Column(MkArray, HasSignals):
     def __init__(self, worksheet, ind):
@@ -72,6 +57,24 @@ class Worksheet(Item, HasSignals):
 
         self.__attr = True
 
+    def eval(self, expression):
+        project = self.project
+        worksheet = self
+        namespace = {}
+
+        namespace.update(arrays.__dict__)
+
+        namespace['top'] = project.top
+        namespace['here'] = project.this
+        namespace['this'] = worksheet
+        namespace['up'] = worksheet.parent.parent
+
+        namespace.update(dict([(c.name, c) for c in worksheet.columns]))
+        namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
+
+        return eval(expression, namespace)
+
+
     def __getattr__(self, name):
         if name in self.column_names:
             return self[name]
@@ -94,7 +97,7 @@ class Worksheet(Item, HasSignals):
             object.__delattr__(self, name)
 
     def column_index(self, name):
-        return self.data.columns.select(*[{'name': n} for n in self.column_names]).find(name=name)
+        return self.data.columns.select(*[{'name': n.encode('utf-8')} for n in self.column_names]).find(name=name.encode('utf-8'))
 
     def add_column(self, name):
         ind = self.data.columns.append(name=name, id=create_id(), data='')
