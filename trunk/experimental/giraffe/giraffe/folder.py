@@ -12,7 +12,8 @@ class Item(common.signals.HasSignals):
 
     def _from_element(cls, element):
         lookup = dict([(i._element_name, i) for i in Item.__subclasses__() if hasattr(i, '_element_name')])
-        print lookup
+        if hasattr(cls, '_element_name'):
+            print cls._element_name
     from_element = classmethod(_from_element)
 
     def _set_name(self, name):
@@ -90,4 +91,4 @@ if __name__ == '__main__':
     print f.desc()
     print f3.objects
     print f.subfolders
-    Item.from_element(None)
+    f.from_element(None)
