@@ -1,6 +1,9 @@
 import wx
 from  wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 
+import sys
+sys.path.append('..')
+sys.path.append('../lib')
 from giraffe.signals import HasSignals
 
 class Widget(HasSignals):
@@ -8,9 +11,21 @@ class Widget(HasSignals):
         if hasattr(parent, '_add'):
             parent._add(self, **kwds)
 
+    def show(self):
+        self._widget.Show()
+
+    def show_all(self):
+        self._widget.Show(True)
+
+    def hide(self):
+        self._widget.Hide()
+
 class Box(Widget):
     def __init__(self, parent, orientation, **kwds):
-        self._widget = wx.Panel(parent._widget, -1)
+        if parent is None:
+            self._widget = wx.Panel(None, -1)
+        else:
+            self._widget = wx.Panel(parent._widget, -1)
         Widget.__init__(self, parent, **kwds)
         if orientation == 'horizontal':
             self.layout = wx.BoxSizer(wx.HORIZONTAL)
@@ -27,7 +42,38 @@ class Box(Widget):
             expand = 0
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
         self.layout.SetSizeHints(self._widget)
- 
+
+class CustomWxApp(wx.App):
+    def __init__(self, mainwinclass, *args, **kwds):
+        self.mainwinclass = mainwinclass
+        self.initargs, self.initkwds = args, kwds
+        wx.App.__init__(self, redirect=False)
+
+    def OnInit(self):
+        self.mainwin = self.mainwinclass(*self.initargs, **self.initkwds)
+        self.SetTopWindow(self.mainwin._widget)
+        self.mainwin.show_all()
+        return True
+
+class Application(object):
+    def __init__(self, mainwinclass, *args, **kwds):
+        self._app = CustomWxApp(mainwinclass, *args, **kwds)
+
+    def get_mainwin(self):
+        return self._app.mainwin
+    mainwin = property(get_mainwin)
+
+    def run(self):
+        print >>sys.stderr, 'a'
+        return self._app.MainLoop()
+        print >>sys.stderr, 'b'
+
+class Window(Widget):
+    def __init__(self, **kwds):
+        self._widget = wx.Frame(None, -1,  'grafit', pos=(50,50), size=(200,100),
+                                style=wx.DEFAULT_FRAME_STYLE)
+        Widget.__init__(self, None, **kwds)
+
 class Button(Widget):
     def __init__(self, parent, text, **kwds):
         self._widget = wx.Button(parent._widget, -1, text)
@@ -160,3 +206,7 @@ class Label(Widget):
     def __init__(self, parent, text, **kwds):
         self._widget = wx.StaticText(parent._widget, -1, text)
         Widget.__init__(self, parent, **kwds)
+
+if __name__ == '__main__':
+    app = Application(Window)
+    app.run()

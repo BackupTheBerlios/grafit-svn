@@ -9,4 +9,24 @@ Window
 
 w = Window()
 w.menubar = MenuBar()
-w.menubar.append()
+
+m = Menu()
+m.append('file-new', '&New')
+m.append('file-open', '&Open')
+
+actions = { 
+    'file-new': gui.Action('&New', 'New', 'Create a new project', self.on_new_project),
+    'file-open': gui.Action('&Open', 'Open', 'Open a project', self.on_open_project),
+    }
+
+filemenu = [['file-new', '&New', 'Ctrl+N'],
+            ['file-open', '&Open', 'Ctrl+O'],
+            ['file-save', '&Save', 'Ctrl+S'],
+            ['file-saveas', '&Save as...'],
+            ['check-item?', 'check'],
+            None,
+            ['file-quit', '&Quit', 'Ctrl+Q'],
+           ]
+m = Menu(filemenu)
+
+w.menubar.append('')
