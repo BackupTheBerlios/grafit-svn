@@ -9,7 +9,7 @@ import wx.grid
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
 from wx.lib.colourselect import ColourSelect, EVT_COLOURSELECT
 
-from giraffe.signals import HasSignals
+from signals import HasSignals
 
 # this module absolutely needs documentation!
 
@@ -250,6 +250,18 @@ class Spin(Widget):
 
     def on_spin(self, event):
         self.emit('modified', self.value)
+
+class Text(Widget):
+    def __init__(self, parent, multiline=False, **place):
+        style = 0
+        if multiline:
+            style |= wx.TE_MULTILINE 
+        self._widget = wx.TextCtrl(parent._widget, -1, style=style)
+        Widget.__init__(self, parent, **place)
+
+    def get_value(self): return self._widget.GetValue()
+    def set_value(self, val): self._widget.SetValue(val)
+    text = property(get_value, set_value)
     
 class Choice(Widget):
     def __init__(self, parent, **place):
@@ -1122,10 +1134,14 @@ class Menu(object):
             self.menubar.items[id] = action
     def on_menu(self, event):
         self.items[event.GetId()]()
+        
+###############################################################################
+# top level window                                                            #
+###############################################################################
 
 class Window(Widget):
-    def __init__(self, position=(50,50), size=(640,480), statusbar=False):
-        self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
+    def __init__(self, position=(50,50), size=(640,480), title='', statusbar=False):
+        self._widget = wx.Frame(None, -1,  title, pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
         if statusbar:
             self._widget.CreateStatusBar()

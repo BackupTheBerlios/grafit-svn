@@ -1,0 +1,2 @@
+<Function extra="import Numeric
+def" name="Dielectric/Havriliak-Negami" text="y=hn(x)"><Parameter name="logf0" /><Parameter name="de" /><Parameter name="a" /><Parameter name="b" /></Function>
