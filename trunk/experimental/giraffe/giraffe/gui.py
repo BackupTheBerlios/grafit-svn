@@ -67,9 +67,19 @@ class Application(object):
         return self._app.MainLoop()
 
 class Window(Widget):
-    def __init__(self, position=None, size=None, **kwds):
+    def __init__(self, position=None, size=None, menubar=False, statusbar=False, toolbar=False, **kwds):
         self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
+        if toolbar:
+            self._widget.CreateToolBar()
+        if statusbar:
+            self._widget.CreateStatusBar()
+        if menubar:
+            menubar = wx.MenuBar()
+            menu = wx.Menu()
+            menu.Append(-1, 'S&trint')
+            menubar.Append(menu, '&Spring')
+            self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None, **kwds)
 
 class Button(Widget):
@@ -191,12 +201,17 @@ class List(Widget):
         for num, name in enumerate(self.columns):
             self._widget.InsertColumn(num, str(name))
 
-
 class Label(Widget):
     def __init__(self, parent, text, **kwds):
         self._widget = wx.StaticText(parent._widget, -1, text)
         Widget.__init__(self, parent, **kwds)
 
+class MainWindow(Window):
+    def __init__(self):
+        Window.__init__(self, menubar=True, statusbar=True)
+        box = Box(self, 'vertical')
+        button = Button(box, 'button', expand=False, stretch=0)
+
 if __name__ == '__main__':
-    app = Application(Window)
+    app = Application(MainWindow)
     app.run()

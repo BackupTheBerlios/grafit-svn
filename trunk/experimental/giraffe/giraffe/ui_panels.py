@@ -11,6 +11,8 @@ class ProjectExplorer(wx.Panel, HasSignals):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         splitter = wx.SplitterWindow(self)
+        splitter2 = wx.SplitterWindow(splitter)
+        splitter3 = wx.SplitterWindow(splitter2)
 
         # tree control
         self.project_tree = wx.TreeCtrl(splitter, -1, 
@@ -29,9 +31,8 @@ class ProjectExplorer(wx.Panel, HasSignals):
         # object.id: treeitemid
         self.treeitems = {}
 
-
         # list control
-        self.current_dir = wx.ListCtrl(splitter, -1,
+        self.current_dir = wx.ListCtrl(splitter2, -1,
                    style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS|wx.LC_HRULES|wx.LC_SINGLE_SEL)
 
         self.il = wx.ImageList(16, 16)
@@ -41,7 +42,15 @@ class ProjectExplorer(wx.Panel, HasSignals):
 
         self.current_dir.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 
-        splitter.SplitHorizontally(self.project_tree, self.current_dir)
+        self.dir = wx.ListCtrl(splitter3, -1,
+                   style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS|wx.LC_HRULES|wx.LC_SINGLE_SEL)
+
+        self.dor = wx.ListCtrl(splitter3, -1,
+                   style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS|wx.LC_HRULES|wx.LC_SINGLE_SEL)
+
+        splitter.SplitHorizontally(self.project_tree, splitter2)
+        splitter2.SplitHorizontally(self.current_dir, splitter3)
+        splitter3.SplitHorizontally(self.dir, self.dor)
         sizer.Add(splitter, 1, wx.EXPAND)
 
         self.SetSizer(sizer)
