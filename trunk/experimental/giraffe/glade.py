@@ -1,6 +1,8 @@
 import gtk
 import gtk.glade
 
+import sys
+
 #import pygtk
 #pygtk.require('2.0')
 #import gtk
@@ -11,6 +13,8 @@ import pango
 #vbox = gtk.VBox()
 #vbox.show()
 #win.add(vbox)
+
+position = None
 
 class C:
 
@@ -94,26 +98,32 @@ def rotated_image(image):
     return imageOut
 
 
+class _getwidget(object):
+    def __init__(self, xml):
+        self.xml = xml
+    def __getitem__(self, name):
+        return self.xml.get_widget(name)
+
 class GladeHandlers:
 
-    def ok_button_clicked(ok_button):
+    def ok_button_clicked(self, ok_button):
         print "Thanks for trying out my program."
         gtk.mainquit()
 
-    def gtk_main_quit(window, event):
+    def gtk_main_quit(self, window, event):
         gtk.mainquit()
 
-    def on_script_toggled(*args, **kwds):
-        if main_window.get_widget('script_button').get_active():
-            main_window.get_widget('script').show()
+    def on_script_toggled(self, *args, **kwds):
+        if w['script_button'].get_active():
+            w['script'].show()
         else:
-            main_window.get_widget('script').hide()
-        print args, kwds
+            w['script'].hide()
+            w['vpane'].set_position(sys.maxint)
 
 # load the interface
 main_window = gtk.glade.XML('project1.glade')
 
-print main_window.get_widget('image9')
+w = _getwidget(main_window)
 
 # connect the signals in the interface
 main_window.signal_autoconnect(GladeHandlers.__dict__)

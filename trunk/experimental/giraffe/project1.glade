@@ -239,10 +239,11 @@
       </child>
 
       <child>
-	<widget class="GtkVPaned" id="vpaned1">
+	<widget class="GtkVPaned" id="vpane">
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
 	  <property name="position">0</property>
+	  <signal name="move-handle" handler="on_move_handle" last_modification_time="Sat, 23 Oct 2004 13:15:36 GMT"/>
 
 	  <child>
 	    <widget class="GtkHPaned" id="hpaned1">
@@ -431,7 +432,7 @@
 		      </child>
 		    </widget>
 		    <packing>
-		      <property name="shrink">False</property>
+		      <property name="shrink">True</property>
 		      <property name="resize">True</property>
 		    </packing>
 		  </child>
@@ -551,7 +552,7 @@
 					      <property name="max_length">0</property>
 					      <property name="text" translatable="yes">122</property>
 					      <property name="has_frame">True</property>
-					      <property name="invisible_char" translatable="yes">*</property>
+					      <property name="invisible_char">*</property>
 					      <property name="activates_default">False</property>
 					    </widget>
 					    <packing>
@@ -573,7 +574,7 @@
 					      <property name="max_length">0</property>
 					      <property name="text" translatable="yes">0.35</property>
 					      <property name="has_frame">True</property>
-					      <property name="invisible_char" translatable="yes">*</property>
+					      <property name="invisible_char">*</property>
 					      <property name="activates_default">False</property>
 					    </widget>
 					    <packing>
@@ -772,7 +773,7 @@
 					      <property name="max_length">0</property>
 					      <property name="text" translatable="yes">122</property>
 					      <property name="has_frame">True</property>
-					      <property name="invisible_char" translatable="yes">*</property>
+					      <property name="invisible_char">*</property>
 					      <property name="activates_default">False</property>
 					    </widget>
 					    <packing>
@@ -794,7 +795,7 @@
 					      <property name="max_length">0</property>
 					      <property name="text" translatable="yes">0.35</property>
 					      <property name="has_frame">True</property>
-					      <property name="invisible_char" translatable="yes">*</property>
+					      <property name="invisible_char">*</property>
 					      <property name="activates_default">False</property>
 					    </widget>
 					    <packing>
@@ -992,7 +993,7 @@
 					      <property name="max_length">0</property>
 					      <property name="text" translatable="yes">122</property>
 					      <property name="has_frame">True</property>
-					      <property name="invisible_char" translatable="yes">*</property>
+					      <property name="invisible_char">*</property>
 					      <property name="activates_default">False</property>
 					    </widget>
 					    <packing>
@@ -1014,7 +1015,7 @@
 					      <property name="max_length">0</property>
 					      <property name="text" translatable="yes">0.35</property>
 					      <property name="has_frame">True</property>
-					      <property name="invisible_char" translatable="yes">*</property>
+					      <property name="invisible_char">*</property>
 					      <property name="activates_default">False</property>
 					    </widget>
 					    <packing>
@@ -1204,13 +1205,13 @@
 		  </child>
 		</widget>
 		<packing>
-		  <property name="shrink">False</property>
+		  <property name="shrink">True</property>
 		  <property name="resize">True</property>
 		</packing>
 	      </child>
 	    </widget>
 	    <packing>
-	      <property name="shrink">False</property>
+	      <property name="shrink">True</property>
 	      <property name="resize">True</property>
 	    </packing>
 	  </child>
@@ -1323,8 +1324,8 @@
 	      </child>
 	    </widget>
 	    <packing>
-	      <property name="shrink">True</property>
-	      <property name="resize">True</property>
+	      <property name="shrink">False</property>
+	      <property name="resize">False</property>
 	    </packing>
 	  </child>
 	</widget>

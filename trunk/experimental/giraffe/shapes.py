@@ -1,22 +1,17 @@
 #!/usr/bin/env python
 
 import sys
+import time
 
 import pygtk
 pygtk.require('2.0')
+import gtk
 from gtk.gtkgl.apputils import *
 
-from OpenGL.GLE import *
-
-# Implement the GLScene interface
-# to have a shape rendered.
-
-import sys
-import time
+import ftgl
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
-import ftgl
 from Numeric import *
 from render import makedata
 
@@ -44,12 +39,18 @@ class Style(object):
 
 default_style = Style()
 
+def create_list_id(start=[100]):
+    start[0] += 1
+    return start[0]
+
 class Dataset(object):
     def __init__(self, x=None, y=None, range=(None,None), style=default_style):
         self._style = Style()
         self._x = x
         self._y = y
         self._style.dataset = self
+
+        self.id = create_list_id()
 
     def set_style(self, val):
         self._style.line_width = val.line_width
@@ -77,33 +78,88 @@ class Dataset(object):
         return self._y
     y = property(get_y, set_y)
 
+    def paint(self):
+        glCallList(self.id)
+
+    def build_display_list(self):
+        dx =  self.graph.res * (self.graph.xmax-self.graph.xmin)/self.graph.w
+        dy =  self.graph.res * (self.graph.ymax-self.graph.ymin)/self.graph.h
+
+        glNewList(self.id, GL_COMPILE)
+        glColor4f(*self.style.color)
+        makedata(self.x, self.y, dx, dy, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax)
+        glEndList()
+
+class Axis(object):
+    def __init__(self, position, plot):
+        assert position in ['left', 'right', 'top', 'bottom'], "illegal value for position: %s" % position
+        self.position = position
+        self.plot = plot
+
+    def paint(self):
+        glPushMatrix()
+        glLoadIdentity()
+        glTranslatef(-1., -1., 0.)         # starting at bottom left corner
+        glScalef(self.plot.xscale_pixel, self.plot.yscale_pixel, 1.) # pixel scale
+
+        glColor3f(0.0,0.0,0.0)      # black
+
+        glBegin(GL_LINES)
+        if self.position == 'bottom':
+            glVertex3f(self.plot.marginl, self.plot.marginb, 0.0)
+            glVertex3f(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
+        elif self.position == 'right':
+            glVertex3f(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
+            glVertex3f(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
+        elif self.position == 'top':
+            glVertex3f(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
+            glVertex3f(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
+        elif self.position == 'left':
+            glVertex3f(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
+            glVertex3f(self.plot.marginl, self.plot.marginb, 0.0)
+        glEnd()
+
+        glPopMatrix()
+
+    def tics(self, fr, to):
+        # 5-8 major tics
+        if fr == to:
+            return [fr]
+        exponent = floor(log10(to-fr)) - 1
+
+        for interval in (1,5,2,4,6,7,8,9,3):
+            interval = interval * (10**exponent)
+            if fr%interval == 0:
+                first = fr
+            else:
+                first = fr + (interval-fr%interval)
+            rng = arange(first, to, interval)
+            if 5 <= len(rng) <= 8:
+                return rng
+
+        exponent += 1
+        for interval in (1,5,2,4,6,7,8,9,3):
+            interval = interval * (10**exponent)
+            if fr%interval == 0:
+                first = fr
+            else:
+                first = fr + (interval-fr%interval)
+            rng = arange(first, to, interval)
+            if 5 <= len(rng) <= 8:
+                return rng
+        return []
+
 def tics(fr, to):
-    # 5-8 major tics
-    if fr == to:
-        return [fr]
-    exponent = floor(log10(to-fr)) - 1
+    return Axis.tics(Axis('bottom', None), fr, to)
 
-    for interval in (1,5,2,4,6,7,8,9,3):
-        interval = interval * (10**exponent)
-        if fr%interval == 0:
-            first = fr
-        else:
-            first = fr + (interval-fr%interval)
-        rng = arange(first, to, interval)
-        if 5 <= len(rng) <= 8:
-            return rng
+# matrix_physical: starting at lower left corner of plot; units in mm
+# matrix_data: starting at data (0, 0); units are data
+# resolution: pixels per mm (but we _should not care about pixels_!)
 
-    exponent += 1
-    for interval in (1,5,2,4,6,7,8,9,3):
-        interval = interval * (10**exponent)
-        if fr%interval == 0:
-            first = fr
-        else:
-            first = fr + (interval-fr%interval)
-        rng = arange(first, to, interval)
-        if 5 <= len(rng) <= 8:
-            return rng
-    return []
+# TODO:
+# - convert drawing to use the above data
+# - move drawing to Axis and Dataset classes
+# - more generic mechanism for symbols, in pyrex if nescessary
 
 
 class Shapes(GLScene,
@@ -111,10 +167,7 @@ class Shapes(GLScene,
              GLSceneButtonMotion):
     
     def __init__(self, graph):
-        GLScene.__init__(self,
-#                         gtk.gdkgl.MODE_RGB   |
-#                         gtk.gdkgl.MODE_DEPTH |
-                         gtk.gdkgl.MODE_DOUBLE)
+        GLScene.__init__(self, gtk.gdkgl.MODE_DOUBLE)
     
         # mouse rubberbanding coordinates
         self.sx = None
@@ -139,20 +192,28 @@ class Shapes(GLScene,
         self.datasets.append(Dataset(x = arange(1000.)/100,
                                      y = sin(arange(1000.)/100)))
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
+        self.datasets[-1].graph = self
 
         self.datasets.append(Dataset(x = arange(10000.)/1000,
                                      y = cos(arange(10000.)/1000)))
         self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
+        self.datasets[-1].graph = self
 
 #        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 
+        self.axis_top = Axis('top', self)
+        self.axis_bottom = Axis('bottom', self)
+        self.axis_right = Axis('right', self)
+        self.axis_left = Axis('left', self)
+
+        self.axes = [self.axis_bottom, self.axis_top, self.axis_right, self.axis_left]
+
         self.set_range(0.0, 100.5)
         self.autoscale()
- 
-    def paint_axes(self):
-        glLoadIdentity()
 
+    def paint_frame(self):
         glPushMatrix()
+        glLoadIdentity()
         glTranslatef(-1., -1., 0.)         # starting at bottom left corner
         glScalef(self.xscale_pixel, self.yscale_pixel, 1.)
 
@@ -165,26 +226,20 @@ class Shapes(GLScene,
         glVertex3f(self.marginl, self.h - self.margint, 0.0)
         glEnd()
 
-        glColor3f(0.0,0.0,0.0)      # black
-
-        glBegin(GL_LINES)
-        glVertex3f(self.marginl, self.marginb, 0.0)
-        glVertex3f(self.w - self.marginr, self.marginb, 0.0)
-
-        glVertex3f(self.w - self.marginr, self.marginb, 0.0)
-        glVertex3f(self.w - self.marginr, self.h - self.margint, 0.0)
-
-        glVertex3f(self.w - self.marginr, self.h - self.margint, 0.0)
-        glVertex3f(self.marginl, self.h - self.margint, 0.0)
-
-        glVertex3f(self.marginl, self.h - self.margint, 0.0)
-        glVertex3f(self.marginl, self.marginb, 0.0)
-        glEnd()
-
         glPopMatrix()
+
+
+
+    def paint_axes(self):
+
+        self.paint_frame()
+
+        for a in self.axes:
+            a.paint()
 
         #x tics
 
+        glLoadIdentity()
         glPushMatrix()
         glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
         glScalef(self.xscale_data, self.yscale_mm, 1.)
@@ -203,7 +258,6 @@ class Shapes(GLScene,
 #                glVertex3f(x, 0.0, 0.0)
 #                glVertex3f(x, 0.6, 0.0)
 #        glEnd()
-
 
         plot_height_mm = (self.h - self.marginb - self.margint)/self.res
         plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
@@ -257,8 +311,9 @@ class Shapes(GLScene,
 
         glLoadIdentity()
 
-        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/VeraSe.ttf')
-#        f = ftgl.FTGLPixmapFont('fonts/gentium/GenR101.TTF')
+#        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/VeraSe.ttf')
+#        f = ftgl.FTGLPixmapFont('fonts/xsuni.ttf')
+        f = ftgl.FTGLPixmapFont('fonts/Cyberbit.ttf')
         h = int(2.6*self.res)
         f.FaceSize(h)
         for x in tics(self.xmin, self.xmax):
@@ -317,14 +372,16 @@ class Shapes(GLScene,
     def make_data_list(self):
 #        t = time.time()
 
-        dx =  self.res * (self.xmax-self.xmin)/self.w
-        dy =  self.res * (self.ymax-self.ymin)/self.h
-
-        glNewList(1, GL_COMPILE)
+#        dx =  self.res * (self.xmax-self.xmin)/self.w
+#        dy =  self.res * (self.ymax-self.ymin)/self.h
+#
+#        glNewList(1, GL_COMPILE)
+#        for d in self.datasets:
+#            glColor4f(*d.style.color)
+#            makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
+#        glEndList()
         for d in self.datasets:
-            glColor4f(*d.style.color)
-            makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
-        glEndList()
+            d.build_display_list()
 
 #        print (time.time()-t), "seconds"
 
@@ -412,8 +469,9 @@ class Shapes(GLScene,
             glEnable(GL_CLIP_PLANE3)
 
             glLoadMatrixd(self.projmatrix)
-            glPointSize(5)
-            glCallList(1)
+#            glPointSize(5)
+            for d in self.datasets:
+                d.paint()
 
             glDisable(GL_CLIP_PLANE0)
             glDisable(GL_CLIP_PLANE1)
@@ -550,11 +608,11 @@ class ShapesWindow(gtk.Window):
         
         # Set self attfibutes.
         self.set_title('Shapes')
-        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+#        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
         self.connect('destroy', lambda quit: gtk.main_quit())
-        if sys.platform != 'win32':
-            self.set_resize_mode(gtk.RESIZE_IMMEDIATE)
-        self.set_reallocate_redraws(gtk.TRUE)
+#        if sys.platform != 'win32':
+#            self.set_resize_mode(gtk.RESIZE_IMMEDIATE)
+#        self.set_reallocate_redraws(gtk.TRUE)
         
         # Create the table that will hold everything.
         self.box = gtk.VBox()

@@ -1,7 +1,9 @@
 classes:
 
 Plot: a single plot, containing:
-    Axis: draws two opposite axes with tics, title, numbers and grid if any.
+    plot has min, max, scale
+    Axis: an axis. draws tics, title, numbers
           There are 2 axes: x_axis, y_axis
-          has min, max, scale
+          There are four axes: axis_top, axis_bottom, axis_left, axis_right.
     Curve: draws a dataset. Has x[], y[], style, range
+    Grid: there is grid_x, grid_y
