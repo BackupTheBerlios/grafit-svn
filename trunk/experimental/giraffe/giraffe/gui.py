@@ -47,12 +47,31 @@ class Widget(HasSignals):
     def hide(self):
         self._widget.Hide()
 
+class Splitter(Widget):
+    def __init__(self, parent, orientation, **place):
+        self._widget = wx.SplitterWindow(parent._widget, -1)
+        Widget.__init__(self, parent, **place)
+        self.first = None
+        self.second = None
+        self.orientation = orientation
+
+    def _add(self, widget):
+        if self.first is None:
+            self.first = widget
+            print 1
+        elif self.second is None:
+            self.second = widget
+            if self.orientation == 'horizontal':
+                self._widget.SplitHorizontally(self.first._widget, self.second._widget)
+            elif self.orientation == 'vertical':
+                self._widget.SplitVertically(self.first._widget, self.second._widget)
+        else:
+            raise NameError, 'TODO'
+        
+
 class Box(Widget):
     def __init__(self, parent, orientation, **kwds):
-        if parent is None:
-            self._widget = wx.Panel(None, -1)
-        else:
-            self._widget = wx.Panel(parent._widget, -1)
+        self._widget = wx.Panel(parent._widget, -1)
         Widget.__init__(self, parent, **kwds)
         if orientation == 'horizontal':
             self.layout = wx.BoxSizer(wx.HORIZONTAL)

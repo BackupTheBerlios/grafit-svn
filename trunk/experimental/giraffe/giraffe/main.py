@@ -1,6 +1,6 @@
 import sys
 
-from giraffe.gui import Window, Button, Box, Application, Shell
+from giraffe.gui import Window, Button, Box, Application, Shell, List, Splitter
 
 class ScriptWindow(Shell):
     def __init__(self, parent, **kwds):
@@ -24,15 +24,24 @@ class ScriptWindow(Shell):
         self.project.unset_dict()
         self.project = None
 
+class ProjectExplorer(Box):
+    def __init__(self, parent, **kwds):
+        Box.__init__(self, parent, 'horizontal', **kwds)
+        self.splitter = Splitter(self, 'horizontal')
+        self.list1 = List(self.splitter)
+        self.list2 = Button(self.splitter, 'ass')
+
 
 # example main window
 class MainWindow(Window):
     def __init__(self):
-        Window.__init__(self, menubar=True, statusbar=True, panels='br')
+        Window.__init__(self, menubar=True, statusbar=True, panels='brl')
 
         # for example
         self.shell = ScriptWindow(self.bottom_panel,
                                   page_label='console', page_pixmap='console.png')
+        self.explorer = ProjectExplorer(self.left_panel,
+                                        page_label='explorer', page_pixmap='stock_navigator.png')
 
         box = Box(self, 'vertical')
         self.m = Button(box, 'periex')
