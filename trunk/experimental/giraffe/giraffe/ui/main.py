@@ -83,10 +83,16 @@ class ToolPanel(wx.SashLayoutWindow):
 
         ind = len(self.contents)
 
-        btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, -1, bmp, style=wx.BU_EXACTFIT)
-        btn.SetBezelWidth(1)
-        btn.Bind(wx.EVT_BUTTON, self.button_clicked(ind))
-        self.btnbox.Add(btn, 0)
+#        btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, -1, bmp, style=wx.BU_EXACTFIT)
+#        btn.SetBezelWidth(1)
+
+        self.toolbar = wx.ToolBar(self.panel, -1, style=wx.TB_HORIZONTAL|wx.NO_BORDER|wx.TB_FLAT)
+        btn = wx.NewId()
+        self.toolbar.AddCheckTool(btn, bmp, bmp, "New", "Long help for 'New'")
+        self.toolbar.Bind(wx.EVT_TOOL, self.button_clicked(ind))
+        
+#        self.btnbox.Add(btn, 0)
+        self.btnbox.Add(self.toolbar, 0)
         self.contentbox.Add(widget, 1, wx.EXPAND)
         widget.Hide()
         self.contentbox.Layout()
@@ -96,10 +102,10 @@ class ToolPanel(wx.SashLayoutWindow):
 
         if self.position in ['left', 'right']:
             margin = self.GetEdgeMargin(wx.SASH_RIGHT)
-            self.SetDefaultSize((self.buttons[0].GetSize()[0] + margin, -1))
+            self.SetDefaultSize((self.toolbar.GetSize()[0] + margin, -1))
         else:
             margin = self.GetEdgeMargin(wx.SASH_TOP)
-            self.SetDefaultSize((-1, self.buttons[0].GetSize()[1] + margin))
+            self.SetDefaultSize((-1, self.toolbar.GetSize()[1] + margin))
 
 
     def open(self, id):
@@ -126,18 +132,18 @@ class ToolPanel(wx.SashLayoutWindow):
         if self.position in ['left', 'right']:
             self.last_width = self.GetSize()[0]
             margin = self.GetEdgeMargin(wx.SASH_RIGHT)
-            self.SetDefaultSize((self.buttons[0].GetSize()[0] + margin, -1))
+            self.SetDefaultSize((self.toolbar.GetSize()[0] + margin, -1))
         else:
             self.last_height = self.GetSize()[1]
             margin = self.GetEdgeMargin(wx.SASH_TOP)
-            self.SetDefaultSize((-1, self.buttons[0].GetSize()[1] + margin))
+            self.SetDefaultSize((-1, self.toolbar.GetSize()[1] + margin))
 
         wx.LayoutAlgorithm().LayoutWindow(self.parent, self.parent.remainingSpace)
         self.parent.remainingSpace.Refresh()
  
     def button_clicked(self, id):
         def button_clicked_callback(self, event):
-            if event.GetIsDown():
+            if self.toolbar.GetToolState(self.buttons[id]):
                 self.open(id)
             else:
                 self.close(id)
@@ -277,8 +283,33 @@ class MainWindow(wx.Panel):
     
         # the left panel
         self.left_panel = ToolPanel(self, 'left')
-        self.project_tree = ProjectTree(self.left_panel.panel, self.project, self)
-        self.left_panel.add_page('Project', 'closed-folder.png', self.project_tree)
+
+
+        # project explorer panel
+
+        explorer = wx.Panel(self.left_panel.panel, -1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # buttons
+#        btnsizer = wx.BoxSizer(wx.HORIZONTAL)
+        toolbar = wx.ToolBar(explorer, -1)
+
+        bmp = wx.Image('../data/images/closed-folder.png').ConvertToBitmap()
+#        btn = wx.BitmapButton(explorer, -1, bmp)
+#        toolbar.AddControl(btn)
+        toolbar.AddTool(10, bmp, bmp,  "New")
+
+        sizer.Add(toolbar, 0)
+
+        # tree control
+        self.project_tree = ProjectTree(explorer, self.project, self)
+        sizer.Add(self.project_tree, 1, wx.EXPAND)
+
+        explorer.SetSizer(sizer)
+        sizer.SetSizeHints(explorer)
+
+
+        self.left_panel.add_page('Project', 'closed-folder.png', explorer)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)

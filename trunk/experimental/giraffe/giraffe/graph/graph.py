@@ -1,19 +1,13 @@
-#!/usr/bin/env python
-
 import sys
 import time
 
 from numarray import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 from giraffe.base.signals import HasSignals
 from giraffe.base.item import Item, wrap_attribute, register_class
-
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from lib import ftgl
-
-#from giraffe.base.items import Item, Persistent
-#from giraffe.common import identity
+from giraffe.lib import ftgl
 
 from render import makedata
 
@@ -374,8 +368,6 @@ class Graph(Item, HasSignals):
 
         glPopMatrix()
 
-
-
     def paint_axes(self):
 
         self.paint_frame()
@@ -402,14 +394,6 @@ class Graph(Item, HasSignals):
     def make_data_list(self):
         t = time.time()
 
-#        dx =  self.res * (self.xmax-self.xmin)/self.w
-#        dy =  self.res * (self.ymax-self.ymin)/self.h
-#
-#        glNewList(1, GL_COMPILE)
-#        for d in self.datasets:
-#            glColor4f(*d.style.color)
-#            makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
-#        glEndList()
         for d in self.datasets:
             d.build_display_list()
 
