@@ -1,4 +1,4 @@
-import time, random, md5
+import time, random, md5, socket
 
 def uuid( *args ):
   """
