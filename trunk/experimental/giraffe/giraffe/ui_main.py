@@ -7,7 +7,7 @@ import wx.py
 import wx.xrc
 
 from giraffe.signals import HasSignals
-from giraffe.commands import undo, redo
+from giraffe.commands import undo, redo, command_list
 from giraffe.graph import Graph
 from giraffe.worksheet import Worksheet
 from giraffe.item import Folder
@@ -528,6 +528,7 @@ class MainPanel(wx.Panel):
         self.script_window.connect_project(self.project)
         self.explorer.connect_project(self.project)
         self.project.connect('remove-item', self.on_project_remove_item)
+        command_list.clear()
 
     def close_project(self):
         self.script_window.disconnect_project()

@@ -1,3 +1,5 @@
+import sys
+
 import metakit
 
 from giraffe.commands import command_from_methods, command_list
@@ -138,7 +140,7 @@ class Project(HasSignals):
         del self.items[obj.id]
         obj.id = '-'+obj.id
         self.deleted[obj.id] = obj
-        if obj.parent is self.top:
+        if obj.parent is self.top and obj.name in self._dict:
             del self._dict[obj.name] 
         self.emit('remove-item', obj)
 
@@ -163,7 +165,7 @@ class Project(HasSignals):
         obj = self.items[id]
         ind = obj.view.find(id=id)
 
-        if obj.name in self._dict:
+        if obj.name in self._dict and obj.name in self._dict:
             del self._dict[obj.name]
 
         if ind == -1:
