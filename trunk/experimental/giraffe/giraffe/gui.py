@@ -864,8 +864,8 @@ class TableData(wx.grid.PyGridTableBase):
     def GetValue(self, row, col):
         return self.data.get_data(col, row)
 
-#    def SetValue(self, row, col, value):
-#        self.worksheet[col][row] = float(value)
+    def SetValue(self, row, col, value):
+        self.data.set_data(col, row, value)
 
     def label_edited(self, column, name):
         if hasattr(self.data, 'label_edited'):
