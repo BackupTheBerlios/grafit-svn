@@ -85,9 +85,9 @@ class Column(VarArray, HasSignals, Persistent):
 
     _element_name = 'Column'
 
-class Worksheet(Item, WithId):
-    def __init__(self):
-        Item.__init__(self, '', None)
+class Worksheet(Item, WithId, Persistent):
+    def __init__(self, name, parent):
+        Item.__init__(self, name, parent)
         self.register()
         self.columns = []
 
@@ -106,10 +106,11 @@ class Worksheet(Item, WithId):
         worksheet_remove_column(self.uuid, name).do_and_register()
 
     def __getattr__(self, name):
-        if name in self.__dict__:
-            return self.__dict__[name]
-        elif 'columns' in self.__dict__ and name in [c.name for c in self.columns]:
+        if 'columns' in self.__dict__ and name in [c.name for c in self.columns]:
             return self.columns[[c.name for c in self.columns].index(name)]
+        else:
+#           return __getattr__(self, name)
+            return self.__dict__[name]
 
     def __setattr__(self, name, value):
         if 'columns' in self.__dict__ and name in [c.name for c in self.columns]:
@@ -134,8 +135,18 @@ class Worksheet(Item, WithId):
             s += '\n   ' + c.name + ": " + str(c)
         return s
 
+    def to_element(self):
+        elem = Element('Worksheet', name=self.name, uuid=self.uuid)
+        return elem
+
+    def from_element(element, parent):
+        w = Worksheet(element.get('name'), parent)
+        w.uuid = element.get('uuid')
+        return w
+    from_element = staticmethod(from_element)
+
 if __name__ == '__main__':
-    w = Worksheet()
+    w = Worksheet('test', None)
     w.add_column('A')
     w.add_column('Star')
     w.Star[4] = 13
