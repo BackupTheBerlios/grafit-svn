@@ -42,7 +42,7 @@ class TableData(grid.PyGridTableBase):
         return str(self.worksheet[col][row]).replace('nan', '')
 
     def SetValue(self, row, col, value):
-        self.log.write('SetValue(%d, %d, "%s") ignored.\n' % (row, col, value))
+        self.worksheet[col][row] = float(value)
 
     def on_data_changed(self):
         self.ResetView(self.GetView())

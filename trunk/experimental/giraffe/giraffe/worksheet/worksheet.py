@@ -18,9 +18,14 @@ class Column(MkArray):
         return self.data.name
     name = property(get_name, set_name)
 
+    def __setitem__(self, key, value):
+        MkArray.__setitem__(self, key, value)
+        self.worksheet.emit('data-changed')
+
 
 class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
+        self.__attr = False
         Item.__init__(self, project, name, parent, location)
 
         self.columns = []
@@ -29,6 +34,24 @@ class Worksheet(Item, HasSignals):
             for i in range(len(self.data.columns)):
                 if not i.name.startswith('-'):
                     self.columns.append(Column(self, i))
+
+        self.__attr = True
+
+
+    def __getattr__(self, name):
+        if name in self.column_names:
+            return self[name]
+        else:
+            return object.__getattribute_(self, name)
+
+    def __setattr__(self, name, value):
+        if name.startswith('_') or hasattr(self.__class__, name) \
+                                or name in self.__dict__ or not self.__attr:
+            return object.__setattr__(self, name, value)
+        else:
+            if name not in self.column_names:
+                self.add_column(name)
+            self[name] = value
 
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])

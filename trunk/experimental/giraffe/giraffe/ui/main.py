@@ -225,9 +225,9 @@ class MainWindow(wx.Panel):
         self.bottom_panel = ToolPanel(self, 'bottom')
         self.script_window = wx.py.shell.Shell(self.bottom_panel.panel, -1, 
                                                locals=locals, introText='Welcome to giraffe')
-        self.script_window.run('from giraffe import *')
-        self.script_window.run('from giraffe.base.commands import undo, redo')
-        self.script_window.run('project.set_dict(globals())')
+        self.script_window.push('from giraffe import *')
+        self.script_window.push('project.set_dict(globals())')
+        self.script_window.setLocalShell()
         self.bottom_panel.add_page(self.script_window)
         self.script_window.zoom(-1)
 
