@@ -190,6 +190,7 @@ class GraphStylePanel(gui.Box):
 
         c = gui.Spin(grid, pos=(2,2))
         c.min_size = (10, c.min_size[1])
+        c.connect('modified', self.on_select_size)
         c.value = 5
 
 
@@ -248,7 +249,10 @@ class GraphStylePanel(gui.Box):
             d.style.symbol = self.shapes[ind]
         self.graph.emit('redraw')
 
-
+    def on_select_size(self, size):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            d.style.size = size
+        self.graph.emit('redraw')
 
 class GraphDataPanel(gui.Box):
     def __init__(self, graph, view, parent, **place):

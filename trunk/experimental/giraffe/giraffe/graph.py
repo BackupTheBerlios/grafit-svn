@@ -13,7 +13,7 @@ from giraffe.commands import command_from_methods
 import ftgl
 from gl2ps import *
 
-from giraffe.graph_render import makedata
+from giraffe.graph_render import render
 
 class Style(HasSignals):
     def __init__(self, color=(0,0,0), symbol='square-f'):
@@ -57,6 +57,7 @@ class Dataset(HasSignals):
         self.y.connect('data-changed', self.on_data_changed)
 
         self.style = Style()
+
         try:
             c = self.data.color
             self.style.color = (c%256, (c//256)%256, (c//(256*256))%256)
@@ -64,7 +65,7 @@ class Dataset(HasSignals):
             self.style.color = default_style.color
             self.data.color = '0'
 
-        print self.data.size
+        self.style.size = self.data.size
 
         if self.data.symbol == '':
             self.data.symbol = 'square-f'
@@ -82,12 +83,32 @@ class Dataset(HasSignals):
     def paint(self):
         res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         gl2psPointSize(self.data.size)
-        dx =  res * (xmax-xmin)/width * 2
-        dy =  res * (ymax-ymin)/height * 2
-        glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
-        makedata(asarray(self.x[:]), asarray(self.y[:]), 
-                 xmin, xmax, ymin, ymax, 
-                 dx, dy, self.style.symbol)
+        dx =  res * (xmax-xmin)/width * self.style.size / 5.
+        dy =  res * (ymax-ymin)/height * self.style.size / 5.
+        glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
+                  self.style.color[2]/256., 1.)
+        x = asarray(self.x[:])
+        y = asarray(self.y[:])
+
+        x = array([xi for (xi, yi) in zip(x, y) if xi is not nan and yi is not nan])
+        y = array([yi for (xi, yi) in zip(x, y) if xi is not nan and yi is not nan])
+        z = zeros(len(x))
+
+        x = array([1,2,3,4,5])
+        y = array([1,2,3,4,5])
+        z = array([0,0,0,0,0])
+
+        glMap1f(GL_MAP1_VERTEX_3, 0., 1., array([x-xmin, y-ymin, z]))
+        glEnable(GL_MAP1_VERTEX_3)
+#        glBegin(GL_LINE_STRIP)
+#        for i in xrange(100):
+#            print i/100.
+#            glEvalCoord1f(i/100.)
+#        glEnd()
+        glMapGrid1f(100, 0.0, 1.0)
+        glEvalMesh1(GL_LINE, 0, 100)
+        glDisable(GL_MAP1_VERTEX_3)
+#        render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
         self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
@@ -96,8 +117,10 @@ class Dataset(HasSignals):
         self.emit('modified', self)
 
     def on_style_modified(self):
-        self.data.color = self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256
+        self.data.color = (self.style.color[0] + self.style.color[1]*256 + 
+                           self.style.color[2]*256*256)
         self.data.symbol = self.style.symbol
+        self.data.size = self.style.size
         self.emit('modified', self)
 
     def __str__(self):
@@ -119,7 +142,8 @@ class Grid(object):
             self = self.plot
             glLoadIdentity()
             glPushMatrix()
-            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+            glTranslate(-1.+2.*self.marginl/self.w, 
+                        -1.+2.*self.marginb/self.h, 0)
             glScaled(self.xscale_data, self.yscale_mm, 1.)
 #            glTranslate(-self.xmin, 0, 0)
 
@@ -147,7 +171,8 @@ class Grid(object):
         elif self.orientation == 'vertical':
             self = self.plot
             glPushMatrix()
-            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+            glTranslate(-1.+2.*self.marginl/self.w, 
+                        -1.+2.*self.marginb/self.h, 0)
             glScaled(self.xscale_mm, self.yscale_data, 1.)
 #            glTranslate(0, -self.ymin, 0)
 
@@ -173,11 +198,11 @@ class Grid(object):
 
             glPopMatrix()
 
-AXISFONT = ftgl.FTGLPixmapFont('/home/daniel/giraffe/data/fonts/bitstream-vera/VeraSe.ttf')
+FONTFILE = '/home/daniel/giraffe/data/fonts/bitstream-vera/VeraSe.ttf'
+AXISFONT = ftgl.FTGLPixmapFont(FONTFILE)
 
 class Axis(object):
     def __init__(self, position, plot):
-        assert position in ['left', 'right', 'top', 'bottom'], "illegal value for position: %s" % position
         self.position = position
         self.plot = plot
         self.font = AXISFONT

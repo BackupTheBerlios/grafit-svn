@@ -238,10 +238,14 @@ class Spin(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.SpinCtrl(parent._widget, -1)
         Widget.__init__(self, parent, **place) 
+        self._widget.Bind(wx.EVT_SPINCTRL, self.on_spin)
 
     def get_value(self): return self._widget.GetValue()
     def set_value(self, val): self._widget.SetValue(val)
     value = property(get_value, set_value)
+
+    def on_spin(self, event):
+        self.emit('modified', self.value)
     
 class Choice(Widget):
     def __init__(self, parent, **place):

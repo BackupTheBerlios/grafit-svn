@@ -88,9 +88,9 @@ cdef extern from "GL/gl.h":
     int GL_BACK, GL_LINE, GL_FRONT, GL_FILL
 
 
-def makedata(_numarray sx, _numarray sy,  
-             double xmin, double xmax, double ymin, double ymax, 
-             double dx, double dy, symbol):
+def render(_numarray sx, _numarray sy,  
+           double xmin, double xmax, double ymin, double ymax, 
+           double dx, double dy, symbol):
 #             shape, vertices):
     cdef int n, m, l
     cdef double x, y, xnext, ynext
@@ -189,6 +189,8 @@ def makedata(_numarray sx, _numarray sy,
                 glVertex3d(x-xmin+circlex[m+1], y-ymin+circley[m+1], 0)
             
     glEnd()
+
+    return 1
 
     # draw lines
     glBegin(GL_LINE_STRIP)
