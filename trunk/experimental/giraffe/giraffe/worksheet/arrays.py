@@ -22,14 +22,14 @@ class VarOperation(object):
         if self.oper.arity == 1:
             try:
                 length = len(a)
-            except TypeError:
+            except (ValueError, TypeError):
                 return self.oper(a)
             else:
                 return asvarray(self.oper(a))
         elif self.oper.arity == 2:
             try:
                 length = min(len(a), len(b))
-            except TypeError:
+            except (ValueError, TypeError):
                 return self.oper(a, b)
             else:
                 return asvarray(self.oper(a[:length], b[:length]))

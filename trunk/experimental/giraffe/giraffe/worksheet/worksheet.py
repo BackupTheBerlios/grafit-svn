@@ -4,9 +4,8 @@ from giraffe.base.signals import HasSignals
 from giraffe.base.commands import command_from_methods
 from giraffe.base.item import Item, wrap_attribute, register_class, create_id
 
-import mkarray as arrays
-
-from giraffe.worksheet.mkarray import MkArray
+import arrays
+from giraffe.worksheet.arrays import MkArray
 
 def evaluate_expression(expression, project, worksheet):
     namespace = {}

@@ -152,13 +152,31 @@ class ProjectTree(wx.TreeCtrl):
         self.mainwin = mainwin
         self.project.connect('add-item', self.on_add_item)
 
+        isz = (16,16)
+        il = wx.ImageList(isz[0], isz[1])
+
+        self.fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
+        self.fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
+        self.fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_REPORT_VIEW, wx.ART_OTHER, isz))
+        self.wsidx       = il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
+        self.il = il
+        self.SetImageList(il)
+
         self.root  = self.AddRoot('Project')
+        self.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
+        self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
+
         self.items = {}
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
 
+
     def on_add_item(self, item):
+
         self.items[item.id] = self.AppendItem(self.root, item.name)
+        self.SetItemImage(self.items[item.id], self.wsidx, wx.TreeItemIcon_Normal)
+#        self.SetItemImage(self.items[item.id], self.fldropenidx, wx.TreeItemIcon_Expanded)
+
         item.connect('rename', self.on_rename)
 
     def on_double_click(self, event):
@@ -188,6 +206,13 @@ class Application(wx.App):
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
         frame.CreateStatusBar()
+        tb = frame.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
+        tb.AddSimpleTool(10, wx.Image("../data/images/new.png").ConvertToBitmap(), "New", "Long help for 'New'")
+        tb.AddSimpleTool(10, wx.Image("../data/images/open.png").ConvertToBitmap(), "New", "Long help for 'New'")
+        tb.AddSimpleTool(10, wx.Image("../data/images/save.png").ConvertToBitmap(), "New", "Long help for 'New'")
+        tb.AddSimpleTool(10, wx.Image("../data/images/saveas.png").ConvertToBitmap(), "New", "Long help for 'New'")
+
+        tb.Hide()
 
         menuBar = wx.MenuBar()
         menu = wx.Menu()
@@ -243,7 +268,7 @@ class MainWindow(wx.Panel):
         self.script_window = wx.py.shell.Shell(self.bottom_panel.panel, -1, 
                                                locals=locals, introText='Welcome to giraffe')
         self.script_window.push('from giraffe import *')
-        self.script_window.push('from giraffe.worksheet.mkarray import *')
+        self.script_window.push('from giraffe.worksheet.arrays import *')
         self.script_window.push('project.set_dict(globals())')
         self.script_window.setLocalShell()
         self.script_window.clear()

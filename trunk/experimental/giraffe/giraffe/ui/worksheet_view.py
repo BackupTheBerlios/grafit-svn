@@ -3,7 +3,7 @@ import sys
 import wx
 import wx.grid as grid
 
-from giraffe.worksheet.mkarray import nan
+from giraffe.worksheet.arrays import nan
 from giraffe.worksheet import Worksheet
 
 class TableData(grid.PyGridTableBase):
@@ -19,7 +19,7 @@ class TableData(grid.PyGridTableBase):
         self.worksheet = worksheet
         self.worksheet.connect('data-changed', self.on_data_changed)
         self.normal_attr = grid.GridCellAttr()
-        self.normal_attr.SetFont(wx.Font(9, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.normal_attr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
@@ -28,7 +28,6 @@ class TableData(grid.PyGridTableBase):
         self._cached_data = None
 
     def GetAttr(self, row, col, kind):
-        print >>sys.stderr, 'A', row, col
         attr = self.normal_attr
         attr.IncRef()
         return attr
@@ -43,7 +42,6 @@ class TableData(grid.PyGridTableBase):
         return self.worksheet[col][row] is nan
 
     def GetValue(self, row, col):
-        print >>sys.stderr, row, col
         return str(self.worksheet[col][row]).replace('nan', '')
 
     def SetValue(self, row, col, value):
@@ -76,8 +74,6 @@ class TableData(grid.PyGridTableBase):
 
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
-        # update the column rendering plugins
-#        self._updateColAttrs(view)
 
         # update the scrollbars and the displayed part of the grid
         view.AdjustScrollbars()
@@ -89,11 +85,11 @@ class TableData(grid.PyGridTableBase):
         msg = grid.GridTableMessage(self, grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         view.ProcessTableMessage(msg)
 
-#    def GetColLabelValue(self, col):
-#        return self.worksheet.column_names[col]
+    def GetColLabelValue(self, col):
+        return self.worksheet.column_names[col]
 
-#    def GetRowLabelValue(self, row):
-#        return str(row)
+    def GetRowLabelValue(self, row):
+        return str(row)
 
 
 class WorksheetView(grid.Grid):
@@ -110,8 +106,10 @@ class WorksheetView(grid.Grid):
             w.B = [1,4,9,16]
             self.worksheet = w
 
-        table = TableData(self.worksheet)
+        self.SetLabelFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.SetDefaultRowSize(20, False)
 
+        table = TableData(self.worksheet)
 
         # The second parameter means that the grid is to take ownership of the
         # table and will destroy it when done.  Otherwise you would need to keep
@@ -119,10 +117,21 @@ class WorksheetView(grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
-#        table.SetColAttr(0, table.normal_attr)
 #        table.SetColAttr(1, table.normal_attr)
 #        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
+        self.Bind(grid.EVT_GRID_RANGE_SELECT, self.OnRangeSelect)
+        self.Bind(grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
+
+    def OnLabelLeftClick(self, evt):
+        pass
+#        evt.Skip()
         
+    def OnRangeSelect(self, evt):
+#        print evt, type(evt)
+#        if evt.Selecting():
+#            print >>sys.stderr, (evt.GetTopLeftCoords(), evt.GetBottomRightCoords())
+        evt.Skip()
+
     def OnKeyDown(self, evt):
         if evt.KeyCode() != wx.WXK_RETURN:
             evt.Skip()
@@ -143,18 +152,3 @@ class WorksheetView(grid.Grid):
             self.GetTable().worksheet.add_column('col'+str(l))
         self.GetTable().worksheet.A[999] = 14
         print self.GetSelectedRows()
-
-
-class TestFrame(wx.Frame):
-    def __init__(self, parent, log):
-        wx.Frame.__init__(self, parent, -1, "Huge (virtual) Table Demo", size=(640,480))
-        grid = WorksheetView(self)
-
-        grid.SetReadOnly(5,5, True)
-
-if __name__ == '__main__':
-    import sys
-    app = wx.PySimpleApp()
-    frame = TestFrame(None, sys.stdout)
-    frame.Show(True)
-    app.MainLoop()
