@@ -170,9 +170,9 @@ class CommandList(signals.HasSignals):
             finally:
                 if e:
                     self.enable()
-            return True
-        else:
-            return False
+#            return True
+#        else:
+#            return False
 
     def undo(self):
         for com in self.commands[::-1]:
@@ -186,8 +186,8 @@ class CommandList(signals.HasSignals):
             finally:
                 if e:
                     self.enable()
-            return True
-        else:
-            return False
+#            return True
+#        else:
+#            return False
 
 command_list = CommandList()

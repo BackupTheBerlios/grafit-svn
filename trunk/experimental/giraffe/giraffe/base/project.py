@@ -28,13 +28,7 @@ def create_id(*args):
     return data
 
 
-"""
-Simplest case:
-a command whose do() function calls a single method of an object
-and the undo() another method:
-"""
-
-def command_from_methods(init, undo, redo, cleanup):
+def command_from_methods(name, do, undo, redo=None, cleanup=None):
     def replace_init(selb, *args, **kwds):
         class CommandFromMethod(Command):
             def __init__(self):
@@ -43,7 +37,7 @@ def command_from_methods(init, undo, redo, cleanup):
 
             def do(self):
                 if not self.__done:
-                    self.__state = init(selb, *self.args, **self.kwds)
+                    self.__state = do(selb, *self.args, **self.kwds)
                     self.__done = True
                 else:
                     redo(selb, self.__state)
@@ -52,12 +46,16 @@ def command_from_methods(init, undo, redo, cleanup):
             def undo(self):
                 undo(selb, self.__state)
 
-#            def __del__(self):
-#                cleanup(selb, self.__state)
+            if cleanup is not None:
+                def __del__(self):
+                    cleanup(selb, self.__state)
+
+        CommandFromMethod.__name__ = name
         com = CommandFromMethod()
         ret = com.do_and_register()
         return ret
     return replace_init
+
 
 class Project(HasSignals):
     def __init__(self, filename=None):
@@ -120,6 +118,7 @@ class Project(HasSignals):
 
     def new(self, cls, *args, **kwds):
         obj = cls(self, *args, **kwds)
+        print >>sys.stderr, "DEVYU, adding %s", obj.id
         self.items[obj.id] = obj
         if obj.parent is self.top:
             self._dict[obj.name] = obj
@@ -127,24 +126,26 @@ class Project(HasSignals):
         return obj
 
     def new_undo(self, obj):
+        print >>sys.stderr, "DEVYU, unadding %s", obj.id
         del self.items[obj.id]
-        self.deleted[obj.id] = obj
         obj.id = '-'+obj.id
+        self.deleted[obj.id] = obj
         if obj.parent is self.top:
             del self._dict[obj.name] 
 
     def new_redo(self, obj):
         del self.deleted[obj.id]
-        self.items[obj.id] = obj
         obj.id = obj.id[1:]
+        self.items[obj.id] = obj
         if obj.parent is self.top:
             self._dict[obj.name] = obj
 
     def new_cleanup(self, obj):
-        del self.deleted[obj.id]
-        obj.view.remove(obj.row)
+        if obj.id in self.deleted:
+            del self.deleted[obj.id]
+        obj.view.delete(obj.row)
 
-    new = command_from_methods(new, new_undo, new_redo, new_cleanup)
+    new = command_from_methods('project_new', new, new_undo, new_redo, new_cleanup)
 
 
     def remove(self, id):
@@ -157,9 +158,24 @@ class Project(HasSignals):
         if ind == -1:
             raise NameError
         else:
-            obj.data.id = obj.id = '-'+obj.id 
             del self.items[id]
-            self.deleted[id] = obj
+            obj.id = '-'+obj.id 
+            self.deleted[obj.id] = obj
+        return id
+
+    def remove_undo(self, id):
+        obj = self.deleted['-'+id]
+        ind = obj.view.find(id=obj.id)
+
+        del self.deleted[obj.id]
+        obj.id = obj.id[1:]
+        self.items[obj.id] = obj
+
+        if obj.parent is self.top:
+            self._dict[obj.name] = obj
+
+    remove = command_from_methods('project_remove', remove, remove_undo)
+
         
     def mkfolder(self, path):
         self.new(Folder, path)

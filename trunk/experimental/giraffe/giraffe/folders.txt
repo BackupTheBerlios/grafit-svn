@@ -24,14 +24,30 @@ The following special names are defined:
     >>> p.rmfolder('hole')
     Traceback (most recent call last):
     NameError: folder 'hole' does not exist
+
     >>> w = p.new(Worksheet, 'data1')
     >>> data1 == w
     True
+
     >>> command_list.undo()
-    True
     >>> data1 == w
     Traceback (most recent call last):
     ...
     NameError: name 'data1' is not defined
+
+    >>> command_list.redo()
+    >>> data1 == w
+    True
+
+    >>> p.remove(data1.id)
+    >>> data1 == w
+    Traceback (most recent call last):
+    ...
+    NameError: name 'data1' is not defined
+
+    >>> command_list.undo()
+    >>> data1 == w
+    True
+
 
 

@@ -59,6 +59,9 @@ class Worksheet(Item, HasSignals):
             self.columns[self.column_names.index(key)][:] = value
         else:
             raise IndexError
+
+    def __repr__(self):
+        return '<Worksheet %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
         
 
     def get_column_names(self):
