@@ -1,14 +1,17 @@
 import sys
 import time
 
-from qt import *
-from qtgl import *
-
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import ftgl
 from Numeric import *
 from render import makedata
+
+"""
+g = Graph()
+d = Dataset(x=datax, y=datay, range=(1, 100), line='solid', symbol=)
+id = d.addto(g)
+"""
 
 class Mouse:
     Left, Right, Middle = range(3)
@@ -52,21 +55,13 @@ def tics(fr, to):
             return rng
     return []
 
-
-class GLGraphWidget(QGLWidget):
-    def __init__(self,graph,parent=None, name=None):
-        fmt = QGLFormat()
-        fmt.setDepth(False)
-        fmt.setAlpha(True)
-        QGLWidget.__init__(self, fmt, parent, name)
-
+class glGraph(object):
+    def __init__(self):
         # mouse rubberbanding coordinates
         self.sx = None
         self.px = None
         self.sy = None
         self.py = None
-        self.graph = graph
-
 
         self.buf =  False
 #        self.res = self.size().width()/100.
@@ -94,6 +89,50 @@ class GLGraphWidget(QGLWidget):
         self.set_range(0.0, 100.5)
         self.autoscale()
  
+    def mouse_event(self, event, x, y, button):
+        if event == Mouse.Press:
+            if button in [Mouse.Left, Mouse.Right]:
+                self.rubberband_begin(x, y)
+
+        elif event == Mouse.Move:
+            if self.rubberband_active():
+                self.rubberband_continue(x, y)
+#        x, y = self.mouse_to_real(e.x(), e.y())
+#        self.set_range(x, self.to)
+#        self.updateGL()
+#        return
+        elif event == Mouse.Release:
+            if button == Mouse.Middle:
+                self.autoscale()
+                self.make_data_list()
+                self.update()
+            elif button == Mouse.Left or button == Mouse.Right:
+#                self.px, self.py = self.sx, self.sy
+#                self.sx, self.sy = self.ix, self.iy
+#                self.mouseMoveEvent(e)
+#                if self.px == self.sx or self.py == self.sy: #can't zoom!
+#                    self.px, self.py = None, None
+#                    return
+                self.zix, self.ziy, self.zfx, self.zfy = self.rubberband_end(x, y)
+
+                self.zix, self.ziy = self.mouse_to_real(self.zix, self.ziy)
+                self.zfx, self.zfy = self.mouse_to_real(self.zfx, self.zfy)
+#
+                self._xmin, self._xmax = min(self.zix, self.zfx), max(self.zix, self.zfx)
+                self._ymin, self._ymax = min(self.zfy, self.ziy), max(self.zfy, self.ziy)
+
+                if button == Mouse.Right:
+                    self.xmin, self.xmax = self.zoomout(self.xmin, self.xmax, self._xmin, self._xmax)
+                    self.ymin, self.ymax = self.zoomout(self.ymin, self.ymax, self._ymin, self._ymax)
+                else:
+                    self.xmin, self.xmax, self.ymin, self.ymax = self._xmin, self._xmax, self._ymin, self._ymax
+                self.zoom(self.xmin, self.xmax, self.ymin, self.ymax)
+
+                self.make_data_list()
+                self.updateGL()
+            self.px, self.py = None, None
+
+
     def paint_axes(self):
         glLoadIdentity()
 
@@ -249,7 +288,7 @@ class GLGraphWidget(QGLWidget):
 
         glPopMatrix()
 
-    def paintGL(self):
+    def update_view(self):
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
         if not self.buf:
@@ -319,7 +358,7 @@ class GLGraphWidget(QGLWidget):
             glPopMatrix()
 
 
-    def resizeGL(self,width,height):
+    def resize_view(self,width,height):
         """handles window resize events"""
         # aspect ratio to keep 
         ratio = 4./3.
@@ -357,8 +396,9 @@ class GLGraphWidget(QGLWidget):
         self.xscale_data = self.xscale_pixel * ((self.w-self.marginl-self.marginr)/(self.xmax-self.xmin))
         self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
 
-    def initializeGL(self):
+    def init_view(self, w, h):
 
+        self.w, self.h = w, h
 
         glEnable (GL_BLEND)
 
@@ -369,8 +409,8 @@ class GLGraphWidget(QGLWidget):
         glDisable(GL_DEPTH_TEST)
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
-        gluOrtho2D (0, self.size().width(), 0, self.size().height())
-        self.resizeGL(self.size().width(), self.size().height())
+        gluOrtho2D (0, w, 0, h)
+        self.resize_view(self.w, self.h)
 
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
@@ -381,8 +421,8 @@ class GLGraphWidget(QGLWidget):
     def make_data_list(self):
         t = time.time()
 
-        dx =  self.res * (self.xmax-self.xmin)/self.size().width()
-        dy =  self.res * (self.ymax-self.ymin)/self.size().height()
+        dx =  self.res * (self.xmax-self.xmin)/self.w
+        dy =  self.res * (self.ymax-self.ymin)/self.h
 
         glNewList(1, GL_COMPILE)
         for k in self.x.keys():
@@ -438,88 +478,9 @@ class GLGraphWidget(QGLWidget):
     def rubberband_continue(self, x, y):
         self.px, self.py = self.sx, self.sy
         self.sx, self.sy = self.mouse_to_ident(x, y)
-        self.updateGL()
+        self.update_view()
 
     def rubberband_end(self, x, y):
         self.rubberband_continue(x, y)
         self.buf = False
         return self.pixx, self.pixy, x, y
-
-    btns = {Qt.LeftButton: Mouse.Left, Qt.MidButton: Mouse.Middle, Qt.RightButton: Mouse.Right, 0:None}
-
-    def mouseMoveEvent(self, e):
-        self.graph.mouse_event(Mouse.Move, e.x(), e.y(), self.btns[e.button()])
-    def mousePressEvent(self, e):
-        self.graph.mouse_event(Mouse.Press, e.x(), e.y(), self.btns[e.button()])
-
-    def mouseReleaseEvent(self, e):
-        self.graph.mouse_event(Mouse.Release, e.x(), e.y(), self.btns[e.button()])
-#        x, y = self.mouse_to_real(e.x(), e.y())
-#        self.set_range(x, self.to)
-#        self.updateGL()
-#        return
-class glGraph(object):
-    def __init__(self, parent=None):
-        self.win = QTabWidget(parent)
-        self.win.setTabShape(self.win.Triangular)
-        self.win.setTabPosition(self.win.Bottom)
-        self.win.graph = self
-
-        self.main = QHBox(self.win)
-        self.win.addTab(self.main, 'graph')
-
-        self.gwidget = GLGraphWidget(self, self.main)
-
-    def mouse_event(self, event, x, y, button):
-        if event == Mouse.Press:
-            if button in [Mouse.Left, Mouse.Right]:
-                self.gwidget.rubberband_begin(x, y)
-
-        elif event == Mouse.Move:
-            if self.gwidget.rubberband_active():
-                self.gwidget.rubberband_continue(x, y)
-#        x, y = self.mouse_to_real(e.x(), e.y())
-#        self.set_range(x, self.to)
-#        self.updateGL()
-#        return
-        elif event == Mouse.Release:
-            if button == Mouse.Middle:
-                self.gwidget.autoscale()
-                self.gwidget.make_data_list()
-                self.gwidget.update()
-            elif button == Mouse.Left or button == Mouse.Right:
-#                self.px, self.py = self.sx, self.sy
-#                self.sx, self.sy = self.ix, self.iy
-#                self.mouseMoveEvent(e)
-#                if self.px == self.sx or self.py == self.sy: #can't zoom!
-#                    self.px, self.py = None, None
-#                    return
-                self.zix, self.ziy, self.zfx, self.zfy = self.gwidget.rubberband_end(x, y)
-
-                self.zix, self.ziy = self.gwidget.mouse_to_real(self.zix, self.ziy)
-                self.zfx, self.zfy = self.gwidget.mouse_to_real(self.zfx, self.zfy)
-#
-                self._xmin, self._xmax = min(self.zix, self.zfx), max(self.zix, self.zfx)
-                self._ymin, self._ymax = min(self.zfy, self.ziy), max(self.zfy, self.ziy)
-
-                if button == Mouse.Right:
-                    self.xmin, self.xmax = self.gwidget.zoomout(self.xmin, self.xmax, self._xmin, self._xmax)
-                    self.ymin, self.ymax = self.gwidget.zoomout(self.ymin, self.ymax, self._ymin, self._ymax)
-                else:
-                    self.xmin, self.xmax, self.ymin, self.ymax = self._xmin, self._xmax, self._ymin, self._ymax
-                self.gwidget.zoom(self.xmin, self.xmax, self.ymin, self.ymax)
-
-                self.gwidget.make_data_list()
-                self.gwidget.updateGL()
-            self.px, self.py = None, None
-
-
-
-##############################################################################
-if __name__=='__main__':
-    app=QApplication(sys.argv)
-    g = glGraph()
-    app.setMainWidget(g.win)
-    g.win.show()
-    app.exec_loop()
-
