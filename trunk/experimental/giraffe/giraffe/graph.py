@@ -135,7 +135,7 @@ class Dataset(HasSignals):
             glLineStipple (1, 0x4444)
             glEnable(GL_LINE_STIPPLE)
         elif self.style.line_style == 'dashed':
-            glLineStipple (3, 0xAAAA)
+            glLineStipple (3, 0x4444)
             glEnable(GL_LINE_STIPPLE)
         elif self.style.line_style == 'solid':
             glDisable(GL_LINE_STIPPLE)
