@@ -44,7 +44,7 @@ class Item(object):
         else: # existing item
             pass
 
-        if not (hasattr(self, '_isroot') and self._isroot) and self.parent is self.project.top:
+        if (not (hasattr(self, '_isroot') and self._isroot)) and self.parent is self.project.top:
             self.project._dict[self.name] = self
 
         # We have to emit the signal after calling _update()

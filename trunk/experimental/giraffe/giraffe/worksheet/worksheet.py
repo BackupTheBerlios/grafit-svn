@@ -14,17 +14,13 @@ class Column(MkArray):
 
 class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, id=None):
-        Item.__init__(self, project, id, parent)
+        Item.__init__(self, project, name, parent, id)
 
         self.columns = []
 
-        if id is None:
-            self.name = name
-        else:
+        if id is not None:
             for i in range(len(self.data.columns)):
                 self.columns.append(Column(self, i))
-
-#        self.parent.on_add(self)
 
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])

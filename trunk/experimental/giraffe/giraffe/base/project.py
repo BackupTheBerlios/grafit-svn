@@ -44,15 +44,11 @@ class Project(HasSignals):
 
         self._dict = {}
 
-#        self.this = None
-
-#        try:
-#            id = self.db.getas(storage_desc[Folder]).select(name='top')[0].id
-#            self.top = self.items[id] = Folder(self, id=id)
-#       except IndexError:
-        self.top = Folder(self, 'top', _isroot=True)
-
-        self.items['']  = self.top
+        try:
+            id = self.db.getas(storage_desc[Folder]).select(name='top')[0].id
+            self.top = self.items[id] = Folder(self, id=id, _isroot=True)
+        except IndexError:
+            self.top = Folder(self, 'top', _isroot=True)
 
         self.this = self.top
 
