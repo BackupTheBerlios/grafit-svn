@@ -238,6 +238,10 @@ class Spin(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.SpinCtrl(parent._widget, -1)
         Widget.__init__(self, parent, **place) 
+
+    def get_value(self): return self._widget.GetValue()
+    def set_value(self, val): self._widget.SetValue(val)
+    value = property(get_value, set_value)
     
 class Choice(Widget):
     def __init__(self, parent, **place):
@@ -246,6 +250,11 @@ class Choice(Widget):
 
     def append(self, s):
         self._widget.Append(s)
+
+    def get_selection(self): return self._widget.GetSelection()
+    def set_selection(self, sel): self._widget.SetSelection(sel)
+    selection = property(get_selection, set_selection)
+
 
 class xPopup(wx.PopupWindow):
     pass
@@ -1036,7 +1045,12 @@ class Toolbar(Widget):
         else:
             bitmap = wx.Image('/home/daniel/giraffe/data/images/'+action.pixmap).ConvertToBitmap()
             id = wx.NewId()
-            self._widget.AddSimpleTool(id, bitmap, action.name, action.desc)
+            if action.type == 'check':
+                self._widget.AddCheckTool(id, bitmap, bitmap, action.name, action.desc)
+            elif action.type == 'radio':
+                self._widget.AddRadioTool(id, bitmap, bitmap, action.name, action.desc)
+            else:
+                self._widget.AddSimpleTool(id, bitmap, action.name, action.desc)
             self.tools[id] = action
 
 class Menubar(Widget):
@@ -1406,8 +1420,9 @@ class _xGrid(wx.grid.Grid):
         pass
 
 class Action(object):
-    def __init__(self, name, desc, call, pixmap=None, accel=None):
+    def __init__(self, name, desc, call, pixmap=None, accel=None, type='simple'):
         self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
+        self.type = type
 
     def __call__(self, *args, **kwds):
         return self.call(*args, **kwds)

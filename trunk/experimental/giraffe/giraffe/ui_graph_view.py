@@ -48,12 +48,12 @@ class GraphView(gui.Box):
         tbbox = gui.Box(self, 'horizontal', stretch=0)
 
         self.toolbar = gui.Toolbar(tbbox, stretch=1)
-        self.toolbar.append(gui.Action('Arrow', '', object, 'arrow.png'))
-        self.toolbar.append(gui.Action('Hand', '', object, 'hand.png'))
-        self.toolbar.append(gui.Action('Zoom', '', object, 'zoom.png'))
-        self.toolbar.append(gui.Action('Range', '', object, 'range.png'))
-        self.toolbar.append(gui.Action('Data reader', '', object, 'dreader.png'))
-        self.toolbar.append(gui.Action('Screen reader', '', object, 'sreader.png'))
+        self.toolbar.append(gui.Action('Arrow', '', object, 'arrow.png', type='radio'))
+        self.toolbar.append(gui.Action('Hand', '', object, 'hand.png', type='radio'))
+        self.toolbar.append(gui.Action('Zoom', '', object, 'zoom.png', type='radio'))
+        self.toolbar.append(gui.Action('Range', '', object, 'range.png', type='radio'))
+        self.toolbar.append(gui.Action('Data reader', '', object, 'dreader.png', type='radio'))
+        self.toolbar.append(gui.Action('Screen reader', '', object, 'sreader.png', type='radio'))
 
         self.closebar = gui.Toolbar(tbbox, stretch=0)
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
@@ -143,20 +143,29 @@ class GraphStylePanel(gui.Box):
         self.graph = graph
         self.view = view
 
-        self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
-        grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
-
         labels = []
 
+        # Symbol
+        self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
+        grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
+        grid.layout.AddGrowableCol(2)
+
+        # symbol type
         labels.append(gui.Label(grid,  'Symbol', pos=(0,1)))
+        b = gui.Checkbox(grid, pos=(1,0))
+        grid.layout.Hide(b._widget)
         c = gui.PixmapChoice(grid, pos=(0,2))
         c.min_size = (10, c.min_size[1])
         for shape in ['circle', 'square']:
             for interior in ['o', 'f']:
                 c.append(shape+'-'+interior+'.png')
+        c.selection = 0
 
+        # symbol color
         labels.append(gui.Label(grid,  'Color', pos=(1,1)))
         c = gui.PixmapChoice(grid, pos=(1,2))
+        b = gui.Checkbox(grid, pos=(2,0))
+        grid.layout.Hide(b._widget)
         c.min_size = (10, c.min_size[1])
         self.colors = []
         for r in range(0, 256, 64):
@@ -164,21 +173,18 @@ class GraphStylePanel(gui.Box):
                 for b in range(0, 256, 64):
                     c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
                     self.colors.append((r/256.,g/256.,b/256., 1.0))
+        c.selection = 0
         c.connect('select', self.on_select_color)
 
+        # symbol size
         labels.append(gui.Label(grid, 'Size', pos=(2,1)))
+        b = gui.Checkbox(grid, pos=(0,0))
+        grid.layout.Hide(b._widget)
 
         c = gui.Spin(grid, pos=(2,2))
         c.min_size = (10, c.min_size[1])
+        c.value = 5
 
-        b = gui.Checkbox(grid, pos=(0,0))
-        grid.layout.Hide(b._widget)
-        b = gui.Checkbox(grid, pos=(1,0))
-        grid.layout.Hide(b._widget)
-        b = gui.Checkbox(grid, pos=(2,0))
-        grid.layout.Hide(b._widget)
-
-        grid.layout.AddGrowableCol(2)
 
         # Line
         self.line = gui.Frame(self, 'vertical', title='Line', stretch=0.)
@@ -193,6 +199,7 @@ class GraphStylePanel(gui.Box):
         self.line_type.min_size = (10, self.line_type.min_size[1])
         for shape in ['none', 'straight', 'spline']:
             self.line_type.append(shape)
+        self.line_type.selection = 0
 
         # Line style
         labels.append(gui.Label(grid,  'Style', pos=(1,1)))
@@ -202,6 +209,7 @@ class GraphStylePanel(gui.Box):
         self.line_style.min_size = (10, self.line_style.min_size[1])
         for p in ['solid', 'dash', 'dot',]:
             self.line_style.append(p)
+        self.line_style.selection = 0
 
         # Line width
         labels.append(gui.Label(grid, 'Width', pos=(2,1)))
@@ -209,17 +217,19 @@ class GraphStylePanel(gui.Box):
         grid.layout.Hide(b._widget)
         self.line_width = gui.Spin(grid, pos=(2,2))
         self.line_width.min_size = (10, self.line_width.min_size[1])
+        self.line_width.value = 1
 
-        maxminw = max([l.min_size[0] for l in labels])
+        b = gui.Box(self, 'horizontal', expand=True, stretch=0)
+        labels.append(gui.Label(b, 'Group', stretch=0))
+        self.multi = gui.Choice(b, stretch=1)
+        self.multi.append('identical')
+        self.multi.append('series')
+        self.multi.selection = 0
+
+        maxminw = max([l._widget.GetBestSize()[0] for l in labels])
         for l in labels:
             l.min_size = (maxminw, l.min_size[1])
 
-
-        b = gui.Box(self, 'horizontal', expand=False, stretch=0)
-        gui.Label(b, 'Group', stretch=1)
-        self.multi = gui.Choice(b, stretch=2)
-        self.multi.append('identical')
-        self.multi.append('series')
 
     def on_select_color(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
