@@ -24,11 +24,10 @@ class TableData(grid.PyGridTableBase):
         self._cached_col = None
         self._cached_data = None
 
-
-    def GetAttr(self, row, col, kind):
-        attr = self.normal_attr
-        attr.IncRef()
-        return attr
+#    def GetAttr(self, row, col, kind):
+#        attr = self.normal_attr
+#        attr.IncRef()
+#        return attr
 
     def GetNumberRows(self):
         return self.worksheet.nrows
@@ -106,7 +105,6 @@ class WorksheetView(grid.Grid):
             w.B = [1,4,9,16]
             self.worksheet = w
 
-     
         table = TableData(self.worksheet)
 
         # The second parameter means that the grid is to take ownership of the

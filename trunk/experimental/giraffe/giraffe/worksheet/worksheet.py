@@ -18,8 +18,6 @@ class Column(MkArray):
         return self.data.name
     name = property(get_name, set_name)
 
-    def __coerce__(self, other):
-        print >>sys.stderr, self, other
 
 class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
@@ -29,17 +27,22 @@ class Worksheet(Item, HasSignals):
 
         if location is not None:
             for i in range(len(self.data.columns)):
-                self.columns.append(Column(self, i))
+                if not i.name.startswith('-'):
+                    self.columns.append(Column(self, i))
 
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])
+        print >>sys.stderr, 'appended', ind
         self.columns.append(Column(self, ind))
+        self.emit('data-changed')
         return name
 
     def add_column_undo(self, name):
         ind = self.data.columns.find(name=name)
+        print >>sys.stderr, 'found', ind
         self.data.columns.delete(ind)
         del self.columns[ind]
+        self.emit('data-changed')
 
     add_column = command_from_methods('worksheet_add_column', add_column, add_column_undo)
 
@@ -50,13 +53,17 @@ class Worksheet(Item, HasSignals):
             raise NameError, "Worksheet does not have a column named %s" % name
         else:
             col = self.columns[ind]
+            col.name = '-'+col.name
             del self.columns[ind]
+            self.emit('data-changed')
             return (col, ind), None
 
     def undo_remove_column(self, c):
         print >>sys.stderr, c
         col, ind = c
+        col.name = col.name[1:]
         self.columns.insert(ind, col)
+        self.emit('data-changed')
 
     remove_column = command_from_methods('worksheet_remove_column', remove_column, undo_remove_column)
 
@@ -88,6 +95,7 @@ class Worksheet(Item, HasSignals):
             self.columns[self.column_names.index(key)][:] = value
         else:
             raise IndexError
+        self.emit('data-changed')
 
     def __repr__(self):
         return '<Worksheet %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
