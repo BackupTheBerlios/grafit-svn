@@ -1,5 +1,5 @@
 import  wx
-from arrays import nan
+from base.arrays import nan
 from worksheet import Worksheet
 import wx.grid as grid
 

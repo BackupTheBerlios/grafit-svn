@@ -1,6 +1,6 @@
-from arrays import *
+from base.arrays import *
 
-from items import Item, Persistent
+from base.items import Item, Persistent
 from common import identity
 from common.commands import Command, CommandList
 from common.signals import HasSignals

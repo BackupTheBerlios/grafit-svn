@@ -1,6 +1,11 @@
-from project import Project
-from worksheet import Worksheet
-from ui.main import Application
+import os
+import sys
+
+DATADIR = os.path.normpath(os.path.dirname(os.path.realpath(os.path.abspath(__file__)))+'/../')+'/'
+sys.path.append(DATADIR)
+
+from giraffe.project import Project
+from giraffe.ui.main import Application
 
 def main():
     p = Project()

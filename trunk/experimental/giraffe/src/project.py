@@ -1,4 +1,4 @@
-import items
+from base import items
 from common import identity
 import lib.ElementTree as et
 

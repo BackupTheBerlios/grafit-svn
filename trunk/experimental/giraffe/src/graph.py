@@ -9,8 +9,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from lib import ftgl
 
-from items import Item, Persistent
-from common import identity
+from giraffe.base.items import Item, Persistent
+from giraffe.common import identity
 
 from render import makedata
 
