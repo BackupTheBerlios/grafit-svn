@@ -87,7 +87,7 @@ def tics(fr, to):
         return [fr]
     exponent = floor(log10(to-fr)) - 1
 
-    for interval in (1,5,4,6,7,8,9,3,2):
+    for interval in (1,5,2,4,6,7,8,9,3):
         interval = interval * (10**exponent)
         if fr%interval == 0:
             first = fr
@@ -98,7 +98,7 @@ def tics(fr, to):
             return rng
 
     exponent += 1
-    for interval in (1,5,4,6,7,8,9,3,2):
+    for interval in (1,5,2,4,6,7,8,9,3):
         interval = interval * (10**exponent)
         if fr%interval == 0:
             first = fr
@@ -125,14 +125,14 @@ class GLGraphWidget(QGLWidget):
 
 
         self.buf =  False
-        self.res = self.size().width()/100.
+#        self.res = self.size().width()/100.
         self.i = 0
 
         self.x = {}
         self.y = {}
         self.range = {}
 
-        self.x[0] = arange(10000.)/10000
+        self.x[0] = arange(10000.)/1000
         self.y[0] = sin(self.x[0])
 
         self.x[1] = arange(10000.)/10000
@@ -326,8 +326,8 @@ class GLGraphWidget(QGLWidget):
 
             glClipPlane(GL_CLIP_PLANE0, [  1.,  0.,  0.,  min(lt, -x1) ])
             glClipPlane(GL_CLIP_PLANE1, [ -1.,  0.,  0.,  min(rt, x2) ])
-            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  tp ])
-            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  bt ])
+            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
+            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
 
             glEnable(GL_CLIP_PLANE0)
             glEnable(GL_CLIP_PLANE1)
@@ -387,9 +387,9 @@ class GLGraphWidget(QGLWidget):
 
         # set margins (in pixels)
         self.marginb = int(self.h * 0.1)
-        self.margint = int(self.h * 0.1)
+        self.margint = int(self.h * 0.05)
         self.marginl = int(self.w * 0.1)
-        self.marginr = int(self.w * 0.1)
+        self.marginr = int(self.w * 0.05)
 
 
         # resolution (in pixels/mm)
