@@ -1,5 +1,4 @@
-from giraffe.project import Project
-from giraffe.item import Folder
+from giraffe.project import Project, Folder
 from giraffe.worksheet import Worksheet
 from giraffe.graph import Graph
 

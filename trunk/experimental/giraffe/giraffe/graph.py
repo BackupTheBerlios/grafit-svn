@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from giraffe.signals import HasSignals
-from giraffe.item import Item, wrap_attribute, register_class
+from giraffe.project import Item, wrap_attribute, register_class
 
 import ftgl
 from gl2ps import *

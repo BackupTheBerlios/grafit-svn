@@ -2,7 +2,7 @@ import sys
 
 from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods
-from giraffe.item import Item, wrap_attribute, register_class, create_id
+from giraffe.project import Item, wrap_attribute, register_class, create_id
 
 from giraffe.arrays import MkArray
 
