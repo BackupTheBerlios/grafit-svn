@@ -33,7 +33,7 @@ storage_desc = {}
 def register_class(cls, description):
     storage_desc[cls] = description
 
-def wrap_attribute(name):
+def wrap_attribute(name, signal=None):
     """Wrap a metakit column in a class attribute.
     
     If the wrapped attribute is an id of an object in project.items,
@@ -49,10 +49,12 @@ def wrap_attribute(name):
         if hasattr(value, 'id') and value in self.project.items.values():
             value = value.id
         setattr(self.data, name, value)
+        if signal:
+            self.emit(signal)
     return property(get_data, set_data)
 
 
-class Item(object):
+class Item(HasSignals):
     """Base class for all items in a Project"""
     def __init__(self, project, name=None, parent=None, location=None):
         self.project = project
@@ -124,7 +126,18 @@ class Folder(Item, HasSignals):
                     yield self.project.items[row.id]
 
     name = wrap_attribute('name')
-    parent = wrap_attribute('parent')
+    _parent = wrap_attribute('parent')
+
+    def set_parent(self, parent):
+        oldparent = self._parent
+        self._parent = parent
+        if oldparent != '':
+            oldparent.emit('modified')
+            self.parent.emit('modified')
+    def get_parent(self):
+        return self._parent
+    parent = property(get_parent, set_parent)
+
 
     default_name_prefix = 'folder'
 

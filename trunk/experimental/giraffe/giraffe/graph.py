@@ -653,7 +653,23 @@ class Graph(Item, HasSignals):
             self.haha = True
         else:
             self.haha = False
-    
+
+    def export_ascii(self, f):
+        gl2psBeginPage("Title", "Producer", 
+                       self.viewport,
+                       GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,
+                       GL_RGBA, -1,
+                       0,
+                       0, 0, 0,
+                       21055000, f,
+                       "arxi.eps")
+        self.ps = True
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        self.display()
+        self.ps = False
+
+        gl2psEndPage()
+ 
     def button_release(self, x, y, button):
         if button == 2:
 

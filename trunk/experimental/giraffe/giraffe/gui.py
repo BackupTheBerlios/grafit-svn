@@ -244,70 +244,48 @@ class ListModel(HasSignals):
 #http://wiki.wxpython.org/index.cgi/TreeCtrlDnD
 #http://wiki.wxpython.org/index.cgi/LongRunningTasks
 
-
-
-class DropTarget(wx.DropTarget):
+class xDropTarget(wx.DropTarget):
     def __init__(self, window):
-        super (DropTarget, self).__init__ ()
+        wx.DropTarget.__init__(self)
         self.window = window
-    #    self.dataFormat = wx.CustomDataFormat("ItemUUID")
-    #    self.data = wx.CustomDataObject(self.dataFormat)
-        self.data = wx.FileDataObject()
-        self.SetDataObject(self.data)
 
     def OnDrop(self, x, y):
         return self.window.OnRequestDrop(x, y)
 
     def OnData(self, x, y, d):
         if self.GetData():
-#            itemUUID = self.data.GetData()
-            itemUUID = self.data.GetText()
-            self.window.AddItem(itemUUID)
+            self.window.AddItem(x, y)
         return d
 
     def OnDragOver(self, x, y, d):
         return self.window.OnHover(x, y)
 
-#    def OnEnter(self, x, y, d):
-#        return self.window.OnEnter(x, y)
+def create_wx_data_object(formats, data=None):
+    compobj = wx.DataObjectComposite()
+    indivi = []
 
+    for format in formats:
+        if format == 'filename':
+            obj = wx.FileDataObject()
+            if data:
+                for filename in data.get_data(format):
+                    obj.AddFile(filename)
+        elif format == 'text':
+            obj = wx.TextDataObject()
+            if data:
+                obj.SetText(data.get_data(format))
+        else:
+            obj = wx.CustomDataObject(wx.CustomDataFormat(format))
+            if data:
+                obj.SetData(data.get_data(format))
+        compobj.Add(obj)
+        indivi.append(obj)
 
-class DropReceiveWidget (object):
-    def __init__(self, *arguments, **keywords):
-        super (DropReceiveWidget, self).__init__ (*arguments, **keywords)
-        self.dropTarget = DropTarget(self)
-        self.SetDropTarget(self.dropTarget)
+    return compobj, indivi
 
-    def OnRequestDrop(self, x, y):
-        """
-        Override this to decide whether or not to accept a dropped
-        item.
-        """
-        print 'request'
-        return False
-
-    def AddItem(self, itemUUID):
-        """
-        Override this to add the dropped item to your widget.
-        """
-        print 'add', itemUUID
-        pass
-
-    def OnHover(self, x, y):
-        """
-        Override this to perform an action when a drag action is
-        hovering over the widget.
-        """
-        return wx.DragNone
-
-#    def OnEnter(self, x, y):
-#        return wx.DragNone
-
-
-class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix, DropReceiveWidget):
+class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
-        DropReceiveWidget.__init__(self)
         ListCtrlAutoWidthMixin.__init__(self)
         ListCtrlSelectionManagerMix.__init__(self)
         self.lst = lst
@@ -322,25 +300,17 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
 
 
     def on_begin_drag(self, event):
-        print event.GetItem(),
-        dropSource = wx.DropSource(self)
-#        data = wx.CustomDataObject(wx.CustomDataFormat("ItemUUID"))
-        data_file = wx.FileDataObject()
-        data_file.AddFile('/home/daniel/giraffe/giraffe/koali.gt')
-        data_text = wx.TextDataObject("koalaki")
-        data_bmp = wx.BitmapDataObject(wx.Image("../data/images/logo.png").ConvertToBitmap())
+        data = self.lst.emit('begin-drag', event.GetItem().GetId())
+        if len(data) != 1:
+#            event.Deny()
+            return
 
-        data = wx.DataObjectComposite()
-        data.Add(data_file)
-        data.Add(data_text)
-        data.Add(data_bmp, True)
-#        data.SetData('pikou')
-#        data.SetText('pikou')
+        dropSource = wx.DropSource(self)
+        data, _ = create_wx_data_object(data[0].supported_formats, data[0])
         dropSource.SetData(data)
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
-        print result
 
-#        event.Allow()
+        event.Allow()
 
     def OnHover(self, x, y):
         """
@@ -369,6 +339,32 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
             return True
         else:
             return False
+
+    def AddItem(self, x, y):
+        item, flags = self.HitTest(wx.Point(x, y))
+
+        for obj in self.lst.dropobjs:
+            if obj.GetFormat() == wx.DataFormat(wx.DF_UNICODETEXT):
+                format, data = 'text', obj.GetText()
+                if len(data):
+                    obj.SetData('')
+                    break
+            elif obj.GetFormat() == wx.DataFormat(wx.DF_FILENAME):
+                format, data = 'filename', obj.GetFilenames()
+                if len(data):
+                    obj.SetData('')
+                    break
+            else:
+                if obj.GetDataSize() > 0:
+                    format, data = obj.GetFormat().GetId(), obj.GetDataHere()
+                    if data is not None:
+                        obj.SetData('')
+                        break
+
+        result = self.lst.emit('dropped', item, format, data)
+#        print 'end'
+#        self.lst.setup_drop()
+#        print 'endlich'
 
     def getpixmap(self, filename):
         if filename is None:
@@ -413,6 +409,19 @@ class List(Widget):
         for event in (wx.EVT_LIST_ITEM_SELECTED, wx.EVT_LIST_ITEM_DESELECTED, wx.EVT_LIST_ITEM_FOCUSED):
             self._widget.Bind(event, self.on_update_selection)
 
+        self.can_drop = False
+        self.drop_formats = []
+
+    def enable_drop(self, formats):
+        self.can_drop = True
+        self.formats = formats
+        self.setup_drop()
+
+    def setup_drop(self):
+        target = xDropTarget(self._widget)
+        composite, self.dropobjs = create_wx_data_object(self.formats)
+        target.SetDataObject(composite)
+        self._widget.SetDropTarget(target)
 
     def on_item_activated(self, event):
         self.emit('item-activated', event.m_itemIndex)

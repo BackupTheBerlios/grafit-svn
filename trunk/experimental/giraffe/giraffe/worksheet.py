@@ -197,8 +197,18 @@ class Worksheet(Item, HasSignals):
         return self._name
     name = property(get_name, set_name)
 
+    def set_parent(self, parent):
+        oldparent = self._parent
+        self._parent = parent
+        if oldparent != '':
+            oldparent.emit('modified')
+            self.parent.emit('modified')
+    def get_parent(self):
+        return self._parent
+    parent = property(get_parent, set_parent)
+
     _name = wrap_attribute('name')
-    parent = wrap_attribute('parent')
+    _parent = wrap_attribute('parent')
 
     def suggest_column_name(self):
         def num_to_alpha(n):

@@ -21,18 +21,17 @@ class WorksheetDragData(object):
     def __init__(self, worksheet):
         self.worksheet = worksheet
     
-    def supported_formats(self):
-        return 'filename', 'grafit-object'
+    supported_formats = ['grafit-object', 'filename']
 
     def get_data(self, format):
         if format == 'filename':
-            fd, name = tempfile.mkstemp()
-            f = open(name)
+            d = tempfile.mkdtemp()
+            f = open(d+'/koal.txt', 'wb')
             self.worksheet.export_ascii(f)
             f.close()
-            return name
+            return [d+'/koal.txt']
         elif format == 'grafit-object':
-            return worksheet.id
+            return self.worksheet.id
 
 class Cancel(Exception):
     pass
@@ -64,6 +63,7 @@ class FolderTreeNode(HasSignals):
 
     def __init__(self, folder, isroot=False):
         self.folder = folder
+        self.folder.connect('modified', self.on_modified)
         if isroot:
             self.folder.project.connect('add-item', self.on_modified)
             self.folder.project.connect('remove-item', self.on_modified)
@@ -79,7 +79,7 @@ class FolderTreeNode(HasSignals):
     def get_pixmap(self): 
         return 'stock_folder.png'
 
-    def on_modified(self, item): 
+    def on_modified(self, item=None): 
         self.emit('modified')
 
 
@@ -92,13 +92,35 @@ class ProjectExplorer(Box):
         self.tree.connect('selected', self.on_tree_selected)
 
         self.list = List(self.splitter)
-        self.list.enable_drop(['filename'])
+        self.list.enable_drop(['grafit-object', 'filename', 'text'])
         self.list.connect('item-activated', self.on_list_item_activated)
+
         self.list.connect('drop-hover', self.on_drop_hover)
+        self.list.connect('dropped', self.on_dropped)
+        self.list.connect('drop', self.on_drop)
+
+        self.list.connect('begin-drag', self.on_begin_drag)
 
     def on_drop_hover(self, item):
         if item != -1:
             return 'copy'
+
+    def on_drop(self, item):
+        if item != -1 and isinstance(self.list.model[item], Folder):
+            return True
+        else:
+            return False
+
+    def on_dropped(self, item, format, data):
+        if format == 'grafit-object':
+            folder = self.list.model[item]
+            obj = self.project.items[data]
+            obj.parent = folder
+        else:
+            print 'DROPPED: ', format, data
+
+    def on_begin_drag(self, item):
+        return WorksheetDragData(self.list.model[item])
 
     def on_tree_selected(self, item):
         self.list.model = FolderListData(item.folder)
@@ -140,10 +162,14 @@ class FolderListData(HasSignals):
         self.folder = folder
         self.folder.project.connect('add-item', self.on_project_modified)
         self.folder.project.connect('remove-item', self.on_project_modified)
+        self.folder.connect('modified', self.on_folder_modified)
 
     def on_project_modified(self, item):
         if item.parent == self.folder:
             self.emit('modified')
+
+    def on_folder_modified(self):
+        self.emit('modified')
 
     def __len__(self): 
         return len(list(self.folder.contents()))
