@@ -321,7 +321,10 @@ class Application(wx.App):
 
         resource = wx.xrc.XmlResource('menu.xrc')
         frame.SetMenuBar(resource.LoadMenuBar('menubar'))
-	self.Bind(wx.EVT_MENU, self.OnButton, id=wx.xrc.XRCID("menu-quit"))
+
+	for id, func in [('project-quit', self.OnButton),
+                         ('object-new-worksheet', self.OnNewWs), ]:
+            self.Bind(wx.EVT_MENU, func, id=wx.xrc.XRCID(id))
 
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 
