@@ -217,6 +217,8 @@ class MainWindow(Window):
     def close_project(self):
         for panel in (self.shell, self.explorer):
             panel.disconnect_project()
+        for page in list(self.book.pages):
+            self.book.delete(page)
 #        self.project.disconnect('remove-item', self.on_project_remove_item)
 
     def act(self, x, y):
