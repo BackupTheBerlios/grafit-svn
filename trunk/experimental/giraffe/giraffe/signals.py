@@ -118,5 +118,6 @@ class HasSignals(object):
             except ReferenceError:
                 # We can't do self._signals[signal].remove(slot) because that calls slot.__eq__
                 # and raises another ReferenceError. So we might as well remove all expired slots.
+                print >>sys.stderr, "garbage collected slot", slot
                 self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
         return results
