@@ -1,29 +1,18 @@
 import sys
-sys.path.append('/home/daniel/giraffe')
-
-print >>sys.stderr, "initializing...",
 import os
 import new
 
 import wx
-print >>sys.stderr, 'x',
 import wx.py
-print >>sys.stderr, 'p',
 from numarray import arange
- 
+
 from giraffe.graph import Graph
-print >>sys.stderr, 'g',
 from giraffe.worksheet import Worksheet
 from giraffe.item import Folder
-print >>sys.stderr, 'w',
-
 from giraffe.signals import HasSignals
-
 from giraffe.graph_view import GraphView
 from giraffe.worksheet_view import WorksheetView
-print >>sys.stderr, 'v',
 
-print >>sys.stderr, " ok"
 
 class ToolPanel(wx.SashLayoutWindow):
     """The areas on the left, top and bottom of the window holding tabs."""
@@ -162,6 +151,7 @@ class ToolPanel(wx.SashLayoutWindow):
                 self.close(id)
         return new.instancemethod(button_clicked_callback, self, self.__class__)
 
+
 class ProjectExplorer(wx.Panel, HasSignals):
     def __init__(self, parent, project):
         wx.Panel.__init__(self, parent, -1)
@@ -216,12 +206,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
             self.on_sel_changed(None, self.project_tree.items[item.parent.id])
 
     def on_item_activated(self, event):
-#        for k, v in self.project_tree.items.iteritems():
-#            if v == event.GetItem().GetText():
         self.emit('activate-object', self.project.here[event.GetItem().GetText()])
-
-#    def on_activate(self, item):
-#        self.emit('activate-object', item)
 
     def on_sel_changed(self, event, item=None):
         self.items = {}
@@ -232,12 +217,13 @@ class ProjectExplorer(wx.Panel, HasSignals):
             if v == item:
                 folder = self.project.items[k]
         for i, o in enumerate(folder.contents()):
-            item = self.current_dir.InsertImageStringItem(0, o.name, {Worksheet: self.img_worksheet, Graph: self.img_graph, Folder: self.img_folder}[type(o)])
+            self.current_dir.InsertImageStringItem(0, o.name, 
+                            {Worksheet: self.img_worksheet, 
+                             Graph: self.img_graph, 
+                             Folder: self.img_folder}[type(o)])
             self.items[o.name] = o
 
 
-
-                
 class ProjectTree(wx.TreeCtrl, HasSignals):
     def __init__(self, parent, project): 
         wx.TreeCtrl.__init__(self, parent, -1, 
@@ -267,8 +253,6 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.items = {}
         self.items[project.top.id] = self.root
 
-#        self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
-
     def on_add_item(self, item):
         if type(item) == Folder:
             treeitem = self.AppendItem(self.items[item.parent.id], item.name)
@@ -277,19 +261,6 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
             self.SetItemImage(self.treeitem, self.wsidx, wx.TreeItemIcon_Normal)
             item.connect('rename', self.on_rename)
             self.Expand(self.root)
-
-#    def on_double_click(self, event):
-#        item, flags = self.HitTest(event.GetPosition())
-#        for k, v in self.items.iteritems():
-#            if v == item:
-#                self.emit('activate-object', self.project.items[k])
-#                self.mainwin.show_object(self.project.items[k])
-#                if self.current_item != v:
-#                    if self.current_item is not None:
-#                        self.SetItemBold(self.current_item, False)
-#                    self.SetItemBold(v, True)
-#                    self.current_item = v
-#        event.Skip()
 
     def on_rename(self, name, item):
         self.SetItemText(self.items[item.id], name)
@@ -315,7 +286,7 @@ class Application(wx.App):
         tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_TOOLBAR), "New", "Long help for 'New'")
         tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR), "New", "Long help for 'New'")
 
-#        tb.Hide()
+        tb.Hide()
 
         menuBar = wx.MenuBar()
         menu = wx.Menu()
@@ -365,19 +336,21 @@ class MainWindow(wx.Panel):
         self.project = project
         self.view = None
 
-        locals = {'project': self.project}
+        self.locals = {}
 
         self.bottom_panel = ToolPanel(self, 'bottom')
         self.script_window = wx.py.shell.Shell(self.bottom_panel.panel, -1, 
-                                               locals=locals, introText='Welcome to giraffe')
-        self.script_window.push('from giraffe import *')
+                                               locals=self.locals, introText='Welcome to giraffe')
         self.script_window.push('from giraffe.worksheet.arrays import *')
+        self.script_window.push('from giraffe import *')
         self.script_window.push('project.set_dict(globals())')
         self.script_window.setLocalShell()
         self.script_window.clear()
         self.script_window.prompt()
         self.script_window.zoom(-1)
 
+        self.locals.update({'project': self.project})
+        
         # bottom panel
         self.bottom_panel.add_page('Script', 'console.png', self.script_window)
  
@@ -394,8 +367,20 @@ class MainWindow(wx.Panel):
          # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
 
-        self.main_box = wx.BoxSizer(wx.HORIZONTAL)
+        self.main_box = wx.BoxSizer(wx.VERTICAL)
         self.remainingSpace.SetSizer(self.main_box)
+
+        toolbar = wx.ToolBar(self.remainingSpace, -1, style=wx.TB_HORIZONTAL)
+
+        bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(10, bmp, "New")
+        bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(10, bmp, "Delete")
+        bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(10, bmp, "Up")
+
+        self.main_box.Add(toolbar, 0, wx.EXPAND)
+
 
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.left_panel.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.right_panel.GetId())
@@ -439,7 +424,3 @@ class MainWindow(wx.Panel):
 
     def OnSize(self, event):
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
-
-if __name__ == '__main__':
-    app = Application(None)
-    app.MainLoop()

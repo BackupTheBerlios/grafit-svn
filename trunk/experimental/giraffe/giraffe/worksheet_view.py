@@ -27,8 +27,10 @@ class TableData(grid.PyGridTableBase):
         self._cols = self.GetNumberCols()
         print >>sys.stderr, 5
 
- #   def GetAttr(self, row, col, kind):
- #       print >>sys.stderr, 'GetAttr', row, col, '#', kind
+#    def GetAttr(self, row, col, kind):
+#        print >>sys.stderr, 'GetAttr', row, col, '#', kind
+#        return None
+
  #       attr = self.normal_attr
            # Re: [wxPython-users] GetAttr() destroys wxGridCellAttr
            # by Roger Binns other posts by this author
@@ -44,6 +46,14 @@ class TableData(grid.PyGridTableBase):
 
 #        attr.IncRef()
 #        return attr
+
+    def CanHaveAttributes(self):
+        print 'can'
+        return False
+
+    def base_CanHaveAttributes(self):
+        print 'baecan'
+        return False
 
     def GetNumberRows(self):
         return self.worksheet.nrows
@@ -93,9 +103,6 @@ class TableData(grid.PyGridTableBase):
         view.AdjustScrollbars()
         view.ForceRefresh()
 
-#        for r in range(self._cols):
-#            self.SetColAttr(r, self.normal_attr)
-
     def UpdateValues(self, view):
         """Update all displayed values"""
         # This sends an event to the grid table to update all of the values
@@ -137,14 +144,17 @@ class WorksheetView(grid.Grid):
         evt.Skip()
 
     def OnLabelLeftClick(self, evt):
-        pass
-#        evt.Skip()
+#        pass
+        evt.Skip()
         
     def OnRangeSelect(self, evt):
 #        print evt, type(evt)
 #        if evt.Selecting():
 #            print >>sys.stderr, (evt.GetTopLeftCoords(), evt.GetBottomRightCoords())
         evt.Skip()
+
+    def SelectCol(self, col, addToSelected):
+        print col, addToSelected
 
     def OnKeyDown(self, evt):
         if evt.KeyCode() != wx.WXK_RETURN:
@@ -160,9 +170,38 @@ class WorksheetView(grid.Grid):
             # add a new row
             self.GetTable().worksheet[self.GetGridCursorCol()][self.GetTable().GetNumberRows()] = nan
 
+    def OnWinPaint(self, evt):
+#        print self
+#        dc = wx.PaintDC(self.GetGridWindow())
+#        self.PrepareDC(dc)
+#        DirtyCells = self.CalcCellsExposed()
+#        DirtyCells = self.GetSelectedCells()
+#        self.DrawGridCellArea(dc, DirtyCells)
+#        self.DrawAllGridLines(dc, reg)
+#        self.DrawGridSpace(dc)
+#        self.DrawHighlight(dc, DirtyCells)
+        print 'winpaint', evt
+        evt.Skip()
+
     def OnRightDown(self, event):
         print "hello"
-        for l in range(100):
-            self.GetTable().worksheet.add_column('col'+str(l))
-        self.GetTable().worksheet.A[999] = 14
-        print self.GetSelectedRows()
+        win =  self.GetGridWindow()
+        print win.Refresh
+        win.Bind(wx.EVT_PAINT, self.OnWinPaint)
+#        win.Refresh = wrap_method(win.Refresh)
+
+        #for l in range(100):
+#            self.GetTable().worksheet.add_column('col'+str(l))
+#        self.GetTable().worksheet.A[999] = 14
+#        print self.GetSelectedRows()
+
+    def Refresh(*args):
+        print >>sys.stderr, args
+        return grid.Grid.Refresh(*args)
+
+class wrap_method(object):
+    def __init__(self, meth):
+        self.orig_method = meth
+    def __call__(self, *args, **kwds):
+        print >>sys.stderr, 'called!', args, kwds
+        return self.orig_method(*args, **kwds)
