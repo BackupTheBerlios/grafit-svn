@@ -1,5 +1,5 @@
 all: render.so
-	@make -C ftgl
+	@make -C lib/ftgl
 
 render.so: render.pyx
 	@echo compiling 'render' pyrex extension...

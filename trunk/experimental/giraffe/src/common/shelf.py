@@ -3,6 +3,10 @@ Shelf for global object access
 """
 
 import weakref
+import time
+import random
+import socket
+import md5
 
 def uuid( *args ):
     """
