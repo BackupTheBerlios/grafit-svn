@@ -5,7 +5,9 @@ import metakit
 
 from giraffe.common.commands import Command, command_list
 from giraffe.base.item import Item, storage_desc
+from giraffe.base.folder import Folder
 
+# import only in order to register object types
 import giraffe.worksheet
 
 def create_id(*args):
@@ -23,6 +25,7 @@ def create_id(*args):
     data = str(t)+' '+str(r)+' '+str(a)+' '+str(args)
     data = md5.md5(data).hexdigest()
     return data
+
 
 class Project(object):
     def __init__(self, filename=None):
@@ -45,6 +48,7 @@ class Project(object):
                     self.items[row.id] = cls(self, id=row.id)
                 else:
                     self.deleted[row.id] = cls(self, id=row.id)
+
 
     def add(self, item, id=None):
         view = self.db.getas(storage_desc[type(item)])
