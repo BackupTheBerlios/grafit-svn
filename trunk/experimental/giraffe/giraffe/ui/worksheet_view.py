@@ -8,29 +8,25 @@ from giraffe.worksheet import Worksheet
 
 class TableData(grid.PyGridTableBase):
     """
-    This is all it takes to make a custom data table to plug into a
-    wxGrid.  There are many more methods that can be overridden, but
-    the ones shown below are the required ones.  This table simply
-    provides strings containing the row and column values.
+    Custom data table for a wx.Grid
     """
 
     def __init__(self, worksheet):
         grid.PyGridTableBase.__init__(self)
         self.worksheet = worksheet
-        self.worksheet.connect('data-changed', self.on_data_changed)
+        self.worksheet.connect('data-changed', self.ResetView)
+
         self.normal_attr = grid.GridCellAttr()
         self.normal_attr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
 
-        self._cached_col = None
-        self._cached_data = None
-
-    def GetAttr(self, row, col, kind):
-        attr = self.normal_attr
-        attr.IncRef()
-        return attr
+#    def GetAttr(self, row, col, kind):
+#        print >>sys.stderr, 'GetAttr', row, col, kind
+#        attr = self.normal_attr
+#        attr.IncRef()
+#        return attr
 
     def GetNumberRows(self):
         return self.worksheet.nrows
@@ -47,26 +43,27 @@ class TableData(grid.PyGridTableBase):
     def SetValue(self, row, col, value):
         self.worksheet[col][row] = float(value)
 
-    def on_data_changed(self):
-        self.ResetView(self.GetView())
-
-    def ResetView(self, view):
+    def ResetView(self, view=None):
         """
         (Grid) -> Reset the grid view.   Call this to
         update the grid if rows and columns have been added or deleted
         """
+        if view is None:
+            view = self.GetView()
+        
         view.BeginBatch()
         
         for current, new, delmsg, addmsg in [
-            (self._rows, self.GetNumberRows(), grid.GRIDTABLE_NOTIFY_ROWS_DELETED, grid.GRIDTABLE_NOTIFY_ROWS_APPENDED),
-            (self._cols, self.GetNumberCols(), grid.GRIDTABLE_NOTIFY_COLS_DELETED, grid.GRIDTABLE_NOTIFY_COLS_APPENDED),
-        ]:
+            (self._rows, self.GetNumberRows(), 
+             grid.GRIDTABLE_NOTIFY_ROWS_DELETED, grid.GRIDTABLE_NOTIFY_ROWS_APPENDED),
+            (self._cols, self.GetNumberCols(), 
+             grid.GRIDTABLE_NOTIFY_COLS_DELETED, grid.GRIDTABLE_NOTIFY_COLS_APPENDED), ]:
             
             if new < current:
-                msg = grid.GridTableMessage(self,delmsg,new,current-new)
+                msg = grid.GridTableMessage(self, delmsg, new, current-new)
                 view.ProcessTableMessage(msg)
             elif new > current:
-                msg = grid.GridTableMessage(self,addmsg,new-current)
+                msg = grid.GridTableMessage(self, addmsg, new-current)
                 view.ProcessTableMessage(msg)
                 self.UpdateValues(view)
 
@@ -74,6 +71,9 @@ class TableData(grid.PyGridTableBase):
 
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
+
+        for r in range(self._cols):
+            self.SetColAttr(r, self.normal_attr)
 
         # update the scrollbars and the displayed part of the grid
         view.AdjustScrollbars()
@@ -117,10 +117,14 @@ class WorksheetView(grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
-#        table.SetColAttr(1, table.normal_attr)
 #        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
         self.Bind(grid.EVT_GRID_RANGE_SELECT, self.OnRangeSelect)
         self.Bind(grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+
+    def OnMouseWheel(self, evt):
+        print evt
+        evt.Skip()
 
     def OnLabelLeftClick(self, evt):
         pass
