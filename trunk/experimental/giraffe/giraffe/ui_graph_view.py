@@ -158,7 +158,7 @@ class GraphStylePanel(gui.Box):
         grid.layout.Hide(b._widget)
         self.shape = c = gui.PixmapChoice(grid, pos=(0,2))
         c.min_size = (10, c.min_size[1])
-        self.shapes = ['uptriangle-f', 'square-f']
+        self.shapes = ['uptriangle-f', 'square-f', 'circle-f', 'diamond-f']
         for shape in ['circle', 'square']:
             for interior in ['o', 'f']:
                 c.append(shape+'-'+interior+'.png')

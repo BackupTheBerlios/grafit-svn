@@ -78,11 +78,13 @@ import_libnumarray()
 cdef extern from "GL/gl.h":
 
     void glVertex3d(double x, double y, double z)
+    void glPointSize(double size)
     void glBegin(int mode)
     void glEnd()
     void glCallList(int id)
+    void glEnable(int)
     void glTranslated(double x, double y, double z)
-    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES, GL_LINE_STRIP
+    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES, GL_LINE_STRIP, GL_POINTS, GL_POINT_SMOOTH
 
 
 def makedata(_numarray sx, _numarray sy,  
@@ -121,7 +123,14 @@ def makedata(_numarray sx, _numarray sy,
             v2y[i] = cos(i*2*pi/m)*dy
             v3x[i] = sin((i+1)*2*pi/m)*dx
             v3y[i] = cos((i+1)*2*pi/m)*dy
-
+    elif symbol == 'circle-f':
+        sym = 3
+        shape = GL_POINTS
+#        glPointSize(4)
+        glEnable(GL_POINT_SMOOTH)
+    elif symbol == 'diamond-f':
+        sym = 4
+        shape = GL_QUADS
     else:
         print 'unknown symbol', symbol
         return 0
@@ -167,8 +176,17 @@ def makedata(_numarray sx, _numarray sy,
             glVertex3d(x-xmin-dx/2, y-ymin+dy/2, 0)
         elif sym == 2:
             glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
-            glVertex3d(x-xmin-dx/2, y-ymin+dy/2, 0)
+            glVertex3d(x-xmin+dx/2, y-ymin-dy/2, 0)
+            glVertex3d(x-xmin, y-ymin+dy/2, 0)
+        elif sym == 3:
+            glVertex3d(x-xmin, y-ymin, 0)
+        elif sym == 4:
+            glVertex3d(x-xmin-dx/2, y-ymin, 0)
+            glVertex3d(x-xmin, y-ymin-dy/2, 0)
             glVertex3d(x-xmin+dx/2, y-ymin, 0)
+            glVertex3d(x-xmin, y-ymin+dy/2, 0)
+            
+
 
 #        for v in vertices:
 #            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)

@@ -64,6 +64,8 @@ class Dataset(HasSignals):
             self.style.color = default_style.color
             self.data.color = '0'
 
+        print self.data.size
+
         if self.data.symbol == '':
             self.data.symbol = 'square-f'
         self.style.symbol = self.data.symbol
@@ -85,6 +87,7 @@ class Dataset(HasSignals):
     def get_worksheet(self): return self.graph.project.items[self.data.worksheet]
 
     def paint(self):
+        gl2psPointSize(self.data.size)
         glCallList(self.listid)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
