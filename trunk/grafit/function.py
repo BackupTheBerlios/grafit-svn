@@ -2,7 +2,10 @@ import inspect
 import types
 import sys
 
-sys.modules['__main__'].splash_message('loading Function')
+try:
+    sys.modules['__main__'].splash_message('loading Function')
+except:
+    pass
 
 class FitFunction (object):
     """function onject with memory"""

@@ -10,6 +10,10 @@ import ftgl
 from Numeric import *
 from render import makedata
 
+sys.path.append('/home/daniel/grafit/functions')
+sys.path.append('/home/daniel/grafit')
+import hn
+
 class Mouse:
     Left, Right, Middle = range(3)
     Press, Release, Move = range(3)
@@ -25,7 +29,6 @@ class Coordinates:
 
 class Style(object):
     def __init__(self, color=(0,0,0,1)):
-        print 'init'
         self._line_width = 0
         self._color = color
 
@@ -66,6 +69,7 @@ class Dataset(object):
 
     def set_x(self, val):
         self._x = val
+        self.graph.update()
     def get_x(self):
         return self._x
     x = property(get_x, set_x)
@@ -123,13 +127,23 @@ class GLGraphWidget(QGLWidget):
         self.buf =  False
 
         self.datasets = []
-        self.datasets.append(Dataset(x = arange(10000.)/1000,
-                                     y = sin(arange(10000.)/1000)))
+#        self.datasets.append(Dataset(x = arange(10000.)/1000,
+#                                     y = sin(arange(10000.)/1000)))
+#        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
+#
+#        self.datasets.append(Dataset(x = arange(10000.)/1000,
+#                                     y = cos(arange(10000.)/1000)))
+#        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
+#
+        x = arange(2, 6, 0.001)
+        y = log10(hn.havriliak_negami(10.**x, 4, 1, 0.5, 1))
 
-        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
+        d = Dataset(x, y)
+        d.style.color =  (0.3, 0.4, 0.7, 0.8)
+        d.graph = self
+        self.datasets.append(d)
 
 
-#        self.colors[1] = (0.4, 0.0, 0.1, 0.8)
 #        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 
         self.set_range(0.0, 100.5)
@@ -243,7 +257,8 @@ class GLGraphWidget(QGLWidget):
 
         glLoadIdentity()
 
-        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/VeraSe.ttf')
+#        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/VeraSe.ttf')
+        f = ftgl.FTGLPixmapFont('fonts/gentium/GenR101.TTF')
         h = int(2.6*self.res)
         f.FaceSize(h)
         for x in tics(self.xmin, self.xmax):
@@ -377,6 +392,9 @@ class GLGraphWidget(QGLWidget):
         else:
             self.h = self.w/ratio
 
+        self.excessh = height - self.h
+        self.excessw = width - self.w
+
         # set margins (in pixels)
         self.marginb = int(self.h * 0.1)
         self.margint = int(self.h * 0.05)
@@ -425,7 +443,7 @@ class GLGraphWidget(QGLWidget):
 
 
     def make_data_list(self):
-        t = time.time()
+#        t = time.time()
 
         dx =  self.res * (self.xmax-self.xmin)/self.size().width()
         dy =  self.res * (self.ymax-self.ymin)/self.size().height()
@@ -436,7 +454,7 @@ class GLGraphWidget(QGLWidget):
             makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
         glEndList()
 
-        print (time.time()-t), "seconds"
+#        print (time.time()-t), "seconds"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
@@ -465,8 +483,10 @@ class GLGraphWidget(QGLWidget):
 
  
     def zoomout(self,x1, x2,x3, x4):
-        a = (x2-x1)/(x4-x3); c = x1 - a*x3;
-        f1 = a*x1 + c; f2 = a*x2 + c;
+        a = (x2-x1)/(x4-x3)
+        c = x1 - a*x3
+        f1 = a*x1 + c
+        f2 = a*x2 + c
         return min(f1, f2), max(f1, f2)
 
     def rubberband_begin(self, x, y):
@@ -524,6 +544,7 @@ class glGraph(object):
         elif event == Mouse.Move:
             if self.gwidget.rubberband_active():
                 self.gwidget.rubberband_continue(x, y)
+
 #        x, y = self.mouse_to_real(e.x(), e.y())
 #        self.set_range(x, self.to)
 #        self.updateGL()
@@ -540,20 +561,20 @@ class glGraph(object):
 #                if self.px == self.sx or self.py == self.sy: #can't zoom!
 #                    self.px, self.py = None, None
 #                    return
-                self.zix, self.ziy, self.zfx, self.zfy = self.gwidget.rubberband_end(x, y)
+                zix, ziy, zfx, zfy = self.gwidget.rubberband_end(x, y)
 
-                self.zix, self.ziy = self.gwidget.mouse_to_real(self.zix, self.ziy)
-                self.zfx, self.zfy = self.gwidget.mouse_to_real(self.zfx, self.zfy)
+                zix, ziy = self.gwidget.mouse_to_real(zix, ziy)
+                zfx, zfy = self.gwidget.mouse_to_real(zfx, zfy)
 #
-                self._xmin, self._xmax = min(self.zix, self.zfx), max(self.zix, self.zfx)
-                self._ymin, self._ymax = min(self.zfy, self.ziy), max(self.zfy, self.ziy)
+                _xmin, _xmax = min(zix, zfx), max(zix, zfx)
+                _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
 
                 if button == Mouse.Right:
-                    self.xmin, self.xmax = self.gwidget.zoomout(self.xmin, self.xmax, self._xmin, self._xmax)
-                    self.ymin, self.ymax = self.gwidget.zoomout(self.ymin, self.ymax, self._ymin, self._ymax)
+                    xmin, xmax = self.gwidget.zoomout(self.gwidget.xmin, self.gwidget.xmax, _xmin, _xmax)
+                    ymin, ymax = self.gwidget.zoomout(self.gwidget.ymin, self.gwidget.ymax, _ymin, _ymax)
                 else:
-                    self.xmin, self.xmax, self.ymin, self.ymax = self._xmin, self._xmax, self._ymin, self._ymax
-                self.gwidget.zoom(self.xmin, self.xmax, self.ymin, self.ymax)
+                    xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
+                self.gwidget.zoom(xmin, xmax, ymin, ymax)
 
                 self.gwidget.make_data_list()
                 self.gwidget.updateGL()
