@@ -89,6 +89,7 @@ class GraphView(gui.Box):
         style = [self.legend.model[i] for i in self.legend.selection][0].style
         self.style.color.selection = self.style.colors.index(style.color)
         self.style.shape.selection = self.style.shapes.index(style.symbol)
+        self.style.line_type.selection = self.style.linetypes.index(style.line_type)
 
     def on_new_column(self):
         pass
@@ -205,9 +206,12 @@ class GraphStylePanel(gui.Box):
         grid.layout.Hide(b._widget)
         self.line_type = gui.Choice(grid, pos=(0,2))
         self.line_type.min_size = (10, self.line_type.min_size[1])
-        for shape in ['none', 'straight', 'spline']:
+        self.linetypes = []
+        for shape in ['none', 'straight', 'bspline']:
             self.line_type.append(shape)
+            self.linetypes.append(shape)
         self.line_type.selection = 0
+        self.line_type.connect('select', self.on_select_line_type)
 
         # Line style
         labels.append(gui.Label(grid,  'Style', pos=(1,1)))
@@ -252,6 +256,11 @@ class GraphStylePanel(gui.Box):
     def on_select_size(self, size):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             d.style.size = size
+        self.graph.emit('redraw')
+
+    def on_select_line_type(self, ind):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            d.style.line_type = self.linetypes[ind]
         self.graph.emit('redraw')
 
 class GraphDataPanel(gui.Box):

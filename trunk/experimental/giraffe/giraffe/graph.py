@@ -16,10 +16,18 @@ from gl2ps import *
 from giraffe.graph_render import render
 
 class Style(HasSignals):
-    def __init__(self, color=(0,0,0), symbol='square-f'):
+    def __init__(self, color=(0,0,0), symbol='square-f', line_type='none'):
         self._line_width = 0
         self._color = color
         self._symbol = symbol
+        self._line_type = line_type
+
+    def set_line_type(self, val):
+        self._line_type = val
+        self.emit('modified')
+    def get_line_type(self):
+        return self._line_type
+    line_type = property(get_line_type, set_line_type)
 
     def set_line_width(self, val):
         self._line_width = val
@@ -70,6 +78,10 @@ class Dataset(HasSignals):
         if self.data.symbol == '':
             self.data.symbol = 'square-f'
         self.style.symbol = self.data.symbol
+
+        if self.data.linetype == '':
+            self.data.linetype = 'none'
+        self.style.line_type = self.data.linetype
         
         self.style.connect('modified', self.on_style_modified)
 
@@ -82,32 +94,37 @@ class Dataset(HasSignals):
 
     def paint(self):
         res, xmin, xmax, ymin, ymax, width, height = self.paintdata
-        gl2psPointSize(self.data.size)
-        dx =  res * (xmax-xmin)/width * self.style.size / 5.
-        dy =  res * (ymax-ymin)/height * self.style.size / 5.
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
-        xx = asarray(self.x[:])
-        yy = asarray(self.y[:])
 
-        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
-        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
+        x = asarray(self.x[:])
+        y = asarray(self.y[:])
+
+#        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
+#        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
         z = zeros(len(x))
-
-#        x = array([1,2,3,4,5])
-#        y = array([1,2,3,4,5])
-#        z = array([0,0,0,0,0])
 
         N = len(x)
 
-#        self.nurb = nurb = gluNewNurbsRenderer()
-#        gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
-#        gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
-#        gluBeginCurve(nurb)
-#        gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
-#        gluEndCurve(nurb)
+        if self.style.line_type == 'bspline':
+            nurb = gluNewNurbsRenderer()
+            gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
+            gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
+            gluBeginCurve(nurb)
+            gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
+            gluEndCurve(nurb)
+        elif self.style.line_type == 'straight':
+            glVertexPointerd(transpose(array([x-xmin, y-ymin, z])))
+            glEnable(GL_VERTEX_ARRAY)
+            glDrawArrays(GL_LINE_STRIP, 0, N)
+            glDisable(GL_VERTEX_ARRAY)
 
-        render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
+        if self.style.symbol != 'none':
+            gl2psPointSize(self.data.size)
+            glPointSize(self.data.size)
+            dx =  res * (xmax-xmin)/width * self.style.size / 5.
+            dy =  res * (ymax-ymin)/height * self.style.size / 5.
+            render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
         self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)

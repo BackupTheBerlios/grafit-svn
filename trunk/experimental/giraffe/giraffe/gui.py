@@ -251,6 +251,7 @@ class Choice(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.Choice(parent._widget, -1)
         Widget.__init__(self, parent, **place)
+        self._widget.Bind(wx.EVT_CHOICE, self.on_choice)
 
     def append(self, s):
         self._widget.Append(s)
@@ -258,6 +259,9 @@ class Choice(Widget):
     def get_selection(self): return self._widget.GetSelection()
     def set_selection(self, sel): self._widget.SetSelection(sel)
     selection = property(get_selection, set_selection)
+
+    def on_choice(self, event):
+        self.emit('select', self.selection)
 
 
 class xPopup(wx.PopupWindow):
