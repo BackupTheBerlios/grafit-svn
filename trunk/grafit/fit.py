@@ -824,7 +824,7 @@ class FitWindow (QVBox):
     def add_fit_curve_to_graph(self, function):
         try:
             project['fitcurves']
-        except KeyError:
+        except IndexError, KeyError:
             project.new_worksheet ('fitcurves')
 
         ws = project['fitcurves']
@@ -839,7 +839,8 @@ class FitWindow (QVBox):
             x = Numeric.arange (self.graph.xaxis.min, self.graph.xaxis.max, (self.graph.xaxis.max-self.graph.xaxis.min)/100.)
         ws[self.graph.name+'_fit_'+str(id)+'X'] = x
         ws[self.graph.name+'_fit_'+str(id)+'Y'] = self.functions[function].call(x)
-        self.graph.add(ws.__getattr__(self.graph.name+'_fit_'+str(id)+'X').__getattr__(self.graph.name+'_fit_'+str(id)+'Y'))
+        self.graph.add(ws, self.graph.name+'_fit_'+str(id)+'X',
+                           self.graph.name+'_fit_'+str(id)+'Y')
 
     def pencil (self):
         if self.resultsws not in [w.name for w in project.worksheets]:
