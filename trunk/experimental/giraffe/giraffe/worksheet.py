@@ -1,11 +1,11 @@
 import sys
 
-from giraffe.base.signals import HasSignals
-from giraffe.base.commands import command_from_methods
-from giraffe.base.item import Item, wrap_attribute, register_class, create_id
+from giraffe.signals import HasSignals
+from giraffe.commands import command_from_methods
+from giraffe.item import Item, wrap_attribute, register_class, create_id
 
 import arrays
-from giraffe.worksheet.arrays import MkArray
+from giraffe.arrays import MkArray
 
 def evaluate_expression(expression, project, worksheet):
     namespace = {}

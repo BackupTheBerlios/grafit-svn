@@ -14,13 +14,13 @@ from numarray import arange
 from giraffe.graph import Graph
 print >>sys.stderr, 'g',
 from giraffe.worksheet import Worksheet
-from giraffe.base.item import Folder
+from giraffe.item import Folder
 print >>sys.stderr, 'w',
 
-from giraffe.base.signals import HasSignals
+from giraffe.signals import HasSignals
 
-from giraffe.ui.graph_view import GraphView
-from giraffe.ui.worksheet_view import WorksheetView
+from giraffe.graph_view import GraphView
+from giraffe.worksheet_view import WorksheetView
 print >>sys.stderr, 'v',
 
 print >>sys.stderr, " ok"

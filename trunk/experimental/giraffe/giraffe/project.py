@@ -1,8 +1,8 @@
 import metakit
 
-from giraffe.base.commands import command_from_methods
-from giraffe.base.signals import HasSignals
-from giraffe.base.item import Item, Folder, storage_desc, create_id
+from giraffe.commands import command_from_methods
+from giraffe.signals import HasSignals
+from giraffe.item import Item, Folder, storage_desc, create_id
 
 # import only in order to register object types
 import giraffe.worksheet

@@ -5,8 +5,8 @@ from numarray import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from giraffe.base.signals import HasSignals
-from giraffe.base.item import Item, wrap_attribute, register_class
+from giraffe.signals import HasSignals
+from giraffe.item import Item, wrap_attribute, register_class
 from giraffe.lib import ftgl
 
 from render import makedata

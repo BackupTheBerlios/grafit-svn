@@ -6,7 +6,7 @@ DATADIR = os.path.normpath(os.path.dirname(os.path.realpath(os.path.abspath(__fi
 sys.path.append(DATADIR)
 
 from giraffe import Project
-from giraffe.ui.main import Application
+from giraffe.main import Application
 
 def main():
     p = Project()

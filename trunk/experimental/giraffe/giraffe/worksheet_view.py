@@ -3,7 +3,7 @@ import sys
 import wx
 import wx.grid as grid
 
-from giraffe.worksheet.arrays import nan
+from giraffe.arrays import nan
 from giraffe.worksheet import Worksheet
 
 class TableData(grid.PyGridTableBase):

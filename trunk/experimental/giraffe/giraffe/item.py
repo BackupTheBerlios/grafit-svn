@@ -1,7 +1,7 @@
 import sys
 import time, random, socket, md5
 
-from giraffe.base.signals import HasSignals
+from giraffe.signals import HasSignals
 
 # by (Carl Free Jr. http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761)
 def create_id(*args):
