@@ -112,7 +112,7 @@ class GLGraphWidget(QGLWidget):
         self.x[0] = arange(10000.)/1000
         self.y[0] = sin(self.x[0])
 
-        self.x[1] = arange(1000000.)/10000
+        self.x[1] = arange(10000.)/1000
         self.y[1] = cos(self.x[1])
 
         self.x[2] = arange(30000.)/1000
@@ -236,13 +236,16 @@ class GLGraphWidget(QGLWidget):
         glLoadIdentity()
 
         f = ftgl.FTGLPixmapFont('/usr/share/fonts/truetype/Times_New_Roman.ttf')
-        f.FaceSize(int(2.3 * self.res))
+        h = int(2.6*self.res)
+        f.FaceSize(h)
         for x in tics(self.xmin, self.xmax):
             glPushMatrix()
             glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
             glScalef(self.xscale_data, self.yscale_mm, 1.)
+            glTranslatef(-self.xmin, 0, 0)
             
-            glRasterPos2f(x, -3)
+            w = f.Advance(str(x))
+            glRasterPos2f(x-(self.xscale_pixel/self.xscale_data)*(w/2.), -3)
             f.Render(str(x))
 
             glPopMatrix()
@@ -252,9 +255,11 @@ class GLGraphWidget(QGLWidget):
             glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
             glScalef(self.xscale_mm, self.yscale_data, 1.)
             
-            glTranslatef(-2, y-self.ymin, 0)
+            glTranslatef(0, -self.ymin, 0)
 
-            glRasterPos2f(-3, y)
+            w = f.Advance(str(y))
+            glRasterPos2f(-3.-(self.xscale_pixel/self.xscale_mm)*w, 
+                          y-(self.xscale_pixel/self.xscale_data)*(h*0.35277138/4.))
             f.Render(str(y))
             
             glPopMatrix()
