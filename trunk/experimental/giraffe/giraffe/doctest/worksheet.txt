@@ -6,7 +6,7 @@ Calculated columns
 
 When evaluating calculated columns, the namespace used contains the following (in order of precedence):
 
-* math, using ``from giraffe.worksheet.mkarray import *`` (which includes numarray)
+* math, using ``from giraffe.arrays import *`` (which includes numarray)
 
 * ``here``, ``top``, ``up`` and ``this`` with their usual meanings
 

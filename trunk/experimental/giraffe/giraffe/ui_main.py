@@ -5,15 +5,14 @@ import new
 import wx
 import wx.py
 import wx.xrc
-from numarray import arange
 
+from giraffe.signals import HasSignals
+from giraffe.commands import undo, redo
 from giraffe.graph import Graph
 from giraffe.worksheet import Worksheet
 from giraffe.item import Folder
-from giraffe.signals import HasSignals
 from giraffe.ui_graph_view import GraphView
 from giraffe.ui_worksheet_view import WorksheetView
-from giraffe.commands import undo, redo
 
 
 class ToolPanel(wx.SashLayoutWindow):

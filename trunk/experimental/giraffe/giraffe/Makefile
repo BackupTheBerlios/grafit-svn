@@ -7,5 +7,5 @@ graph_render.so: graph_render.pyx
 	@chmod -x graph_render.so
 
 clean:
-	@rm graph_render.so
-	@rm *.pyc
+	@rm -f graph_render.so
+	@rm -f *.pyc

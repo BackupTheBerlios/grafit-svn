@@ -17,11 +17,18 @@ Also in ``project._dict`` are the contents (subfolders and items)
 of the current folder.  Programatically, you can get these object 
 with ``project.top.contents()``.
 
-    >>> from giraffe import Project, Worksheet
-    >>> from giraffe.base.commands import undo, redo, command_list
-    >>> import sys
+Importing the giraffe module
+
+    >>> from giraffe import *
+    >>> from giraffe.commands import undo, redo
+
+Creating and initializing a project
+
     >>> p = Project()
     >>> p.set_dict(globals())
+
+Creating and deleting folders
+
     >>> p.mkfolder('ass')
     >>> ass
     <Folder ass>
@@ -34,10 +41,12 @@ with ``project.top.contents()``.
     Traceback (most recent call last):
     ...
     NameError: folder 'hole' does not exist
+
+Creating and deleting worksheets
+
     >>> w = p.new(Worksheet, 'data1')
     >>> data1 == w
     True
-
     >>> undo()
     >>> data1 == w
     Traceback (most recent call last):

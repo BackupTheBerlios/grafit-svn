@@ -183,8 +183,8 @@ class Project(HasSignals):
         self.new(Folder, path, parent)
 
     def rmfolder(self, path):
-        if path in self.this:
-            self.remove(self.this[path].id)
+        if path in self.here:
+            self.remove(self.here[path].id)
         else:
             raise NameError, "folder '%s' does not exist" % path
 
