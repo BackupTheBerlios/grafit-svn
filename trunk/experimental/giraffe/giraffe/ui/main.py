@@ -59,7 +59,8 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_height = 120
 
     def add_page(self, label, pixmap, widget):
-        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
+#        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
+        bimp = wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_MENU)
         text = label
 
         dc = wx.MemoryDC()
@@ -79,7 +80,6 @@ class ToolPanel(wx.SashLayoutWindow):
         if self.position in ['left', 'right']:
             bmp = bmp.ConvertToImage().Rotate90(False).ConvertToBitmap()
 
-#        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
         ind = len(self.contents)
 
         btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, -1, bmp, style=wx.BU_EXACTFIT)
@@ -170,13 +170,9 @@ class ProjectTree(wx.TreeCtrl):
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
 
-
     def on_add_item(self, item):
-
         self.items[item.id] = self.AppendItem(self.root, item.name)
         self.SetItemImage(self.items[item.id], self.wsidx, wx.TreeItemIcon_Normal)
-#        self.SetItemImage(self.items[item.id], self.fldropenidx, wx.TreeItemIcon_Expanded)
-
         item.connect('rename', self.on_rename)
 
     def on_double_click(self, event):
@@ -207,12 +203,10 @@ class Application(wx.App):
                         style=wx.DEFAULT_FRAME_STYLE)
         frame.CreateStatusBar()
         tb = frame.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
-        tb.AddSimpleTool(10, wx.Image("../data/images/new.png").ConvertToBitmap(), "New", "Long help for 'New'")
-        tb.AddSimpleTool(10, wx.Image("../data/images/open.png").ConvertToBitmap(), "New", "Long help for 'New'")
-        tb.AddSimpleTool(10, wx.Image("../data/images/save.png").ConvertToBitmap(), "New", "Long help for 'New'")
-        tb.AddSimpleTool(10, wx.Image("../data/images/saveas.png").ConvertToBitmap(), "New", "Long help for 'New'")
+        tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_TOOLBAR), "New", "Long help for 'New'")
+        tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR), "New", "Long help for 'New'")
 
-        tb.Hide()
+#        tb.Hide()
 
         menuBar = wx.MenuBar()
         menu = wx.Menu()

@@ -447,7 +447,8 @@ class Graph(Item, HasSignals):
         glEnable (GL_BLEND)
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        glClearColor(252./256, 246./256, 238./256, 1.0)
+#        glClearColor(252./256, 246./256, 238./256, 1.0)
+        glClearColor(252./256, 252./256, 252./256, 1.0)
 #        glClearColor(1., 1., 1., 1.0)
 
         glDisable(GL_DEPTH_TEST)
