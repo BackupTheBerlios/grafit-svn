@@ -387,13 +387,13 @@ class MainPanel(wx.Panel):
                                                locals=self.locals, introText='Welcome to giraffe')
         self.script_window.push('from giraffe.worksheet.arrays import *')
         self.script_window.push('from giraffe import *')
-        self.script_window.push('project.set_dict(globals())')
         self.script_window.setLocalShell()
         self.script_window.clear()
         self.script_window.prompt()
         self.script_window.zoom(-1)
 
         self.locals.update({'project': self.project})
+        self.script_window.push('project.set_dict(globals())')
 
         # bottom panel
         self.bottom_panel.add_page('Script', 'console.png', self.script_window)
@@ -413,7 +413,6 @@ class MainPanel(wx.Panel):
 
         self.main_box = wx.BoxSizer(wx.VERTICAL)
         self.remainingSpace.SetSizer(self.main_box)
-
 
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.left_panel.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.right_panel.GetId())
