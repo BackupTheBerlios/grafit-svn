@@ -10,11 +10,10 @@ print >>sys.stderr, "loading wx...",
 import wx
 print >>sys.stderr, "ok"
 
-print >>sys.stderr, "loading application...",
+print >>sys.stderr, "loading giraffe...",
 from giraffe import Project
-print >>sys.stderr, "ok"
-
 from giraffe.main import Application
+print >>sys.stderr, "ok"
 
 def main():
     print >>sys.stderr, "creating application...",

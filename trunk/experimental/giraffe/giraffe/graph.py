@@ -111,11 +111,9 @@ class Dataset(object):
 
         glNewList(self.id, GL_COMPILE)
         glColor4f(*self.style.color)
-	print >>sys.stderr, 'makedata'
         makedata(asarray(self.x[:]), asarray(self.y[:]), 
                  self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
                  GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]  )
-	print >>sys.stderr, '/makedata'
         glEndList()
 
 class Grid(object):
@@ -234,9 +232,7 @@ class Axis(object):
 
     def paint_text(self):
         glLoadIdentity()
-	print >>sys.stderr, 'arse'
         f = ftgl.FTGLPixmapFont('/home/daniel/giraffe/data/fonts/bitstream-vera/Vera.ttf')
-	print >>sys.stderr, 'arses'
         h = int(2.6*self.plot.res)
         f.FaceSize(h)
         if self.position == 'bottom':
@@ -438,7 +434,6 @@ class Graph(Item, HasSignals):
         return min(f1, f2), max(f1, f2)
 
     def init(self):
-    	print >>sys.stderr, 'init'
         glClearColor(252./256, 252./256, 252./256, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
 
@@ -454,12 +449,9 @@ class Graph(Item, HasSignals):
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
-    	print >>sys.stderr, 'init/'
         self.make_data_list()
-    	print >>sys.stderr, '/init'
  
     def display(self, width, height):
-    	print >>sys.stderr, 'display'
 
         gluOrtho2D (0, width, 0, height)
         if not self.buf:

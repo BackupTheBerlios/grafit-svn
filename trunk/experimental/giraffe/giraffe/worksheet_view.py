@@ -7,53 +7,18 @@ from giraffe.arrays import nan
 from giraffe.worksheet import Worksheet
 
 class TableData(grid.PyGridTableBase):
-    """
-    Custom data table for a wx.Grid
-    """
+    """Custom data table for a wx.Grid, connecting the grid to a worksheet"""
 
     def __init__(self, worksheet):
         grid.PyGridTableBase.__init__(self)
         self.worksheet = worksheet
-        print >>sys.stderr, 1
         self.worksheet.connect('data-changed', self.ResetView)
-        print >>sys.stderr, 2
 
         self.normal_attr = grid.GridCellAttr()
         self.normal_attr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
-        print >>sys.stderr, 3
         self._rows = self.GetNumberRows()
-        print >>sys.stderr, 4
         self._cols = self.GetNumberCols()
-        print >>sys.stderr, 5
-
-#    def GetAttr(self, row, col, kind):
-#        print >>sys.stderr, 'GetAttr', row, col, '#', kind
-#        return None
-
- #       attr = self.normal_attr
-           # Re: [wxPython-users] GetAttr() destroys wxGridCellAttr
-           # by Roger Binns other posts by this author
-           # Dec 6 2003 5:25AM
-           #
-           # GridCellAttr objects *ARE* reference counted.  They are *only*
-           # deleted when the reference count hits zero indicating that
-           # noone is using them.
-
-           # Due to an artifact of the wxPython wrapping, the reference
-           #  count isn't increased and wx thinks it is no longer in
-           #  use when it is.  Calling IncRef manually solves the problem.
-
-#        attr.IncRef()
-#        return attr
-
-    def CanHaveAttributes(self):
-        print 'can'
-        return False
-
-    def base_CanHaveAttributes(self):
-        print 'baecan'
-        return False
 
     def GetNumberRows(self):
         return self.worksheet.nrows
@@ -72,8 +37,8 @@ class TableData(grid.PyGridTableBase):
 
     def ResetView(self, view=None):
         """
-        (Grid) -> Reset the grid view.   Call this to
-        update the grid if rows and columns have been added or deleted
+        Reset the grid view. Call this to update the grid 
+        if rows and columns have been added or deleted
         """
         if view is None:
             view = self.GetView()
@@ -170,38 +135,10 @@ class WorksheetView(grid.Grid):
             # add a new row
             self.GetTable().worksheet[self.GetGridCursorCol()][self.GetTable().GetNumberRows()] = nan
 
-    def OnWinPaint(self, evt):
-#        print self
-#        dc = wx.PaintDC(self.GetGridWindow())
-#        self.PrepareDC(dc)
-#        DirtyCells = self.CalcCellsExposed()
-#        DirtyCells = self.GetSelectedCells()
-#        self.DrawGridCellArea(dc, DirtyCells)
-#        self.DrawAllGridLines(dc, reg)
-#        self.DrawGridSpace(dc)
-#        self.DrawHighlight(dc, DirtyCells)
-        print 'winpaint', evt
-        evt.Skip()
 
     def OnRightDown(self, event):
         print "hello"
-        win =  self.GetGridWindow()
-        print win.Refresh
-        win.Bind(wx.EVT_PAINT, self.OnWinPaint)
-#        win.Refresh = wrap_method(win.Refresh)
-
-        #for l in range(100):
-#            self.GetTable().worksheet.add_column('col'+str(l))
-#        self.GetTable().worksheet.A[999] = 14
-#        print self.GetSelectedRows()
 
     def Refresh(*args):
         print >>sys.stderr, args
         return grid.Grid.Refresh(*args)
-
-class wrap_method(object):
-    def __init__(self, meth):
-        self.orig_method = meth
-    def __call__(self, *args, **kwds):
-        print >>sys.stderr, 'called!', args, kwds
-        return self.orig_method(*args, **kwds)
