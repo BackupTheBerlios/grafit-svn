@@ -1,14 +1,14 @@
-* add wx.FlexGridSizer to gui module
+- add wx.FlexGridSizer to gui module
 * create gui for graph style panel
 - make add/remove datasets into commands
-* make data entry possible in worksheetview
+- make data entry possible in worksheetview
 
 
 for grafit M1:
 --------------
 - explorer
-    * work correctly
-    * move objects to folder
+    - work correctly
+    - move objects to folder
     * delete objects
 
 - worksheets

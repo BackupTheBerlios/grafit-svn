@@ -138,7 +138,7 @@ class GraphStylePanel(gui.Box):
         self.graph = graph
         self.view = view
 
-        grid = gui.Grid(self, 2, 2, expand=True, stretch=1.)
+        grid = gui.Grid(self, 3, 2, expand=True, stretch=1.)
         gui.Label(grid,  'Symbol', pos=(0,0))
         c = gui.Choose(grid, pos=(0,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
@@ -153,6 +153,8 @@ class GraphStylePanel(gui.Box):
             for g in range(0, 256, 16):
                 for b in range(0, 256, 16):
                     c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
+
+        gui.Label(grid, 'Size', pos=(2,0))
 
         grid.layout.AddGrowableCol(1)
 

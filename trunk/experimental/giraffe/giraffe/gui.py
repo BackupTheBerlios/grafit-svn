@@ -215,6 +215,7 @@ class Choose(Widget):
 
     def on_button(self, event):
         if self.down:
+            self.on_kill_focus(None)
             return
         self.win = win = xPopup(self._widget, wx.SUNKEN_BORDER)
         lst = wx.ListCtrl(win, -1, size=(120, 220), style=wx.LC_SMALL_ICON)
@@ -247,6 +248,7 @@ class Choose(Widget):
     def on_kill_focus(self, event):
         try:
             self.win.Destroy()
+            self.down = False
         except wx.PyDeadObjectError:
             pass
 
