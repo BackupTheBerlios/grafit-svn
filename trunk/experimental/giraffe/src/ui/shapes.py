@@ -325,13 +325,13 @@ class Plot(HasSignals):
         d.graph = self
         self.datasets.append(d)
 
-        self.datasets.append(Dataset(x = arange(10000.)/10000,
-                                     y = sin(arange(10000.)/10000)))
+        self.datasets.append(Dataset(x = arange(100000.)/100000,
+                                     y = sin(arange(100000.)/100000)))
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
         self.datasets[-1].graph = self
 
-        self.datasets.append(Dataset(x = arange(10000.)/1000,
-                                     y = cos(arange(10000.)/1000)))
+        self.datasets.append(Dataset(x = arange(100000.)/10000,
+                                     y = cos(arange(100000.)/10000)))
         self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
         self.datasets[-1].graph = self
 
