@@ -6,33 +6,42 @@ import os
 import new
 
 import wx
+print >>sys.stderr, 'x',
 import wx.py
+print >>sys.stderr, 'p',
 from numarray import arange
  
+from giraffe.graph import Graph
+print >>sys.stderr, 'g',
+from giraffe.worksheet import Worksheet
+print >>sys.stderr, 'w',
+
 from giraffe.ui.graph_view import GraphView
 from giraffe.ui.worksheet_view import WorksheetView
-from giraffe.graph import Graph
-from giraffe.worksheet import Worksheet
+print >>sys.stderr, 'v',
 
-print >>sys.stderr, "ok"
+print >>sys.stderr, " ok"
 
 class ToolPanel(wx.SashLayoutWindow):
+    """The areas on the left, top and bottom of the window holding tabs."""
+
     def __init__(self, parent, position):
-        wx.SashLayoutWindow.__init__(self, parent, -1, 
-                                     wx.DefaultPosition, (200, 30),
-                                     wx.NO_BORDER|wx.SW_3D)
+        wx.SashLayoutWindow.__init__(self, parent, -1, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
+
         self.parent = parent
         self.position = position
+
         if position in ['top', 'bottom']:
             self.SetDefaultSize((1000, 12))
         else:
             self.SetDefaultSize((12, 1000))
 
-        data = { 'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, wx.SASH_RIGHT, wx.VERTICAL, wx.HORIZONTAL),
-                 'right' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_RIGHT, wx.SASH_LEFT, wx.VERTICAL, wx.HORIZONTAL), 
-                 'top' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_TOP, wx.SASH_BOTTOM, wx.HORIZONTAL, wx.VERTICAL), 
-                 'bottom' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_BOTTOM, wx.SASH_TOP, wx.HORIZONTAL, wx.VERTICAL) }
-        d_orientation, d_alignment, d_showsash, d_btnbox, d_mainbox = data[position]
+        data = { 'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, wx.SASH_RIGHT, wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
+                 'right' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_RIGHT, wx.SASH_LEFT, wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL), 
+                 'top' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_TOP, wx.SASH_BOTTOM, wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL), 
+                 'bottom' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_BOTTOM, wx.SASH_TOP, wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL) }
+
+        d_orientation, d_alignment, d_showsash, d_btnbox, d_mainbox, d_toolbar = data[position]
 
         self.SetOrientation(d_orientation)
         self.SetAlignment(d_alignment)
@@ -43,11 +52,14 @@ class ToolPanel(wx.SashLayoutWindow):
         self.contentbox = wx.BoxSizer(d_mainbox)
         self.box = wx.BoxSizer(d_mainbox)
         if position in ['top', 'left']:
-            self.box.Add(self.btnbox, 0)
+            self.box.Add(self.btnbox, 0, wx.EXPAND)
             self.box.Add(self.contentbox, 1, wx.EXPAND)
         else:
             self.box.Add(self.contentbox, 1, wx.EXPAND)
-            self.box.Add(self.btnbox, 0)
+            self.box.Add(self.btnbox, 0, wx.EXPAND)
+
+        self.toolbar = wx.ToolBar(self.panel, -1, style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_FLAT)
+        self.btnbox.Add(self.toolbar, 1)
 
         self.panel.SetAutoLayout(True)
         self.panel.SetSizer(self.box)
@@ -57,17 +69,17 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_width = 180
         self.last_height = 180
 
-    def add_page(self, label, pixmap, widget):
+    def add_page(self, text, pixmap, widget):
         bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
-#        bimp = wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_MENU)
-        text = label
 
+        # create an empty bitmap
         dc = wx.MemoryDC()
         w, h = dc.GetTextExtent(text)
         wb, hb = bimp.GetSize()
         bmp = wx.EmptyBitmap(w + wb, max([h, hb]))
         dc.SelectObject(bmp)
 
+        # draw bitmap and text 
         dc.BeginDrawing()
         dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
         dc.Clear()
@@ -76,22 +88,17 @@ class ToolPanel(wx.SashLayoutWindow):
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
         bmp.SetMaskColour(self.GetBackgroundColour())
-
+        
+        # rotate if nescessary
         if self.position in ['left', 'right']:
             bmp = bmp.ConvertToImage().Rotate90(False).ConvertToBitmap()
 
         ind = len(self.contents)
 
-#        btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, -1, bmp, style=wx.BU_EXACTFIT)
-#        btn.SetBezelWidth(1)
-
-        self.toolbar = wx.ToolBar(self.panel, -1, style=wx.TB_HORIZONTAL|wx.NO_BORDER|wx.TB_FLAT)
         btn = wx.NewId()
         self.toolbar.AddCheckTool(btn, bmp, bmp, "New", "Long help for 'New'")
         self.toolbar.Bind(wx.EVT_TOOL, self.button_clicked(ind))
         
-#        self.btnbox.Add(btn, 0)
-        self.btnbox.Add(self.toolbar, 0)
         self.contentbox.Add(widget, 1, wx.EXPAND)
         widget.Hide()
         self.contentbox.Layout()
@@ -297,15 +304,14 @@ class MainWindow(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # buttons
-#        btnsizer = wx.BoxSizer(wx.HORIZONTAL)
         toolbar = wx.ToolBar(explorer, -1)
 
-        bmp = wx.Image('../data/images/closed-folder.png').ConvertToBitmap()
-#        btn = wx.BitmapButton(explorer, -1, bmp)
-#        toolbar.AddControl(btn)
+        bmp = wx.Image('../data/images/folder_new.png').ConvertToBitmap()
         toolbar.AddTool(10, bmp, bmp,  "New")
+        bmp = wx.Image('../data/images/remove.png').ConvertToBitmap()
+        toolbar.AddTool(10, bmp, bmp, "Delete")
 
-        sizer.Add(toolbar, 0)
+        sizer.Add(toolbar, 0, wx.EXPAND)
 
         # tree control
         self.project_tree = ProjectTree(explorer, self.project, self)
