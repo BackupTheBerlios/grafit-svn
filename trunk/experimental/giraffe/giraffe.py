@@ -97,17 +97,27 @@ class glGraph(object):
         elif event == Mouse.Move:
             if self.rubberband_active():
                 self.rubberband_continue(x, y)
+#        x, y = self.mouse_to_real(e.x(), e.y())
+#        self.set_range(x, self.to)
+#        self.updateGL()
+#        return
         elif event == Mouse.Release:
             if button == Mouse.Middle:
                 self.autoscale()
                 self.make_data_list()
-                self.widget.update()
+                self.update()
             elif button == Mouse.Left or button == Mouse.Right:
+#                self.px, self.py = self.sx, self.sy
+#                self.sx, self.sy = self.ix, self.iy
+#                self.mouseMoveEvent(e)
+#                if self.px == self.sx or self.py == self.sy: #can't zoom!
+#                    self.px, self.py = None, None
+#                    return
                 self.zix, self.ziy, self.zfx, self.zfy = self.rubberband_end(x, y)
 
                 self.zix, self.ziy = self.mouse_to_real(self.zix, self.ziy)
                 self.zfx, self.zfy = self.mouse_to_real(self.zfx, self.zfy)
-
+#
                 self._xmin, self._xmax = min(self.zix, self.zfx), max(self.zix, self.zfx)
                 self._ymin, self._ymax = min(self.zfy, self.ziy), max(self.zfy, self.ziy)
 
@@ -115,11 +125,11 @@ class glGraph(object):
                     self.xmin, self.xmax = self.zoomout(self.xmin, self.xmax, self._xmin, self._xmax)
                     self.ymin, self.ymax = self.zoomout(self.ymin, self.ymax, self._ymin, self._ymax)
                 else:
-                    self.xmin, self.xmax, self.ymin, self.ymax = self._xmin,self._xmax,self._ymin,self._ymax
+                    self.xmin, self.xmax, self.ymin, self.ymax = self._xmin, self._xmax, self._ymin, self._ymax
                 self.zoom(self.xmin, self.xmax, self.ymin, self.ymax)
 
                 self.make_data_list()
-                self.widget.update()
+                self.updateGL()
             self.px, self.py = None, None
 
 
@@ -269,6 +279,10 @@ class glGraph(object):
 
         # go to (0, 0)
         glTranslatef(-self.xmin, -self.ymin, 0)
+#
+#            glTranslate(-1., -1., 0)
+#            glScalef(2./(self.xmax-self.xmin), 2./(self.ymax-self.ymin), 1.)
+#            glTranslatef(-self.xmin, -self.ymin, 0)
         
         self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
 
@@ -319,15 +333,12 @@ class glGraph(object):
             glPushMatrix()
             glLoadIdentity()
 
-            glColor4f(1.0,1.0,0.0, 1.0)
-
-            glLineStipple(1, 0x4444)
-#            glEnable(GL_LINE_STIPPLE)
-
+            glColor3f(1.0,1.0,0.0)
+            glLineStipple (1, 0x4444) # dotted
+            glEnable(GL_LINE_STIPPLE)
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
 
-            # erase previous rectangle
             glBegin(GL_LINE_LOOP)
             glVertex3f(self.ix, self.iy, 0.0)
             glVertex3f(self.ix, self.py, 0.0)
@@ -335,7 +346,6 @@ class glGraph(object):
             glVertex3f(self.px, self.iy, 0.0)
             glEnd()
 
-            # draw new rectangle
             glBegin(GL_LINE_LOOP)
             glVertex3f(self.ix, self.iy, 0.0)
             glVertex3f(self.ix, self.sy, 0.0)
@@ -390,9 +400,10 @@ class glGraph(object):
 
         self.w, self.h = w, h
 
-        # enable translucency
         glEnable (GL_BLEND)
+
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
 
         glClearColor(252./256, 246./256, 238./256, 1.0)
         glDisable(GL_DEPTH_TEST)
@@ -467,7 +478,7 @@ class glGraph(object):
     def rubberband_continue(self, x, y):
         self.px, self.py = self.sx, self.sy
         self.sx, self.sy = self.mouse_to_ident(x, y)
-        self.widget.update()
+        self.update_view()
 
     def rubberband_end(self, x, y):
         self.rubberband_continue(x, y)
