@@ -318,7 +318,10 @@ class Application(wx.App):
 #
 #        frame.SetMenuBar(menuBar)
 
-        frame.SetMenuBar(wx.xrc.XmlResource('menu.xrc').LoadMenuBar('menubar'))
+
+        resource = wx.xrc.XmlResource('menu.xrc')
+        frame.SetMenuBar(resource.LoadMenuBar('menubar'))
+	self.Bind(wx.EVT_MENU, self.OnButton, id=wx.xrc.XRCID("menu-quit"))
 
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 

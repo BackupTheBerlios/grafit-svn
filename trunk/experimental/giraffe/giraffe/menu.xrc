@@ -16,7 +16,7 @@
         <label>Save &amp;As</label>
       </object>
       <object class="separator"/>
-      <object class="wxMenuItem">
+      <object class="wxMenuItem" name="menu-quit">
         <label>&amp;Quit</label>
       </object>
     </object>
