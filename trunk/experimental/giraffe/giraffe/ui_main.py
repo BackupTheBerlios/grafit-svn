@@ -159,9 +159,8 @@ class ToolPanel(wx.SashLayoutWindow):
 
 
 class ProjectExplorer(wx.Panel, HasSignals):
-    def __init__(self, parent, project):
+    def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
-        self.project = project
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -181,14 +180,8 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.wsidx       = il.Add(wx.Image('../data/images/stock_folder.png').ConvertToBitmap())
         self.project_tree.SetImageList(self.ilt)
 
-        self.root = self.project_tree.AddRoot('Project')
-
-        self.project_tree.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
-        self.project_tree.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
-
         # object.id: treeitemid
         self.treeitems = {}
-        self.treeitems[project.top.id] = self.root
 
 
         # list control
@@ -210,17 +203,57 @@ class ProjectExplorer(wx.Panel, HasSignals):
 
         self.project_tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
         self.current_dir.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
+       
+        self.items = {}
+
+    def connect_project(self, project):
+        self.project = project
 
         self.project.connect('add-item', self.on_add_item)
         self.project.connect('remove-item', self.on_add_item)
         self.project.connect('change-current-folder', self.on_project_change_folder)
         self.project.connect('add-item', self.on_project_add_item)
         self.project.connect('remove-item', self.on_project_remove_item)
-        
-        self.items = {}
+
+        self.root = self.project_tree.AddRoot('Project')
+        self.project_tree.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
+        self.project_tree.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
+        self.treeitems[project.top.id] = self.root
+
+        def subfolders(f):
+            for item in f.contents():
+                if isinstance(item, Folder):
+                    yield item
+
+        def all_subfolders(f):
+            yield f
+            for item in subfolders(f):
+                for i in all_subfolders(item):
+                    yield i
+
+
+        for f in all_subfolders(project.top):
+            print >>sys.stderr, f
+
+        for f in all_subfolders(project.top):
+            if f != project.top:
+                self.on_project_add_item(f)
 
         self.on_sel_changed(None, self.root)
 
+    def disconnect_project(self):
+        self.project.disconnect('add-item', self.on_add_item)
+        self.project.disconnect('remove-item', self.on_add_item)
+        self.project.disconnect('change-current-folder', self.on_project_change_folder)
+        self.project.disconnect('add-item', self.on_project_add_item)
+        self.project.disconnect('remove-item', self.on_project_remove_item)
+
+        self.treeitems = {}
+        self.project = None
+
+        self.project_tree.DeleteAllItems()
+        self.current_dir.ClearAll()
+ 
     def on_add_item(self, item):
         if item.parent == self.project.here:
             self.on_sel_changed(None, self.treeitems[item.parent.id])
@@ -257,7 +290,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.project.cd(folder)
 
     def on_project_add_item(self, item):
-        if type(item) == Folder:
+        if isinstance(item, Folder):
             treeitem = self.project_tree.AppendItem(self.treeitems[item.parent.id], item.name)
             self.treeitems[item.id] = treeitem
             self.project_tree.SetItemImage(treeitem, self.wsidx, wx.TreeItemIcon_Normal)
@@ -276,7 +309,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
 
 
 class ScriptWindow(wx.py.shell.Shell):
-    def __init__(self, parent, project):
+    def __init__(self, parent):
         self.locals = {}
         wx.py.shell.Shell.__init__(self, parent, -1, locals=self.locals)
 
@@ -284,13 +317,20 @@ class ScriptWindow(wx.py.shell.Shell):
         self.push('from giraffe.worksheet.arrays import *')
         self.push('from giraffe import *')
 
-        self.locals.update({'project': project})
-        self.push('project.set_dict(globals())')
-
         self.setLocalShell()
         self.clear()
         self.prompt()
         self.zoom(-1)
+
+    def connect_project(self, project):
+        self.project = project
+        self.locals.update({'project': project})
+        self.push('project.set_dict(globals())')
+
+    def disconnect_project(self):
+        self.locals.update({'project': None})
+        self.project.unset_dict()
+        self.project = None
 
 
 class Application(wx.App):
@@ -397,13 +437,16 @@ class MainPanel(wx.Panel):
         self.left_panel = ToolPanel(self, 'left')
 
         # bottom panel
-        self.script_window = ScriptWindow(self.bottom_panel.panel, self.project)
+        self.script_window = ScriptWindow(self.bottom_panel.panel)
         self.bottom_panel.add_page('Script', 'console.png', self.script_window)
+        self.script_window.connect_project(self.project)
+        self.script_window.locals['mainwin'] = self
 
         # the left panel
-        explorer = ProjectExplorer(self.left_panel.panel, self.project)
-        explorer.connect('activate-object', self.show_object)
-        self.left_panel.add_page('Project', 'stock_navigator.png', explorer)
+        self.explorer = ProjectExplorer(self.left_panel.panel)
+        self.explorer.connect('activate-object', self.show_object)
+        self.left_panel.add_page('Project', 'stock_navigator.png', self.explorer)
+        self.explorer.connect_project(self.project)
 
 
         # will occupy the space not used by the Layout Algorithm
