@@ -1,10 +1,5 @@
-#!/usr/bin/env python
-
 import sys
-#import time
-
-import wx
-import wx.glcanvas
+import sets
 
 from giraffe import Worksheet, Folder
 from giraffe.signals import HasSignals
@@ -24,6 +19,9 @@ def intersection (ml):
         if len(v) == len(ml):
             rslt.append(k)
     return rslt
+
+def all_the_same(sequence):
+    return len(sets.Set(sequence)) == 1
 
 class LegendModel(HasSignals):
     def __init__(self, graph):
@@ -79,31 +77,13 @@ class GraphView(gui.Box):
         self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-        self.graphdata.connect_project(self.graph.project)
 
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
-        selection = [self.legend.model[i] for i in self.legend.selection]
-
-        if len(selection) > 1:
-            self.style.show_checks()
-
-            colors = [self.style.colors.index(d.style.color) for d in selection]
-            c0 = colors[0]
-            self.style.color.check.state = colors == [c % len(self.style.colors) for c in range(c0, c0+len(colors))]
-        else:
-            self.style.hide_checks()
-
-        style = selection[0].style
-        self.style.color.selection = self.style.colors.index(style.color)
-        self.style.shape.selection = self.style.shapes.index(style.symbol)
-        self.style.size.value = style.symbol_size
-        self.style.line_type.selection = self.style.linetypes.index(style.line_type)
-        self.style.line_style.selection = self.style.linestyles.index(style.line_style)
-        self.style.line_width.value = style.line_width
+        self.style.on_legend_selection()
 
     def on_new_column(self):
         pass
@@ -121,37 +101,10 @@ class GraphView(gui.Box):
 
         self.parent.delete(self)
 
-class WorksheetListModel(HasSignals):
-    def __init__(self, folder):
-        self.folder = folder
-        self.update()
-        self.folder.project.connect(['add-item', 'remove-item'], self.update)
 
-    def update(self, item=None):
-        self.contents = [o for o in self.folder.contents() 
-                           if isinstance(o, (Worksheet))]
-        self.emit('modified')
-
-    # ListModel protocol
-    def get(self, row, column): return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
-    def get_image(self, row): return 'worksheet.png'
-    def __len__(self): return len(self.contents)
-    def __getitem__(self, row): return self.contents[row]
-
-class ColumnListModel(HasSignals):
-    def __init__(self):
-        self.worksheets = []
-        self.colnames = []
-
-    def set_worksheets(self, worksheets):
-        self.worksheets = worksheets
-        self.colnames = intersection([w.column_names for w in worksheets])
-        self.emit('modified')
-
-    def get(self, row, column): return self.colnames[row]
-    def get_image(self, row): return None
-    def __len__(self): return len(self.colnames)
-    def __getitem__(self, row): return self.colnames[row]
+###############################################################################
+# style panel                                                                  #
+###############################################################################
 
 class GraphStylePanel(gui.Box):
     def __init__(self, graph, view, parent, **place):
@@ -171,6 +124,7 @@ class GraphStylePanel(gui.Box):
         labels.append(gui.Label(grid,  'Symbol', pos=(0,1)))
         self.shape = gui.PixmapChoice(grid, pos=(0,2))
         self.shape.check = gui.Checkbox(grid, pos=(0,0))
+        self.shape.check.connect('modified', lambda state: self.on_check(self.shape, state), True)
         self.shape.min_size = (10, self.shape.min_size[1])
 #        self.shapes = ['uptriangle-f', 'square-f', 'circle-f', 'diamond-f']
         self.shapes = []
@@ -253,10 +207,51 @@ class GraphStylePanel(gui.Box):
         self.multi.append('identical')
         self.multi.append('series')
         self.multi.selection = 0
+        self.multi.connect('select', self.on_select_multi)
 
         maxminw = max([l._widget.GetBestSize()[0] for l in labels])
         for l in labels:
             l.min_size = (maxminw, l.min_size[1])
+
+    def on_legend_selection(self):
+        datasets = [self.view.legend.model[i] for i in self.view.legend.selection]
+
+        style = datasets[0].style
+        self.color.selection = self.colors.index(style.color)
+        self.shape.selection = self.shapes.index(style.symbol)
+        self.size.value = style.symbol_size
+        self.line_type.selection = self.linetypes.index(style.line_type)
+        self.line_style.selection = self.linestyles.index(style.line_style)
+        self.line_width.value = style.line_width
+
+        if len(datasets) > 1:
+            self.show_checks()
+
+            if self.multi.selection == 0: # identical
+                self.color.check.state =  all_the_same([self.colors.index(d.style.color) for d in datasets])
+                self.shape.check.state = all_the_same([d.style.symbol for d in datasets])
+                self.size.check.state = all_the_same([d.style.symbol_size for d in datasets])
+
+                self.line_type.check.state = all_the_same([d.style.line_type for d in datasets])
+                self.line_style.check.state = all_the_same([d.style.line_style for d in datasets])
+                self.line_width.check.state = all_the_same([d.style.line_width for d in datasets])
+
+                for control in [self.color, self.shape, self.size, 
+                                self.line_type, self.line_style, self.line_width]:
+                    control.active = control.check.state
+
+            elif self.multi.selection == 1: # series
+                colors = [self.colors.index(d.style.color) for d in datasets]
+                c0 = colors[0]
+                self.color.check.state = colors == [c % len(self.colors) for c in range(c0, c0+len(colors))]
+        else:
+            self.hide_checks()
+
+    def on_select_multi(self, sel):
+        self.on_legend_selection()
+
+    def on_check(self, widget, state):
+        print widget, state
 
     def hide_checks(self):
         for w in [self.shape,self.color,self.size]:
@@ -298,6 +293,44 @@ class GraphStylePanel(gui.Box):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             d.style.line_width = width
 
+
+###############################################################################
+# data panel                                                                  #
+###############################################################################
+
+class WorksheetListModel(HasSignals):
+    def __init__(self, folder):
+        self.folder = folder
+        self.update()
+        self.folder.project.connect(['add-item', 'remove-item'], self.update)
+
+    def update(self, item=None):
+        self.contents = [o for o in self.folder.contents() 
+                           if isinstance(o, (Worksheet))]
+        self.emit('modified')
+
+    # ListModel protocol
+    def get(self, row, column): return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
+    def get_image(self, row): return 'worksheet.png'
+    def __len__(self): return len(self.contents)
+    def __getitem__(self, row): return self.contents[row]
+
+class ColumnListModel(HasSignals):
+    def __init__(self):
+        self.worksheets = []
+        self.colnames = []
+
+    def set_worksheets(self, worksheets):
+        self.worksheets = worksheets
+        self.colnames = intersection([w.column_names for w in worksheets])
+        self.emit('modified')
+
+    def get(self, row, column): return self.colnames[row]
+    def get_image(self, row): return None
+    def __len__(self): return len(self.colnames)
+    def __getitem__(self, row): return self.colnames[row]
+
+
 class GraphDataPanel(gui.Box):
     def __init__(self, graph, view, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
@@ -305,19 +338,19 @@ class GraphDataPanel(gui.Box):
         self.graph = graph
         self.view = view
 
-        # create widgets 
-#        btnbox = gui.Box(self, 'horizontal', stretch=0)
-#        button = gui.Button(btnbox, 'add', stretch=0)
+        self.project = graph.project
+        self.folder = None
+
         self.toolbar = gui.Toolbar(self, stretch=0)
         self.toolbar.append(gui.Action('Add', 'Add datasets to the graph', 
                                        self.on_add, 'add.png'))
         self.toolbar.append(gui.Action('Remove', 'Remove datasets from the graph', 
                                        self.on_remove, 'remove.png'))
-#        button.connect('clicked', self.on_add)
 
         gui.Label(self, 'Worksheet', stretch=0)
-        self.worksheet_list = gui.List(self, editable=False)
-        self.worksheet_list.connect('item-activated', self.on_wslist_activated)
+        self.worksheet_list = gui.List(self, editable=False, 
+                                       model=WorksheetListModel(self.project.top))
+#        self.worksheet_list.connect('item-activated', self.on_wslist_activated)
         self.worksheet_list.connect('selection-changed', self.on_wslist_select)
 
         gui.Label(self, 'X column', stretch=0)
@@ -326,11 +359,8 @@ class GraphDataPanel(gui.Box):
         gui.Label(self, 'Y column', stretch=0)
         self.y_list = gui.List(self, model=ColumnListModel())
 
-        self.project = None
-        self.folder = None
-
-    def on_wslist_activated(self, ind):
-        print 'activated:', self.worksheet_list.model[ind]
+#    def on_wslist_activated(self, ind):
+#        print 'activated:', self.worksheet_list.model[ind]
 
     def on_wslist_select(self):
         selection = [self.worksheet_list.model[ind] for ind in self.worksheet_list.selection]
@@ -351,15 +381,3 @@ class GraphDataPanel(gui.Box):
     def on_remove(self):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             self.graph.remove(d)
-
-    def connect_project(self, project):
-        self.project = project
-        self.worksheet_list.model = WorksheetListModel(self.project.top)
-
-    def disconnect_project(self):
-        self.worksheet_list.model = None
-        self.project = None
-
-    def on_open(self):
-        #`self.set_current_folder(self.project.here)
-        pass

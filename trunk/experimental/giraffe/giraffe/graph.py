@@ -19,11 +19,11 @@ class Style(HasSignals):
     def __init__(self, color=(0,0,0), symbol='square-f', symbol_size=8,line_type='none', line_style='solid', line_width=0):
         self._color = color
         self._symbol = symbol
+        self._symbol_size = symbol_size
 
         self._line_type = line_type
         self._line_style = line_style
         self._line_width = line_width
-        self._symbol_size = symbol_size
 
     def __repr__(self):
         return "Style(symbol='%s', color=%s, symbol_size=%d, line_type='%s', line_style='%s', line_width=%d)" % (self.symbol, str(self.color), self.symbol_size, self.line_type, self.line_style, self.line_width)

@@ -29,14 +29,20 @@ class Slot(object):
     Test for expiration with is_expired().
     """ 
 
-    def __init__(self, call):
+    def __init__(self, call, keepref=False):
         if hasattr(call, 'im_self'):
             self.method = True
-            self.obj = weakref.proxy(call.im_self)#, self.destroyed)
+            if keepref:
+                self.obj = call.im_self
+            else:
+                self.obj = weakref.proxy(call.im_self)#, self.destroyed)
             self.name = call.__name__
         else:
             self.method = False
-            self.call = weakref.proxy(call)#, self.destroyed)
+            if keepref:
+                self.call = call
+            else:
+                self.call = weakref.proxy(call)#, self.destroyed)
 
     def __call__(self, *args, **kwds):
         if self.method:
@@ -77,7 +83,7 @@ class Slot(object):
 class HasSignals(object):
     """Base class for an object that can emit signals"""
 
-    def connect(self, signal, slot):
+    def connect(self, signal, slot, keepref=False):
         """
         Connect a signal to a slot.  'signal' is a string, `slot` is any callable.
         """
@@ -88,7 +94,7 @@ class HasSignals(object):
             self._signals = {}
         if signal not in self._signals:
             self._signals[signal] = []
-        self._signals[signal].append(Slot(slot))
+        self._signals[signal].append(Slot(slot, keepref))
 
     def disconnect(self, signal, slot):
         """

@@ -253,6 +253,8 @@ class MainWindow(Window):
             'import-ascii'
         ]:
             self.toolbar.append(actions[item])
+        if len(sys.argv) > 1:
+            self.open_project(Project(sys.argv[1]))
 
     def on_import_ascii(self):
         dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
