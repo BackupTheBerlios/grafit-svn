@@ -8,10 +8,12 @@ import wx
 import wx.py
 import wx.lib.buttons
 
-from giraffe.ui.shapes import PlotCanvas, Plot
-from giraffe.ui.worksheet_view import WorksheetView
 from giraffe.common import identity
+from giraffe.ui.graph_view import GraphView
+from giraffe.ui.worksheet_view import WorksheetView
+from giraffe.graph import Graph
 from giraffe.worksheet import Worksheet
+
 print >>sys.stderr, "ok"
 
 class ToolPanel(wx.SashLayoutWindow):
@@ -235,8 +237,8 @@ class MainWindow(wx.Panel):
             self.main_box.Remove(self.view)
             self.view.Destroy()
 
-        if isinstance(obj, Plot):
-            self.view =  PlotCanvas(self.remainingSpace, obj)
+        if isinstance(obj, Graph):
+            self.view =  GraphView(self.remainingSpace, obj)
         elif isinstance(obj, Worksheet):
             self.view = WorksheetView(self.remainingSpace, obj)
 
