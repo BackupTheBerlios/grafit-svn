@@ -197,18 +197,18 @@ def makedata(_numarray sx, _numarray sy,
         y = yd[n]
 
         # skip if outside limits
-        if n < l-1:
-            xnext = xd[n-1]
-            ynext = yd[n-1]
-            if (x <= xmin and xnext <= xmin) or \
-               (x >= xmax and xnext >= xmax) or \
-               (y <= ymin and ynext <= ymin) or \
-               (y >= ymax and ynext >= ymax):
-                continue
-        else:
-            if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
-                continue
-
+#        if n < l-1:
+#            xnext = xd[n-1]
+#            ynext = yd[n-1]
+#            if (x <= xmin and xnext <= xmin) or \
+#               (x >= xmax and xnext >= xmax) or \
+#               (y <= ymin and ynext <= ymin) or \
+#               (y >= ymax and ynext >= ymax):
+#                continue
+#        else:
+#            if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
+#                continue
+#
         # skip if we would land within 1/1000th of the graph from the previous point
         xbucket_s = xbucket
         ybucket_s = ybucket

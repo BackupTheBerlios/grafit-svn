@@ -2,9 +2,11 @@ all: graph_render.so
 
 graph_render.so: graph_render.pyx
 	@echo compiling 'graph_render' pyrex extension...
-	@pyrexc graph_render.pyx
-	@gcc -fPIC -I/usr/include/python2.3/ -lGL -lGLU -shared graph_render.c -o graph_render.so
+#	@pyrexc graph_render.pyx
+#	@gcc -fPIC -I/usr/include/python2.3/ -lGL -lGLU -shared graph_render.c -o graph_render.so
+	python setup.py build_ext -i
 	@chmod -x graph_render.so
+	@rm -rf build graph_render.c
 
 clean:
 	@rm -f graph_render.so

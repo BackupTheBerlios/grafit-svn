@@ -72,13 +72,6 @@ class Dataset(HasSignals):
         
         self.style.connect('modified', self.on_style_modified)
 
-        self.listid = self.create_list_id()
-
-    def create_list_id(start=[100]):
-        start[0] += 1
-        return start[0]
-    create_list_id = staticmethod(create_list_id)
-
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
     id = property(get_id, set_id)
@@ -89,44 +82,15 @@ class Dataset(HasSignals):
     def paint(self):
         res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         gl2psPointSize(self.data.size)
-#        glCallList(self.listid)
         dx =  res * (xmax-xmin)/width * 2
         dy =  res * (ymax-ymin)/height * 2
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
         makedata(asarray(self.x[:]), asarray(self.y[:]), 
                  xmin, xmax, ymin, ymax, 
                  dx, dy, self.style.symbol)
-#
+
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
         self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
-
-#        glNewList(self.listid, GL_COMPILE)
-        
-#        vertices = []
-#        n=25
-#        for i in xrange(n):
-#            vertices.append((0,0))
-#            vertices.append((sin(i*2*pi/n)*dx, cos(i*2*pi/n)*dy))
-#            vertices.append((sin((i+1)*2*pi/n)*dx, cos((i+1)*2*pi/n)*dy))
-
-        
-#        dx =  res * (xmax-xmin)/width * 2
-#        dy =  res * (ymax-ymin)/height * 2
-#        glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
-#        makedata(asarray(self.x[:]), asarray(self.y[:]), 
-#                 xmin, xmax, ymin, ymax, 
-#                 dx, dy, self.style.symbol)
-#                 GL_TRIANGLES, vertices)
-#                 GL_QUADS, [(dx,0), (0,dy), (-dx,0), (0,-dy)]) # squares
-
-#                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]) # squares
-#                 GL_TRIANGLES, [(0,dy), (-dx,-dy), (dx, -dy), (0, dx), (dx, dy), (0, 0)])
-#                 GL_POLYGONS, [(0,dy), (-dx,-dy), (dx, -dy)])
-#        glEndList()
-
-# square
-# up triangle
-# down triangle
 
     def on_data_changed(self):
         self.emit('modified', self)
@@ -604,37 +568,9 @@ class Graph(Item, HasSignals):
 
             glPushMatrix()
             glLoadIdentity()
-
-            x, _, _ = gluProject(self.fr, 0.0, 0.0, self.mvmatrix, self.projmatrix, self.viewport)
-            x1, _ = self.mouse_to_ident(x, 0.)
-
-            x, _, _ = gluProject(self.to, 0.0, 0.0, self.mvmatrix, self.projmatrix, self.viewport)
-            x2, _ =  self.mouse_to_ident(x, 0.)
-
-            lt = 1-2.*self.marginl/self.w
-            rt = -1+2.*(self.w-self.marginr)/self.w
-            bt = 1-2.*self.marginb/self.h
-            tp = -1+2.*(self.h-self.margint)/self.h
-
-            glClipPlane(GL_CLIP_PLANE0, [  1.,  0.,  0.,  min(lt, -x1) ])
-            glClipPlane(GL_CLIP_PLANE1, [ -1.,  0.,  0.,  min(rt, x2) ])
-            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
-            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
-
-#            glEnable(GL_CLIP_PLANE0)
-#            glEnable(GL_CLIP_PLANE1)
-#            glEnable(GL_CLIP_PLANE2)
-#            glEnable(GL_CLIP_PLANE3)
-
             glLoadMatrixd(self.projmatrix0)
             for d in self.datasets:
                 d.paint()
-
-#            glDisable(GL_CLIP_PLANE0)
-#            glDisable(GL_CLIP_PLANE1)
-#            glDisable(GL_CLIP_PLANE2)
-#            glDisable(GL_CLIP_PLANE3)
-
             glPopMatrix()
         else:
             glPushMatrix()
