@@ -1,5 +1,3 @@
-import sys
-import time
 import struct
 
 import metakit
@@ -21,7 +19,7 @@ class VarOperation(object):
         # wrap the result in a varray, otherwise leave it alone
         if self.oper.arity == 1:
             try:
-                length = len(a)
+                len(a)
             except (ValueError, TypeError):
                 return self.oper(a)
             else:
@@ -158,5 +156,3 @@ class MkArray(with_new_opers):
 
     def __repr__(self):
         return repr(self[:]).replace('nan', '--')
-
-
