@@ -1,6 +1,6 @@
 import sys
 
-from giraffe.gui import Window, Button, Box, Application, Shell, List, Splitter
+from giraffe.gui import Window, Button, Box, Application, Shell, List, Splitter, Label, Tree, TreeNode
 
 class ScriptWindow(Shell):
     def __init__(self, parent, **kwds):
@@ -28,8 +28,13 @@ class ProjectExplorer(Box):
     def __init__(self, parent, **kwds):
         Box.__init__(self, parent, 'horizontal', **kwds)
         self.splitter = Splitter(self, 'horizontal')
-        self.list1 = List(self.splitter)
-        self.list2 = Button(self.splitter, 'ass')
+        self.tree = Tree(self.splitter)
+        n = TreeNode()
+        n.append(TreeNode())
+        n.append(TreeNode())
+        n.append(TreeNode())
+        self.tree.append(n)
+        self.list2 = List(self.splitter)
 
 
 # example main window
@@ -44,8 +49,8 @@ class MainWindow(Window):
                                         page_label='explorer', page_pixmap='stock_navigator.png')
 
         box = Box(self, 'vertical')
-        self.m = Button(box, 'periex')
-        self.m2 = Button(box, 'px')
+        Label(box, 'periex')
+        Label(box, 'px')
 
 
 if __name__ == '__main__':

@@ -58,7 +58,6 @@ class Splitter(Widget):
     def _add(self, widget):
         if self.first is None:
             self.first = widget
-            print 1
         elif self.second is None:
             self.second = widget
             if self.orientation == 'horizontal':
@@ -80,6 +79,7 @@ class Box(Widget):
         else:
             raise NameError
         self._widget.SetSizer(self.layout)
+        self._widget.SetAutoLayout(True)
 
     def _add(self, widget, expand=True, stretch=1.0):
         if expand:
@@ -121,6 +121,10 @@ class ListModel(HasSignals):
 
     def __getitem__(self, key):
         return self.items[key]
+
+    def __delitem__(self, key):
+        del self.items[key]
+        self.emit('modified')
 
 class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def __init__(self, lst, *args, **kwds):
@@ -209,6 +213,63 @@ class List(Widget):
         for num, name in enumerate(self.columns):
             self._widget.InsertColumn(num, str(name))
 
+
+class TreeNode(HasSignals):
+    def __init__(self):
+        self.children = []
+
+    def __iter__(self):
+        return iter(self.children)
+    
+    def __str__(self):
+        return 'TreeNode'
+
+    def append(self, child):
+        self.children.append(child)
+        child.connect('modified', self.on_child_modified)
+        self.emit('modified')
+
+    def on_child_modified(self):
+        self.emit('modified')
+
+class Tree(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.TreeCtrl(parent._widget, -1,
+                                   style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
+        Widget.__init__(self, parent, **place)
+        self._widget.SetIndent(10)
+        self.roots = []
+
+    def append(self, node):
+        self.roots.append(node)
+        node.connect('modified', self.on_node_modified)
+        self.on_node_modified()
+
+    def remove(self, node):
+        self.roots.remove(node)
+        node.disconnect('modified', self.on_node_modified)
+        self.on_node_modified()
+
+    def _add_node_and_children(self, parent, node):
+        self._widget.AppendItem(parent._nodeid, str(node))
+        for child in node:
+            self._add_node_and_children(node, child)
+
+    def on_node_modified(self):
+        self._widget.DeleteAllItems()
+        for root in self.roots:
+            root._nodeid = self._widget.AddRoot(str(root))
+            for node in root:
+                self._add_node_and_children(root, node)
+
+    def clear(self):
+        self._widget.DeleteAllItems()
+        self.roots = []
+
+
+
+
+
 class Label(Widget):
     def __init__(self, parent, text, **kwds):
         self._widget = wx.StaticText(parent._widget, -1, text)
@@ -272,12 +333,14 @@ class xToolPanel(wx.SashLayoutWindow):
             self.box.Add(self.btnbox, 0, wx.EXPAND)
 
         self.toolbar = wx.ToolBar(self.panel, -1, 
-                                  style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
+                                  style=d_toolbar |wx.TB_3DBUTTONS)
+#                                  |wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
         self.btnbox.Add(self.toolbar, 1)
         self.toolbar.Bind(wx.EVT_TOOL, self.on_toolbar)
 
         self.panel.SetAutoLayout(True)
         self.panel.SetSizer(self.box)
+        self.panel.SetAutoLayout(True)
 
         self.contents = []
         self.buttons = []
@@ -384,6 +447,7 @@ class MainPanel(wx.Panel):
 
         self.main_box = wx.BoxSizer(wx.VERTICAL)
         self.remainingSpace.SetSizer(self.main_box)
+        self.remainingSpace.SetAutoLayout(True)
 
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.left_panel._widget.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.right_panel._widget.GetId())
