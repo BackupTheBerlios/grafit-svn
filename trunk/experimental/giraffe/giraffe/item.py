@@ -1,4 +1,5 @@
 import sys
+import re
 import time, random, socket, md5
 
 from giraffe.signals import HasSignals
@@ -66,6 +67,11 @@ class Item(object):
             if parent is None:
                 parent = self.project.top
 
+            if name is None:
+                name = self.create_name(parent)
+            if not self.check_name(name, parent):
+                raise NameError
+ 
             # initialize
             self.name = name
             self.parent = parent.id
@@ -80,6 +86,21 @@ class Item(object):
         # so the signal handlers can access wrapped attributes.
         # We can't emit in project.add()
         self.project.emit('add-item', self)
+
+    def check_name(self, name, parent):
+        if not re.match('^[a-zA-Z]\w*$', name):
+            return False
+        if name in [i.name for i in parent.contents()]:
+            return False
+        return True
+
+    def create_name(self, parent):
+        for i in xrange(sys.maxint):
+            name = self.default_name_prefix+str(i)
+            if self.check_name(name, parent):
+                return name
+
+    default_name_prefix = 'item'
 
 
 class Folder(Item, HasSignals):
@@ -99,6 +120,8 @@ class Folder(Item, HasSignals):
 
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
+
+    default_name_prefix = 'folder'
 
     up = property(lambda self: self.parent)
 

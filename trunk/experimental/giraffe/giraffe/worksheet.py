@@ -1,5 +1,4 @@
 import sys
-import re
 
 from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods
@@ -62,15 +61,6 @@ class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         self.__attr = False
 
-        if parent is None:
-            parent = project.top
-
-        if name is None:
-            name = self.create_name(parent)
-
-        if not self.check_name(name, parent):
-            raise NameError
-
         Item.__init__(self, project, name, parent, location)
 
         self.columns = []
@@ -102,19 +92,6 @@ class Worksheet(Item, HasSignals):
             self.remove_column(name)
         else:
             object.__delattr__(self, name)
-
-    def check_name(self, name, parent):
-        if not re.match('^[a-zA-Z]\w*$', name):
-            return False
-        if name in [i.name for i in parent.contents()]:
-            return False
-        return True
-
-    def create_name(self, parent):
-        for i in xrange(sys.maxint):
-            name = 'data'+str(i)
-            if self.check_name(name, parent):
-                return name
 
     def column_index(self, name):
         return self.data.columns.select(*[{'name': n} for n in self.column_names]).find(name=name)
@@ -155,7 +132,6 @@ class Worksheet(Item, HasSignals):
         self.emit('data-changed')
 
     remove_column = command_from_methods('worksheet_remove_column', remove_column, undo_remove_column)
-
 
     def get_ncolumns(self):
         return len(self.columns)
@@ -220,5 +196,7 @@ class Worksheet(Item, HasSignals):
         while num_to_alpha(i) in self.column_names:
             i+=1
         return num_to_alpha(i)
+
+    default_name_prefix = 'sheet'
 
 register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B,expr:S]]')

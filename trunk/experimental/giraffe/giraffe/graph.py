@@ -349,6 +349,8 @@ class Graph(Item, HasSignals):
         self.set_range(0.0, 100.5)
         self.autoscale()
 
+    default_name_prefix = 'graph'
+
     def add(self, *args, **kwds):
         d = Dataset(*args, **kwds)
         self.datasets.append(d)

@@ -16,7 +16,7 @@ from giraffe.ui_main import Application
 print >>sys.stderr, "ok"
 
 def main():
-    print >>sys.stderr, "creating application...",
+    sys.stderr.write("creating application")
     p = Project()
     app = Application()
     app.main.open_project(p)
