@@ -189,20 +189,29 @@ class xPopup(wx.PopupWindow):
 
 class Choose(Widget):
     def __init__(self, parent, **place):
-        bimp = wx.Image('../data/images/'+'arrow.png').ConvertToBitmap()
+#        bimp = wx.Image('../data/images/'+'arrow.png').ConvertToBitmap()
+        bimp = self.create_colored_bitmap((80, 20), (100, 80, 120))
         self._widget = wx.BitmapButton(parent._widget, -1, bimp, style=wx.BU_EXACTFIT)
         Widget.__init__(self, parent, **place) 
-        self.imagelist = wx.ImageList(16, 16)
+        self.imagelist = wx.ImageList(20, 10)
 
         self._widget.Bind(wx.EVT_BUTTON, self.on_button)
 
         self.images = {}
         self.items = []
 
-        self.append('arrow.png')
-        self.append('hand.png')
-        self.append('save.png')
         self.down = False
+
+    def create_colored_bitmap(self, size, rgb):
+        dc = wx.MemoryDC()
+        bmp = wx.EmptyBitmap(*size)
+        dc.SelectObject(bmp)
+        dc.BeginDrawing()
+        dc.SetBackground(wx.Brush(wx.Colour(*rgb)))
+        dc.Clear()
+        dc.EndDrawing()
+
+        return bmp
 
     def on_button(self, event):
         if self.down:
@@ -211,9 +220,10 @@ class Choose(Widget):
         lst = wx.ListCtrl(win, -1, size=(120, 220), style=wx.LC_SMALL_ICON)
         win.lst = lst
 #        lst.InsertColumn(0, 'col')
-        lst.SetImageList(self.imagelist, wx.IMAGE_LIST_NORMAL)
+#        lst.SetImageList(self.imagelist, wx.IMAGE_LIST_NORMAL)
         lst.SetImageList(self.imagelist, wx.IMAGE_LIST_SMALL)
-        lst.SetItemSpacing(0, True)
+        lst.SetItemSpacing(0, 1)
+        print lst.GetItemSpacing()
         for i, img in enumerate(self.items):
             lst.InsertImageItem(i, img)
         pos = self._widget.ClientToScreen( (0,0) )
@@ -229,8 +239,8 @@ class Choose(Widget):
 
     def on_sel(self, event):
         i = event.GetIndex()
-        filename = self.images[self.items[i]]
-        self._widget.SetBitmapLabel(wx.Image('../data/images/'+filename).ConvertToBitmap())
+        bitmap = self.images[self.items[i]]
+        self._widget.SetBitmapLabel(bitmap)
         wx.CallAfter(self.win.Destroy)
         self.down = False
 
@@ -240,9 +250,11 @@ class Choose(Widget):
         except wx.PyDeadObjectError:
             pass
 
-    def append(self, filename):
-        id = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
-        self.images[id] = filename
+    def append(self, bitmap):
+        if isinstance(bitmap, basestring):
+            bitmap = wx.Image('../data/images/'+bitmap).ConvertToBitmap()
+        id = self.imagelist.Add(bitmap)
+        self.images[id] = bitmap
         self.items.append(id)
 
 class ColorSelect(Widget):
@@ -733,6 +745,17 @@ class _xToolPanel(wx.SashLayoutWindow):
         self.buttons = []
         self.last_width = 180
         self.last_height = 120
+
+    def create_colored_bitmap(self, size, rgb):
+        dc = wx.MemoryDC()
+        bmp = wx.EmptyBitmap(*size)
+        dc.SelectObject(bmp)
+        dc.BeginDrawing()
+        dc.SetBackground(wx.Brush(wx.Colour(*rgb)))
+        dc.Clear()
+        dc.EndDrawing()
+
+        return bmp
 
     def add_page(self, text, pixmap, widget):
         bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()

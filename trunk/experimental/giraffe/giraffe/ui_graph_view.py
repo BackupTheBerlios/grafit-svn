@@ -147,8 +147,12 @@ class GraphStylePanel(gui.Box):
 #            c.append(shape)
 
         gui.Label(grid,  'Color', pos=(1,0))
-        c = gui.ColorSelect(grid, pos=(1,1))
+        c = gui.Choose(grid, pos=(1,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
+        for r in range(0, 256, 16):
+            for g in range(0, 256, 16):
+                for b in range(0, 256, 16):
+                    c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
 
         grid.layout.AddGrowableCol(1)
 
