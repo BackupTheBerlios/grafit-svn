@@ -138,8 +138,8 @@ class GraphStylePanel(gui.Box):
         self.graph = graph
         self.view = view
 
-        self.symbol = gui.Frame(self, 'vertical')
-        grid = gui.Grid(self.symbol, 3, 2, expand=True, stretch=1.)
+        self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
+        grid = gui.Grid(self.symbol, 3, 2)#, expand=True, stretch=1.)
         gui.Label(grid,  'Symbol', pos=(0,0))
         c = gui.Choose(grid, pos=(0,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
@@ -150,10 +150,13 @@ class GraphStylePanel(gui.Box):
         gui.Label(grid,  'Color', pos=(1,0))
         c = gui.Choose(grid, pos=(1,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
+        self.colors = []
         for r in range(0, 256, 64):
             for g in range(0, 256, 64):
                 for b in range(0, 256, 64):
                     c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
+                    self.colors.append((r/256.,g/256.,b/256., 1.0))
+        c.connect('select', self.on_select_color)
 
         gui.Label(grid, 'Size', pos=(2,0))
 
@@ -163,16 +166,16 @@ class GraphStylePanel(gui.Box):
         grid.layout.AddGrowableCol(1)
 
 
-        self.line = gui.Frame(self, 'vertical')
-        grid = gui.Grid(self.line, 3, 2, expand=True, stretch=1.)
-        gui.Label(grid,  'Symbol', pos=(0,0))
-        c = gui.Choose(grid, pos=(0,1))
+        self.line = gui.Frame(self, 'vertical', title='Line', stretch=0.)
+        grid = gui.Grid(self.line, 3, 2)#, expand=True, stretch=1.)
+        gui.Label(grid,  'Type', pos=(0,0))
+        c = gui.Choice(grid, pos=(0,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
 #        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
 #                      'diamond', 'pentagon', 'star', 'cross', 'x']:
 #            c.append(shape)
 
-        gui.Label(grid,  'Color', pos=(1,0))
+        gui.Label(grid,  'Shape', pos=(1,0))
         c = gui.Choose(grid, pos=(1,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
         for r in range(0, 256, 64):
@@ -180,12 +183,17 @@ class GraphStylePanel(gui.Box):
                 for b in range(0, 256, 64):
                     c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
 
-        gui.Label(grid, 'Size', pos=(2,0))
+        gui.Label(grid, 'Width', pos=(2,0))
 
         c = gui.Spin(grid, pos=(2,1))
         c._widget.SetSizeHints(-1, 20, 60, 30)
 
         grid.layout.AddGrowableCol(1)
+
+    def on_select_color(self, ind):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            d.style.color = self.colors[ind]
+        self.graph.emit('redraw')
 
 
 

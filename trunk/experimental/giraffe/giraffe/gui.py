@@ -166,7 +166,7 @@ class Grid(Widget):
         self._widget = wx.Panel(parent._widget, -1)
         Widget.__init__(self, parent, **place)
         self.layout = wx.GridBagSizer(rows, columns)
-        self._widget.SetSizerAndFit(self.layout)
+        self._widget.SetSizer(self.layout)
 #        self.layout.SetSizeHints(self._widget)
         self._widget.SetAutoLayout(True)
 
@@ -234,7 +234,6 @@ class Choose(Widget):
 #        lst.SetImageList(self.imagelist, wx.IMAGE_LIST_NORMAL)
         lst.SetImageList(self.imagelist, wx.IMAGE_LIST_SMALL)
         lst.SetItemSpacing(0, 1)
-        print lst.GetItemSpacing()
         for i, img in enumerate(self.items):
             lst.InsertImageItem(i, img)
         pos = self._widget.ClientToScreen( (0,0) )
@@ -254,6 +253,7 @@ class Choose(Widget):
         self._widget.SetBitmapLabel(bitmap)
         wx.CallAfter(self.win.Destroy)
         self.down = False
+        self.emit('select', i)
 
     def on_kill_focus(self, event):
         try:
@@ -275,9 +275,9 @@ class ColorSelect(Widget):
         Widget.__init__(self, parent, **place)
 
 class Frame(Widget):
-    def __init__(self, parent, orientation, **kwds):
+    def __init__(self, parent, orientation, title='', **kwds):
         self._widget = wx.Panel(parent._widget, -1)
-        self._box = wx.StaticBox(self._widget, -1, 'static')
+        self._box = wx.StaticBox(self._widget, -1, title)
         Widget.__init__(self, parent, **kwds)
         if orientation == 'horizontal':
             self.layout = wx.StaticBoxSizer(self._box, wx.HORIZONTAL)

@@ -15,19 +15,21 @@ from gl2ps import *
 
 from giraffe.graph_render import makedata
 
-class Style(object):
+class Style(HasSignals):
     def __init__(self, color=(0,0,0,1)):
         self._line_width = 0
         self._color = color
 
     def set_line_width(self, val):
         self._line_width = val
+        self.emit('modified')
     def get_line_width(self):
         return self._line_width
     line_width = property(get_line_width, set_line_width)
 
     def set_color(self, val):
         self._color = val
+        self.emit('modified')
     def get_color(self):
         return self._color
     color = property(get_color, set_color)
@@ -46,7 +48,10 @@ class Dataset(HasSignals):
         self.x.connect('data-changed', self.on_data_changed)
         self.y.connect('data-changed', self.on_data_changed)
 
-        self.style = default_style
+        self.style = Style()
+        self.style.color = default_style.color
+        self.style.connect('modified', self.on_style_modified)
+
         self.listid = self.create_list_id()
 
     def create_list_id(start=[100]):
@@ -83,6 +88,9 @@ class Dataset(HasSignals):
 # down triangle
 
     def on_data_changed(self):
+        self.emit('modified', self)
+
+    def on_style_modified(self):
         self.emit('modified', self)
 
     def __str__(self):
