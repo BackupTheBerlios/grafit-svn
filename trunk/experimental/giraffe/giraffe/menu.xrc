@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<resource>
+  <object class="wxMenuBar" name="menubar">
+    <object class="wxMenu">
+      <label>ar</label>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+    </object>
+    <object class="wxMenu">
+      <label></label>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenuItem">
+        <label></label>
+      </object>
+      <object class="wxMenu">
+        <label></label>
+        <object class="wxMenuItem">
+          <label></label>
+        </object>
+        <object class="wxMenuItem">
+          <label></label>
+        </object>
+        <object class="wxMenuItem">
+          <label></label>
+        </object>
+      </object>
+    </object>
+  </object>
+</resource>

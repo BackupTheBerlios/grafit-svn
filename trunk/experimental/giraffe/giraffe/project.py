@@ -117,14 +117,17 @@ class Project(HasSignals):
         self.items[obj.id] = obj
         if obj.parent is self.top:
             self._dict[obj.name] = obj
+        # don't emit 'add-item' because it is emitted by Item.__init__
         return obj, obj
 
     def new_undo(self, obj):
+#        self.remove(obj.id)
         del self.items[obj.id]
         obj.id = '-'+obj.id
         self.deleted[obj.id] = obj
         if obj.parent is self.top:
             del self._dict[obj.name] 
+        self.emit('remove-item', obj)
 
     def new_redo(self, obj):
         del self.deleted[obj.id]
@@ -132,6 +135,8 @@ class Project(HasSignals):
         self.items[obj.id] = obj
         if obj.parent is self.top:
             self._dict[obj.name] = obj
+        self.emit('add-item', obj)
+#        self.remove_undo(self, obj.id)
 
     def new_cleanup(self, obj):
         if obj.id in self.deleted:

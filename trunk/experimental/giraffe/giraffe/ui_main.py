@@ -4,6 +4,7 @@ import new
 
 import wx
 import wx.py
+import wx.xrc
 from numarray import arange
 
 from giraffe.graph import Graph
@@ -196,48 +197,56 @@ class ProjectExplorer(wx.Panel, HasSignals):
         sizer.SetSizeHints(self)
 
         self.project_tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
-
         self.current_dir.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
-        self.on_sel_changed(None, self.project_tree.root)
+
         self.project.connect('add-item', self.on_add_item)
         self.project.connect('remove-item', self.on_add_item)
+        self.project.connect('change-current-folder', self.on_project_change_folder)
+        
         self.items = {}
+
+        self.on_sel_changed(None, self.project_tree.root)
 
     def on_add_item(self, item):
         if item.parent == self.project.here:
             self.on_sel_changed(None, self.project_tree.items[item.parent.id])
 
     def on_item_activated(self, event):
-        self.emit('activate-object', self.project.here[event.GetItem().GetText()])
+        obj = self.project.here[event.GetItem().GetText()]
+        if isinstance(obj, Folder):
+            self.project.cd(obj)
+        else:
+            self.emit('activate-object', obj)
 
-    def on_sel_changed(self, event, item=None):
-        self.items = {}
-        if item is None:
-            item = event.GetItem()
+    def on_project_change_folder(self, folder):
         self.current_dir.ClearAll()
-
-        # find folder
-        for k, v in self.project_tree.items.iteritems():
-            if v == item:
-                folder = self.project.items[k]
-                
-        print >>sys.stderr, folder
-
-        self.project.cd(folder)
+        self.items = {}
+        
         for i, o in enumerate(folder.contents()):
-            if isinstance(o, Folder):
-                continue
             self.current_dir.InsertImageStringItem(0, o.name,
                             {Worksheet: self.img_worksheet,
                              Graph: self.img_graph,
                              Folder: self.img_folder}[type(o)])
             self.items[o.name] = o
 
+        self.project_tree.SelectItem(self.project_tree.items[folder.id])
+
+    def on_sel_changed(self, event, item=None):
+        if item is None:
+            item = event.GetItem()
+
+        # find folder
+        for k, v in self.project_tree.items.iteritems():
+            if v == item:
+                folder = self.project.items[k]
+                
+        self.project.cd(folder)
+
 
 class ProjectTree(wx.TreeCtrl, HasSignals):
     def __init__(self, parent, project):
         wx.TreeCtrl.__init__(self, parent, -1,
-                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.TR_ROW_LINES|wx.SUNKEN_BORDER)
+                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
         self.SetIndent(10)
         self.project = project
         self.project.connect('add-item', self.on_add_item)
@@ -253,7 +262,6 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.SetImageList(il)
 
         self.root = self.AddRoot('Project')
-        self.SetPyData(self.root, self.project.top)
 
         self.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
         self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
@@ -265,7 +273,6 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
     def on_add_item(self, item):
         if type(item) == Folder:
             treeitem = self.AppendItem(self.items[item.parent.id], item.name)
-            self.SetPyData(treeitem, item)
             self.items[item.id] = treeitem
             self.SetItemImage(treeitem, self.wsidx, wx.TreeItemIcon_Normal)
             item.connect('rename', self.on_rename)
@@ -297,19 +304,22 @@ class Application(wx.App):
 
         tb.Hide()
 
-        menuBar = wx.MenuBar()
-        menu = wx.Menu()
-        item = menu.Append(-1, "New Workshee (test)", "Test new worksheet")
-        self.Bind(wx.EVT_MENU, self.OnNewWs, item)
-        item = menu.Append(-1, "New graph (test)", "Test new graph")
-        self.Bind(wx.EVT_MENU, self.on_new_graph, item)
-        item = menu.Append(-1, "New folder (test)", "Test new folder")
-        self.Bind(wx.EVT_MENU, self.on_new_folder, item)
-        item = menu.Append(-1, "E&xit\tAlt-X", "Exit demo")
-        self.Bind(wx.EVT_MENU, self.OnButton, item)
-        menuBar.Append(menu, "&File")
+#        menuBar = wx.MenuBar()
+#        menu = wx.Menu()
+#        item = menu.Append(-1, "New Workshee (test)", "Test new worksheet")
+#        self.Bind(wx.EVT_MENU, self.OnNewWs, item)
+#        item = menu.Append(-1, "New graph (test)", "Test new graph")
+#        self.Bind(wx.EVT_MENU, self.on_new_graph, item)
+#        item = menu.Append(-1, "New folder (test)", "Test new folder")
+#        self.Bind(wx.EVT_MENU, self.on_new_folder, item)
+#        item = menu.Append(-1, "E&xit\tAlt-X", "Exit demo")
+#        self.Bind(wx.EVT_MENU, self.OnButton, item)
+#        menuBar.Append(menu, "&File")
+#
+#        frame.SetMenuBar(menuBar)
 
-        frame.SetMenuBar(menuBar)
+        frame.SetMenuBar(wx.xrc.XmlResource('menu.xrc').LoadMenuBar('menubar'))
+
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 
         win = MainWindow(frame, self.project)
