@@ -126,6 +126,11 @@ class Widget(HasSignals):
     def place(self, **kwds):
         return self, kwds
 
+    def get_min_size(self): return self._widget.GetMinSize()
+    def set_min_size(self, size): self._widget.SetMinSize(size)
+    min_size = property(get_min_size, set_min_size)
+
+
 # http://wiki.wxpython.org/index.cgi/_xProportionalSplitterWindow
 class _xProportionalSplitter(wx.SplitterWindow):
     def __init__(self,parent, id = -1, proportion=0.33, size = wx.DefaultSize):
@@ -208,16 +213,26 @@ class Grid(Widget):
         self._widget = wx.Panel(parent._widget, -1)
         Widget.__init__(self, parent, **place)
         self.layout = wx.GridBagSizer(rows, columns)
+        self.layout.SetEmptyCellSize((0,0))
         self._widget.SetSizer(self.layout)
 #        self.layout.SetSizeHints(self._widget)
         self._widget.SetAutoLayout(True)
 
+#        self._widget.Bind(wx.EVT_SIZE, self.OnSize)
+
+
     def _add(self, widget, pos, span=(1,1), expand=False):
-        self.layout.Add(widget._widget, pos, span, flag=wx.EXPAND)
-        self.layout.CalcMin()
-        self.layout.RecalcSizes()
+        self.layout.Add(widget._widget, pos, span, flag=wx.EXPAND|wx.ALL)
+
+#        self.layout.CalcMin()
+#        self.layout.RecalcSizes()
 #        self.layout.SetSizeHints(self._widget)
-        self._widget.Layout()
+        self._widget.Fit()
+##    def OnSize(self, evt):
+#        print evt.GetSize()
+#        if self._widget.GetAutoLayout():
+#            self._widget.Layout()
+#        evt.Skip()
 
 class Spin(Widget):
     def __init__(self, parent, **place):
@@ -242,7 +257,7 @@ class xPopup(wx.PopupWindow):
 class PixmapChoice(Widget):
     def __init__(self, parent, **place):
 #        bimp = wx.Image('../data/images/'+'arrow.png').ConvertToBitmap()
-        bimp = self.create_colored_bitmap((80, 20), (100, 80, 120))
+        bimp = self.create_colored_bitmap((30, 10), (100, 80, 120))
         self._widget = wx.BitmapButton(parent._widget, -1, bimp, style=wx.BU_EXACTFIT)
         Widget.__init__(self, parent, **place) 
         self.imagelist = wx.ImageList(20, 10)
@@ -347,7 +362,7 @@ class Frame(Widget):
             expand = 0
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
 #        self.layout.SetSizeHints(self._widget)
-        self._widget.Layout()
+#        self._widget.Layout()
 
 
 class Box(Widget):

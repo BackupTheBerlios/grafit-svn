@@ -207,10 +207,10 @@ class MainWindow(Window):
 
         actions = {
             'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
-            'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
+            'file-open': Action('Open...', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
             'file-save': Action('Save', 'Save the project', 
                                 self.on_project_save, 'save.png', 'Ctrl+S'),
-            'file-saveas': Action('Save As', 'Save the project with a new name', 
+            'file-saveas': Action('Save As...', 'Save the project with a new name', 
                                   self.on_project_saveas, 'saveas.png', 'Ctrl+A'),
             'file-quit': Action('Quit', 'Quit grafit', self.on_quit, 'stock_exit.png', 'Ctrl+Q'),
 
@@ -218,7 +218,7 @@ class MainWindow(Window):
             'edit-redo': Action('Redo', 'Redo the last action', redo, 'stock_redo.png', 'Shift+Ctrl+Z'),
             'edit-copy': Action('Copy', 'Undo the last action', object, None, 'Ctrl+C'),
 
-            'import-ascii': Action('Import ASCII', 'Import and ASCII file', 
+            'import-ascii': Action('Import ASCII...', 'Import and ASCII file', 
                                    self.on_import_ascii, 'import_ascii.png', 'Ctrl+I'),
             'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
                                            self.on_new_worksheet, 'worksheet.png'),

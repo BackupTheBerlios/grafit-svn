@@ -81,8 +81,8 @@ class GraphView(gui.Box):
                                         page_label='Data', page_pixmap='worksheet.png')
         self.graphdata.connect_project(self.graph.project)
 
-        self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
+        self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
@@ -146,19 +146,18 @@ class GraphStylePanel(gui.Box):
         self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
         grid = gui.Grid(self.symbol, 3, 3, expand=False)#, expand=True, stretch=1.)
 
-        gui.Label(grid,  'Symbol', pos=(0,1))
+        labels = []
+
+        labels.append(gui.Label(grid,  'Symbol', pos=(0,1)))
         c = gui.PixmapChoice(grid, pos=(0,2))
-        c._widget.SetSizeHints(-1, 20, 60, 30)
+        c.min_size = (10, c.min_size[1])
         for shape in ['circle', 'square']:
             for interior in ['o', 'f']:
                 c.append(shape+'-'+interior+'.png')
-#        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
-#                      'diamond', 'pentagon', 'star', 'cross', 'x']:
-#            c.append(shape)
 
-        gui.Label(grid,  'Color', pos=(1,1))
+        labels.append(gui.Label(grid,  'Color', pos=(1,1)))
         c = gui.PixmapChoice(grid, pos=(1,2))
-        c._widget.SetSizeHints(-1, 20, 60, 30)
+        c.min_size = (10, c.min_size[1])
         self.colors = []
         for r in range(0, 256, 64):
             for g in range(0, 256, 64):
@@ -167,10 +166,10 @@ class GraphStylePanel(gui.Box):
                     self.colors.append((r/256.,g/256.,b/256., 1.0))
         c.connect('select', self.on_select_color)
 
-        gui.Label(grid, 'Size', pos=(2,1))
+        labels.append(gui.Label(grid, 'Size', pos=(2,1)))
 
         c = gui.Spin(grid, pos=(2,2))
-        c._widget.SetSizeHints(-1, 20, 60, 30)
+        c.min_size = (10, c.min_size[1])
 
         b = gui.Checkbox(grid, pos=(0,0))
         grid.layout.Hide(b._widget)
@@ -179,36 +178,48 @@ class GraphStylePanel(gui.Box):
         b = gui.Checkbox(grid, pos=(2,0))
         grid.layout.Hide(b._widget)
 
-        grid.layout.AddGrowableCol(1)
-        grid.layout.Layout()
+        grid.layout.AddGrowableCol(2)
 
+        # Line
         self.line = gui.Frame(self, 'vertical', title='Line', stretch=0.)
-        grid = gui.Grid(self.line, 3, 2)#, expand=True, stretch=1.)
-        gui.Label(grid,  'Type', pos=(0,0))
-        c = gui.Choice(grid, pos=(0,1))
-        c._widget.SetSizeHints(-1, 20, 60, 30)
-#        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
-#                      'diamond', 'pentagon', 'star', 'cross', 'x']:
-#            c.append(shape)
+        grid = gui.Grid(self.line, 3, 3)#, expand=True, stretch=1.)
+        grid.layout.AddGrowableCol(2)
 
-        gui.Label(grid,  'Shape', pos=(1,0))
-        c = self.color = gui.PixmapChoice(grid, pos=(1,1))
-        c._widget.SetSizeHints(-1, 20, 60, 30)
-        for r in range(0, 256, 64):
-            for g in range(0, 256, 64):
-                for b in range(0, 256, 64):
-                    c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
+        # Line type
+        labels.append(gui.Label(grid, 'Type', pos=(0,1)))
+        b = gui.Checkbox(grid, pos=(0,0))
+        grid.layout.Hide(b._widget)
+        self.line_type = gui.Choice(grid, pos=(0,2))
+        self.line_type.min_size = (10, self.line_type.min_size[1])
+        for shape in ['none', 'straight', 'spline']:
+            self.line_type.append(shape)
 
-        gui.Label(grid, 'Width', pos=(2,0))
+        # Line style
+        labels.append(gui.Label(grid,  'Style', pos=(1,1)))
+        b = gui.Checkbox(grid, pos=(1,0))
+        grid.layout.Hide(b._widget)
+        self.line_style = self.color = gui.Choice(grid, pos=(1,2))
+        self.line_style.min_size = (10, self.line_style.min_size[1])
+        for p in ['solid', 'dash', 'dot',]:
+            self.line_style.append(p)
 
-        c = gui.Spin(grid, pos=(2,1))
-        c._widget.SetSizeHints(-1, 20, 60, 30)
+        # Line width
+        labels.append(gui.Label(grid, 'Width', pos=(2,1)))
+        b = gui.Checkbox(grid, pos=(2,0))
+        grid.layout.Hide(b._widget)
+        self.line_width = gui.Spin(grid, pos=(2,2))
+        self.line_width.min_size = (10, self.line_width.min_size[1])
 
-        grid.layout.AddGrowableCol(1)
+        maxminw = max([l.min_size[0] for l in labels])
+        for l in labels:
+            l.min_size = (maxminw, l.min_size[1])
+
 
         b = gui.Box(self, 'horizontal', expand=False, stretch=0)
-        gui.Label(b, 'Group')
-        c = gui.Choice(b)
+        gui.Label(b, 'Group', stretch=1)
+        self.multi = gui.Choice(b, stretch=2)
+        self.multi.append('identical')
+        self.multi.append('series')
 
     def on_select_color(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
