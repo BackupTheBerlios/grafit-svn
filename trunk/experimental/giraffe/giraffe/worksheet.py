@@ -1,4 +1,4 @@
-from giraffe.project import Item, wrap_attribute, register_class
+from giraffe.item import Item, wrap_attribute, register_class
 from giraffe.base.mkarray import MkArray
 
 class Column(MkArray):

@@ -39,8 +39,8 @@ You can remove columns with remove(), like this:
     >>> w['B']
     array([ 1.,  2.,  3.,  4.])
 
-    >>> #import os
-    >>> #os.remove('rikadik.db')
+    >>> import os
+    >>> os.remove('rikadik.db')
 
 
 How it works: Internals (subject to change!)

@@ -5,6 +5,7 @@ import metakit
 
 from giraffe.base.mkarray import MkArray
 from giraffe.common.commands import Command, command_list
+from giraffe.item import Item, storage_desc
 
 def create_id(*args):
     """
@@ -21,32 +22,6 @@ def create_id(*args):
     data = str(t)+' '+str(r)+' '+str(a)+' '+str(args)
     data = md5.md5(data).hexdigest()
     return data
-
-
-storage_desc = {}
-
-def register_class(cls, description):
-    storage_desc[cls] = description
-
-def wrap_attribute(name):
-    def get_data(self):
-        return getattr(self.data, name)
-    def set_data(self, value):
-        setattr(self.data, name, value)
-    return property(get_data, set_data)
-
-
-class Item(object):
-    def __init__(self, project, id=None):
-        self.project = project
-        self._update(id)
-
-    def _update(self, id):
-        self.view, self.data, self.id = self.project.add(self, id)
-
-    description = 'items[name:S,id:S]'
-    name = wrap_attribute('name')
-
 
 class Project(object):
     def __init__(self, filename=None):
@@ -69,7 +44,6 @@ class Project(object):
                     self.items[row.id] = cls(self, id=row.id)
                 else:
                     self.deleted[row.id] = cls(self, id=row.id)
-
 
     def add(self, item, id=None):
         view = self.db.getas(storage_desc[type(item)])
