@@ -4,6 +4,10 @@ Signal / Slot framework
 
 import sys
 import weakref
+try:
+    import wx
+except ImportError:
+    pass
 
 class Slot(object):
     """
@@ -120,7 +124,7 @@ class HasSignals(object):
             # then we remove them from the slots list.
             try:
                 results.append(slot(*args, **kwds))
-            except ReferenceError:
+            except ReferenceError, wx.PyDeadObjectError:
                 # We can't do self._signals[signal].remove(slot) because that calls slot.__eq__
                 # and raises another ReferenceError. So we might as well remove all expired slots.
 #                print >>sys.stderr, "garbage collected slot", slot

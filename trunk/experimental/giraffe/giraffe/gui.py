@@ -4,7 +4,7 @@ import wx
 import wx.py
 import wx.glcanvas
 import wx.grid
-from  wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
+from  wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
 
 import sys
 sys.path.append('..')
@@ -201,10 +201,11 @@ class ListModel(HasSignals):
     def index(self, value):
         return self.items.index(value)
 
-class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
+class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
         ListCtrlAutoWidthMixin.__init__(self)
+        ListCtrlSelectionManagerMix.__init__(self)
         self.lst = lst
 
         # item images
@@ -270,18 +271,11 @@ class List(Widget):
         # we have to work around the fact that a virtual ListCtrl does _not_
         # send ITEM_SELECTED or ITEM_DESELECTED events when multiple items
         # are selected / deselected
-        selection = []
 
-        item = -1
         try:
-            while True:
-                item = self._widget.GetNextItem(item, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
-                if item == -1:
-                    break
-                selection.append(item)
+            selection = self._widget.getSelection()
         except wx.PyDeadObjectError:
-            pass
-
+            return
         if selection != self.selection:
             self.selection = selection
             self.emit('selection-changed')

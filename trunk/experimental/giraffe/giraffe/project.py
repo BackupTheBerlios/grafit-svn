@@ -188,14 +188,17 @@ class Project(HasSignals):
         self.this = None
 
         # create objects
-        for cls, desc in storage_desc.iteritems():
+        for cls, desc in [(i, storage_desc[i]) for i in (Folder, giraffe.worksheet.Worksheet, giraffe.graph.Graph)]:
             view = self.db.getas(desc)
             for i, row in enumerate(view):
                 if row.id != self.top.id:
                     if not row.id.startswith('-'):
+                        print 'loading', cls, row.id,
                         self.items[row.id] = cls(self, location=(view, row, row.id))
+                        print 'end'
                     else:
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
+
 
     def on_command_added(self, command=None):
         self.modified = True

@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from giraffe.signals import HasSignals
-from giraffe.project import Item, wrap_attribute, register_class
+from giraffe.project import Item, wrap_attribute, register_class, create_id
 
 import ftgl
 from gl2ps import *
@@ -34,7 +34,6 @@ class Style(object):
         return self._color
     color = property(get_color, set_color)
 
-
 default_style = Style()
 
 def create_list_id(start=[100]):
@@ -42,110 +41,26 @@ def create_list_id(start=[100]):
     return start[0]
 
 
-class oDataset(object):
-    def __init__(self, x=None, y=None, range=(None,None), style=default_style):
-        self._style = Style()
-        self._x = x
-        self._y = y
-        self._style.dataset = self
-
-        self.id = create_list_id()
-
-    def set_style(self, val):
-        self._style.line_width = val.line_width
-        self._style.color = val.color
-    def get_style(self):
-        return self._style
-    style = property(get_style, set_style)
-
-#    def set_range(self, val):
-#        self._range.line_width = val.line_width
-#    def get_range(self):
-#        return self._range
-#    range = property(get_range, set_range)
-
-    def set_x(self, val):
-        self._x = val
-    def get_x(self):
-        return self._x
-    x = property(get_x, set_x)
-
-    def set_y(self, val):
-        self._y = val
-    def get_y(self):
-        return self._y
-    y = property(get_y, set_y)
-
-    def paint(self):
-        glCallList(self.id)
-
-    def build_display_list(self):
-        dx =  self.graph.res * (self.graph.xmax-self.graph.xmin)/self.graph.w
-        dy =  self.graph.res * (self.graph.ymax-self.graph.ymin)/self.graph.h
-
-#        p = 0.5
-
-#        glNewList(1001, GL_COMPILE)
-#        glPushMatrix()
-#        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
-#
-#        glBegin(GL_QUADS)
-#        glVertex3d(-p, -p, 0)
-#        glVertex3d(-p, p, 0)
-#        glVertex3d(p, p, 0)
-#        glVertex3d(p, -p, 0)
-#        glEnd()
-#        glPopMatrix()
-#        glEndList()
-
-#        glNewList(1002, GL_COMPILE)
-#        glPushMatrix()
-#        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
-#        glBegin(GL_POLYGON)
-#        n = 20
-#        for i in xrange(n):
-#            c = p*exp(i*2j*pi/n)
-#            glVertex(c.real, c.imag, 0)
-#        glPopMatrix()
-#
-#        glEndList()
-
-        glNewList(self.id, GL_COMPILE)
-        glColor4f(*self.style.color)
-        makedata(asarray(self.x[:]), asarray(self.y[:]), 
-                 self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
-                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]  )
-        glEndList()
-
-class Style(object):
-    def __init__(self, color=(0,0,0,1)):
-        self._line_width = 0
-        self._color = color
-
-    def set_line_width(self, val):
-        self._line_width = val
-    def get_line_width(self):
-        return self._line_width
-    line_width = property(get_line_width, set_line_width)
-
-    def set_color(self, val):
-        self._color = val
-    def get_color(self):
-        return self._color
-    color = property(get_color, set_color)
-
-
-default_style = Style()
-
 class Dataset(HasSignals):
-    def __init__(self, x, y, range=(None, None), style=default_style):
-        self.x, self.y = x, y
-        x.connect('data-changed', self.on_data_changed)
-        y.connect('data-changed', self.on_data_changed)
-        self.range = range
-        self.style = style
-        
+    def __init__(self, graph, ind):
+        self.graph, self.ind = graph, ind
+        self.data = self.graph.data.datasets[ind]
+
+        self.worksheet = self.graph.project.items[self.data.worksheet]
+        self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
+
+        self.x.connect('data-changed', self.on_data_changed)
+        self.y.connect('data-changed', self.on_data_changed)
+
+        self.style = default_style
         self.listid = create_list_id()
+
+    def set_id(self, id): self.data.id = id
+    def get_id(self): return self.data.id
+    id = property(get_id, set_id)
+
+    def set_worksheet(self, ws): self.data.worksheet = ws.id
+    def get_worksheet(self): return self.graph.project.items[self.data.worksheet]
 
     def paint(self):
         glCallList(self.listid)
@@ -368,7 +283,6 @@ class Axis(object):
 
 # TODO:
 # - convert drawing to use the above data
-# - move drawing to Axis and Dataset classes
 # - more generic mechanism for symbols, in pyrex if nescessary
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
@@ -383,26 +297,14 @@ class Graph(Item, HasSignals):
         self.buf =  False
 
         self.datasets = []
+        if location is not None:
+            for i in range(len(self.data.datasets)):
+                if not self.data.datasets[i].id.startswith('-'):
+                    d = Dataset(self, i)
+                    self.datasets.append(d)
+                    d.connect('modified', self.on_dataset_modified)
+
         self.ps = False
-
-        x = arange(2, 6, 0.001)
-        y = log10(hn.havriliak_negami(10.**x, 4, 1, 0.5, 1))
-
-#        d = Dataset(x, y)
-#        d.style.color =  (0.3, 0.4, 0.7, 0.8)
-#        d.graph = self
-#        self.datasets.append(d)
-#        self._shape = (-1, -1)
-
-#        self.datasets.append(Dataset(x = arange(100000.)/100000,
-#                                     y = sin(arange(100000.)/100000)))
-#        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
-#        self.datasets[-1].graph = self
-#
-#        self.datasets.append(Dataset(x = arange(10000.)/1000,
-#                                     y = cos(arange(10000.)/1000)))
-#        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
-#        self.datasets[-1].graph = self
 
         self.axis_top = Axis('top', self)
         self.axis_bottom = Axis('bottom', self)
@@ -417,23 +319,26 @@ class Graph(Item, HasSignals):
         self.set_range(0.0, 100.5)
         self.xmin, self.ymin = 0,0  
         self.ymax, self.xmax = 10, 10
-        self.autoscale()
+#        self.autoscale()
 
     default_name_prefix = 'graph'
 
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
 
-    def add(self, *args, **kwds):
-        d = Dataset(*args, **kwds)
+    def add(self, x, y):
+        ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), x=x.name, y=y.name)
+        d = Dataset(self, ind)
         self.datasets.append(d)
         d.connect('modified', self.on_dataset_modified)
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
 
     def remove(self, dataset):
+        # XXX
         self.datasets.remove(dataset)
         dataset.disconnect('modified', self.on_dataset_modified)
+        self.emit('redraw')
         self.emit('remove-dataset', dataset)
 
     def on_dataset_modified(self, d):
@@ -768,7 +673,9 @@ class Graph(Item, HasSignals):
     parent = wrap_attribute('parent')
 
 
-register_class(Graph, 'graphs[name:S,id:S,parent:S]')
+register_class(Graph, 'graphs[name:S,id:S,parent:S,datasets[id:S,worksheet:S,x:S,y:S]]')
+#register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B,expr:S]]')
+
 
 if 0:
     graph = project.new(Graph, 'graph')
