@@ -7,9 +7,8 @@ Using ``Worksheet``
 This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
-    >>> from giraffe.base.project import Project
-    >>> from giraffe.worksheet import Worksheet
-    >>> p = Project('rikadik.db')
+    >>> from giraffe import Project, Worksheet, Folder
+    >>> p = Project()
 
 Now use it:
 
@@ -19,11 +18,9 @@ Now use it:
     >>> w = Worksheet(p, 'data2')
     >>> w.add_column('A')
     >>> w.add_column('B')
-    >>> p.db.commit()
     >>> p = Project('rikadik.db')
     >>> print w.column_names
     ['A', 'B']
-    >>> p.save()
 
 You can remove columns with remove(), like this:
 

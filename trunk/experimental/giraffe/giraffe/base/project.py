@@ -10,9 +10,10 @@ from giraffe.base.folder import Folder
 # import only in order to register object types
 import giraffe.worksheet
 
+
+# by (Carl Free Jr. http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761)
 def create_id(*args):
-    """
-    Generates a universally unique ID.
+    """Generates a universally unique ID.
     Any arguments only create more randomness.
     """
     t = long(time.time() * 1000)
