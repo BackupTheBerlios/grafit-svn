@@ -140,8 +140,25 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
         ListCtrlAutoWidthMixin.__init__(self)
         self.lst = lst
 
+        # item images
+        self.imagelist = wx.ImageList(16, 16)
+        self.SetImageList(self.imagelist, wx.IMAGE_LIST_NORMAL)
+        self.SetImageList(self.imagelist, wx.IMAGE_LIST_SMALL)
+        self.pixmaps = {}
+
+    def getpixmap(self, filename):
+        if filename is None:
+            return None
+        if filename not in self.pixmaps:
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+        return self.pixmaps[filename]
+
     def OnGetItemText(self, item, col):
         return self.lst.model.get(item, self.lst.columns[col])
+
+    def OnGetItemImage(self, item):
+        return self.getpixmap(self.lst.model.get_image(item))
+
 
 class List(Widget):
     def __init__(self, parent, model=None, columns=None, headers=False, editable=False, **kwds):
@@ -252,9 +269,11 @@ class Tree(Widget):
         self.items = []
 
         self._widget.SetIndent(10)
+
         self.imagelist = wx.ImageList(16, 16)
         self._widget.SetImageList(self.imagelist)
         self.pixmaps = {}
+
         self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
 
     def on_sel_changed(self, evt):

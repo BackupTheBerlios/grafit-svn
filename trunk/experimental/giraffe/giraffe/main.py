@@ -6,9 +6,15 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                         OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
 
+import wx
+import os
+
 from giraffe.signals import HasSignals
 
 from giraffe import *
+
+class Cancel(Exception):
+    pass
 
 class ScriptWindow(Shell):
     def __init__(self, parent, **kwds):
@@ -67,7 +73,7 @@ class ProjectExplorer(Box):
 
     def on_tree_selected(self, item):
         self.list.model = FolderListData(item.folder)
-        print item.folder
+        self.project.cd(item.folder)
 
     def connect_project(self, project):
         self.project = project
@@ -81,9 +87,16 @@ class FolderListData(HasSignals):
     def __init__(self, folder):
         self.folder = folder
 
-    def __len__(self): return len(list(self.folder.contents()))
-    def get(self, row, column): return list(self.folder.contents())[row].name
+    def __len__(self): 
+        return len(list(self.folder.contents()))
 
+    def get(self, row, column): 
+        return list(self.folder.contents())[row].name
+
+    def get_image(self, row): 
+        return { Worksheet: 'worksheet.png',
+                 Graph: 'graph.png',
+                 Folder: 'stock_folder.png', }[type(list(self.folder.contents())[row])]
 
 class TableData(HasSignals):
     def get_n_columns(self):
@@ -131,13 +144,19 @@ class MainWindow(Window):
 
         menubar = Menubar(self)
         actions = {
-            'file-new': Action('New', 'Create a new project', self.koal),
-            'file-open': Action('Open', 'Open a project', self.koal),
-            'file-save': Action('Save', 'Save the project', self.koal),
+            'file-new': Action('New', 'Create a new project', self.on_project_new),
+            'file-open': Action('Open', 'Open a project', self.on_project_open),
+            'file-save': Action('Save', 'Save the project', self.on_project_save),
             'edit-undo': Action('Undo', 'Undo the last action', self.koal, 'stock_undo.png'),
             'edit-redo': Action('Redo', 'Redo the last action', self.koal),
             'edit-copy': Action('Copy', 'Undo the last action', self.koal),
-            None: None,
+            'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
+                                           self.on_new_worksheet, 'worksheet.png'),
+            'object-new-graph': Action('New Graph', 'Create a new worksheet', 
+                                       self.on_new_graph, 'graph.png'),
+            'object-new-folder': Action('New Folder', 'Create a new worksheet', 
+                                        self.on_new_folder, 'stock_folder.png'),
+            None: None
         }
 
         menu = Menu(menubar, '&File')
@@ -149,7 +168,8 @@ class MainWindow(Window):
             menu.append(actions[item])
 
         self.toolbar = Toolbar(self)
-        self.toolbar.append(actions['edit-undo'])
+        for item in ['object-new-folder', 'object-new-worksheet', 'object-new-graph']:
+            self.toolbar.append(actions[item])
 
         self.project = Project()
         self.project.new(Folder, 'arse')
@@ -184,28 +204,28 @@ class MainWindow(Window):
     def res(self, width, height):
         glViewport(0, 0, int(width), int(height))
 
-    def on_new_worksheet(self, evt):
-        ws = self.main.project.new(Worksheet, None, self.main.project.here)
+    def on_new_worksheet(self):
+        ws = self.project.new(Worksheet, None, self.project.here)
         ws.a = [1,2,3]
         ws.other = 2*ws.a
 
-    def on_project_open(self, evt=None):
+    def on_project_open(self):
         try:
-            if self.main.project.modified and self.ask_savechanges():
+            if self.project.modified and self.ask_savechanges():
                 self.on_project_save()
 
-            dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+            dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
                                 defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.OPEN | wx.CHANGE_DIR)
             if dlg.ShowModal() == wx.ID_OK:
                 path = dlg.GetPaths()[0]
-                self.main.close_project()
-                self.main.open_project(Project(str(path)))
+                self.close_project()
+                self.open_project(Project(str(path)))
             dlg.Destroy()
         except Cancel:
             return
 
     def ask_savechanges(self):
-        dlg = wx.MessageDialog(self.frame, 'Save <b>changes?</b>', 'Save?',
+        dlg = wx.MessageDialog(self._widget, 'Save <b>changes?</b>', 'Save?',
                                wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
         result = dlg.ShowModal()
         if result == wx.ID_YES:
@@ -216,41 +236,41 @@ class MainWindow(Window):
             raise Cancel
         dlg.Destroy()
 
-    def on_project_saveas(self, evt=None):
+    def on_project_saveas(self):
         try:
-            dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+            dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
                                 defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.SAVE | wx.CHANGE_DIR)
             if dlg.ShowModal() == wx.ID_OK:
                 path = dlg.GetPaths()[0]
-                self.main.project.saveto(path)
-                self.main.open_project(Project(str(path)))
+                self.project.saveto(path)
+                self.open_project(Project(str(path)))
             dlg.Destroy()
         except Cancel:
             return
 
-    def on_project_save(self, evt=None):
+    def on_project_save(self):
         try:
-            if self.main.project.filename is not None:
-                self.main.project.commit()
+            if self.project.filename is not None:
+                self.project.commit()
             else:
                 self.on_project_saveas()
         except Cancel:
             return
 
-    def on_project_new(self, evt=None):
+    def on_project_new(self):
         try:
-            if self.main.project.modified and self.ask_savechanges():
+            if self.project.modified and self.ask_savechanges():
                 self.on_project_save()
-            self.main.close_project()
-            self.main.open_project(Project())
+            self.close_project()
+            self.open_project(Project())
         except Cancel:
             return
             
-    def on_new_graph(self, evt):
-        g = self.main.project.new(Graph, None, self.main.project.here)
+    def on_new_graph(self):
+        g = self.project.new(Graph, None, self.project.here)
 
-    def on_new_folder(self, evt):
-        self.main.project.new(Folder, None, self.main.project.here)
+    def on_new_folder(self):
+        self.project.new(Folder, None, self.project.here)
 
 
 if __name__ == '__main__':
