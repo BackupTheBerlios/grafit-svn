@@ -43,6 +43,7 @@ class Worksheet(Item, HasSignals):
 
     add_column = command_from_methods('worksheet_add_column', add_column, add_column_undo)
 
+
     def remove_column(self, name):
         ind = self.data.columns.find(name=name)
         if ind == -1:
@@ -50,7 +51,7 @@ class Worksheet(Item, HasSignals):
         else:
             col = self.columns[ind]
             del self.columns[ind]
-            return [col, ind]
+            return (col, ind), None
 
     def undo_remove_column(self, c):
         print >>sys.stderr, c
@@ -58,6 +59,7 @@ class Worksheet(Item, HasSignals):
         self.columns.insert(ind, col)
 
     remove_column = command_from_methods('worksheet_remove_column', remove_column, undo_remove_column)
+
 
     def get_ncolumns(self):
         return len(self.columns)

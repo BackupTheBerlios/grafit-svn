@@ -4,10 +4,12 @@ sys.path.append('/home/daniel/giraffe')
 print >>sys.stderr, "initializing...",
 import os
 import new
+
 import wx
 import wx.py
 import wx.lib.buttons
-
+from numarray import arange
+ 
 from giraffe.ui.graph_view import GraphView
 from giraffe.ui.worksheet_view import WorksheetView
 from giraffe.graph import Graph
@@ -198,7 +200,7 @@ class Application(wx.App):
         ws.add_column('a')
         ws.add_column('other')
         ws['a'] = [1,2,3]
-        ws['other'] = range(1000000)
+        ws['other'] = arange(1000000)
 
     def on_new_graph(self, evt):
         g = self.project.new(Graph, 'graph1')

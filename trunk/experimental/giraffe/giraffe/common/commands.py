@@ -196,6 +196,7 @@ class CommandList(signals.HasSignals):
 #        else:
 #            return False
 
+
 def command_from_methods(name, do, undo, redo=None, cleanup=None):
     def replace_init(selb, *args, **kwds):
         class CommandFromMethod(Command):
