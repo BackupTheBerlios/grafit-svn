@@ -80,6 +80,7 @@ class FunctionsWindow(gui.Window):
         self.extra = gui.Text(extra, multiline=True, stretch=1)
 
         self.functions = []
+        self.function = None
 
 #        self.function = Function('Dielectric/Havriliak-Negami', ['logf0', 'de', 'a', 'b'], 'y=hn(x)', 'import Numeric\ndef')
 
@@ -117,6 +118,7 @@ class FunctionsWindow(gui.Window):
 
     def scan(self, dir):
         self.functions = []
+        sel = self.category.selection
         del self.category.model[:]
         for f in os.listdir(dir):
             try:
@@ -129,12 +131,16 @@ class FunctionsWindow(gui.Window):
                             eval(e.get('extra')))
             func.filename = dir + '/' + f
             self.add(func)
+        print sel
+        self.category.setsel(sel)
 
     def on_select_function(self):
         try:
             name = self.category.model[self.category.selection[0]]
         except IndexError:
             return
+#        if self.function is not None:
+#            print 'are you sure?'
         self.function = [f for f in self.functions if f.name == name][0]
         self.update_gui()
 

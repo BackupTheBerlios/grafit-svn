@@ -716,6 +716,10 @@ class List(Widget):
         return self._model
     model = property(get_model, set_model)
 
+    def setsel(self, sel):
+        for item in sel:
+            self._widget.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_MASK_STATE)
+
     def update(self):
         self._widget.Freeze()
         sel = self.selection
