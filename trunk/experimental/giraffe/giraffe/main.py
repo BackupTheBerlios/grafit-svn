@@ -1,12 +1,11 @@
 import sys
-from OpenGL.GL import *
-from OpenGL.GLU import *
 
 from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                         OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
 
 from giraffe.ui_worksheet_view import WorksheetView
+from giraffe.ui_graph_view import GraphView
 
 import wx
 import os
@@ -140,7 +139,7 @@ class MainWindow(Window):
         self.project = Project()
         self.project.new(Folder, 'arse')
         self.project.new(Worksheet, 'brse')
-        self.project.new(Graph, 'crse')
+        g = self.project.new(Graph, 'crse')
         self.project.new(Folder, 'drse')
 
         self.open_project(self.project)
@@ -153,15 +152,9 @@ class MainWindow(Window):
         box = Box(book, 'vertical', page_label='window1')
         WorksheetView(box, self.project.new(Worksheet, 'a'))
         koalaki = MainPanel(book, page_label='window2')
-        Label(koalaki, 'perierxx')
+        GraphView(koalaki, self.project.new(Graph, 'agraph'))
         self.expl = Table(koalaki.right_panel, TableData(),
                           page_label='koalaki', page_pixmap='stock_navigator.png')
-
-        self.test = OpenGLWidget(koalaki.right_panel,
-                                 page_label='koali', page_pixmap='graph.png')
-        self.test.connect('initialize-gl', self.ini)
-        self.test.connect('paint-gl', self.ini)
-        self.test.connect('resize-gl', self.res)
 
         menubar = Menubar(self)
         actions = {
@@ -206,13 +199,6 @@ class MainWindow(Window):
 
     def act(self, x, y):
         print 'patataki'
-
-    def ini(self, x=None, y=None):
-        glClearColor(0.4, 0.3, 0.7, 1)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-    def res(self, width, height):
-        glViewport(0, 0, int(width), int(height))
 
     def on_new_worksheet(self):
         ws = self.project.new(Worksheet, None, self.project.here)

@@ -693,7 +693,7 @@ class OpenGLWidget(Widget):
     def OnMouseMotion(self, evt):
         if evt.Dragging():
             x, y = evt.GetPosition()
-            self.emit('mouse-move', x, y)
+            self.emit('mouse-moved', x, y)
 
 
 class Notebook(Widget):
