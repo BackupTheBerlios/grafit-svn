@@ -596,7 +596,7 @@ class ShapesWindow(gtk.Window):
  
         self.shape = Shapes(self)
         self.glarea = GLArea(self.shape)
-        self.glarea.set_size_request(400,300)
+        self.glarea.set_size_request(200,100)
         self.glarea.show()
         self.table.pack_start(self.glarea)
 
