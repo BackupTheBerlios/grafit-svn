@@ -24,6 +24,7 @@ class Project(HasSignals):
         self.items = {}
         self.deleted = {}
         self._dict = {}
+        self.save_dict = {}
 
         # Create top folder.
         # - it must be created before all other items
@@ -36,7 +37,8 @@ class Project(HasSignals):
             # can't find it in the database, create a new one.
             self.top = Folder(self, 'top', _isroot=True)
 
-        self.this = self.top
+        self.here = self.top
+        self.this = None
 
         # create objects
         for cls, desc in storage_desc.iteritems():
@@ -48,8 +50,37 @@ class Project(HasSignals):
                     else:
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
 
+    def cd(self, folder):
+        # restore dictionary
+        for o in self.here.contents():
+            del self._dict[o.name]
+        self._dict.update(self.save_dict)
+        self.save_dict = {}
+        
+        self.here = folder
+
+        # update dictionary
+        self._dict['here'] = self.here
+        self._dict['up'] = self.here.up
+        for o in self.here.contents():
+            if o.name in self._dict:
+                self._save_dict[o.name] = self._dict[o.name]
+            self._dict[o.name] = o
+
+        self.emit('change-current-folder', folder)
+
+    def set_current(self, obj):
+        if obj not in list(self.here.contents()):
+            raise NotImplementedError
+        self.this = obj
+        self._dict['this'] = self.this
+        self.emit('set-current-object', obj)
+
     def set_dict(self, d):
         self._dict = d
+        self._dict['top'] = self.top
+        self._dict['this'] = self.this
+        self.cd(self.here)
 
     def cleanup(self):
         """Purge all deleted items from the database"""

@@ -14,6 +14,7 @@ from numarray import arange
 from giraffe.graph import Graph
 print >>sys.stderr, 'g',
 from giraffe.worksheet import Worksheet
+from giraffe.base.item import Folder
 print >>sys.stderr, 'w',
 
 from giraffe.base.signals import HasSignals
@@ -187,7 +188,12 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.project_tree.connect('activate-object', self.on_activate)
 
         self.current_dir = wx.ListCtrl(splitter, -1, 
-                   style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS|wx.LC_NO_HEADER|wx.LC_HRULES|wx.LC_SINGLE_SEL)
+                   style=
+#wx.LC_REPORT|
+                   wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS
+                  # |wx.LC_NO_HEADER
+                   |wx.LC_HRULES|wx.LC_SINGLE_SEL)
+        self.current_dir.InsertColumn(0, 'name')
 
         splitter.SplitHorizontally(self.project_tree, self.current_dir)
         sizer.Add(splitter, 1, wx.EXPAND)
@@ -195,10 +201,20 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.SetSizer(sizer)
         sizer.SetSizeHints(self)
 
+        self.project_tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
+
     def on_activate(self, item):
         self.emit('activate-object', item)
 
-
+    def on_sel_changed(self, event):
+        item = event.GetItem()
+        self.current_dir.ClearAll()
+        for k, v in self.project_tree.items.iteritems():
+            if v == item:
+                folder = self.project.items[k]
+        for i, o in enumerate(folder.contents()):
+            self.current_dir.InsertStringItem(0, o.name)
+                
 class ProjectTree(wx.TreeCtrl, HasSignals):
     def __init__(self, parent, project): 
         wx.TreeCtrl.__init__(self, parent, -1, 
@@ -223,20 +239,18 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
 
         # object.id: treeitemid
         self.items = {}
+        self.items[self.project.top.id] = self.root
+
         self.current_item = None
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
-        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
 
     def on_add_item(self, item):
-        self.items[item.id] = self.AppendItem(self.root, item.name)
-        self.SetItemImage(self.items[item.id], self.wsidx, wx.TreeItemIcon_Normal)
-        item.connect('rename', self.on_rename)
-        self.Expand(self.root)
-
-    def on_sel_changed(self, event):
-        item = event.GetItem()
-        print item
+        if type(item) == Folder:
+            self.items[item.id] = self.AppendItem(self.items[item.parent.id], item.name)
+            self.SetItemImage(self.items[item.id], self.wsidx, wx.TreeItemIcon_Normal)
+            item.connect('rename', self.on_rename)
+            self.Expand(self.root)
 
     def on_double_click(self, event):
         item, flags = self.HitTest(event.GetPosition())

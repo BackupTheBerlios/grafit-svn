@@ -9,6 +9,14 @@ The following special names are defined:
 
 * `top`: the top-level folder
 
+* `this`: the current object (shown in the main window)
+
+These names are updated in ``project._dict``.
+
+Also in ``project._dict`` are the contents (subfolders and items)
+of the current folder.  Programatically, you can get these object 
+with ``project.top.contents()``.
+
     >>> from giraffe import Project, Worksheet
     >>> from giraffe.base.commands import undo, redo, command_list
     >>> import sys
