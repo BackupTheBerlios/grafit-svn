@@ -194,14 +194,14 @@ class Application(wx.App):
         return True
 
     def OnNewWs(self, evt):
-        ws = Worksheet(self.project, 'test')
+        ws = self.project.new(Worksheet, 'test')
         ws.add_column('a')
         ws.add_column('other')
         ws['a'] = [1,2,3]
-        ws['other'] = range(1000)
+        ws['other'] = range(10000)
 
     def on_new_graph(self, evt):
-        g = Graph(self.project, 'graph1')
+        g = self.project.new(Graph, 'graph1')
 
     def OnButton(self, evt):
         self.frame.Close(True)
