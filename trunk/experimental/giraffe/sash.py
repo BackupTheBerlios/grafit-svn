@@ -1,7 +1,6 @@
 # http://tman.3-wave.com/torrents.html
 
 import  wx
-import wx                  # This module uses the new wx namespace
 import sys, os
 
 class RunDemoApp(wx.App):
@@ -43,19 +42,7 @@ class RunDemoApp(wx.App):
 
 
     def OnCloseFrame(self, evt):
-        if hasattr(self, "window") and hasattr(self.window, "ShutdownDemo"):
-            self.window.ShutdownDemo()
         evt.Skip()
-
-
-#----------------------------------------------------------------------------
-
-
-def main(argv):
-    app = RunDemoApp()
-    app.MainLoop()
-
-
 
 class TestSashWindow(wx.Panel):
     ID_WINDOW_LEFT1  = 5101
@@ -97,13 +84,16 @@ class TestSashWindow(wx.Panel):
 
         win = wx.Panel(self.leftWindow1, -1)
 
-        textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
-        textWindow.SetValue("A window")
-        btn = wx.Button(win, -1, "He")
+        self.textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
+        self.textWindow.SetValue("A window")
+
+        btn = wx.ToggleButton(win, 10011, "He", style=wx.BU_EXACTFIT)
+        self.btn = btn
+        self.Bind(wx.EVT_TOGGLEBUTTON, self.button_clicked, btn)
 
         box = wx.BoxSizer(wx.HORIZONTAL)
         box.Add(btn, 0)
-        box.Add(textWindow, 1, wx.EXPAND)
+        box.Add(self.textWindow, 1, wx.EXPAND)
 
 #        box.SetSizeHints(win)
 
@@ -117,6 +107,17 @@ class TestSashWindow(wx.Panel):
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT2)
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_BOTTOM)
         self.Bind(wx.EVT_SIZE, self.OnSize)
+
+    def button_clicked(self, event):
+        if event.IsChecked():
+            self.textWindow.Show()
+            self.leftWindow1.SetDefaultSize((300, -1))
+        else:
+            self.textWindow.Hide()
+            self.leftWindow1.SetDefaultSize((self.btn.GetSize()[0], -1))
+
+        wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
+        self.remainingSpace.Refresh()
 
 
     def OnSashDrag(self, event):
@@ -140,8 +141,6 @@ class TestSashWindow(wx.Panel):
     def OnSize(self, event):
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
 
-#---------------------------------------------------------------------------
-
 if __name__ == '__main__':
-    import sys,os
-    main(['', os.path.basename(sys.argv[0])] + sys.argv[1:])
+    app = RunDemoApp()
+    app.MainLoop()
