@@ -3,6 +3,8 @@
 import  wx
 import sys, os
 
+from shapes import PlotCanvas, Plot
+
 class RunDemoApp(wx.App):
     def __init__(self):
         self.name = 'name'
@@ -22,7 +24,6 @@ class RunDemoApp(wx.App):
         menuBar.Append(menu, "&File")
 
         frame.SetMenuBar(menuBar)
-        frame.Show(True)
         frame.Bind(wx.EVT_CLOSE, self.OnCloseFrame)
 
         win = TestSashWindow(frame)
@@ -34,6 +35,7 @@ class RunDemoApp(wx.App):
 
         self.SetTopWindow(frame)
         self.frame = frame
+        frame.Show(True)
         return True
 
 
@@ -84,8 +86,18 @@ class TestSashWindow(wx.Panel):
 
         win = wx.Panel(self.leftWindow1, -1)
 
-        self.textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
-        self.textWindow.SetValue("A window")
+#        self.textWindow = wx.TextCtrl(win, -1, "", wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.SUNKEN_BORDER)
+        self.textWindow = wx.TreeCtrl(win, -1, style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS | wx.TR_HIDE_ROOT)
+#        self.textWindow = wx.TreeCtrl(win, -1, style=wx.TR_DEFAULT_STYLE)
+        self.textWindow.SetIndent(10)
+        r1 = self.textWindow.AddRoot('Root item')
+        r = self.textWindow.AppendItem(r1, 'Root item')
+        self.textWindow.AppendItem(r, 'other item')
+        self.textWindow.AppendItem(r, 'other item')
+        r = self.textWindow.AppendItem(r1, 'Root item')
+        self.textWindow.AppendItem(r, 'other item')
+        self.textWindow.AppendItem(r, 'other item')
+#        self.textWindow.SetValue("A window")
 
         btn = wx.ToggleButton(win, 10011, "He", style=wx.BU_EXACTFIT)
         self.btn = btn
@@ -103,6 +115,14 @@ class TestSashWindow(wx.Panel):
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
 
+        self.graph = Plot()
+        self.graphw = PlotCanvas(self.remainingSpace, self.graph)
+
+        box = wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(self.graphw, 1, wx.EXPAND)
+        self.remainingSpace.SetSizer(box)
+
+
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT1)
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT2)
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_BOTTOM)
@@ -115,7 +135,9 @@ class TestSashWindow(wx.Panel):
         else:
             self.textWindow.Hide()
 #            self.leftWindow1.Fit()
-            self.leftWindow1.SetDefaultSize((self.btn.GetBestSize()[0], -1))
+            margin = self.leftWindow1.GetSize()[0] - self.leftWindow1.GetClientSize()[0]
+            print margin
+            self.leftWindow1.SetDefaultSize((self.btn.GetSize()[0]+margin, -1))
 #            self.leftWindow1.SetDefaultSize((self.leftWindow1.GetMinimumSizeX(), -1))
 
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)

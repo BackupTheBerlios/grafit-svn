@@ -1,4 +1,61 @@
-classes:
+Framework:
+
+class HasSignals:
+    emit(signal, *args, **kwds)
+    connect(signal, slot)
+    disconnect(signal, slot)
+
+class Command:
+    static undo_list
+    do()
+    undo()
+    combine(command)
+    register()
+
+    signal 'done'
+    signal 'undone'
+
+class UndoList:
+    append(command)
+    begin_composite(command)
+    end_composite()
+    clear()
+    undo()
+    redo()
+    enable()
+    disable()
+
+    signal 'added', command
+    signal 'removed', command
+    signal 'enabled'
+    signal 'disabled'
+
+Should we give commands uuid's?
+
+class Object:
+    save()
+    load(string)
+    
+    name
+    make_name
+    
+    signal 'renamed', oldname, newname
+    signal 'modified'
+
+class Project:
+    add(object)
+    remove(object)
+    clear()
+
+    save()
+    load(string)
+
+class ui.MainWindow:
+    statusbar_message(str, time)
+    progressbar_set(progress)
+
+    
+
 
 Plot: a single plot, containing:
     plot has min, max, scale

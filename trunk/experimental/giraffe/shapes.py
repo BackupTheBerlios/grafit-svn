@@ -3,21 +3,23 @@
 import sys
 import time
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-from gtk.gtkgl.apputils import *
+import wx
+import wx.glcanvas
 
-import ftgl
+from Numeric import *
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from Numeric import *
+import ftgl
+
 from render import makedata
 
 sys.path.append('/home/daniel/grafit/functions')
 sys.path.append('/home/daniel/grafit')
 import hn
+
+from common import HasSignals
+
 
 class Style(object):
     def __init__(self, color=(0,0,0,1)):
@@ -214,16 +216,8 @@ class Axis(object):
                 glVertex3f(x, 0.0, 0.0)
                 glVertex3f(x, 2, 0.0)
             glEnd()
+
             glPopMatrix()
-
-#        glBegin(GL_LINES)
-#        tx  = tics(self.xmin, self.xmax)
-#        for xx in [(tx[n], tx[n+1]) for n in xrange(len(tx)-1)]:
-#            for x in tics(xx[0], xx[1]):
-#                glVertex3f(x, 0.0, 0.0)
-#                glVertex3f(x, 0.6, 0.0)
-#        glEnd()
-
  
         elif self.position == 'left':
             glPushMatrix()
@@ -236,14 +230,8 @@ class Axis(object):
                 glVertex3f(0, y, 0.0)
                 glVertex3f(2, y, 0.0)
             glEnd()
+
             glPopMatrix()
-#        glBegin(GL_LINES)
-#        ty  = tics(self.ymin, self.ymax)
-#        for yy in [(ty[n], ty[n+1]) for n in xrange(len(ty)-1)]:
-#            for y in tics(yy[0], yy[1]):
-#                glVertex3f(0, y, 0.0)
-#                glVertex3f(0.6, y, 0.0)
-#        glEnd()
         self.paint_text()
 
     def paint_text(self):
@@ -316,32 +304,14 @@ class Axis(object):
 # - convert drawing to use the above data
 # - move drawing to Axis and Dataset classes
 # - more generic mechanism for symbols, in pyrex if nescessary
-
-class GraphWidget(GLScene, GLSceneButton, GLSceneButtonMotion):
-    def __init__(self, graph):
-        GLScene.__init__(self, gtk.gdkgl.MODE_DOUBLE)
-        self.graph = graph
-
-    def reshape(self, width, height):
-        return self.graph.reshape(width, height)
-
-    def display(self, width, height):
-        return self.graph.display(width, height)
-
-    def init(self):
-        return self.graph.init()
-
-class Plot(object):
-    def __init__(self, graph):
-        self.widget = GraphWidget(self)
+class Plot(HasSignals):
+    def __init__(self):#, graph):
     
         # mouse rubberbanding coordinates
         self.sx = None
         self.px = None
         self.sy = None
         self.py = None
-        self.graph = graph
-
 
         self.buf =  False
 
@@ -360,8 +330,8 @@ class Plot(object):
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
         self.datasets[-1].graph = self
 
-        self.datasets.append(Dataset(x = arange(100000.)/10000,
-                                     y = cos(arange(100000.)/10000)))
+        self.datasets.append(Dataset(x = arange(10000.)/1000,
+                                     y = cos(arange(10000.)/1000)))
         self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
         self.datasets[-1].graph = self
 
@@ -613,7 +583,7 @@ class Plot(object):
     def rubberband_continue(self, x, y):
 #        self.px, self.py = self.sx, self.sy
         self.sx, self.sy = self.mouse_to_ident(x, y)
-        self.queue_draw()
+        self.emit('redraw')
 
     def rubberband_end(self, x, y):
         self.rubberband_continue(x, y)
@@ -621,22 +591,22 @@ class Plot(object):
         self.px, self.py = None, None
         return self.pixx, self.pixy, x, y
 
-    def button_press(self, width, height, event):
-        if event.button in (1,3):
-            self.rubberband_begin(event.x, event.y)
-        if event.button == 2:
+    def button_press(self, x, y, button):
+        if button in (1,3):
+            self.rubberband_begin(x, y)
+        if button == 2:
             self.haha = True
         else:
             self.haha = False
     
-    def button_release(self, width, height, event):
-        if event.button == 2:
+    def button_release(self, x, y, button):
+        if button == 2:
             pass
 #            self.autoscale()
 #            self.make_data_list()
 #            self.queue_draw()
-        elif event.button == 1 or event.button == 3:
-            zix, ziy, zfx, zfy = self.rubberband_end(event.x, event.y)
+        elif button == 1 or button == 3:
+            zix, ziy, zfx, zfy = self.rubberband_end(x, y)
 
             zix, ziy = self.mouse_to_real(zix, ziy)
             zfx, zfy = self.mouse_to_real(zfx, zfy)
@@ -644,7 +614,7 @@ class Plot(object):
             _xmin, _xmax = min(zix, zfx), max(zix, zfx)
             _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
 
-            if event.button == 3:
+            if button == 3:
                 xmin, xmax = self.zoomout(self.xmin, self.xmax, _xmin, _xmax)
                 ymin, ymax = self.zoomout(self.ymin, self.ymax, _ymin, _ymax)
             else:
@@ -652,93 +622,105 @@ class Plot(object):
             self.zoom(xmin, xmax, ymin, ymax)
 
             self.make_data_list()
-            self.queue_draw()
+            self.emit('redraw')
 
     
-    def button_motion(self, width, height, event):
+    def button_motion(self, x, y):
         if self.haha:
+            ex, ey = self.mouse_to_real(x, y)
             x = arange(2, 6, 0.01)
-            ex, ey = self.mouse_to_real(event.x, event.y)
             params = hn.havriliak_negami.move(10.**ex, 10.**ey, 4, 1, 0.5, 1)
             y = log10(hn.havriliak_negami(10.**x, *params))
             self.datasets[0].x = x
             self.datasets[0].y = y
             self.datasets[0].build_display_list()
-            self.queue_draw()
+            self.emit('redraw')
         elif self.rubberband_active():
-            self.rubberband_continue(event.x, event.y)
+            self.rubberband_continue(x, y)
 
 
-class PlotWindow(gtk.Window):
-    def __init__(self):
-        gtk.Window.__init__(self)
+class PlotCanvas(wx.glcanvas.GLCanvas):
+    def __init__(self, parent, graph):
+        wx.glcanvas.GLCanvas.__init__(self, parent, -1)
+        self.init = False
+
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
         
-        # Set self attfibutes.
-        self.set_title('Plot')
-        self.connect('destroy', lambda quit: gtk.main_quit())
-        
-        # Create the table that will hold everything.
-        self.box = gtk.VBox()
-        self.box.show()
-        self.add(self.box)
-        
-        self.table = gtk.HBox()
-#        self.table.set_border_width(5)
-#        self.table.set_col_spacings(5)
-#        self.table.set_row_spacings(5)
-        self.table.show()
-        self.box.pack_start(self.table)
-#        self.add(self.table)
+        for event in (wx.EVT_LEFT_DOWN, wx.EVT_MIDDLE_DOWN, wx.EVT_RIGHT_DOWN):
+            self.Bind(event, self.OnMouseDown)
+        for event in (wx.EVT_LEFT_UP, wx.EVT_MIDDLE_UP, wx.EVT_RIGHT_UP):
+            self.Bind(event, self.OnMouseUp)
+        self.Bind(wx.EVT_MOTION, self.OnMouseMotion)
 
-        self.toolbar = gtk.Toolbar()
-        self.toolbar.set_border_width(0)
-        self.toolbar.set_orientation(gtk.ORIENTATION_VERTICAL)
-        self.toolbar.set_style(gtk.TOOLBAR_ICONS)
+        self.graph = graph
+        self.graph.connect('redraw', self.redraw)
+        self.SetCursor(wx.CROSS_CURSOR)
 
-        iconw = gtk.Image() # icon widget
-        iconw.set_from_file("../../pixmaps/range.png")
-        self.toolbar.append_element(gtk.TOOLBAR_CHILD_BUTTON, None, "Range", "Set range", "what is this?", iconw, None, None)
+    def redraw(self):
+        self.Refresh(False)
 
-        iconw = gtk.Image()
-        iconw.set_from_file("../../pixmaps/zoom.png")
-        self.toolbar.append_element(gtk.TOOLBAR_CHILD_BUTTON, None, "Zoom", "Zoom", "what is this?", iconw, None, None)
+    def OnEraseBackground(self, event):
+        pass # Do nothing, to avoid flashing on MSW.
 
-        iconw = gtk.Image()
-        iconw.set_from_file("../../pixmaps/hand.png")
-        self.toolbar.append_element(gtk.TOOLBAR_CHILD_BUTTON,None, "Zoom", "Zoom", "what is this?", iconw, None, None)
+    def InitGL(self):
+        self.graph.init()
+        self.SwapBuffers()
 
-        self.toolbar.show()
-        self.table.pack_start(self.toolbar, expand=False)
- 
-        self.shape = Plot(self)
-        self.glarea = GLArea(self.shape.widget)
-        self.glarea.set_size_request(200,100)
-        self.glarea.show()
-        self.table.pack_start(self.glarea)
+    def OnSize(self, event):
+        self.graph.reshape(*event.GetSize())
 
-        self.legend = Legend(self)
-        self.legend.show()
-        self.table.pack_start(self.legend, expand=False)
+    def OnPaint(self, event):
+        dc = wx.PaintDC(self)
+        self.SetCurrent()
+        if not self.init:
+            self.InitGL()
+            self.init = True
+        self.graph.display(*self.GetSize())
+        self.SwapBuffers()
 
-        
-    def run(self):
-        self.show()
-        gtk.main()
+    def OnMouseDown(self, evt):
+        self.CaptureMouse()
+        x, y = evt.GetPosition()
+        btn = evt.GetButton()
+        if btn is wx.MOUSE_BTN_LEFT:
+            self.graph.button_press(x, y, 1)
+        elif btn is wx.MOUSE_BTN_RIGHT:
+            self.graph.button_press(x, y, 3)
+        elif btn is wx.MOUSE_BTN_MIDDLE:
+            self.graph.button_press(x, y, 2)
 
-class Legend(gtk.TreeView):
-    def __init__(self, plot):
-        self.plot = plot
-        self.store = gtk.ListStore(str)
-        gtk.TreeView.__init__(self, model=self.store)
-        self.set_headers_visible(False)
-        column = gtk.TreeViewColumn('What')
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, True)
-        column.add_attribute(cell, 'text', 0)
-        self.append_column(column)
+    def OnMouseUp(self, evt):
+        self.ReleaseMouse()
+        x, y = evt.GetPosition()
+        btn = evt.GetButton()
+        if btn is wx.MOUSE_BTN_LEFT:
+            self.graph.button_release(x, y, 1)
+        elif btn is wx.MOUSE_BTN_RIGHT:
+            self.graph.button_release(x, y, 3)
+        elif btn is wx.MOUSE_BTN_MIDDLE:
+            self.graph.button_release(x, y, 2)
 
-        self.store.append(['that'])
+    def OnMouseMotion(self, evt):
+        if evt.Dragging():
+            x, y = evt.GetPosition()
+            self.graph.button_motion(x, y)
+
+
+def main():
+    class MyApp(wx.App):
+        def OnInit(self):
+            frame = wx.Frame(None, -1, "GL Demos", wx.DefaultPosition, wx.Size(600,300))
+            g = Plot()
+            win = PlotCanvas(frame, g)
+            frame.Show(True)
+            self.SetTopWindow(frame)
+            return True
+
+    app = MyApp(0)
+    app.MainLoop()
 
 if __name__ == '__main__':
-    app = PlotWindow()
-    app.run()
+    main()
+
