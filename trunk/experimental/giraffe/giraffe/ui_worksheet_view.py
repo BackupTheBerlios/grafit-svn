@@ -20,6 +20,7 @@ class TableData(HasSignals):
     def get_column_name(self, col): return self.worksheet.column_names[col]
     def get_row_name(self, row): return str(row)
     def get_data(self, col, row): return str(self.worksheet[col][row]).replace('nan', '')
+    def label_edited(self, col, value): print col, value
 
 class WorksheetView(gui.Box):
     def __init__(self, parent, worksheet, **place):

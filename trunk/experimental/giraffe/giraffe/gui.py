@@ -867,6 +867,10 @@ class TableData(wx.grid.PyGridTableBase):
 #    def SetValue(self, row, col, value):
 #        self.worksheet[col][row] = float(value)
 
+    def label_edited(self, column, name):
+        if hasattr(self.data, 'label_edited'):
+            self.data.label_edited(column, name)        
+
     def ResetView(self, view=None):
         """
         Reset the grid view. Call this to update the grid 
@@ -917,6 +921,33 @@ class Table(Widget):
         self._widget = xGrid(parent._widget, data)
         Widget.__init__(self, parent, **place)
 
+class xLabelEditor(wx.TextCtrl, HasSignals):
+    def __init__(self, parent, column):
+        wx.TextCtrl.__init__(self, parent, -1, 'test'+str(column), style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
+        self.parent, self.column = parent, column
+        self.destroyed = False
+
+        rect = parent.CellToRect(0, column)
+        self.SetSize((rect[2], parent.GetColLabelSize()))
+        self.SetPosition(parent.CalcScrolledPosition(parent.GetRowLabelSize()+rect[0], 0))
+        self.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
+
+        self.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
+
+        self.SetFocus()
+
+    def on_enter(self, evt):
+        self.parent.GetTable().label_edited(self.column, self.GetValue())
+        if not self.destroyed:
+            self.destroyed = True
+            self.Destroy()
+
+    def on_kill_focus(self, evt):
+        if not self.destroyed:
+            self.destroyed = True
+            self.Destroy()
+
 class xGrid(wx.grid.Grid):
     def __init__(self, parent, data):
         wx.grid.Grid.__init__(self, parent, -1)
@@ -936,6 +967,14 @@ class xGrid(wx.grid.Grid):
         self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.OnRangeSelect)
         self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+        self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.OnLabelLeftDClick)
+
+    def OnLabelLeftDClick(self, evt):
+        evt.Skip()
+        if evt.GetRow() != -1:
+            return
+        if hasattr(self.GetTable().data, 'label_edited'):
+            self.edit = xLabelEditor(self, evt.GetCol())
 
     def OnMouseWheel(self, evt):
         evt.Skip()
