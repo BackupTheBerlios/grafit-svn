@@ -15,6 +15,8 @@ from giraffe.project import Project
 from giraffe.ui_graph_view import GraphView
 from giraffe.ui_worksheet_view import WorksheetView
 
+class Cancel(Exception):
+    pass
 
 class ToolPanel(wx.SashLayoutWindow):
     """The areas on the left, top and bottom of the window holding tabs."""
@@ -348,6 +350,10 @@ class Application(wx.App):
         s = wx.SplashScreen(wx.Image("/home/daniel/grafit/pixmaps/logo.png").ConvertToBitmap(),
                             wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 3000, None, -1)
         s.Show()
+
+        print >>sys.stderr, 'loading resources'
+        resource = wx.xrc.XmlResource('menu.xrc')
+
         print >>sys.stderr, 'creating main window'
 
         # frame ###################################################################################
@@ -378,10 +384,8 @@ class Application(wx.App):
                 tool = tb.AddSimpleTool(-1, bitmap, help_s, help_l)
                 tb.Bind(wx.EVT_TOOL, callback, id=tool.GetId())
             
-
-        print >>sys.stderr, 'creating menus'
         # menu bar ################################################################################
-        resource = wx.xrc.XmlResource('menu.xrc')
+        print >>sys.stderr, 'creating menus'
         frame.SetMenuBar(resource.LoadMenuBar('menubar'))
 
         menuitems = [
@@ -415,27 +419,63 @@ class Application(wx.App):
         ws.a = [1,2,3]
         ws.other = 2*ws.a
 
-    def on_project_open(self, evt):
-        dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
-                            defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.OPEN | wx.CHANGE_DIR)
+    def on_project_open(self, evt=None):
+        try:
+            if self.main.project.modified and self.ask_savechanges():
+                self.on_project_save()
 
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPaths()[0]
-            self.main.close_project()
-            self.main.open_project(Project(str(path)))
+            dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+                                defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.OPEN | wx.CHANGE_DIR)
+            if dlg.ShowModal() == wx.ID_OK:
+                path = dlg.GetPaths()[0]
+                self.main.close_project()
+                self.main.open_project(Project(str(path)))
+            dlg.Destroy()
+        except Cancel:
+            return
 
+    def ask_savechanges(self):
+        dlg = wx.MessageDialog(self.frame, 'Save <b>changes?</b>', 'Save?',
+                               wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+        result = dlg.ShowModal()
+        if result == wx.ID_YES:
+            return True
+        elif result == wx.ID_NO:
+            return False
+        elif result == wx.ID_CANCEL:
+            raise Cancel
         dlg.Destroy()
 
-    def on_project_saveas(self, evt):
-        pass
+    def on_project_saveas(self, evt=None):
+        try:
+            dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+                                defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.SAVE | wx.CHANGE_DIR)
+            if dlg.ShowModal() == wx.ID_OK:
+                path = dlg.GetPaths()[0]
+                self.main.project.saveto(path)
+                self.main.open_project(Project(str(path)))
+            dlg.Destroy()
+        except Cancel:
+            return
 
-    def on_project_save(self, evt):
-        pass
+    def on_project_save(self, evt=None):
+        try:
+            if self.main.project.filename is not None:
+                self.main.project.commit()
+            else:
+                self.on_project_saveas()
+        except Cancel:
+            return
 
-    def on_project_new(self, evt):
-        self.main.close_project()
-        self.main.open_project(Project())
-        
+    def on_project_new(self, evt=None):
+        try:
+            if self.main.project.modified and self.ask_savechanges():
+                self.on_project_save()
+            self.main.close_project()
+            self.main.open_project(Project())
+        except Cancel:
+            return
+            
     def on_new_graph(self, evt):
         g = self.main.project.new(Graph, 'graph1', self.main.project.here)
 

@@ -1,6 +1,6 @@
 import metakit
 
-from giraffe.commands import command_from_methods
+from giraffe.commands import command_from_methods, command_list
 from giraffe.signals import HasSignals
 from giraffe.item import Item, Folder, storage_desc, create_id
 
@@ -20,6 +20,10 @@ class Project(HasSignals):
             self.db = metakit.storage(self.filename, 1)
 
         self.cleanup()
+
+        self._modified = False
+
+        command_list.connect('added', self.on_command_added)
 
         self.items = {}
         self.deleted = {}
@@ -49,6 +53,9 @@ class Project(HasSignals):
                         self.items[row.id] = cls(self, location=(view, row, row.id))
                     else:
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
+
+    def on_command_added(self, command=None):
+        self.modified = True
 
     def cd(self, folder):
         # restore dictionary
@@ -195,6 +202,24 @@ class Project(HasSignals):
         else:
             raise NameError, "folder '%s' does not exist" % path
 
-    def save(self):
+    def commit(self):
         self.db.commit()
+        self.modified = False
 
+    def saveto(self, filename):
+        try:
+            f = open(filename, 'wb')
+            self.db.save(f)
+        finally:
+            f.close()
+            self.modified = False
+
+    def get_modified(self):
+        return self._modified
+    def set_modified(self, value):
+        if value and not self._modified:
+            self.emit('modified')
+        elif self._modified and not value:
+            self.emit('not-modified')
+        self._modified = value
+    modified = property(get_modified, set_modified)
