@@ -4,6 +4,7 @@ import time, random, socket, md5
 import metakit
 
 from giraffe.common.commands import Command, command_list
+from giraffe.common.signals import HasSignals
 from giraffe.base.item import Item, Folder, storage_desc
 #from giraffe.base.folder import Folder
 
@@ -28,7 +29,7 @@ def create_id(*args):
     return data
 
 
-class Project(object):
+class Project(HasSignals):
     def __init__(self, filename=None):
         self.filename = filename
 

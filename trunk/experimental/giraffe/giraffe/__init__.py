@@ -1,3 +1,3 @@
 from giraffe.base.project import Project
-from giraffe.base.folder import Folder
+from giraffe.base.item import Folder
 from giraffe.worksheet import Worksheet
