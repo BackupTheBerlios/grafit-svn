@@ -8,13 +8,29 @@ class Item(common.signals.HasSignals):
             parent.add_item(self)
 
     def to_element(self):
+        """
+        Convert the item to an Element. Must be overridden
+        in subclasses.
+        """
         raise NotImplementedError
 
-    def _from_element(cls, element):
+    def from_element(cls, element):
+        """
+        Class method. Creates an object given its representation
+        as an Element. Must be overridden in subclasses.
+        """
+        raise NotImplementedError
+    from_element = classmethod(from_element)
+
+    def load(element):
+        """
+        Static method. Item.load(element) creates an Item of the
+        corresponding subclass.
+        """
         lookup = dict([(i._element_name, i) for i in Item.__subclasses__() if hasattr(i, '_element_name')])
-        if hasattr(cls, '_element_name'):
-            print cls._element_name
-    from_element = classmethod(_from_element)
+        print lookup['Folder']
+        return lookup['Folder'].from_element(element)
+    load = staticmethod(load)
 
     def _set_name(self, name):
         if self.parent is not None and not self.parent._is_name_ok(name):
@@ -32,6 +48,11 @@ class Folder(Item):
     def __init__(self, name, parent):
         Item.__init__(self, name, parent)
         self.items = []
+
+    def from_element(cls, element):
+        print 'fe_called'
+        return Folder('new', None)
+    from_element = classmethod(from_element)
 
     def add_item(self, item):
         """
@@ -91,4 +112,5 @@ if __name__ == '__main__':
     print f.desc()
     print f3.objects
     print f.subfolders
-    f.from_element(None)
+    print f.load(None)
+    print f3.load(None)
