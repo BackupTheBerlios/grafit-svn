@@ -139,8 +139,8 @@ class Project(HasSignals):
 
     # Shortcuts for creating and removing folders
         
-    def mkfolder(self, path):
-        self.new(Folder, path)
+    def mkfolder(self, path, parent=None):
+        self.new(Folder, path, parent)
 
     def rmfolder(self, path):
         if path in self.this:

@@ -1,6 +1,8 @@
 import sys
 import time, random, socket, md5
 
+from giraffe.base.signals import HasSignals
+
 # by (Carl Free Jr. http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761)
 def create_id(*args):
     """Generates a universally unique ID.
@@ -72,7 +74,7 @@ class Item(object):
         self.project.emit('add-item', self)
 
 
-class Folder(Item):
+class Folder(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None, _isroot=False):
         self._isroot = _isroot
         Item.__init__(self, project, name, parent, location)
@@ -102,6 +104,10 @@ class Folder(Item):
 
     def __repr__(self):
         return '<Folder %s>' % self.name
+
+    def get_up(self):
+        return self.parent
+    up = property(get_up)
 
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')

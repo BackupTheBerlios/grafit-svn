@@ -16,6 +16,8 @@ print >>sys.stderr, 'g',
 from giraffe.worksheet import Worksheet
 print >>sys.stderr, 'w',
 
+from giraffe.base.signals import HasSignals
+
 from giraffe.ui.graph_view import GraphView
 from giraffe.ui.worksheet_view import WorksheetView
 print >>sys.stderr, 'v',
@@ -36,10 +38,14 @@ class ToolPanel(wx.SashLayoutWindow):
         else:
             self.SetDefaultSize((12, 1000))
 
-        data = { 'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, wx.SASH_RIGHT, wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
-                 'right' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_RIGHT, wx.SASH_LEFT, wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL), 
-                 'top' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_TOP, wx.SASH_BOTTOM, wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL), 
-                 'bottom' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_BOTTOM, wx.SASH_TOP, wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL) }
+        data = { 'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, 
+                           wx.SASH_RIGHT, wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
+                 'right' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_RIGHT, 
+                            wx.SASH_LEFT, wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL), 
+                 'top' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_TOP, 
+                          wx.SASH_BOTTOM, wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL), 
+                 'bottom' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_BOTTOM, 
+                             wx.SASH_TOP, wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL) }
 
         d_orientation, d_alignment, d_showsash, d_btnbox, d_mainbox, d_toolbar = data[position]
 
@@ -67,7 +73,7 @@ class ToolPanel(wx.SashLayoutWindow):
         self.contents = []
         self.buttons = []
         self.last_width = 180
-        self.last_height = 180
+        self.last_height = 120
 
     def add_page(self, text, pixmap, widget):
         bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
@@ -155,14 +161,50 @@ class ToolPanel(wx.SashLayoutWindow):
                 self.close(id)
         return new.instancemethod(button_clicked_callback, self, self.__class__)
 
+class ProjectExplorer(wx.Panel, HasSignals):
+    def __init__(self, parent, project):
+        wx.Panel.__init__(self, parent, -1)
+        self.project = project
 
-class ProjectTree(wx.TreeCtrl):
-    def __init__(self, parent, project, mainwin): 
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # buttons
+#        toolbar = wx.ToolBar(explorer, -1)
+#
+#        bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
+#        toolbar.AddSimpleTool(10, bmp, "New")
+#        bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
+#        toolbar.AddSimpleTool(10, bmp, "Delete")
+#        bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
+#        toolbar.AddSimpleTool(10, bmp, "Up")
+#
+#        sizer.Add(toolbar, 0, wx.EXPAND)
+
+        splitter = wx.SplitterWindow(self)
+
+        # tree control
+        self.project_tree = ProjectTree(splitter, self.project)
+        self.project_tree.connect('activate-object', self.on_activate)
+
+        self.current_dir = wx.ListCtrl(splitter, -1, 
+                   style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_EDIT_LABELS|wx.LC_NO_HEADER|wx.LC_HRULES|wx.LC_SINGLE_SEL)
+
+        splitter.SplitHorizontally(self.project_tree, self.current_dir)
+        sizer.Add(splitter, 1, wx.EXPAND)
+
+        self.SetSizer(sizer)
+        sizer.SetSizeHints(self)
+
+    def on_activate(self, item):
+        self.emit('activate-object', item)
+
+
+class ProjectTree(wx.TreeCtrl, HasSignals):
+    def __init__(self, parent, project): 
         wx.TreeCtrl.__init__(self, parent, -1, 
-                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.TR_ROW_LINES)
+                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.TR_ROW_LINES|wx.SUNKEN_BORDER)
         self.SetIndent(10)
         self.project = project
-        self.mainwin = mainwin
         self.project.connect('add-item', self.on_add_item)
 
         isz = (16,16)
@@ -184,6 +226,7 @@ class ProjectTree(wx.TreeCtrl):
         self.current_item = None
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
 
     def on_add_item(self, item):
         self.items[item.id] = self.AppendItem(self.root, item.name)
@@ -191,11 +234,16 @@ class ProjectTree(wx.TreeCtrl):
         item.connect('rename', self.on_rename)
         self.Expand(self.root)
 
+    def on_sel_changed(self, event):
+        item = event.GetItem()
+        print item
+
     def on_double_click(self, event):
         item, flags = self.HitTest(event.GetPosition())
         for k, v in self.items.iteritems():
             if v == item:
-                self.mainwin.show_object(self.project.items[k])
+                self.emit('activate-object', self.project.items[k])
+#                self.mainwin.show_object(self.project.items[k])
                 if self.current_item != v:
                     if self.current_item is not None:
                         self.SetItemBold(self.current_item, False)
@@ -290,40 +338,20 @@ class MainWindow(wx.Panel):
         self.script_window.prompt()
         self.script_window.zoom(-1)
 
+        # bottom panel
         self.bottom_panel.add_page('Script', 'console.png', self.script_window)
-
+ 
         self.right_panel = ToolPanel(self, 'right')
-    
-        # the left panel
         self.left_panel = ToolPanel(self, 'left')
 
-
-        # project explorer panel
-
-        explorer = wx.Panel(self.left_panel.panel, -1)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # buttons
-        toolbar = wx.ToolBar(explorer, -1)
-
-        bmp = wx.Image('../data/images/folder_new.png').ConvertToBitmap()
-        toolbar.AddTool(10, bmp, bmp,  "New")
-        bmp = wx.Image('../data/images/remove.png').ConvertToBitmap()
-        toolbar.AddTool(10, bmp, bmp, "Delete")
-
-        sizer.Add(toolbar, 0, wx.EXPAND)
-
-        # tree control
-        self.project_tree = ProjectTree(explorer, self.project, self)
-        sizer.Add(self.project_tree, 1, wx.EXPAND)
-
-        explorer.SetSizer(sizer)
-        sizer.SetSizeHints(explorer)
-
-
+        # the left panel
+        # project explorer
+        explorer = ProjectExplorer(self.left_panel.panel, self.project)
+        explorer.connect('activate-object', self.show_object)
         self.left_panel.add_page('Project', 'closed-folder.png', explorer)
 
-        # will occupy the space not used by the Layout Algorithm
+   
+         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
 
         self.main_box = wx.BoxSizer(wx.HORIZONTAL)
