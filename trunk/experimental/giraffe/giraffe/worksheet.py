@@ -62,8 +62,11 @@ class Worksheet(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         self.__attr = False
 
+        if parent is None:
+            parent = project.top
+
         if name is None:
-            name = self.create_name()
+            name = self.create_name(parent)
 
         if not self.check_name(name, parent):
             raise NameError
@@ -107,9 +110,11 @@ class Worksheet(Item, HasSignals):
             return False
         return True
 
-#    def create_name(self, parent):
-#        for 
-#        name = 
+    def create_name(self, parent):
+        for i in xrange(sys.maxint):
+            name = 'data'+str(i)
+            if self.check_name(name, parent):
+                return name
 
     def column_index(self, name):
         return self.data.columns.select(*[{'name': n} for n in self.column_names]).find(name=name)

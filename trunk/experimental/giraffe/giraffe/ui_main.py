@@ -241,7 +241,7 @@ class Application(wx.App):
         return True
 
     def on_new_worksheet(self, evt):
-        ws = self.main.project.new(Worksheet, 'test', self.main.project.here)
+        ws = self.main.project.new(Worksheet, None, self.main.project.here)
         ws.a = [1,2,3]
         ws.other = 2*ws.a
 
