@@ -82,7 +82,7 @@ cdef extern from "GL/gl.h":
     void glEnd()
     void glCallList(int id)
     void glTranslated(double x, double y, double z)
-    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES
+    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES, GL_LINE_STRIP
 
 
 def makedata(_numarray sx, _numarray sy,  
@@ -169,16 +169,28 @@ def makedata(_numarray sx, _numarray sy,
             glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
             glVertex3d(x-xmin-dx/2, y-ymin+dy/2, 0)
             glVertex3d(x-xmin+dx/2, y-ymin, 0)
-#            else:
-#            glVertex3d(x-xmin, y-ymin, 0.)
-#            glVertex3d(x-xmin+sin(i*2*pi/m)*dx, y-ymin+cos(i*2*pi/m)*dy, 0.)
-#            glVertex3d(x-xmin+sin((i+1)*2*pi/m)*dx, y-ymin+cos((i+1)*2*pi/m)*dy, 0.)
-#                vertices.append((0,0))
-#                vertices.append((sin(i*2*pi/n)*dx, cos(i*2*pi/n)*dy))
-#                vertices.append((sin((i+1)*2*pi/n)*dx, cos((i+1)*2*pi/n)*dy))
-
 
 #        for v in vertices:
 #            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)
+    glEnd()
+
+        
+    glBegin(GL_LINE_STRIP)
+    for n from 0 <= n < l:
+        x = xd[n]
+        y = yd[n]
+        # skip if outside limits
+        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
+            continue
+
+        # skip if we would land within 1/1000th of the graph from the previous point
+        xbucket_s = xbucket
+        ybucket_s = ybucket
+        xbucket = <int>((x-xmin)/xinterval)
+        ybucket = <int>((y-ymin)/yinterval)
+        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
+            continue
+        glVertex3d(x-xmin, y-ymin, 0)
+
     glEnd()
     return 1

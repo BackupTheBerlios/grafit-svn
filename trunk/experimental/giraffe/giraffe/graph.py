@@ -88,8 +88,8 @@ class Dataset(HasSignals):
         glCallList(self.listid)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
-        dx =  res * (xmax-xmin)/width
-        dy =  res * (ymax-ymin)/height
+        dx =  res * (xmax-xmin)/width * 2
+        dy =  res * (ymax-ymin)/height * 2
 
         glNewList(self.listid, GL_COMPILE)
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
