@@ -64,13 +64,11 @@ class Application(object):
     mainwin = property(get_mainwin)
 
     def run(self):
-        print >>sys.stderr, 'a'
         return self._app.MainLoop()
-        print >>sys.stderr, 'b'
 
 class Window(Widget):
-    def __init__(self, **kwds):
-        self._widget = wx.Frame(None, -1,  'grafit', pos=(50,50), size=(200,100),
+    def __init__(self, position=None, size=None, **kwds):
+        self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
         Widget.__init__(self, None, **kwds)
 
@@ -82,13 +80,6 @@ class Button(Widget):
 
     def on_clicked(self, evt):
         self.emit('clicked')
-
-class ListData(object):
-    def get(self, row, column):
-        return 'ass'
-
-    def __len__(self):
-        return 3
 
 class ListModel(HasSignals):
     def __init__(self):
@@ -122,9 +113,8 @@ class _CustomListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def OnGetItemText(self, item, col):
         return self.lst.model.get(item, self.lst.columns[col])
 
-
 class List(Widget):
-    def __init__(self, parent, model=None, columns=None, headers=False, editable=True, **kwds):
+    def __init__(self, parent, model=None, columns=None, headers=False, editable=False, **kwds):
         flags = wx.LC_REPORT|wx.LC_VIRTUAL|wx.BORDER_SUNKEN
         if not headers:
             flags |= wx.LC_NO_HEADER
