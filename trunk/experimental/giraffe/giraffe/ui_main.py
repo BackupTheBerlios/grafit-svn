@@ -367,7 +367,7 @@ class MainPanel(wx.Panel):
 
     def close_project(self):
         for panel in (self.script_window, self.explorer, self.graph_data_panel):
-            panel.disconnect_project(self.project)
+            panel.disconnect_project()
         self.project.disconnect('remove-item', self.on_project_remove_item)
 
     def on_project_remove_item(self, obj):

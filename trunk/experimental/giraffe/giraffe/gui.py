@@ -78,8 +78,14 @@ class _CustomListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
 
 
 class List(Widget):
-    def __init__(self, parent, model=None, columns=None, **kwds):
-        self._widget = _CustomListCtrl(self, parent._widget, -1, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_NO_HEADER)
+    def __init__(self, parent, model=None, columns=None, headers=False, editable=True, **kwds):
+        flags = wx.LC_REPORT|wx.LC_VIRTUAL
+        if not headers:
+            flags |= wx.LC_NO_HEADER
+        if editable:
+            flags |= wx.LC_EDIT_LABELS
+
+        self._widget = _CustomListCtrl(self, parent._widget, -1, style=flags)
         Widget.__init__(self, parent, **kwds)
 
         if model is None:
@@ -102,7 +108,10 @@ class List(Widget):
     columns = property(get_columns, set_columns)
     
     def set_model(self, model):
+        if model is None:
+            model = ListModel()
         self._model = model
+        self._model.connect('modified', self.update)
         self.update()
     def get_model(self):
         return self._model

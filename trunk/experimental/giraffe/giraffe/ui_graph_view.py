@@ -7,6 +7,7 @@ import wx
 import wx.glcanvas
 
 from giraffe import Worksheet, Folder
+from giraffe.signals import HasSignals
 
 #from Numeric import *
 
@@ -94,6 +95,25 @@ class GraphView(wx.glcanvas.GLCanvas):
 
 from giraffe import gui
 
+class FolderListModel(HasSignals):
+    def __init__(self, folder):
+        self.folder = folder
+        self.update()
+        self.folder.project.connect('add-item', self.update)
+        self.folder.project.connect('remove-item', self.update)
+
+    def update(self, item=None):
+        self.contents = [o for o in self.folder.contents() 
+                           if isinstance(o, (Folder, Worksheet))]
+        self.emit('modified')
+
+    # ListModel protocol
+    def get(self, row, column):
+        return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
+
+    def __len__(self):
+        return len(self.contents)
+
 class GraphDataPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -151,13 +171,13 @@ class GraphDataPanel(wx.Panel):
 
     def set_current_folder(self, folder):
         self.folder = folder
-        self.worksheet_list.ClearAll()
-
-        for item in folder.contents():
-            if isinstance(item, Worksheet):
-                self.worksheet_list.InsertStringItem(0, item.name)
-            elif isinstance(item, Folder):
-                self.worksheet_list.InsertStringItem(0, item.name+'/')
+#        self.worksheet_list.ClearAll()
+#
+#        for item in folder.contents():
+#            if isinstance(item, Worksheet):
+#                self.worksheet_list.InsertStringItem(0, item.name)
+#            elif isinstance(item, Folder):
+#                self.worksheet_list.InsertStringItem(0, item.name+'/')
 
     def on_add(self):
         print '1'
@@ -167,17 +187,16 @@ class GraphDataPanel(wx.Panel):
             self.set_current_folder(self.folder)
 
     def connect_project(self, project):
-        return
         self.project = project
         self.project.connect('add-item', self.on_project_changed)
         self.project.connect('remove-item', self.on_project_changed)
+        self.worksheet_list.model = FolderListModel(self.project.top)
 
     def disconnect_project(self):
-        return
-        self.project = None
         self.project.disconnect('add-item', self.on_project_changed)
         self.project.disconnect('remove-item', self.on_project_changed)
+        self.worksheet_list.model = None
+        self.project = None
 
     def on_open(self):
-        return
         self.set_current_folder(self.project.here)

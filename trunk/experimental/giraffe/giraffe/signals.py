@@ -93,9 +93,12 @@ class HasSignals(object):
             raise NameError, "TODO"
         if signal not in self._signals:
             raise NameError, "TODO"
-        if slot not in self._signals[signal]:
-            raise NameError, "TODO"
-        self._signals[signal].remove(slot)
+        try:
+            if slot not in self._signals[signal]:
+                raise NameError, "TODO"
+            self._signals[signal].remove(slot)
+        except ReferenceError:
+            pass
 
     def emit(self, signal, *args, **kwds):
         """
