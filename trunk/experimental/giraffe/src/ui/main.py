@@ -4,10 +4,27 @@ sys.path.append('/home/daniel/giraffe')
 import os
 import wx
 import wx.py
+import wx.lib.buttons
 
 from giraffe.ui.shapes import PlotCanvas, Plot
 from giraffe.common import identity
 from giraffe.worksheet import Worksheet
+
+
+class Splash(wx.SplashScreen):
+    def __init__(self):
+        bmp = wx.Image("/home/daniel/grafit/pixmaps/logo.png").ConvertToBitmap()
+        wx.SplashScreen.__init__(self, bmp,
+                                 wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT,
+                                 3000, None, -1)
+#        self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+#    def OnClose(self, evt):
+#        self.Hide()
+#        frame = wxPythonDemo(None, "wxPython: (A Demonstration)")
+#        frame.Show()
+#        evt.Skip()  # Make sure the default handler runs too...
+
 
 class ProjectTree(wx.TreeCtrl):
     def __init__(self, parent, project): 
@@ -33,6 +50,8 @@ class Application(wx.App):
 
     def OnInit(self):
         wx.Log_SetActiveTarget(wx.LogStderr())
+        s = Splash()
+        s.Show()
 
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
@@ -78,7 +97,6 @@ class MainWindow(wx.Panel):
     ID_WINDOW_LEFT2  = 5102
     ID_WINDOW_BOTTOM = 5103
 
-
     def __init__(self, parent, project):
         wx.Panel.__init__(self, parent, -1)
         self.project = project
@@ -94,7 +112,8 @@ class MainWindow(wx.Panel):
         self.bottomWindow = win
 
         panel = wx.Panel(self.bottomWindow, -1)
-        self.script_window = wx.py.shell.Shell(panel, -1)
+        self.script_window = wx.py.shell.Shell(panel, -1, introText='Welcome to giraffe')
+        self.script_window.zoom(-2)
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(self.script_window, 1, wx.EXPAND)
         panel.SetAutoLayout(True)
@@ -122,13 +141,26 @@ class MainWindow(wx.Panel):
         win = wx.Panel(self.leftWindow1, -1)
 
         self.project_tree = ProjectTree(self, self.project)
+        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
 
-        btn = wx.ToggleButton(win, 10011, "He", style=wx.BU_EXACTFIT)
+#        btn = wx.ToggleButton(win, 10011, "He", style=wx.BU_EXACTFIT)
+        btn = wx.lib.buttons.GenBitmapToggleButton(win, 10011, bmp, style=wx.BU_EXACTFIT)
+        btn.SetBezelWidth(1)
         self.btn = btn
-        self.Bind(wx.EVT_TOGGLEBUTTON, self.button_clicked, btn)
+        self.Bind(wx.EVT_BUTTON, self.button_clicked, btn)
+        btn.SetBestSize()
+
+        btn2 = wx.lib.buttons.GenBitmapToggleButton(win, 10014, bmp, style=wx.BU_EXACTFIT)
+        self.Bind(wx.EVT_TOGGLEBUTTON, self.button_clicked, btn2)
+        btn2.SetBestSize()
+        btn2.SetBezelWidth(1)
+
+        btnbox = wx.BoxSizer(wx.VERTICAL)
+        btnbox.Add(btn, 0)
+        btnbox.Add(btn2, 0)
 
         box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(btn, 0)
+        box.Add(btnbox, 0)
         box.Add(self.project_tree, 1, wx.EXPAND)
 
 #        box.SetSizeHints(win)
@@ -152,7 +184,7 @@ class MainWindow(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
     def button_clicked(self, event):
-        if event.IsChecked():
+        if event.GetIsDown():
             self.project_tree.Show()
             self.leftWindow1.SetDefaultSize((300, -1))
         else:
