@@ -104,23 +104,15 @@ class CompositeCommand(Command):
 class CommandList(signals.HasSignals):
     """
     A command list, implementing undo/redo.
-
-    Commands are added to the list using add(), and removed using pop().
-    The normal way of adding commands, however, is Command.register()
-    You move forwards and backwards in the list using undo() and redo().
-    Composite commands are used with begin_composite() and end_composite().
     """
 
     def __init__(self):
         self.commands = []
         self.composite =  None
-        self.locked = 0
+        self.enabled = True
 
     def add(self, command):
-        """
-        Add a command to the command list
-        """
-        if self.locked != 0:
+        if not self.enabled:
             return 
 
         if self.composite is not None:
@@ -135,94 +127,63 @@ class CommandList(signals.HasSignals):
             self.emit('added', command=command)
 
     def pop(self):
-        """
-        Remove the last command added to the list
-        """
-        if self.locked != 0:
+        if not self.enabled:
             return
         com = self.commands.pop()
         self.emit('removed', command=com)
-        return com
 
     def begin_composite(self, composite):
-        """
-        Begin a composite command. All commands added to the list
-        until end_composite() is called will be added to `composite`
-        instead of the list itself.
-        """
-        if self.locked != 0:
+        if not self.enabled:
             return 
         self.composite = composite 
 
     def end_composite(self):
-        """
-        End a composite command.  The composite command
-        is added to the list.
-        """
-        if self.locked != 0:
+        if not self.enabled:
             return 
         ret = self.composite
         self.composite = None
-        self.add(self.composite)
         return ret
 
-    def lock(self):
-        """
-        Disable undo/redo from the list. 
-        """
-        self.locked += 1
-        self.emit('locked')
+    def disable(self):
+        self.enabled = False
+        self.emit('disabled')
 
-    def unlock(self):
-        """
-        Enable undo/redo from the list. 
-        """
-        if self.locked == 0:
-            raise IndexError, "TODO"
-        self.locked -= 1
-        self.emit('unlocked')
+    def enable(self):
+        self.enabled = True
+        self.emit('enabled')
 
     def clear(self):
-        """
-        Clear the list.
-        """
         while self.commands != []:
             self.pop()
 
-    def undo(self):
-        """
-        Undo a a single command from the list.
-        Returns True if a command was undone, False if there were no commands to undo.
-        """
-        for com in self.commands[::-1]:
-            if com.done:
-                break
-        if com and com.done:
-            self.lock()
-            try:
-                com.undo()
-            finally:
-                self.unlock()
-            return True
-        else:
-            return False
-
     def redo(self):
-        """
-        Redo a a single command from the list.
-        Returns True if a command was done, False if there were no commands to do.
-        """
         for com in self.commands:
             if not com.done:
                 break
         if com and not com.done:
-            self.lock()
+            e = self.enabled
+            self.disable()
             try:
                 com.do()
             finally:
-                self.unlock()
+                if e:
+                    self.enable()
             return True
         else:
             return False
 
-
+    def undo(self):
+        for com in self.commands[::-1]:
+            if com.done:
+                break
+        if com and com.done:
+            e = self.enabled
+            self.disable()
+            try:
+                com.undo()
+            finally:
+                if e:
+                    self.enable()
+            return True
+        else:
+            return False
