@@ -104,11 +104,11 @@ class WorksheetView(wx.Panel):
         toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked)
 
         bmp = wx.Image('../data/images/stock_insert-columns.png').ConvertToBitmap()
-        toolbar.new_column = toolbar.AddSimpleTool(-1, bmp, "New").GetId()
+        toolbar.new_column = toolbar.AddSimpleTool(-1, bmp, "New column").GetId()
         bmp = wx.Image('../data/images/stock_left.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(-1, bmp, "Delete")
+        toolbar.AddSimpleTool(-1, bmp, "Left")
         bmp = wx.Image('../data/images/stock_right.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(-1, bmp, "Up")
+        toolbar.AddSimpleTool(-1, bmp, "Right")
 
         return toolbar
 
@@ -136,7 +136,6 @@ class WorksheetGrid(grid.Grid):
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
 
     def OnMouseWheel(self, evt):
-        print evt
         evt.Skip()
 
     def OnLabelLeftClick(self, evt):
@@ -148,9 +147,6 @@ class WorksheetGrid(grid.Grid):
 #        if evt.Selecting():
 #            print >>sys.stderr, (evt.GetTopLeftCoords(), evt.GetBottomRightCoords())
         evt.Skip()
-
-    def SelectCol(self, col, addToSelected):
-        print col, addToSelected
 
     def OnKeyDown(self, evt):
         if evt.KeyCode() != wx.WXK_RETURN:
@@ -169,7 +165,3 @@ class WorksheetGrid(grid.Grid):
 
     def OnRightDown(self, event):
         print "hello"
-
-    def Refresh(*args):
-        print >>sys.stderr, args
-        return grid.Grid.Refresh(*args)

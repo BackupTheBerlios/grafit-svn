@@ -4,6 +4,10 @@ import doctest
 import os
 import sys
 
+sys.path.append('..')
+sys.path.append('.')
+sys.path.append('lib')
+
 red = '\x1b[1;31m'
 green = '\x1b[1;32m'
 default = '\x1b[0m'

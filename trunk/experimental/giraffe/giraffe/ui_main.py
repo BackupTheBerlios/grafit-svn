@@ -311,16 +311,21 @@ class Application(wx.App):
         buttons = [
             ('stock_undo', 'Undo', 'Undo the last action', self.on_undo),
             ('stock_redo', 'Redo', 'Redo the last action that was undone', self.on_redo),
+            None,
             ('worksheet', 'New worksheet', 'Create a new worksheet', self.on_new_worksheet),
             ('graph', 'New graph', 'Create a new graph', self.on_new_graph),
         ] 
 
         tb = frame.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
-        for image, help_s, help_l, callback in buttons:
-            bitmap = wx.Image('/home/daniel/giraffe/data/images/'+image+'.png').ConvertToBitmap()
-            tool = tb.AddSimpleTool(-1, bitmap, help_s, help_l)
-            tb.Bind(wx.EVT_TOOL, callback, id=tool.GetId())
-        
+        for data in buttons:
+            if data is None:
+                tb.AddSeparator()
+            else:
+                image, help_s, help_l, callback = data
+                bitmap = wx.Image('/home/daniel/giraffe/data/images/'+image+'.png').ConvertToBitmap()
+                tool = tb.AddSimpleTool(-1, bitmap, help_s, help_l)
+                tb.Bind(wx.EVT_TOOL, callback, id=tool.GetId())
+            
 
         # menu bar ################################################################################
         resource = wx.xrc.XmlResource('menu.xrc')

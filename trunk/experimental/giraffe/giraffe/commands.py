@@ -156,6 +156,18 @@ class CommandList(signals.HasSignals):
         else:
             raise NoMoreCommandsError
 
+    def can_undo(self):
+        for com in self.commands[::-1]:
+            if com.done:
+                return True
+        return False
+
+    def can_redo(self):
+        for fom in self.commands:
+            if not com.done:
+                return True
+        return False
+
     def undo(self):
         """Undo the last command that was done."""
         com = False
