@@ -78,7 +78,7 @@ class ProjectExplorer(Box):
         self.project.cd(item.folder)
 
     def on_list_item_activated(self, item):
-        print self.list.model[item]
+        self.emit('item-activated', self.list.model[item])
 
     def connect_project(self, project):
         self.project = project
@@ -124,6 +124,7 @@ class MainWindow(Window):
                                   page_label='console', page_pixmap='console.png')
         self.explorer = ProjectExplorer(self.main.left_panel,
                                         page_label='explorer', page_pixmap='stock_navigator.png')
+        self.explorer.connect('item-activated', self.on_item_activated)
 
         self.project = Project()
         self.project.new(Folder, 'arse')
@@ -137,9 +138,7 @@ class MainWindow(Window):
         self.project.new(Folder, 'grse', f)
 
 
-        book = Notebook(self.main)
-        WorksheetView(book, self.project.new(Worksheet, 'a'), page_label='koali')
-        GraphView(book, self.project.new(Graph, 'agraph'), page_label='graph')
+        self.book = Notebook(self.main)
 
         menubar = Menubar(self)
         actions = {
@@ -176,6 +175,12 @@ class MainWindow(Window):
             panel.connect_project(self.project)
 #        self.project.connect('remove-item', self.on_project_remove_item)
 #        command_list.clear()
+
+    def on_item_activated(self, item):
+        if isinstance(item, Graph):
+            GraphView(self.book, item, page_label=item.name)
+        elif isinstance(item, Worksheet):
+            WorksheetView(self.book, item, page_label=item.name)
 
     def close_project(self):
         for panel in (self.shell, self.explorer):

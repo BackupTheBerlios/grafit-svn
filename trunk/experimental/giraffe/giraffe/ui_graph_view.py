@@ -24,7 +24,7 @@ class GraphView(gui.Box):
 
         self.closebar = gui.Toolbar(tbbox, stretch=0)
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
-                                       self.on_new_column, 'remove.png'))
+                                       self.on_close, 'remove.png'))
 
         self.box = gui.Box(self, 'horizontal')
         self.glwidget = gui.OpenGLWidget(self.box)
@@ -44,6 +44,9 @@ class GraphView(gui.Box):
 
     def on_new_column(self):
         pass
+
+    def on_close(self):
+        self.parent.delete(self)
 
 class FolderListModel(HasSignals):
     def __init__(self, folder):

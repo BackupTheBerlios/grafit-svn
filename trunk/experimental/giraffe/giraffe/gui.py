@@ -43,6 +43,7 @@ class Application(object):
 
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
+        self.parent = parent
         if hasattr(parent, '_add'):
             parent._add(self, **kwds)
 
@@ -208,11 +209,14 @@ class List(Widget):
         selection = []
 
         item = -1
-        while True:
-            item = self._widget.GetNextItem(item, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
-            if item == -1:
-                break
-            selection.append(item)
+        try:
+            while True:
+                item = self._widget.GetNextItem(item, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+                if item == -1:
+                    break
+                selection.append(item)
+        except wx.PyDeadObjectError:
+            return
 
         if selection != self.selection:
             self.selection = selection
@@ -713,10 +717,16 @@ class Notebook(Widget):
         self.il = wx.ImageList(16, 16)
         self.wsidx = self.il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
         self._widget.SetImageList(self.il)
+        self.pages = []
 
     def _add(self, widget, page_label):
         self._widget.AddPage(widget._widget, page_label)
         self._widget.SetPageImage(self._widget.GetPageCount()-1, self.wsidx)
+        self.pages.append(widget)
+
+    def delete(self, widget):
+        self._widget.DeletePage(self.pages.index(widget))
+        self.pages.remove(widget)
 
 #    def on_resized(self, event):
 #        self.ass.SetPosition((event.GetSize()[0] - 25, 0))
