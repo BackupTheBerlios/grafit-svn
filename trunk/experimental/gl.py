@@ -1,16 +1,12 @@
-#import psyco
-#psyco.full()
 import sys
 import time
-import math
-import ftgl
-from itertools import izip
+
 from qt import *
-from qtcanvas import *
 from qtgl import *
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from OpenGL.GLUT import *
+import ftgl
 from Numeric import *
 from p import makedata
 
@@ -26,60 +22,6 @@ class Direction:
 
 class Coordinates:
     Pixel, Data, Physical = range(3)
-
-# Units
-# -----
-# cm
-# pixels
-
-
-
-# Coordinate systems
-# ------------------
-# cm (centimeters, origin is bottom left corner)
-# mouse (pixels, origin is top left corner)
-# data (x and y, log if nescessary, origin is 0, 0)
-
-
-"""
-GraphWidget
--------------
-
-to:
----
-clear()
-render_data(x, y, range, style)
-render_line(x1, y1, x2, y2)
-update()
-rubberband_begin(x0, y0)
-rubberband_continue(x, y)
-rubberband_end(x, y)
-rangemarker_begin(x0, direction)
-rangemarker_continue(x)
-rangemarker_end(x, y)
-coords(coor)
-transform(x, y, coor_f, coor_t)
-
-from:
------
-mouse_event(event_type, x, y, clicks, button, keys)
-key_event(key)
-"""
-
-##############################################################################
-
-def output(text, size):
-    glPushMatrix()
-    glScale(1./size, 1./size, 1./size)
-
-    w = 0.
-    for char in text:
-        w += glutStrokeWidth(GLUT_STROKE_ROMAN,ord(char))
-    glTranslatef(-w/2., 0., 0.)
-    for c in text:
-        glutStrokeCharacter(GLUT_STROKE_ROMAN,ord(c))
-    glPopMatrix()
-
 
 def tics(fr, to):
     # 5-8 major tics
@@ -114,7 +56,8 @@ def tics(fr, to):
 class GLGraphWidget(QGLWidget):
     def __init__(self,graph,parent=None, name=None):
         fmt = QGLFormat()
-#        fmt.setDoubleBuffer(False)
+        fmt.setDepth(False)
+        fmt.setAlpha(True)
         QGLWidget.__init__(self, fmt, parent, name)
 
         # mouse rubberbanding coordinates
@@ -133,20 +76,20 @@ class GLGraphWidget(QGLWidget):
         self.y = {}
         self.range = {}
 
-        self.x[0] = arange(10000.)/1000
+        self.x[0] = arange(1000.)/1000
         self.y[0] = sin(self.x[0])
 
-        self.x[1] = arange(10000.)/10000
+        self.x[1] = arange(1000.)/1000
         self.y[1] = cos(self.x[1])
 
-        self.x[2] = arange(10000.)/10000
+        self.x[2] = arange(1000.)/1000
         self.y[2] = tan(self.x[2])
 
 
         self.colors = {}
-        self.colors[0] = (0.0, 0.1, 0.6)
-        self.colors[1] = (0.4, 0.0, 0.1)
-        self.colors[2] = (0.3, 0.4, 0.7)
+        self.colors[0] = (0.0, 0.1, 0.6, 0.8)
+        self.colors[1] = (0.4, 0.0, 0.1, 0.8)
+        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 
         self.set_range(0.0, 100.5)
         self.autoscale()
@@ -157,6 +100,15 @@ class GLGraphWidget(QGLWidget):
         glPushMatrix()
         glTranslatef(-1., -1., 0.)         # starting at bottom left corner
         glScalef(self.xscale_pixel, self.yscale_pixel, 0.)
+
+        glColor3f(1.0,1.0,1.0)      # black
+
+        glBegin(GL_QUADS)
+        glVertex3f(self.marginl, self.marginb, 0.0)
+        glVertex3f(self.w - self.marginr, self.marginb, 0.0)
+        glVertex3f(self.w - self.marginr, self.h - self.margint, 0.0)
+        glVertex3f(self.marginl, self.h - self.margint, 0.0)
+        glEnd()
 
         glColor3f(0.0,0.0,0.0)      # black
 
@@ -251,7 +203,7 @@ class GLGraphWidget(QGLWidget):
         glLoadIdentity()
 
         f = ftgl.FTGLPixmapFont('/usr/share/fonts/truetype/Times_New_Roman.ttf')
-        f.FaceSize(4 * int(self.res))
+        f.FaceSize(int(2.3 * self.res))
         for x in tics(self.xmin, self.xmax):
             glPushMatrix()
             glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
@@ -406,6 +358,13 @@ class GLGraphWidget(QGLWidget):
         self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
 
     def initializeGL(self):
+
+
+        glEnable (GL_BLEND)
+
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+
         glClearColor(252./256, 246./256, 238./256, 1.0)
         glDisable(GL_DEPTH_TEST)
         glMatrixMode (GL_PROJECTION)
@@ -420,18 +379,18 @@ class GLGraphWidget(QGLWidget):
 
 
     def make_data_list(self):
-#        t = time.time()
+        t = time.time()
 
         dx =  self.res * (self.xmax-self.xmin)/self.size().width()
         dy =  self.res * (self.ymax-self.ymin)/self.size().height()
 
         glNewList(1, GL_COMPILE)
         for k in self.x.keys():
-            glColor3f(*self.colors[k])
+            glColor4f(*self.colors[k])
             makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
         glEndList()
 
-#        print (time.time()-t), "seconds"
+        print (time.time()-t), "seconds"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
