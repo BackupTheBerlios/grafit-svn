@@ -32,9 +32,9 @@ class Column(MkArray, HasSignals):
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
 
     def set_name(self, name):
-        self.data.name = str(name)
+        self.data.name = name.encode('utf-8')
     def get_name(self):
-        return self.data.name
+        return self.data.name.decode('utf-8')
     name = property(get_name, set_name)
 
     def set_id(self, id):
