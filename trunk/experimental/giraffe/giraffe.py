@@ -236,7 +236,7 @@ class GLGraphWidget(QGLWidget):
 
         glLoadIdentity()
 
-        f = ftgl.FTGLPixmapFont('/usr/share/fonts/truetype/Times_New_Roman.ttf')
+        f = ftgl.FTGLPixmapFont('fonts/bitstream-vera/VeraSe.ttf')
         h = int(2.6*self.res)
         f.FaceSize(h)
         for x in tics(self.xmin, self.xmax):
