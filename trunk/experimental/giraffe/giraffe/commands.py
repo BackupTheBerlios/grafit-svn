@@ -141,6 +141,7 @@ class CommandList(signals.HasSignals):
 
     def redo(self):
         """Redo the last command that was undone."""
+        com = False
         for com in self.commands:
             if not com.done:
                 break
@@ -157,6 +158,7 @@ class CommandList(signals.HasSignals):
 
     def undo(self):
         """Undo the last command that was done."""
+        com = False
         for com in self.commands[::-1]:
             if com.done:
                 break

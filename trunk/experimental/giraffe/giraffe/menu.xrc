@@ -36,4 +36,15 @@
       </object>
     </object>
   </object>
+  <object class="wxToolBar" name="worksheet_toolbar">
+    <object class="tool">
+      <bitmap>data/images/stock_insert-columns.png</bitmap>
+    </object>
+    <object class="tool">
+      <bitmap></bitmap>
+    </object>
+    <object class="tool">
+      <bitmap></bitmap>
+    </object>
+  </object>
 </resource>

@@ -157,7 +157,9 @@ class Worksheet(Item, HasSignals):
     def __setitem__(self, key, value):
         if isinstance(key, int):
             self.columns[key][:] = value
-        elif isinstance(key, basestring) and key in self.column_names:
+        elif isinstance(key, basestring):
+            if key not in self.column_names:
+                self.add_column(key)
             self.columns[self.column_names.index(key)][:] = value
         else:
             raise IndexError
@@ -180,5 +182,20 @@ class Worksheet(Item, HasSignals):
 
     _name = wrap_attribute('name')
     parent = wrap_attribute('parent')
+
+    def suggest_column_name(self):
+        def num_to_alpha(n):
+            alphabet = 'abcdefghijklmnopqrstuvwxyz'
+            name = ''
+            n, ypol = n//len(alphabet), n%len(alphabet)
+            if n == 0:
+                return alphabet[ypol]
+            name = num_to_alpha(n) + alphabet[ypol]
+            return name
+
+        i = 0
+        while num_to_alpha(i) in self.column_names:
+            i+=1
+        return num_to_alpha(i)
 
 register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B,expr:S]]')

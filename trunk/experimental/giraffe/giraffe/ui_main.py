@@ -13,6 +13,7 @@ from giraffe.item import Folder
 from giraffe.signals import HasSignals
 from giraffe.ui_graph_view import GraphView
 from giraffe.ui_worksheet_view import WorksheetView
+from giraffe.commands import undo, redo
 
 
 class ToolPanel(wx.SashLayoutWindow):
@@ -165,11 +166,16 @@ class ProjectExplorer(wx.Panel, HasSignals):
 #        toolbar = wx.ToolBar(explorer, -1)
 #
 #        bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(10, bmp, "New")
+#        toolbar.AddSimpleTool(-1, bmp, "New").GetId()
 #        bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(10, bmp, "Delete")
+#        toolbar.AddSimpleTool(-1, bmp, "Delete").GetId()
 #        bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
-#        toolbar.AddSimpleTool(10, bmp, "Up")
+#        toolbar.AddSimpleTool(-1, bmp, "Up").GetId()
+#
+#        bmp = wx.Image('../data/images/stock_undo.png').ConvertToBitmap()
+#        toolbar.AddSimpleTool(-1, bmp, "Undo").GetId()
+#        bmp = wx.Image('../data/images/stock_redo.png').ConvertToBitmap()
+#        toolbar.AddSimpleTool(-1, bmp, "Redo").GetId()
 #
 #        sizer.Add(toolbar, 0, wx.EXPAND)
 
@@ -288,6 +294,11 @@ class Application(wx.App):
         self.project = project
         wx.App.__init__(self, redirect=False)
 
+    def on_undo(self, event):
+        undo()
+
+    def on_redo(self, event):
+        redo()
 
     def OnInit(self):
         wx.Log_SetActiveTarget(wx.LogStderr())
@@ -301,9 +312,14 @@ class Application(wx.App):
 
         # toolbar
         tb = frame.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
-        tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_TOOLBAR), "New", "Long help for 'New'")
-        tb.AddSimpleTool(10, wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR), "New", "Long help for 'New'")
-        tb.Hide()
+        tool = tb.AddSimpleTool(-1, wx.Image("/home/daniel/giraffe/data/images/stock_undo.png").ConvertToBitmap(),
+                                "Undo", "Undo the last action")
+        tb.Bind(wx.EVT_TOOL, self.on_undo, id=tool.GetId())
+
+        tool = tb.AddSimpleTool(-1, wx.Image("/home/daniel/giraffe/data/images/stock_redo.png").ConvertToBitmap(),
+                                "Redo", "Redo the last action that was undone")
+        tb.Bind(wx.EVT_TOOL, self.on_redo, id=tool.GetId())
+#        tb.Hide()
 
         # menu bar
         resource = wx.xrc.XmlResource('menu.xrc')

@@ -95,24 +95,20 @@ class WorksheetView(wx.Panel):
         self.grid = WorksheetGrid(self, worksheet)
         self.box.Add(self.grid, 1, wx.EXPAND)
 
-    def toolbar_button_clicked(self, id):
-        def button_clicked_callback(self, event):
-            if self.toolbar.GetToolState(self.buttons[id]):
-                self.open(id)
-            else:
-                self.close(id)
-        return new.instancemethod(button_clicked_callback, self, self.__class__)
+    def toolbar_button_clicked(self, event):
+        if event.GetId() == self.toolbar.new_column:
+            self.worksheet[self.worksheet.suggest_column_name()] = []
 
     def create_toolbar(self):
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL)
-        toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked(ind))
+        toolbar.Bind(wx.EVT_TOOL, self.toolbar_button_clicked)
 
         bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(10, bmp, "New")
+        toolbar.new_column = toolbar.AddSimpleTool(-1, bmp, "New").GetId()
         bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(10, bmp, "Delete")
+        toolbar.AddSimpleTool(-1, bmp, "Delete")
         bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
-        toolbar.AddSimpleTool(10, bmp, "Up")
+        toolbar.AddSimpleTool(-1, bmp, "Up")
 
         return toolbar
 
