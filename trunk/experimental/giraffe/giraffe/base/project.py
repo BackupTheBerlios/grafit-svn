@@ -34,6 +34,31 @@ a command whose do() function calls a single method of an object
 and the undo() another method:
 """
 
+def command_from_methods(init, undo, redo, cleanup):
+    def replace_init(selb, *args, **kwds):
+        class CommandFromMethod(Command):
+            def __init__(self):
+                self.args, self.kwds = args, kwds
+                self.__done = False
+
+            def do(self):
+                if not self.__done:
+                    self.__state = init(selb, *self.args, **self.kwds)
+                    self.__done = True
+                else:
+                    redo(selb, self.__state)
+                return self.__state
+
+            def undo(self):
+                undo(selb, self.__state)
+
+#            def __del__(self):
+#                cleanup(selb, self.__state)
+        com = CommandFromMethod()
+        ret = com.do()
+        return ret
+    return replace_init
+
 class Project(HasSignals):
     def __init__(self, filename=None):
         self.filename = filename
@@ -96,7 +121,6 @@ class Project(HasSignals):
     def new(self, cls, *args, **kwds):
         obj = cls(self, *args, **kwds)
         self.items[obj.id] = obj
-        args = (obj,)
         return obj
 
     def new_undo(self, obj):
@@ -112,6 +136,8 @@ class Project(HasSignals):
     def new_cleanup(self, obj):
         del self.deleted[obj.id]
         obj.view.remove(obj.row)
+
+    new = command_from_methods(new, new_undo, new_redo, new_cleanup)
 
 
     def remove(self, id):
@@ -139,3 +165,4 @@ class Project(HasSignals):
 
     def save(self):
         self.db.commit()
+

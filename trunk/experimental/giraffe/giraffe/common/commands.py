@@ -55,14 +55,16 @@ class Command(signals.HasSignals):
         command_list.add(self)
 
     def _do_wrapper(self):
-        self.real_do()
+        ret = self.real_do()
         self.done = True
         self.emit('done')
+        return ret
 
     def _undo_wrapper(self):
-        self.real_undo()
+        ret = self.real_undo()
         self.done = False
         self.emit('undone')
+        return ret
 
     class __metaclass__(type):
         def __init__(cls, name, bases, dct):
