@@ -1,3 +1,5 @@
+# Command / Undo framework
+
 from common import HasSignals
 
 class Command(HasSignals):

@@ -1,11 +1,11 @@
+# Signal / Slot framework
 
 class HasSignals(object):
     """Base class for an object that can emit signals"""
+
     def connect(self, signal, slot):
         """
-        Connect a signal to a slot.
-
-        'signal' is a string, `slot` is any callable.
+        Connect a signal to a slot.  'signal' is a string, `slot` is any callable.
         """
         if not hasattr(self, 'signals'):
             self.signals = {}

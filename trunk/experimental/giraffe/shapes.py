@@ -18,7 +18,7 @@ sys.path.append('/home/daniel/grafit/functions')
 sys.path.append('/home/daniel/grafit')
 import hn
 
-from common import HasSignals
+from signals import HasSignals
 
 
 class Style(object):
