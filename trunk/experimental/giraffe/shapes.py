@@ -67,7 +67,6 @@ class Dataset(object):
 
     def set_x(self, val):
         self._x = val
-        self.graph.update()
     def get_x(self):
         return self._x
     x = property(get_x, set_x)
@@ -351,8 +350,8 @@ class Plot(GLScene,
         self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
         self.datasets[-1].graph = self
 
-        self.datasets.append(Dataset(x = arange(10000.)/1000,
-                                     y = cos(arange(10000.)/1000)))
+        self.datasets.append(Dataset(x = arange(1000000.)/100000,
+                                     y = cos(arange(1000000.)/100000)))
         self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
         self.datasets[-1].graph = self
 
@@ -615,12 +614,17 @@ class Plot(GLScene,
     def button_press(self, width, height, event):
         if event.button in (1,3):
             self.rubberband_begin(event.x, event.y)
+        if event.button == 2:
+            self.haha = True
+        else:
+            self.haha = False
     
     def button_release(self, width, height, event):
         if event.button == 2:
-            self.autoscale()
-            self.make_data_list()
-            self.queue_draw()
+            pass
+#            self.autoscale()
+#            self.make_data_list()
+#            self.queue_draw()
         elif event.button == 1 or event.button == 3:
             zix, ziy, zfx, zfy = self.rubberband_end(event.x, event.y)
 
@@ -642,8 +646,18 @@ class Plot(GLScene,
 
     
     def button_motion(self, width, height, event):
-        if self.rubberband_active():
+        if self.haha:
+            x = arange(2, 6, 0.01)
+            ex, ey = self.mouse_to_real(event.x, event.y)
+            params = hn.havriliak_negami.move(10.**ex, 10.**ey, 4, 1, 0.5, 1)
+            y = log10(hn.havriliak_negami(10.**x, *params))
+            self.datasets[0].x = x
+            self.datasets[0].y = y
+            self.datasets[0].build_display_list()
+            self.queue_draw()
+        elif self.rubberband_active():
             self.rubberband_continue(event.x, event.y)
+
 
 class PlotWindow(gtk.Window):
     def __init__(self):

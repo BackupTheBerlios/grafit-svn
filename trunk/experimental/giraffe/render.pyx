@@ -61,6 +61,7 @@ def makedata(ArrayType sx, ArrayType sy,
         ybucket = <int>((y-ymin)/yinterval)
         if (xbucket == xbucket_s) and (ybucket == ybucket_s):
             continue
+
         for v in vertices:
             glVertex3d(x+v[0], y+v[1], 0.)
     glEnd()
