@@ -7,7 +7,6 @@ import new
 
 import wx
 import wx.py
-import wx.lib.buttons
 from numarray import arange
  
 from giraffe.ui.graph_view import GraphView
@@ -59,8 +58,8 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_height = 180
 
     def add_page(self, label, pixmap, widget):
-#        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
-        bimp = wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_MENU)
+        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
+#        bimp = wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_MENU)
         text = label
 
         dc = wx.MemoryDC()
