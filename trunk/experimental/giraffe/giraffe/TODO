@@ -1,0 +1,2 @@
+* command_from_methods: make __state a dictionary
+* make combine work for dataset-change-style command

@@ -14,6 +14,7 @@ import sys
 #sys.path.append(DATADIR+'lib/')
 
 import wx
+
 from giraffe import gui
 
 #print >>sys.stderr, "loading giraffe...",
@@ -22,6 +23,7 @@ from giraffe import gui
 #print >>sys.stderr, "ok"
 
 def main():
+    print >>sys.stderr, "creating application"
     app = gui.Application()
     app.splash()
     wx.FileDialog(None).Destroy()

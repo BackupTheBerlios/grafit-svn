@@ -219,7 +219,7 @@ class CommandList(signals.HasSignals):
         self.emit('enabled')
 
 
-def command_from_methods(name, do, undo, redo=None, cleanup=None):
+def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
     """Create a command from a bunch of methods of another object.
     
     If a redo() method is given, it is called instead of do() if
@@ -255,6 +255,12 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None):
 
             def undo(self):
                 return undo(selb, self.__state)
+
+            def combine(self, cmd):
+                if combine is not None:
+                    return combine(self, self.__state, cmd.__state)
+                else:
+                    return False
 
             if cleanup is not None:
                 def __del__(self):

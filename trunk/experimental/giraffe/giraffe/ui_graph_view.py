@@ -210,6 +210,9 @@ class GraphStylePanel(gui.Box):
     def on_legend_selection(self):
         datasets = [self.view.legend.model[i] for i in self.view.legend.selection]
 
+        if len(datasets) == 0:
+            return
+
         style = datasets[0].style
         self.color.value = Style.colors.index(style.color)
         self.symbol.value = Style.symbols.index(style.symbol)

@@ -1,5 +1,7 @@
 import sys
+print >>sys.stderr, "import worksheet_view"
 from giraffe.ui_worksheet_view import WorksheetView
+print >>sys.stderr, "import graph_view"
 from giraffe.ui_graph_view import GraphView
 from giraffe.import_ascii import import_ascii
 
@@ -12,11 +14,11 @@ from giraffe.commands import command_list, undo, redo
 
 from giraffe import Graph, Worksheet, Folder, Project
 
-
 from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                         OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
 from giraffe.signals import HasSignals
+
 
 class WorksheetDragData(object):
     def __init__(self, worksheet):
@@ -187,6 +189,7 @@ class FolderListData(HasSignals):
 # example main window
 class MainWindow(Window):
     def __init__(self):
+        print >>sys.stderr, "creating main window"
         Window.__init__(self, statusbar=True)
 
         # for example

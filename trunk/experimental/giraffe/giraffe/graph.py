@@ -1,4 +1,5 @@
 import sys
+print >>sys.stderr, "import graph"
 import time
 
 #from numarray import *
@@ -137,6 +138,10 @@ class Dataset(HasSignals):
         
         self.style.connect('modified', self.on_style_modified)
 
+    def __repr__(self):
+        return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
+                                                         self.worksheet.name, self.x.name, self.y.name)
+
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
     id = property(get_id, set_id)
@@ -220,8 +225,13 @@ class Dataset(HasSignals):
         item, value, old = state
         setattr(self.style, item, old)
 
+    def change_style_combine(self, state, other):
+        print state, other
+        return False
+
     change_style = command_from_methods('dataset-change-style', change_style_do, 
-                                        change_style_undo, change_style_redo)
+                                        change_style_undo, change_style_redo,
+                                        combine=change_style_combine)
 
     def on_style_modified(self, item, value, old):
         self.change_style(item, value, old)
@@ -541,22 +551,28 @@ class Graph(Item, HasSignals):
     def add(self, x, y):
         ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), 
                                         x=x.name.encode('utf-8'), y=y.name.encode('utf-8'))
+
         d = Dataset(self, ind)
         self.datasets.append(d)
-        ind = len(self.datasets)-1
+
+
+        pos = len(self.datasets)-1
+        print 'added dataset, index %d, position %d' % (ind, pos)
+
         d.connect('modified', self.on_dataset_modified)
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
-        return ind
 
-    def undo_add(self, ind):
-        print ind
-        d = self.datasets[ind]
-        del self.datasets[ind]
+        return pos
+
+    def undo_add(self, pos):
+        d = self.datasets[pos]
+        print 'undoing addition of dataset, index %d, position %d' % (d.ind, pos)
+        del self.datasets[pos]
         d.disconnect('modified', self.on_dataset_modified)
         self.emit('remove-dataset', d)
         self.emit('redraw')
-        self.data.datasets.delete(ind)
+        self.data.datasets.delete(d.ind)
 
     add = command_from_methods('graph_add_dataset', add, undo_add)
 
@@ -565,17 +581,24 @@ class Graph(Item, HasSignals):
         # than the one in self.datasets, if they have the same id
         # (see Dataset.__eq__)
         ind = self.datasets.index(dataset)
+        print 'removing dataset, index %d, position %d' % (dataset.ind, ind)
         dataset.id = '-'+dataset.id
         self.datasets.remove(dataset)
-        dataset.disconnect('modified', self.on_dataset_modified)
+        try:
+            dataset.disconnect('modified', self.on_dataset_modified)
+        except NameError:
+            pass
         self.emit('remove-dataset', dataset)
         self.emit('redraw')
-        return (dataset, ind), None
+        return (dataset.ind, ind), None
 
     def undo_remove(self, data):
-        dataset, ind = data
+        ind, pos = data
+        print 'undoing removal of dataset, index %d, position %d' % (ind, pos)
+        dataset = Dataset(self, ind)
         dataset.id = dataset.id[1:]
-        self.datasets.insert(ind, dataset)
+        self.on_dataset_modified(dataset)
+        self.datasets.insert(pos, dataset)
         dataset.connect('modified', self.on_dataset_modified)
         self.emit('add-dataset', dataset)
         self.emit('redraw')
