@@ -80,6 +80,7 @@ class Column(VarArray, HasSignals, Persistent):
 
     def __setitem__(self, key, value):
         column_change_data(self.worksheet.id, self.name, key, value).do_and_register()
+        self.worksheet.emit('data-changed')
 
     def __repr__(self):
         return VarArray.__repr__(self)

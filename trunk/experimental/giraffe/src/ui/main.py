@@ -1,6 +1,7 @@
 import sys
 sys.path.append('/home/daniel/giraffe')
 
+print >>sys.stderr, "initializing...",
 import os
 import new
 import wx
@@ -10,6 +11,7 @@ import wx.lib.buttons
 from giraffe.ui.shapes import PlotCanvas, Plot
 from giraffe.common import identity
 from giraffe.worksheet import Worksheet
+print >>sys.stderr, "ok"
 
 
 class Splash(wx.SplashScreen):
@@ -18,13 +20,6 @@ class Splash(wx.SplashScreen):
         wx.SplashScreen.__init__(self, bmp,
                                  wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT,
                                  3000, None, -1)
-#        self.Bind(wx.EVT_CLOSE, self.OnClose)
-
-#    def OnClose(self, evt):
-#        self.Hide()
-#        frame = wxPythonDemo(None, "wxPython: (A Demonstration)")
-#        frame.Show()
-#        evt.Skip()  # Make sure the default handler runs too...
 
 class PanelToolbar(wx.ToolBar):
     def __init__(self, parent):
@@ -72,7 +67,8 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_height = 120
 
     def add_page(self, widget):
-        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
+        bmp = wx.Image("graph.png").ConvertToBitmap()
+#        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
         ind = len(self.contents)
 
         btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, -1, bmp, style=wx.BU_EXACTFIT)
@@ -159,8 +155,8 @@ class Application(wx.App):
 
     def OnInit(self):
         wx.Log_SetActiveTarget(wx.LogStderr())
-#        s = Splash()
-#        s.Show()
+        s = Splash()
+        s.Show()
 
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
@@ -209,25 +205,10 @@ class MainWindow(wx.Panel):
         wx.Panel.__init__(self, parent, -1)
         self.project = project
 
-        # A window like a statusbar
-#        win = wx.SashLayoutWindow(self, self.ID_WINDOW_BOTTOM, wx.DefaultPosition, (200, 0), wx.NO_BORDER|wx.SW_3D)
-##
-#        win.SetDefaultSize((1000, 30))
-#        win.SetOrientation(wx.LAYOUT_HORIZONTAL)
-#        win.SetAlignment(wx.LAYOUT_BOTTOM)
-#        win.SetSashVisible(wx.SASH_TOP, True)
-#
-#        self.bottom_panel = win
-#
         self.bottom_panel = ToolPanel(self, 'bottom')
         self.script_window = wx.py.shell.Shell(self.bottom_panel.panel, -1, introText='Welcome to giraffe')
         self.bottom_panel.add_page(self.script_window)
         self.script_window.zoom(-1)
-#        box = wx.BoxSizer(wx.VERTICAL)
-#        box.Add(self.script_window, 1, wx.EXPAND)
-#        panel.SetAutoLayout(True)
-#        panel.SetSizer(box)
-#
 
         self.right_panel = ToolPanel(self, 'right')
     
@@ -235,10 +216,6 @@ class MainWindow(wx.Panel):
         self.left_panel = ToolPanel(self, 'left')
         self.project_tree = ProjectTree(self.left_panel.panel, self.project)
         self.left_panel.add_page(self.project_tree)
-
-        self.pikou = wx.py.shell.Shell(self.left_panel.panel, -1, introText='Welcome to giraffe')
-        self.left_panel.add_page(self.pikou)
-
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
@@ -267,8 +244,6 @@ class MainWindow(wx.Panel):
             self.right_panel.SetDefaultSize((event.GetDragRect().width, 1000))
         elif id == self.bottom_panel.GetId():
             self.bottom_panel.SetDefaultSize((1000, event.GetDragRect().height))
-        else:
-            print id
 
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
         self.remainingSpace.Refresh()
