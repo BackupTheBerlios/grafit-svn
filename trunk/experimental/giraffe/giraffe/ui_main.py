@@ -344,11 +344,8 @@ class MainPanel(wx.Panel):
         self.left_panel.add_page('Project', 'stock_navigator.png', self.explorer)
 
         # the right panel
-        self.e = GraphDataPanel(self.right_panel.panel)
-        self.right_panel.add_page('Data', 'worksheet.png', self.e)
-
-        self.f = ProjectExplorer(self.right_panel.panel)
-        self.right_panel.add_page('Style', 'console.png', self.f)
+        self.graph_data_panel = GraphDataPanel(self.right_panel.panel)
+        self.right_panel.add_page('Data', 'worksheet.png', self.graph_data_panel)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
@@ -363,14 +360,14 @@ class MainPanel(wx.Panel):
 
     def open_project(self, project):
         self.project = project
-        self.script_window.connect_project(self.project)
-        self.explorer.connect_project(self.project)
+        for panel in (self.script_window, self.explorer, self.graph_data_panel):
+            panel.connect_project(self.project)
         self.project.connect('remove-item', self.on_project_remove_item)
         command_list.clear()
 
     def close_project(self):
-        self.script_window.disconnect_project()
-        self.explorer.disconnect_project()
+        for panel in (self.script_window, self.explorer, self.graph_data_panel):
+            panel.disconnect_project(self.project)
         self.project.disconnect('remove-item', self.on_project_remove_item)
 
     def on_project_remove_item(self, obj):

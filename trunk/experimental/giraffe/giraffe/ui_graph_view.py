@@ -6,6 +6,8 @@ import sys
 import wx
 import wx.glcanvas
 
+from giraffe import Worksheet, Folder
+
 #from Numeric import *
 
 #from OpenGL.GL import *
@@ -90,6 +92,8 @@ class GraphView(wx.glcanvas.GLCanvas):
             self.graph.button_motion(x, y)
 
 
+from giraffe import gui
+
 class GraphDataPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -97,32 +101,65 @@ class GraphDataPanel(wx.Panel):
         # create widgets 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        buttons = wx.BoxSizer(wx.HORIZONTAL)
-        buttons.Add(wx.Button(self, -1, "add"), 0, wx.EXPAND)
-        sizer.Add(buttons, 0, wx.EXPAND)
+#        buttons = wx.BoxSizer(wx.HORIZONTAL)
+        class k: pass
+        k = k()
+        k.__dict__.update({'_widget': self })
 
-        sizer.Add(wx.StaticText(self, -1, 'Worksheet'), 0, wx.EXPAND)
-        self.worksheet_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
-        sizer.Add(self.worksheet_list, 1, wx.EXPAND)
+        box = gui.Box(k, 'vertical')
+        sizer.Add(box._widget, 1, wx.EXPAND)
+        button = gui.Button(box, 'add')
+        worksheet_list = gui.List(box)
 
-        sizer.Add(wx.StaticText(self, -1, 'X column'), 0, wx.EXPAND)
-        self.x_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
-        sizer.Add(self.x_list, 1, wx.EXPAND)
-
-        sizer.Add(wx.StaticText(self, -1, 'Y column'), 0, wx.EXPAND)
-        self.y_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
-        sizer.Add(self.y_list, 1, wx.EXPAND)
-
+#
+#        button = gui.Button(k, 'add')
+#        buttons.Add(button._widget, 0, wx.EXPAND)
+#        sizer.Add(buttons, 0, wx.EXPAND)
+#
+#        sizer.Add(wx.StaticText(self, -1, 'Worksheet'), 0, wx.EXPAND)
+#        self.worksheet_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
+#        sizer.Add(self.worksheet_list, 1, wx.EXPAND)
+#
+#        sizer.Add(wx.StaticText(self, -1, 'X column'), 0, wx.EXPAND)
+#        self.x_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
+#        sizer.Add(self.x_list, 1, wx.EXPAND)
+#
+#        sizer.Add(wx.StaticText(self, -1, 'Y column'), 0, wx.EXPAND)
+#        self.y_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
+#        sizer.Add(self.y_list, 1, wx.EXPAND)
+#
         self.SetSizer(sizer)
         sizer.SetSizeHints(self)
 
+        self.project = None
+        self.folder = None
+
+    def set_current_folder(self, folder):
+        self.folder = folder
+        self.worksheet_list.ClearAll()
+
+        for item in folder.contents():
+            if isinstance(item, Worksheet):
+                self.worksheet_list.InsertStringItem(0, item.name)
+            elif isinstance(item, Folder):
+                self.worksheet_list.InsertStringItem(0, item.name+'/')
+
+    def on_project_changed(self, item):
+        if item.parent == self.folder:
+            self.set_current_folder(self.folder)
+
     def connect_project(self, project):
-        pass
+        return
+        self.project = project
+        self.project.connect('add-item', self.on_project_changed)
+        self.project.connect('remove-item', self.on_project_changed)
 
     def disconnect_project(self):
-        pass
+        return
+        self.project = None
+        self.project.disconnect('add-item', self.on_project_changed)
+        self.project.disconnect('remove-item', self.on_project_changed)
 
     def on_open(self):
-        print 'on_open'
-
-
+        return
+        self.set_current_folder(self.project.here)
