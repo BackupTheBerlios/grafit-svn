@@ -79,8 +79,8 @@ class GraphView(gui.Box):
                                         page_label='Data', page_pixmap='worksheet.png')
         self.graphdata.connect_project(self.graph.project)
 
-        self.style = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
-        self.style = gui.Box(self.panel.right_panel, 'horizontal', page_label='Style', page_pixmap='style.png')
+        self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
+        self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_new_column(self):
@@ -130,6 +130,28 @@ class ColumnListModel(HasSignals):
     def get_image(self, row): return None
     def __len__(self): return len(self.colnames)
     def __getitem__(self, row): return self.colnames[row]
+
+class GraphStylePanel(gui.Box):
+    def __init__(self, graph, view, parent, **place):
+        gui.Box.__init__(self, parent, 'vertical', **place)
+
+        self.graph = graph
+        self.view = view
+
+        grid = gui.Grid(self, 2, 2, expand=True, stretch=1.)
+        gui.Label(grid,  'Symbol', pos=(0,0))
+        c = gui.Choose(grid, pos=(0,1))
+        c._widget.SetSizeHints(-1, 30, 60, -1)
+        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
+                      'diamond', 'pentagon', 'star', 'cross', 'x']:
+            c.append(shape)
+
+        gui.Label(grid,  'Color', pos=(1,0))
+        c = gui.ColorSelect(grid, pos=(1,1))
+        c._widget.SetSizeHints(-1, 20, 60, 30)
+
+        grid.layout.AddGrowableCol(1)
+
 
 class GraphDataPanel(gui.Box):
     def __init__(self, graph, view, parent, **place):
