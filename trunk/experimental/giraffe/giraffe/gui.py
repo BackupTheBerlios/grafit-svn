@@ -1,4 +1,5 @@
 import sys
+import time
 import weakref
 import wx
 import wx.py
@@ -224,12 +225,33 @@ class ListModel(HasSignals):
     def index(self, value):
         return self.items.index(value)
 
+
+#1. In the OnBeginDrag method, the line:
+#
+#      sel_item, flags = self.tree.HitTest(event.GetPoint()) 
+#
+#does not work because of a problem with event.GetPoint(). This can be replaced with the following:
+#
+## Get the Mouse Position on the Screen 
+#(windowx, windowy) = wx.wxGetMousePosition() 
+## Translate the Mouse's Screen Position to the Mouse's Control Position 
+#(x, y) = self.tree.ScreenToClientXY(windowx, windowy) 
+## Now use the tree's HitTest method to find out about the potential drop target for the current mouse position 
+#(sel_item, flags) = self.tree.HitTest((x, y))
+
+#http://wiki.wxpython.org/index.cgi/TreeControls
+#http://wiki.wxpython.org/index.cgi/TreeCtrlDnD
+#http://wiki.wxpython.org/index.cgi/LongRunningTasks
+
+
+
 class DropTarget(wx.DropTarget):
     def __init__(self, window):
         super (DropTarget, self).__init__ ()
         self.window = window
-        self.dataFormat = wx.CustomDataFormat("ItemUUID")
-        self.data = wx.CustomDataObject(self.dataFormat)
+    #    self.dataFormat = wx.CustomDataFormat("ItemUUID")
+    #    self.data = wx.CustomDataObject(self.dataFormat)
+        self.data = wx.TextDataObject()
         self.SetDataObject(self.data)
 
     def OnDrop(self, x, y):
@@ -237,7 +259,8 @@ class DropTarget(wx.DropTarget):
 
     def OnData(self, x, y, d):
         if self.GetData():
-            itemUUID = self.data.GetData()
+#            itemUUID = self.data.GetData()
+            itemUUID = self.data.GetText()
             self.window.AddItem(itemUUID)
         return d
 
@@ -269,7 +292,7 @@ class DropReceiveWidget (object):
         """
           Override this to add the dropped item to your widget.
         """
-        print 'add'
+        print 'add', itemUUID
         pass
 
     def OnHover(self, x, y):
@@ -301,8 +324,10 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
     def on_begin_drag(self, event):
         print event.GetItem(),
         dropSource = wx.DropSource(self)
-        data = wx.CustomDataObject(wx.CustomDataFormat("ItemUUID"))
-        data.SetData('pikou')
+#        data = wx.CustomDataObject(wx.CustomDataFormat("ItemUUID"))
+        data = wx.TextDataObject()
+#        data.SetData('pikou')
+        data.SetText('pikou')
         dropSource.SetData(data)
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
         print result
