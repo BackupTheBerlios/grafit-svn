@@ -251,7 +251,7 @@ class DropTarget(wx.DropTarget):
         self.window = window
     #    self.dataFormat = wx.CustomDataFormat("ItemUUID")
     #    self.data = wx.CustomDataObject(self.dataFormat)
-        self.data = wx.TextDataObject()
+        self.data = wx.FileDataObject()
         self.SetDataObject(self.data)
 
     def OnDrop(self, x, y):
@@ -325,9 +325,10 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
         print event.GetItem(),
         dropSource = wx.DropSource(self)
 #        data = wx.CustomDataObject(wx.CustomDataFormat("ItemUUID"))
-        data = wx.TextDataObject()
+        data = wx.FileDataObject()
 #        data.SetData('pikou')
-        data.SetText('pikou')
+#        data.SetText('pikou')
+        data.AddFile('/home/daniel/giraffe/giraffe/koali.gt')
         dropSource.SetData(data)
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
         print result

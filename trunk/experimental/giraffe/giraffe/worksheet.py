@@ -4,7 +4,7 @@ from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 
-from giraffe.arrays import MkArray
+from giraffe.arrays import MkArray, transpose, array
 
 import arrays
 
@@ -214,6 +214,13 @@ class Worksheet(Item, HasSignals):
         while num_to_alpha(i) in self.column_names:
             i+=1
         return num_to_alpha(i)
+
+    def export_ascii(self, f):
+        for row in xrange(self.nrows):
+            for col in xrange(self.ncolumns):
+                f.write(str(self.columns[col][row]))
+                f.write('\t')
+            f.write('\n')
 
     default_name_prefix = 'sheet'
 
