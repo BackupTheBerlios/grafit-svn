@@ -21,7 +21,7 @@ class C:
         # text properties
         context = self.drawingArea.create_pango_context()
         self.layout  = self.drawingArea.create_pango_layout(self.text)
-        desc = pango.FontDescription('Sans 14')
+        desc = pango.FontDescription('Sans 10')
         self.layout.set_font_description(desc)
 
 
@@ -58,14 +58,6 @@ class C:
         gc = pixmap.new_gc()
         pixmap.draw_image(gc, imageOut, 0, 0, 0, 0, w, h)
         c.draw_text(drawable=pixmap, x=0, y=0)
-
-        if 0:
-            # These lines test that the pixmap was drawn to ok
-            pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, 0, 8, w, h)
-            pixbuf.get_from_drawable(pixmap, pixmap.get_colormap(),
-                                     0, 0, 0, 0, w, h)
-            pixbuf.render_to_drawable(self.drawable, gc, 0, 0, 0, 0, w, h, 0, 0, 0)
-            return
 
 
         imageIn = pixmap.get_image(x=0, y=0, width=w, height=h)
