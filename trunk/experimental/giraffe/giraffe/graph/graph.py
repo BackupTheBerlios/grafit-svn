@@ -116,7 +116,7 @@ class Dataset(object):
 
         glNewList(self.id, GL_COMPILE)
         glColor4f(*self.style.color)
-        makedata(self.x, self.y, self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
+        makedata(asarray(self.x), asarray(self.y), self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
                  GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]  )
         glEndList()
 
@@ -305,8 +305,8 @@ class Axis(object):
 # - move drawing to Axis and Dataset classes
 # - more generic mechanism for symbols, in pyrex if nescessary
 class Graph(Item, HasSignals):
-    def __init__(self, project, name=None, parent=None, id=None):
-        Item.__init__(self, project, name, parent, id)
+    def __init__(self, project, name=None, parent=None, location=None):
+        Item.__init__(self, project, name, parent, location)
     
         # mouse rubberbanding coordinates
         self.sx = None
@@ -350,6 +350,11 @@ class Graph(Item, HasSignals):
 
         self.set_range(0.0, 100.5)
         self.autoscale()
+
+    def add(self, *args, **kwds):
+        d = Dataset(*args, **kwds)
+        self.datasets.append(d)
+        d.graph = self
 
     def paint_frame(self):
         glPushMatrix()

@@ -22,9 +22,21 @@ class TableData(grid.PyGridTableBase):
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
 
-#    def GetAttr(self, row, col, kind):
-#        print >>sys.stderr, 'GetAttr', row, col, kind
-#        attr = self.normal_attr
+ #   def GetAttr(self, row, col, kind):
+ #       print >>sys.stderr, 'GetAttr', row, col, '#', kind
+ #       attr = self.normal_attr
+           # Re: [wxPython-users] GetAttr() destroys wxGridCellAttr
+           # by Roger Binns other posts by this author
+           # Dec 6 2003 5:25AM
+           #
+           # GridCellAttr objects *ARE* reference counted.  They are *only*
+           # deleted when the reference count hits zero indicating that
+           # noone is using them.
+
+           # Due to an artifact of the wxPython wrapping, the reference
+           #  count isn't increased and wx thinks it is no longer in
+           #  use when it is.  Calling IncRef manually solves the problem.
+
 #        attr.IncRef()
 #        return attr
 
@@ -72,12 +84,12 @@ class TableData(grid.PyGridTableBase):
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
 
-        for r in range(self._cols):
-            self.SetColAttr(r, self.normal_attr)
-
         # update the scrollbars and the displayed part of the grid
         view.AdjustScrollbars()
         view.ForceRefresh()
+
+#        for r in range(self._cols):
+#            self.SetColAttr(r, self.normal_attr)
 
     def UpdateValues(self, view):
         """Update all displayed values"""
@@ -108,6 +120,7 @@ class WorksheetView(grid.Grid):
 
         self.SetLabelFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
         self.SetDefaultRowSize(20, False)
+#        self.SetSelectionMode(wx.grid.Grid.SelectColumns)
 
         table = TableData(self.worksheet)
 

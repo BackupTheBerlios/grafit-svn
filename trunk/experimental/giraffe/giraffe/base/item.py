@@ -1,9 +1,6 @@
 import sys
 import time, random, socket, md5
 
-from giraffe.base.commands import Command, command_list
-
-
 # by (Carl Free Jr. http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761)
 def create_id(*args):
     """Generates a universally unique ID.
@@ -19,7 +16,6 @@ def create_id(*args):
     data = str(t)+' '+str(r)+' '+str(a)+' '+str(args)
     data = md5.md5(data).hexdigest()
     return data
-
 
 # The layout of the metakit project database.
 # For each type of object (worksheet, graph etc) we call

@@ -1,11 +1,12 @@
 import metakit
 
-from giraffe.base.commands import Command, command_from_methods
+from giraffe.base.commands import command_from_methods
 from giraffe.base.signals import HasSignals
 from giraffe.base.item import Item, Folder, storage_desc, create_id
 
 # import only in order to register object types
 import giraffe.worksheet
+import giraffe.graph
 
 class Project(HasSignals):
     def __init__(self, filename=None):
