@@ -1,5 +1,24 @@
 """
-Shelf for global object access
+The identity module provides a way to get a reference to an object
+which is not guranteed to stay the *same* object, but can be deleted
+and re-created. For example, it may be loaded and saved, or it may
+be deleted and the deletion undone.
+
+When creating the object, use something like:
+
+    def __init__(self, id=None):
+        self.id = identity.register(self, id)
+
+We handle this as follows: We can get a reference to the object with
+
+    ref = obj.id
+
+and retrieve the object with
+
+    obj = identity.lookup(ref)
+
+Identity uses weak references, so the object must be referenced
+elsewhere for it not to be deleted.
 """
 
 import weakref
@@ -8,7 +27,7 @@ import random
 import socket
 import md5
 
-def uuid( *args ):
+def create_id(*args):
     """
     Generates a universally unique ID.
     Any arguments only create more randomness.
@@ -26,18 +45,13 @@ def uuid( *args ):
 
 _objects = weakref.WeakValueDictionary()
 
-def register(obj):
-    if not hasattr(obj, 'uuid') or obj.uuid is None:
-        try:
-            obj.uuid = uuid(obj)
-        except AttributeError:
-            return None
-    try:
-        _objects[obj.uuid] = obj
-    except TypeError:
-        return None
+def register(obj, key=None):
+    """
+    """
+    if key is None:
+        key = create_id(obj)
+    _objects[key] = obj
+    return key
 
-    return obj.uuid
-
-def get(key):
+def lookup(key):
     return _objects[key]
