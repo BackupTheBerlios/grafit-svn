@@ -1,5 +1,5 @@
 import items
-from common import shelf
+from common import identity
 import lib.ElementTree as et
 
 class Project(items.Folder, items.Persistent):
@@ -112,11 +112,11 @@ def test():
     p.load('test.xml')
     print p.desc()
     print p.uuid
-    print shelf.get(p.uuid), p
+    print identity.lookup(p.uuid), p
 
     p3 = items.Persistent.create(et.parse('test.xml').getroot())
     print p3.uuid
-    print shelf.get(p.uuid), p3, p
+    print identity.lookup(p.uuid), p3, p
 
 
 if __name__== '__main__':

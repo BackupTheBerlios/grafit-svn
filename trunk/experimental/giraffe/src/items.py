@@ -1,6 +1,6 @@
 import common.signals
 import lib.ElementTree as et
-from common import shelf
+from common import identity
 
 class Persistent(object):
     def to_element(self):
@@ -49,12 +49,10 @@ class Item(common.signals.HasSignals):
 
 class Folder(Item, Persistent):
     """A folder. Folders contain items and subfolders"""
-    def __init__(self, name, parent, uuid=None):
+    def __init__(self, name, parent, id=None):
         Item.__init__(self, name, parent)
-#        Persistent.__init__(self, uuid)
         self.items = []
-        self.uuid = uuid
-        shelf.register(self)
+        self.id = identity.register(self, id)
 
     def add_item(self, item):
         """
@@ -105,7 +103,7 @@ class Folder(Item, Persistent):
         self.emit('modified')
 
     def from_element(element, parent):
-        folder = Folder(element.get('name'), parent, element.get('uuid'))
+        folder = Folder(element.get('name'), parent, element.get('id'))
 
         # child items
         for eitem in element:
@@ -114,7 +112,7 @@ class Folder(Item, Persistent):
     from_element = staticmethod(from_element)
 
     def to_element(self):
-        elem = et.Element('Folder', name=self.name, uuid=self.uuid)
+        elem = et.Element('Folder', name=self.name, id=self.id)
 
         for item in self.items:
             elem.append(item.to_element())

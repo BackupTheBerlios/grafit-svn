@@ -1,7 +1,7 @@
 from arrays import *
 
 from items import Item, Persistent
-from common import shelf
+from common import identity
 from common.commands import Command, CommandList
 from common.signals import HasSignals
 from lib.ElementTree import Element, SubElement
@@ -11,7 +11,7 @@ Command.command_list = CommandList()
 
 class U(object):
     def __div__(self, other):
-        return shelf.get(other)
+        return identity.lookup(other)
 U = U()
 
 class worksheet_add_column(Command):
@@ -79,7 +79,7 @@ class Column(VarArray, HasSignals, Persistent):
     from_element = staticmethod(from_element)
 
     def __setitem__(self, key, value):
-        column_change_data(self.worksheet.uuid, self.name, key, value).do_and_register()
+        column_change_data(self.worksheet.id, self.name, key, value).do_and_register()
 
     def __repr__(self):
         return VarArray.__repr__(self)
@@ -88,9 +88,9 @@ class Column(VarArray, HasSignals, Persistent):
 
 
 class Worksheet(Item, Persistent):
-    def __init__(self, name, parent):
+    def __init__(self, name, parent, id=None):
         Item.__init__(self, name, parent)
-        shelf.register(self)
+        self.id = identity.register(self, id)
         self.columns = []
 
     def get_ncolumns(self):
@@ -102,10 +102,10 @@ class Worksheet(Item, Persistent):
     nrows = property(get_nrows)
 
     def add_column(self, name):
-        worksheet_add_column(self.uuid, name).do_and_register()
+        worksheet_add_column(self.id, name).do_and_register()
 
     def remove_column(self, name):
-        worksheet_remove_column(self.uuid, name).do_and_register()
+        worksheet_remove_column(self.id, name).do_and_register()
 
     def __getattr__(self, name):
         if 'columns' in self.__dict__ and name in [c.name for c in self.columns]:
@@ -147,7 +147,7 @@ class Worksheet(Item, Persistent):
         return s
 
     def to_element(self):
-        elem = Element('Worksheet', name=self.name, uuid=self.uuid, 
+        elem = Element('Worksheet', name=self.name, id=self.id, 
                                     rows=str(self.nrows), columns=str(self.ncolumns),
                                     column_names=','.join(self.column_names))
 #        elem.text = pickle.dumps(self.get_data())
@@ -157,13 +157,11 @@ class Worksheet(Item, Persistent):
         return elem
 
     def from_element(element, parent):
-        w = Worksheet(element.get('name'), parent)
+        w = Worksheet(element.get('name'), parent, id=element.get('id'))
         for name in element.get('column_names').split(','):
             w.add_column(name)
 #        w.set_data(pickle.loads(element.text))
         w.set_data(fromstring(base64.decodestring(element.text), shape=(int(element.get('columns')),int(element.get('rows'))), type=Float64))
-        w.uuid = element.get('uuid')
-        shelf.register(w)
         return w
     from_element = staticmethod(from_element)
 
