@@ -435,7 +435,25 @@ class xToolPanel(wx.SashLayoutWindow):
         else:
             self.close(num)
 
-class MainPanel(wx.Panel):
+class MainPanel(Widget):
+    def __init__(self, parent, **place):
+        self._widget = xMainPanel(parent._widget)
+        Widget.__init__(self, parent, **place)
+        self.bottom_panel = self._widget.bottom_panel
+        self.left_panel = self._widget.left_panel
+        self.right_panel = self._widget.right_panel
+
+    def _add(self, widget, expand=True, stretch=1.0):
+        widget._widget.Reparent(self._widget.remainingSpace)
+        if expand:
+            expand = wx.EXPAND
+        else:
+            expand = 0
+        self._widget.main_box.Add(widget._widget, stretch, wx.EXPAND)
+        self._widget.main_box.SetSizeHints(widget._widget)
+
+
+class xMainPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
         self.bottom_panel = ToolPanel(self, 'bottom')
@@ -443,7 +461,7 @@ class MainPanel(wx.Panel):
         self.left_panel = ToolPanel(self, 'left')
 
         # will occupy the space not used by the Layout Algorithm
-        self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
+        self.remainingSpace = wx.Panel(self, -1)#, style=wx.SUNKEN_BORDER)
 
         self.main_box = wx.BoxSizer(wx.VERTICAL)
         self.remainingSpace.SetSizer(self.main_box)
@@ -495,7 +513,7 @@ class Window(Widget):
             self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None, **kwds)
 
-        self.main = MainPanel(self._widget)
+        self.main = xMainPanel(self._widget)
         if 'b' in panels:
             self.bottom_panel = self.main.bottom_panel
         if 'l' in panels:
@@ -536,10 +554,19 @@ class Notebook(Widget):
         self.ass = wx.Button(self._widget.GetParent(), -1, 'x')
         self.ass.SetSize((25, 25))
         self.ass.SetPosition((300, 0))
+        self.ass.Bind(wx.EVT_BUTTON, self.on_x_button)
         self.il = wx.ImageList(16, 16)
         self.wsidx = self.il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
         self._widget.SetImageList(self.il)
+        self._widget.Bind(wx.EVT_SIZE, self.on_resized)
 
     def _add(self, widget, page_label):
         self._widget.AddPage(widget._widget, page_label)
         self._widget.SetPageImage(self._widget.GetPageCount()-1, self.wsidx)
+
+    def on_resized(self, event):
+        self.ass.SetPosition((event.GetSize()[0] - 25, 0))
+        event.Skip()
+
+    def on_x_button(self, event):
+        print 'x clicked'
