@@ -65,10 +65,6 @@ class Project(items.Folder, items.Persistent):
         e = items.Folder.to_element(self)
         e.tag = 'Project'
         return e    
-#
-#    def from_element(element):
-#        return items.Folder.from_element(element)
-#    from_element = staticmethod(from_element)
 
     _element_name = 'Project'
 
