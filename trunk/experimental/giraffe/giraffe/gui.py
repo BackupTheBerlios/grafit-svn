@@ -66,8 +66,16 @@ class Application(object):
     def run(self):
         return self._app.MainLoop()
 
+class ToolPanel(Widget):
+    def __init__(self, parent, position, *args, **kwds):
+        self._widget = xToolPanel(parent, position)
+        Widget.__init__(self, parent, *args, **kwds)
 
-class ToolPanel(wx.SashLayoutWindow):
+    def _add(self, widget, page_label='', page_pixmap=''):
+        widget._widget.Reparent(self._widget.panel)
+        self._widget.add_page(page_label, page_pixmap, widget)
+
+class xToolPanel(wx.SashLayoutWindow):
     """The areas on the left, top and bottom of the window holding tabs."""
 
     def __init__(self, parent, position):
@@ -80,9 +88,9 @@ class ToolPanel(wx.SashLayoutWindow):
         self.position = position
 
         if position in ['top', 'bottom']:
-            self.SetDefaultSize((1000, 12))
+            self.SetDefaultSize((1000, 0))
         else:
-            self.SetDefaultSize((12, 1000))
+            self.SetDefaultSize((0, 1000))
 
         data = { 
             'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, wx.SASH_RIGHT,
@@ -153,8 +161,8 @@ class ToolPanel(wx.SashLayoutWindow):
         btn = wx.NewId()
         self.toolbar.AddCheckTool(btn, bmp, bmp, "New", "Long help for 'New'")
 
-        self.contentbox.Add(widget, 1, wx.EXPAND)
-        widget.Hide()
+        self.contentbox.Add(widget._widget, 1, wx.EXPAND)
+        widget.hide()
         self.contentbox.Layout()
 
         self.contents.append(widget)
@@ -174,9 +182,9 @@ class ToolPanel(wx.SashLayoutWindow):
 
         for i, widget in enumerate(self.contents):
             if i != id:
-                self.contentbox.Hide(widget)
+                self.contentbox.Hide(widget._widget)
 
-        self.contentbox.Show(self.contents[id]) 
+        self.contentbox.Show(self.contents[id]._widget) 
         if hasattr(self.contents[id], 'on_open'):
             self.contents[id].on_open()
 
@@ -191,7 +199,7 @@ class ToolPanel(wx.SashLayoutWindow):
 
     def close(self, id=None):
         if id is not None:
-            self.contentbox.Hide(self.contents[id])
+            self.contentbox.Hide(self.contents[id]._widget)
         self.contentbox.Layout()
         if self.position in ['left', 'right']:
             self.last_width = self.GetSize()[0]
@@ -226,9 +234,9 @@ class MainPanel(wx.Panel):
         self.main_box = wx.BoxSizer(wx.VERTICAL)
         self.remainingSpace.SetSizer(self.main_box)
 
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.left_panel.GetId())
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.right_panel.GetId())
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.bottom_panel.GetId())
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.left_panel._widget.GetId())
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.right_panel._widget.GetId())
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.bottom_panel._widget.GetId())
         self.Bind(wx.EVT_SIZE, self.on_size)
 
     # wx stuff
@@ -239,12 +247,12 @@ class MainPanel(wx.Panel):
 
         id = event.GetId()
 
-        if id == self.left_panel.GetId():
-            self.left_panel.SetDefaultSize((event.GetDragRect().width, 1000))
-        elif id == self.right_panel.GetId():
-            self.right_panel.SetDefaultSize((event.GetDragRect().width, 1000))
-        elif id == self.bottom_panel.GetId():
-            self.bottom_panel.SetDefaultSize((1000, event.GetDragRect().height))
+        if id == self.left_panel._widget.GetId():
+            self.left_panel._widget.SetDefaultSize((event.GetDragRect().width, 1000))
+        elif id == self.right_panel._widget.GetId():
+            self.right_panel._widget.SetDefaultSize((event.GetDragRect().width, 1000))
+        elif id == self.bottom_panel._widget.GetId():
+            self.bottom_panel._widget.SetDefaultSize((1000, event.GetDragRect().height))
 
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
         self.remainingSpace.Refresh()
@@ -269,8 +277,8 @@ class Window(Widget):
             self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None, **kwds)
         self.main = MainPanel(self._widget)
-        self.b  = wx.Button(self.main.bottom_panel.panel, -1, 'arse')
-        self.main.bottom_panel.add_page('ass', 'console.png', self.b)
+        self.b = Button(self.main.bottom_panel, 'arse', page_label='ass', page_pixmap='console.png')
+#        self.main.bottom_panel.add_page('ass', 'console.png', self.b)
 
 class Button(Widget):
     def __init__(self, parent, text, **kwds):
