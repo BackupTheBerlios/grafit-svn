@@ -16,7 +16,7 @@ from gl2ps import *
 from giraffe.graph_render import makedata
 
 class Style(HasSignals):
-    def __init__(self, color=(0,0,0,1)):
+    def __init__(self, color=(0,0,0)):
         self._line_width = 0
         self._color = color
 
@@ -49,7 +49,12 @@ class Dataset(HasSignals):
         self.y.connect('data-changed', self.on_data_changed)
 
         self.style = Style()
-        self.style.color = default_style.color
+        try:
+            c = self.data.color
+            self.style.color = (c%256, (c//256)%256, (c//(256*256))%256)
+        except ValueError:
+            self.style.color = default_style.color
+            self.data.color = '0'
         self.style.connect('modified', self.on_style_modified)
 
         self.listid = self.create_list_id()
@@ -74,7 +79,7 @@ class Dataset(HasSignals):
         dy =  res * (ymax-ymin)/height
 
         glNewList(self.listid, GL_COMPILE)
-        glColor4f(*self.style.color)
+        glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
         makedata(asarray(self.x[:]), asarray(self.y[:]), 
                  xmin, xmax, ymin, ymax, 
 #                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]) # squares
@@ -91,6 +96,9 @@ class Dataset(HasSignals):
         self.emit('modified', self)
 
     def on_style_modified(self):
+        c = self.style.color
+        num = c[0] + c[1]*256 + c[2]*256*256
+        self.data.color = num
         self.emit('modified', self)
 
     def __str__(self):
@@ -769,4 +777,4 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph,
-'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:S,size:I,linetype:S,linestyle:S,linewidth:S]]')
+'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I]]')

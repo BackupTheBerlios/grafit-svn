@@ -325,6 +325,7 @@ class PixmapChoice(Widget):
 
     def set_selection(self, idx):
         bitmap = self.images[self.items[idx]]
+        self._selection = idx
         self._widget.SetBitmapLabel(bitmap)
     def get_selection(self):
         return self._selection

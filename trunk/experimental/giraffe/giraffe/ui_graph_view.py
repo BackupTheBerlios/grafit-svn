@@ -86,7 +86,8 @@ class GraphView(gui.Box):
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
-        self.style.color.selection = self.style.colors.index([self.legend.model[i] for i in self.legend.selection][0].style.color)
+        col = [self.legend.model[i] for i in self.legend.selection][0].style.color
+        self.style.color.selection = self.style.colors.index(col)
 
     def on_new_column(self):
         pass
@@ -163,7 +164,7 @@ class GraphStylePanel(gui.Box):
 
         # symbol color
         labels.append(gui.Label(grid,  'Color', pos=(1,1)))
-        c = gui.PixmapChoice(grid, pos=(1,2))
+        c = self.color = gui.PixmapChoice(grid, pos=(1,2))
         b = gui.Checkbox(grid, pos=(2,0))
         grid.layout.Hide(b._widget)
         c.min_size = (10, c.min_size[1])
@@ -172,7 +173,7 @@ class GraphStylePanel(gui.Box):
             for g in range(0, 256, 64):
                 for b in range(0, 256, 64):
                     c.append(c.create_colored_bitmap((20, 10), (r, g, b)))
-                    self.colors.append((r/256.,g/256.,b/256., 1.0))
+                    self.colors.append((r,g,b))
         c.selection = 0
         c.connect('select', self.on_select_color)
 
@@ -205,7 +206,7 @@ class GraphStylePanel(gui.Box):
         labels.append(gui.Label(grid,  'Style', pos=(1,1)))
         b = gui.Checkbox(grid, pos=(1,0))
         grid.layout.Hide(b._widget)
-        self.line_style = self.color = gui.Choice(grid, pos=(1,2))
+        self.line_style = gui.Choice(grid, pos=(1,2))
         self.line_style.min_size = (10, self.line_style.min_size[1])
         for p in ['solid', 'dash', 'dot',]:
             self.line_style.append(p)
