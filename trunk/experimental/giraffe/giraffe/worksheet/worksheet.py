@@ -53,6 +53,12 @@ class Worksheet(Item, HasSignals):
                 self.add_column(name)
             self[name] = value
 
+    def __delattr__(self, name):
+        if name in self.column_names:
+            self.remove_column(name)
+        else:
+            object.__delattr__(self, name)
+
     def add_column(self, name):
         ind = self.data.columns.append([name, ''])
         print >>sys.stderr, 'appended', ind

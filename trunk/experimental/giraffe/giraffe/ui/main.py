@@ -228,6 +228,9 @@ class MainWindow(wx.Panel):
         self.script_window.push('from giraffe import *')
         self.script_window.push('project.set_dict(globals())')
         self.script_window.setLocalShell()
+        self.script_window.clear()
+        self.script_window.prompt()
+
         self.bottom_panel.add_page(self.script_window)
         self.script_window.zoom(-1)
 
@@ -249,6 +252,7 @@ class MainWindow(wx.Panel):
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.bottom_panel.GetId())
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
+
     def show_object(self, obj):
         if self.view is not None:
             self.main_box.Remove(self.view)
@@ -261,6 +265,7 @@ class MainWindow(wx.Panel):
 
         self.main_box.Add(self.view, 1, wx.EXPAND)
         self.remainingSpace.Layout()
+
 
     def OnSashDrag(self, event):
         if event.GetDragStatus() == wx.SASH_STATUS_OUT_OF_RANGE:
