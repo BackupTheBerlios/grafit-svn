@@ -166,7 +166,28 @@ class ProjectExplorer(wx.Panel, HasSignals):
         splitter = wx.SplitterWindow(self)
 
         # tree control
-        self.project_tree = ProjectTree(splitter, self.project)
+        self.project_tree = wx.TreeCtrl(splitter, -1, 
+                                        style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
+        self.project_tree.SetIndent(10)
+
+        isz = (16,16)
+        il = self.ilt = wx.ImageList(isz[0], isz[1])
+
+        self.fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
+        self.fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
+        self.fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_REPORT_VIEW, wx.ART_OTHER, isz))
+        self.wsidx       = il.Add(wx.Image('../data/images/stock_folder.png').ConvertToBitmap())
+        self.project_tree.SetImageList(self.ilt)
+
+        self.root = self.project_tree.AddRoot('Project')
+
+        self.project_tree.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
+        self.project_tree.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
+
+        # object.id: treeitemid
+        self.treeitems = {}
+        self.treeitems[project.top.id] = self.root
+
 
         # list control
         self.current_dir = wx.ListCtrl(splitter, -1,
@@ -191,14 +212,16 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.project.connect('add-item', self.on_add_item)
         self.project.connect('remove-item', self.on_add_item)
         self.project.connect('change-current-folder', self.on_project_change_folder)
+        self.project.connect('add-item', self.on_project_add_item)
+        self.project.connect('remove-item', self.on_project_remove_item)
         
         self.items = {}
 
-        self.on_sel_changed(None, self.project_tree.root)
+        self.on_sel_changed(None, self.root)
 
     def on_add_item(self, item):
         if item.parent == self.project.here:
-            self.on_sel_changed(None, self.project_tree.items[item.parent.id])
+            self.on_sel_changed(None, self.treeitems[item.parent.id])
 
     def on_item_activated(self, event):
         obj = self.project.here[event.GetItem().GetText()]
@@ -218,65 +241,36 @@ class ProjectExplorer(wx.Panel, HasSignals):
                              Folder: self.img_folder}[type(o)])
             self.items[o.name] = o
 
-        self.project_tree.SelectItem(self.project_tree.items[folder.id])
+        self.project_tree.SelectItem(self.treeitems[folder.id])
 
     def on_sel_changed(self, event, item=None):
         if item is None:
             item = event.GetItem()
 
         # find folder
-        for k, v in self.project_tree.items.iteritems():
+        for k, v in self.treeitems.iteritems():
             if v == item:
                 folder = self.project.items[k]
                 
         self.project.cd(folder)
 
-
-class ProjectTree(wx.TreeCtrl, HasSignals):
-    def __init__(self, parent, project):
-        wx.TreeCtrl.__init__(self, parent, -1,
-                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
-        self.SetIndent(10)
-        self.project = project
-        self.project.connect('add-item', self.on_add_item)
-        self.project.connect('remove-item', self.on_remove_item)
-
-        isz = (16,16)
-        il = wx.ImageList(isz[0], isz[1])
-
-        self.fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
-        self.fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
-        self.fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_REPORT_VIEW, wx.ART_OTHER, isz))
-        self.wsidx       = il.Add(wx.Image('../data/images/stock_folder.png').ConvertToBitmap())
-        self.il = il
-        self.SetImageList(il)
-
-        self.root = self.AddRoot('Project')
-
-        self.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
-        self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
-
-        # object.id: treeitemid
-        self.items = {}
-        self.items[project.top.id] = self.root
-
-    def on_add_item(self, item):
+    def on_project_add_item(self, item):
         if type(item) == Folder:
-            treeitem = self.AppendItem(self.items[item.parent.id], item.name)
-            self.items[item.id] = treeitem
-            self.SetItemImage(treeitem, self.wsidx, wx.TreeItemIcon_Normal)
+            treeitem = self.project_tree.AppendItem(self.treeitems[item.parent.id], item.name)
+            self.treeitems[item.id] = treeitem
+            self.project_tree.SetItemImage(treeitem, self.wsidx, wx.TreeItemIcon_Normal)
             item.connect('rename', self.on_rename)
-            self.Expand(self.root)
+            self.project_tree.Expand(self.root)
 
-    def on_remove_item(self, item):
+    def on_project_remove_item(self, item):
         if type(item) == Folder:
             try:
-                self.Delete(self.items[item.id])
+                self.project_tree.Delete(self.treeitems[item.id])
             except KeyError:
-                self.Delete(self.items[item.id[1:]])
+                self.project_tree.Delete(self.treeitems[item.id[1:]])
 
     def on_rename(self, name, item):
-        self.SetItemText(self.items[item.id], name)
+        self.project_tree.SetItemText(self.treeitems[item.id], name)
 
 
 class Application(wx.App):
@@ -300,7 +294,7 @@ class Application(wx.App):
         s.Show()
 
         # frame ###################################################################################
-        frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
+        self.frame = frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
         self.SetTopWindow(frame)
 
