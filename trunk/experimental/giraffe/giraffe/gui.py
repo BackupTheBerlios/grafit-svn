@@ -333,8 +333,7 @@ class xToolPanel(wx.SashLayoutWindow):
             self.box.Add(self.btnbox, 0, wx.EXPAND)
 
         self.toolbar = wx.ToolBar(self.panel, -1, 
-                                  style=d_toolbar |wx.TB_3DBUTTONS)
-#                                  |wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
+                                  style=d_toolbar | wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
         self.btnbox.Add(self.toolbar, 1)
         self.toolbar.Bind(wx.EVT_TOOL, self.on_toolbar)
 
@@ -493,8 +492,7 @@ class xMainPanel(wx.Panel):
 
 
 class Window(Widget):
-    def __init__(self, position=(50,50), size=(640,480), menubar=False, statusbar=False, toolbar=False, 
-                 panels = '', **kwds):
+    def __init__(self, position=(50,50), size=(640,480), menubar=False, statusbar=False, toolbar=False):
         self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
         if toolbar:
@@ -511,24 +509,7 @@ class Window(Widget):
             menu.Append(-1, 'S&trint')
             menubar.Append(menu, '&Spring')
             self._widget.SetMenuBar(menubar)
-        Widget.__init__(self, None, **kwds)
-
-        self.main = xMainPanel(self._widget)
-        if 'b' in panels:
-            self.bottom_panel = self.main.bottom_panel
-        if 'l' in panels:
-            self.left_panel = self.main.left_panel
-        if 'r' in panels:
-            self.right_panel = self.main.right_panel
-
-    def _add(self, widget, expand=True, stretch=1.0):
-        widget._widget.Reparent(self.main.remainingSpace)
-        if expand:
-            expand = wx.EXPAND
-        else:
-            expand = 0
-        self.main.main_box.Add(widget._widget, stretch, wx.EXPAND)
-        self.main.main_box.SetSizeHints(widget._widget)
+        Widget.__init__(self, None)
 
 class Shell(Widget):
     def __init__(self, parent, locals, **kwds):
@@ -551,22 +532,22 @@ class Notebook(Widget):
     def __init__(self, parent, **place):
         self._widget = wx.Notebook(parent._widget, -1)
         Widget.__init__(self, parent, **place)
-        self.ass = wx.Button(self._widget.GetParent(), -1, 'x')
-        self.ass.SetSize((25, 25))
-        self.ass.SetPosition((300, 0))
-        self.ass.Bind(wx.EVT_BUTTON, self.on_x_button)
+#        self.ass = wx.Button(self._widget.GetParent(), -1, 'x')
+#        self.ass.SetSize((25, 25))
+#        self.ass.SetPosition((300, 0))
+#        self.ass.Bind(wx.EVT_BUTTON, self.on_x_button)
+#        self._widget.Bind(wx.EVT_SIZE, self.on_resized)
         self.il = wx.ImageList(16, 16)
         self.wsidx = self.il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
         self._widget.SetImageList(self.il)
-        self._widget.Bind(wx.EVT_SIZE, self.on_resized)
 
     def _add(self, widget, page_label):
         self._widget.AddPage(widget._widget, page_label)
         self._widget.SetPageImage(self._widget.GetPageCount()-1, self.wsidx)
 
-    def on_resized(self, event):
-        self.ass.SetPosition((event.GetSize()[0] - 25, 0))
-        event.Skip()
-
-    def on_x_button(self, event):
-        print 'x clicked'
+#    def on_resized(self, event):
+#        self.ass.SetPosition((event.GetSize()[0] - 25, 0))
+#        event.Skip()
+#
+#    def on_x_button(self, event):
+#        print 'x clicked'

@@ -40,21 +40,26 @@ class ProjectExplorer(Box):
 # example main window
 class MainWindow(Window):
     def __init__(self):
-        Window.__init__(self, menubar=True, statusbar=True, toolbar=True, panels='brl')
+        Window.__init__(self, menubar=True, statusbar=True, toolbar=True)
 
         # for example
-        self.shell = ScriptWindow(self.bottom_panel,
+        self.main = MainPanel(self)
+
+        self.shell = ScriptWindow(self.main.bottom_panel,
                                   page_label='console', page_pixmap='console.png')
-        self.explorer = ProjectExplorer(self.left_panel,
+        self.explorer = ProjectExplorer(self.main.left_panel,
                                         page_label='explorer', page_pixmap='stock_navigator.png')
 
-        book = Notebook(self)
-        box = Box(book, 'vertical', page_label='koali')
+        book = Notebook(self.main)
+        box = Box(book, 'vertical', page_label='koali.fasmata.data.perthcops.maniquio')
         Label(box, 'periex')
-        koalaki = MainPanel(book, page_label='koalaki')
+        for i in xrange(10):
+            koalaki = MainPanel(book, page_label='arrhenius.nr2_5min_2percent.koalaki')
         Label(koalaki, 'perierxx')
         self.test = ProjectExplorer(koalaki.right_panel,
                                     page_label='poulorer', page_pixmap='stock_navigator.png')
+        self.test = ProjectExplorer(koalaki.right_panel,
+                                    page_label='poulouir', page_pixmap='graph.png')
 
 
 
