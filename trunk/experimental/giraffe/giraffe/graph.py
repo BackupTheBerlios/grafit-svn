@@ -80,6 +80,10 @@ class Dataset(HasSignals):
     def __str__(self):
         return self.x.worksheet.name+':'+self.y.name+'('+self.x.name+')'
 
+    # this is nescessary! see graph.remove
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 class Grid(object):
     def __init__(self, orientation, plot):
@@ -324,6 +328,9 @@ class Graph(Item, HasSignals):
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
 
+
+    # add and remove datasets
+
     def add(self, x, y):
         ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), x=x.name, y=y.name)
         d = Dataset(self, ind)
@@ -336,20 +343,23 @@ class Graph(Item, HasSignals):
     def undo_add(self, ind):
         d = self.datasets[ind]
         del self.datasets[ind]
-#        d.disconnect('modified', self.on_dataset_modified)
+        d.disconnect('modified', self.on_dataset_modified)
         self.emit('remove-dataset', d)
-        self.data.datasets.delete(ind)
         self.emit('redraw')
+        self.data.datasets.delete(ind)
 
     add = command_from_methods('graph_add_dataset', add, undo_add)
 
     def remove(self, dataset):
+        # we can do this even if `dataset` is a different object
+        # than the one in self.datasets, if they have the same id
+        # (see Dataset.__eq__)
         ind = self.datasets.index(dataset)
         dataset.id = '-'+dataset.id
         self.datasets.remove(dataset)
         dataset.disconnect('modified', self.on_dataset_modified)
-        self.emit('redraw')
         self.emit('remove-dataset', dataset)
+        self.emit('redraw')
         return (dataset, ind), None
 
     def undo_remove(self, data):
@@ -361,6 +371,8 @@ class Graph(Item, HasSignals):
         self.emit('redraw')
 
     remove = command_from_methods('graph_remove_dataset', remove, undo_remove)
+
+
 
     def on_dataset_modified(self, d):
         d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
@@ -695,11 +707,3 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph, 'graphs[name:S,id:S,parent:S,datasets[id:S,worksheet:S,x:S,y:S]]')
-#register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B,expr:S]]')
-
-
-if 0:
-    graph = project.new(Graph, 'graph')
-    d = graph.add(Dataset(w.a, w.b))
-    graph[d]
-

@@ -1,6 +1,6 @@
 * add wx.FlexGridSizer to gui module
 * create gui for graph style panel
-* make add/remove datasets into commands
+- make add/remove datasets into commands
 * make data entry possible in worksheetview
 
 

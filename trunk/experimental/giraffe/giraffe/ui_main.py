@@ -6,6 +6,7 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
 
 from giraffe.ui_worksheet_view import WorksheetView
 from giraffe.ui_graph_view import GraphView
+from giraffe.import_ascii import import_ascii
 
 import wx
 import os
@@ -13,7 +14,7 @@ import os
 from giraffe.signals import HasSignals
 from giraffe.commands import command_list, undo, redo
 
-from giraffe import *
+from giraffe import Graph, Worksheet, Folder, Project
 
 class Cancel(Exception):
     pass
@@ -155,15 +156,21 @@ class MainWindow(Window):
         self.book = Notebook(self.main)
         self.book.connect('page-changed', self.on_page_changed)
 
-        menubar = Menubar(self)
         actions = {
-            'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png'),
-            'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png'),
-            'file-save': Action('Save', 'Save the project', self.on_project_save, 'save.png'),
-            'file-saveas': Action('Save As', 'Save the project with a new name', self.on_project_saveas, 'saveas.png'),
-            'edit-undo': Action('Undo', 'Undo the last action', undo, 'stock_undo.png'),
-            'edit-redo': Action('Redo', 'Redo the last action', redo, 'stock_redo.png'),
-            'edit-copy': Action('Copy', 'Undo the last action', object),
+            'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
+            'file-open': Action('Open', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
+            'file-save': Action('Save', 'Save the project', 
+                                self.on_project_save, 'save.png', 'Ctrl+S'),
+            'file-saveas': Action('Save As', 'Save the project with a new name', 
+                                  self.on_project_saveas, 'saveas.png', 'Ctrl+A'),
+            'file-quit': Action('Quit', 'Quit grafit', self.on_quit, 'stock_exit.png', 'Ctrl+Q'),
+
+            'edit-undo': Action('Undo', 'Undo the last action', undo, 'stock_undo.png', 'Ctrl+Z'),
+            'edit-redo': Action('Redo', 'Redo the last action', redo, 'stock_redo.png', 'Shift+Ctrl+Z'),
+            'edit-copy': Action('Copy', 'Undo the last action', object, None, 'Ctrl+C'),
+
+            'import-ascii': Action('Import ASCII', 'Import and ASCII file', 
+                                   self.on_import_ascii, 'import_ascii.png', 'Ctrl+I'),
             'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
                                            self.on_new_worksheet, 'worksheet.png'),
             'object-new-graph': Action('New Graph', 'Create a new worksheet', 
@@ -173,19 +180,36 @@ class MainWindow(Window):
             None: None
         }
 
-        menu = Menu(menubar, '&File')
-        for item in ['file-new', 'file-open', None, 'file-save', 'file-saveas']:
-            menu.append(actions[item])
-
-        menu = Menu(menubar, '&Edit')
-        for item in ['edit-undo', 'edit-redo', None, 'edit-copy']:
-            menu.append(actions[item])
+        self.menubar = Menubar(self)
+        for title, items in [
+            ('&File', ['file-new', 'file-open', None, 
+                       'file-save', 'file-saveas', None, 
+                       'file-quit']),
+            ('&Edit', ['edit-undo', 'edit-redo', None, 
+                       'edit-copy']),
+        ]:
+            menu = Menu(self.menubar, title)
+            for item in items:
+                menu.append(actions[item])
 
         self.toolbar = Toolbar(self)
-        for item in ['file-new', 'file-open', 'file-save', 'file-saveas', None,
-                     'object-new-folder', 'object-new-worksheet', 'object-new-graph', None,
-                     'edit-undo', 'edit-redo']:
+        for item in [
+            'file-new', 'file-open', 'file-save', 'file-saveas', None,
+            'object-new-folder', 'object-new-worksheet', 'object-new-graph', None,
+            'edit-undo', 'edit-redo', None,
+            'import-ascii'
+        ]:
             self.toolbar.append(actions[item])
+
+    def on_import_ascii(self):
+        dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
+                            defaultFile="", wildcard="All Files|*.*|Projects|*.gt", style=wx.OPEN | wx.CHANGE_DIR)
+        if dlg.ShowModal() == wx.ID_OK:
+            ws = self.project.new(Worksheet, None, self.project.here)
+            path = dlg.GetPaths()[0]
+            ws.array, ws._header = import_ascii(path)
+        dlg.Destroy()
+ 
 
     def open_project(self, project):
         self.project = project
@@ -214,6 +238,10 @@ class MainWindow(Window):
 #        if isinstance(item, GraphView):
 #            item.graph.emit('redraw')
         pass
+
+
+    def on_quit(self):
+        self.close()
 
     def close_project(self):
         for panel in (self.shell, self.explorer):

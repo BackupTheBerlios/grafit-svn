@@ -144,6 +144,18 @@ class Worksheet(Item, HasSignals):
             return 0
     nrows = property(get_nrows)
 
+    def set_array(self, arr):
+        if len(arr.shape) != 2:
+            raise TypeError, "Array must be two-dimensional"
+
+        for column in arr:
+            name = self.suggest_column_name()
+            self[name] = column
+
+    def get_array(self):
+        return array(self.columns)
+
+    array = property(get_array, set_array)
 
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -171,6 +183,10 @@ class Worksheet(Item, HasSignals):
     def get_column_names(self):
         return [c.name for c in self.columns]
     column_names = property(get_column_names)
+
+    def __iter__(self):
+        for column in self.columns:
+            yield column
 
     def set_name(self, n):
         self._name = n

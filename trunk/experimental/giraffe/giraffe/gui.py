@@ -30,7 +30,14 @@ class xApplication(wx.App):
         self.mainwin.show_all()
         return True
 
-class Application(object):
+class Borg(object):
+    _state = {}
+    def __new__(cls, *p, **k):
+        self = object.__new__(cls, *p, **k)
+        self.__dict__ = cls._state
+        return self
+
+class Application(Borg):
     def __init__(self, mainwinclass, *args, **kwds):
         self._app = xApplication(mainwinclass, *args, **kwds)
 
@@ -665,7 +672,15 @@ class Menu(object):
             self._menu.AppendSeparator()
         else:
             id = wx.NewId()
-            self._menu.Append(id, action.name)
+            if action.accel is not None:
+                name = action.name + '\t' + action.accel
+            else:
+                name = action.name
+            if action.desc is not None:
+                help = action.desc
+            else:
+                help = ''
+            self._menu.Append(id, name, help)
             self.menubar.items[id] = action
     def on_menu(self, event):
         self.items[event.GetId()]()
@@ -686,6 +701,9 @@ class Window(Widget):
             self._widget.SetMenuBar(child._widget)
 #        else:
 #            Widget._add(self, child, **place)
+
+    def close(self):
+        self._widget.Close(True)
 
 class Shell(Widget):
     def __init__(self, parent, locals, **kwds):
