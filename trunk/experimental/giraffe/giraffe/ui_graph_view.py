@@ -47,12 +47,16 @@ class GraphView(gui.Box):
         tbbox = gui.Box(self, 'horizontal', stretch=0)
 
         self.toolbar = gui.Toolbar(tbbox, stretch=1)
-        self.toolbar.append(gui.Action('New column', 'Create a new column', 
-                                       self.on_new_column, 'stock_insert-columns.png'))
+        self.toolbar.append(gui.Action('Arrow', '', object, 'arrow.png'))
+        self.toolbar.append(gui.Action('Hand', '', object, 'hand.png'))
+        self.toolbar.append(gui.Action('Zoom', '', object, 'zoom.png'))
+        self.toolbar.append(gui.Action('Range', '', object, 'range.png'))
+        self.toolbar.append(gui.Action('Data reader', '', object, 'dreader.png'))
+        self.toolbar.append(gui.Action('Screen reader', '', object, 'sreader.png'))
 
         self.closebar = gui.Toolbar(tbbox, stretch=0)
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
-                                       self.on_close, 'remove.png'))
+                                       self.on_close, 'close.png'))
 
         self.panel = gui.MainPanel(self)
         self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
@@ -70,8 +74,13 @@ class GraphView(gui.Box):
 
         self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
 
-        self.graphdata = GraphDataPanel(self.graph, self.panel.right_panel, page_label='Data', page_pixmap='worksheet.png')
+        self.graphdata = GraphDataPanel(self.graph, self.panel.right_panel, 
+                                        page_label='Data', page_pixmap='worksheet.png')
         self.graphdata.connect_project(self.graph.project)
+
+        self.style = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
+        self.style = gui.Box(self.panel.right_panel, 'horizontal', page_label='Style', page_pixmap='style.png')
+        self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_new_column(self):
         pass
@@ -132,7 +141,9 @@ class GraphDataPanel(gui.Box):
 #        button = gui.Button(btnbox, 'add', stretch=0)
         self.toolbar = gui.Toolbar(self, stretch=0)
         self.toolbar.append(gui.Action('Add', 'Add datasets to the graph', 
-                                       self.on_add, 'stock_insert-columns.png'))
+                                       self.on_add, 'add.png'))
+        self.toolbar.append(gui.Action('Remove', 'Remove datasets from the graph', 
+                                       self.on_add, 'remove.png'))
 #        button.connect('clicked', self.on_add)
 
         gui.Label(self, 'Worksheet', stretch=0)

@@ -590,9 +590,10 @@ class Graph(Item, HasSignals):
 
             glColor3f(1.0,1.0,0.0)
             glLineStipple (1, 0x4444) # dotted
-            glEnable(GL_LINE_STIPPLE)
             if self.ps:
                 gl2psEnable(GL2PS_LINE_STIPPLE)
+            else:
+                glEnable(GL_LINE_STIPPLE)
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
 
@@ -612,9 +613,10 @@ class Graph(Item, HasSignals):
             glEnd()
             self.px, self.py = self.sx, self.sy
 
-            glDisable(GL_LINE_STIPPLE)
             if self.ps:
                 gl2psDisable(GL2PS_LINE_STIPPLE)
+            else:
+                glDisable(GL_LINE_STIPPLE)
             glDisable(GL_COLOR_LOGIC_OP)
             glPopMatrix()
 
@@ -701,7 +703,7 @@ class Graph(Item, HasSignals):
 
 
             print >>sys.stderr, "exporting...",
-            f = file('ar.eps', 'w')
+            f = file('arxi.eps', 'w')
             gl2psBeginPage("Title", "Producer", 
                            self.viewport,
                            GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,

@@ -750,6 +750,8 @@ class OpenGLWidget(Widget):
             self.InitGL()
             self.init = True
         size = self._widget.GetSize()
+        if size[0] <= 0 or size[1] <= 0:
+            return
         if self._lastsize != size:
             self.emit('resize-gl', *size)
             self._lastsize = size

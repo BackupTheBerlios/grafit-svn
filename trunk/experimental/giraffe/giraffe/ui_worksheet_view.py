@@ -34,7 +34,7 @@ class WorksheetView(gui.Box):
 
         self.closebar = gui.Toolbar(tbbox, stretch=0)
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
-                                       self.on_close, 'remove.png'))
+                                       self.on_close, 'close.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
 
