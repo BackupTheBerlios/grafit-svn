@@ -26,6 +26,12 @@ class Direction:
 class Coordinates:
     Pixel, Data, Physical = range(3)
 
+# Units
+# -----
+# cm
+# pixels
+
+
 
 # Coordinate systems
 # ------------------
@@ -60,8 +66,6 @@ key_event(key)
 """
 
 ##############################################################################
-
-# symbols are reasonably fast for 100000 points total. Still slower than PyQwt
 
 def output(text, size):
     glPushMatrix()
@@ -128,19 +132,20 @@ class GLGraphWidget(QGLWidget):
         self.y = {}
         self.range = {}
 
-        self.x[0] = arange(100000.)/10000
+        self.x[0] = arange(10000.)/10000
         self.y[0] = sin(self.x[0])
 
-        self.x[1] = arange(100000.)/10000
+        self.x[1] = arange(10000.)/10000
         self.y[1] = cos(self.x[1])
 
-        self.x[2] = arange(100000.)/10000
+        self.x[2] = arange(10000.)/10000
         self.y[2] = tan(self.x[2])
 
 
         self.colors = {}
         self.colors[0] = (0.0, 0.1, 0.6)
         self.colors[1] = (0.4, 0.0, 0.1)
+        self.colors[2] = (0.3, 0.4, 0.7)
 
         self.set_range(0.0, 100.5)
         self.autoscale()
@@ -148,88 +153,131 @@ class GLGraphWidget(QGLWidget):
     def paint_axes(self):
         glLoadIdentity()
 
-        glTranslatef(-1., -1., 0.)
-        glTranslatef(0.1, 0.1, 0.)
+        glPushMatrix()
+        glTranslatef(-1., -1., 0.)         # starting at bottom left corner
+        glScalef(self.xscale_pixel, self.yscale_pixel, 0.)
 
-        glColor3f(0.0,0.0,0.0)
+        glColor3f(0.0,0.0,0.0)      # black
 
         glBegin(GL_LINES)
-        glVertex3f(    0.0,    0.0, 0.0)
-        glVertex3f(    1.8,    0.0, 0.0)
+        glVertex3f(self.marginl, self.marginb, 0.0)
+        glVertex3f(self.w - self.marginr, self.marginb, 0.0)
 
-        glVertex3f(    0.0,    0.0, 0.0)
-        glVertex3f(    0.0,    1.8, 0.0)
+        glVertex3f(self.w - self.marginr, self.marginb, 0.0)
+        glVertex3f(self.w - self.marginr, self.h - self.margint, 0.0)
 
-        glVertex3f(    0.0,    1.8, 0.0)
-        glVertex3f(    1.8,    1.8, 0.0)
+        glVertex3f(self.w - self.marginr, self.h - self.margint, 0.0)
+        glVertex3f(self.marginl, self.h - self.margint, 0.0)
 
-        glVertex3f(    1.8,    1.8, 0.0)
-        glVertex3f(    1.8,    0.0, 0.0)
+        glVertex3f(self.marginl, self.h - self.margint, 0.0)
+        glVertex3f(self.marginl, self.marginb, 0.0)
         glEnd()
+
+        glPopMatrix()
 
         #x tics
 
         glPushMatrix()
-        glScalef(1.8/(self.xmax-self.xmin), 1., 1.)
+        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+        glScalef(self.xscale_data, self.yscale_mm, 1.)
         glTranslate(-self.xmin, 0, 0)
 
         glBegin(GL_LINES)
         for x in tics(self.xmin, self.xmax):
             glVertex3f(x, 0.0, 0.0)
-            glVertex3f(x, 0.03, 0.0)
+            glVertex3f(x, 2, 0.0)
         glEnd()
+
+#        glBegin(GL_LINES)
+#        tx  = tics(self.xmin, self.xmax)
+#        for xx in [(tx[n], tx[n+1]) for n in xrange(len(tx)-1)]:
+#            for x in tics(xx[0], xx[1]):
+#                glVertex3f(x, 0.0, 0.0)
+#                glVertex3f(x, 0.6, 0.0)
+#        glEnd()
+
+
+        plot_height_mm = (self.h - self.marginb - self.margint)/self.res
+        plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
+
+        glLineStipple (1, 0x4444) # dotted
+        glEnable(GL_LINE_STIPPLE)
+        glColor3f(0.3, 0.3, 0.3)
+        glBegin(GL_LINES)
+        for x in tics(self.xmin, self.xmax):
+            glVertex3f(x, 0.0, 0.0)
+            glVertex3f(x, plot_height_mm, 0.0)
+        glEnd()
+        glDisable(GL_LINE_STIPPLE)
+        glColor3f(0.0, 0.0, 0.0)
+
         glPopMatrix()
 
         #y tics
 
         glPushMatrix()
-        glScalef(1., 1.8/(self.ymax-self.ymin), 1.)
+        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+        glScalef(self.xscale_mm, self.yscale_data, 1.)
         glTranslate(0, -self.ymin, 0)
 
         glBegin(GL_LINES)
         for y in tics(self.ymin, self.ymax):
             glVertex3f(0, y, 0.0)
-            glVertex3f(0.03, y, 0.0)
+            glVertex3f(2, y, 0.0)
         glEnd()
+
+#        glBegin(GL_LINES)
+#        ty  = tics(self.ymin, self.ymax)
+#        for yy in [(ty[n], ty[n+1]) for n in xrange(len(ty)-1)]:
+#            for y in tics(yy[0], yy[1]):
+#                glVertex3f(0, y, 0.0)
+#                glVertex3f(0.6, y, 0.0)
+#        glEnd()
+
+        glLineStipple (1, 0x4444) # dotted
+        glEnable(GL_LINE_STIPPLE)
+        glColor3f(0.3, 0.3, 0.3)
+        glBegin(GL_LINES)
+        for y in tics(self.ymin, self.ymax):
+            glVertex3f(0, y, 0.0)
+            glVertex3f(plot_width_mm, y, 0.0)
+        glEnd()
+        glDisable(GL_LINE_STIPPLE)
+        glColor3f(0.0, 0.0, 0.0)
 
         glPopMatrix()
 
-#        glDepthRange( 0, 0 )
         glLoadIdentity()
 
-        glTranslatef(-1., -1., 0.)
-        glTranslatef(0.1, 0.1, 0.)
-
+        f = QFont('Times', self.res*2)
         for x in tics(self.xmin, self.xmax):
             glPushMatrix()
-            glScalef(1.8/(self.xmax-self.xmin), 1., 1.)
-            glTranslatef(-self.xmin, 0., 0.)
-
-            glPushMatrix()
+            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+            glScalef(self.xscale_data, self.yscale_mm, 1.)
             
-            glTranslatef(x, -0.07, 0)
-            glScalef((self.xmax-self.xmin)/1.8, 1., 1.)
-            
-#            output(str(x), 3000)
-            f = QFont('Times', self.res/10)
-            self.renderText(0, 0, 0, str(x), f)
+            glTranslatef(x-self.xmin, -3, 0)
 
-            glPopMatrix()
+            glScalef(self.xscale_pixel / self.xscale_data, 1., 1.)
+
+            fm = QFontMetrics(f)
+            w = fm.width(str(x))
+            self.renderText(-w/2, 0, 0, str(x), f)
+
             glPopMatrix()
 
         for y in tics(self.ymin, self.ymax):
             glPushMatrix()
-            glScalef(1., 1.8/(self.ymax-self.ymin), 1.)
-            glTranslatef(0, -self.ymin, 0.)
-
-            glPushMatrix()
+            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
+            glScalef(self.xscale_mm, self.yscale_data, 1.)
             
-            glTranslatef(-0.07, y, 0)
-            glScalef(1., (self.ymax-self.ymin)/1.8, 1.)
-            
-            output(str(y), 3000)
+            glTranslatef(-2, y-self.ymin, 0)
 
-            glPopMatrix()
+            glScalef(self.yscale_pixel / self.yscale_mm, 1., 1.)
+            
+            fm = QFontMetrics(f)
+            w = fm.width(str(y))
+            self.renderText(-w, 0, 0, str(y), f)
+
             glPopMatrix()
 
 
@@ -239,10 +287,10 @@ class GLGraphWidget(QGLWidget):
         self.initmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
 
         # go to origin
-        glTranslatef(-0.9, -0.9, 0.)
+        glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
 
         # scale to coordinates
-        glScalef(1.8/(self.xmax-self.xmin), 1.8/(self.ymax-self.ymin), 1)
+        glScalef(self.xscale_data, self.yscale_data, 1)
 
         # go to (0, 0)
         glTranslatef(-self.xmin, -self.ymin, 0)
@@ -271,10 +319,15 @@ class GLGraphWidget(QGLWidget):
             x, _, _ = gluProject(self.to, 0.0, 0.0, self.mvmatrix, self.projmatrix, self.viewport)
             x2, _ =  self.mouse_to_ident(x, 0.)
 
-            glClipPlane(GL_CLIP_PLANE0, [  1.,  0.,  0.,  min(0.9, -x1) ])
-            glClipPlane(GL_CLIP_PLANE1, [ -1.,  0.,  0.,  min(0.9, x2) ])
-            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  0.9 ])
-            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  0.9 ])
+            lt = 1-2.*self.marginl/self.w
+            rt = -1+2.*(self.w-self.marginr)/self.w
+            bt = 1-2.*self.marginb/self.h
+            tp = -1+2.*(self.h-self.margint)/self.h
+
+            glClipPlane(GL_CLIP_PLANE0, [  1.,  0.,  0.,  min(lt, -x1) ])
+            glClipPlane(GL_CLIP_PLANE1, [ -1.,  0.,  0.,  min(rt, x2) ])
+            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  tp ])
+            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  bt ])
 
             glEnable(GL_CLIP_PLANE0)
             glEnable(GL_CLIP_PLANE1)
@@ -321,48 +374,68 @@ class GLGraphWidget(QGLWidget):
 
 
     def resizeGL(self,width,height):
+        """handles window resize events"""
+        # aspect ratio to keep 
+        ratio = 4./3.
+
+        # set width and height (in pixels)
         self.w, self.h = width, height
-        self.marginx = int(self.w * 0.1)
-        self.marginy = int(self.h * 0.1)
-        glViewport( 0, 0, width, height )
-        self.viewport = glGetIntegerv(GL_VIEWPORT)
+        if (1.*self.w) / self.h > ratio:
+            self.w = ratio*self.h
+        else:
+            self.h = self.w/ratio
+
+        # set margins (in pixels)
+        self.marginb = int(self.h * 0.1)
+        self.margint = int(self.h * 0.1)
+        self.marginl = int(self.w * 0.1)
+        self.marginr = int(self.w * 0.1)
+
+
+        # resolution (in pixels/mm)
         self.res = self.w/100.
 
+        # resize the viewport
+        glViewport(0, 0, self.w, self.h)
+        self.viewport = glGetIntegerv(GL_VIEWPORT)
+
+        self.xscale_pixel = 2./self.w
+        self.yscale_pixel = 2./self.h
+
+        self.xscale_mm = self.xscale_pixel * self.res
+        self.yscale_mm = self.yscale_pixel * self.res
+
+        self.set_data_scales()
+
+    def set_data_scales(self):
+        self.xscale_data = self.xscale_pixel * ((self.w-self.marginl-self.marginr)/(self.xmax-self.xmin))
+        self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
+
     def initializeGL(self):
-        glClearColor(1.0, 1.0, 1.0, 1.0)
+        glClearColor(252./256, 246./256, 238./256, 1.0)
         glDisable(GL_DEPTH_TEST)
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
         gluOrtho2D (0, self.size().width(), 0, self.size().height())
-        self.make_data_list()
+        self.resizeGL(self.size().width(), self.size().height())
 
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
+        self.make_data_list()
+
+
     def make_data_list(self):
-        V3f = glVertex3f
         t = time.time()
 
         dx =  self.res * (self.xmax-self.xmin)/self.size().width()
         dy =  self.res * (self.ymax-self.ymin)/self.size().height()
 
-        if False:
-            glNewList(1, GL_COMPILE)
-            for k in self.x.keys():
-                glBegin(GL_QUADS)
-                for x,y in izip(self.x[k], self.y[k]):
-                    V3f(x, y, 0)
-                    V3f(x+dx, y, 0)
-                    V3f(x+dx, y+dy, 0)
-                    V3f(x, y+dy, 0)
-                glEnd()
-            glEndList()
-        else:
-            glNewList(1, GL_COMPILE)
-            for k in self.x.keys():
-                makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
-            glEndList()
- 
+        glNewList(1, GL_COMPILE)
+        for k in self.x.keys():
+            glColor3f(*self.colors[k])
+            makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
+        glEndList()
 
         print (time.time()-t), "seconds"
 
@@ -381,12 +454,15 @@ class GLGraphWidget(QGLWidget):
         self.ymin = min(self.y[0])
         self.xmax = max(self.x[0])
         self.ymax = max(self.y[0])
+        if hasattr(self, 'xscale_pixel'):
+            self.set_data_scales()
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
 
     def zoom(self, xmin, xmax, ymin, ymax):
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
+        self.set_data_scales()
 
  
     def zoomout(self,x1, x2,x3, x4):
