@@ -87,9 +87,12 @@ class ProjectExplorer(Box):
     def __init__(self, parent, **kwds):
         Box.__init__(self, parent, 'horizontal', **kwds)
         self.splitter = Splitter(self, 'horizontal')
+
         self.tree = Tree(self.splitter)
-        self.list = List(self.splitter)
         self.tree.connect('selected', self.on_tree_selected)
+
+        self.list = List(self.splitter)
+        self.list.enable_drop(['filename'])
         self.list.connect('item-activated', self.on_list_item_activated)
         self.list.connect('drop-hover', self.on_drop_hover)
 
