@@ -1,9 +1,14 @@
 # http://tman.3-wave.com/torrents.html
 
+import sys
+print  >>sys.stderr, "import wx...",
 import  wx
-import sys, os
+print  >>sys.stderr, "ok"
+import os
 
+print  >>sys.stderr, "import shapes...",
 from shapes import PlotCanvas, Plot
+print  >>sys.stderr, "ok",
 
 class RunDemoApp(wx.App):
     def __init__(self):
