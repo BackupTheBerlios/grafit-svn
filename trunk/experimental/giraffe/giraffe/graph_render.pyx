@@ -106,7 +106,7 @@ def makedata(_numarray sx, _numarray sy,
         y = yd[n]
 
         # skip if outside limits
-        if not (xmin <= x <= xmax):
+        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
             continue
 
         # skip if we would land within 1/1000th of the graph from the previous point

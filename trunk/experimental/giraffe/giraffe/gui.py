@@ -321,6 +321,10 @@ class Box(Widget):
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
 #        self.layout.SetSizeHints(self._widget)
 
+class Checkbox(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.CheckBox(parent._widget, -1)
+        Widget.__init__(self, parent, **place)
 
 class Button(Widget):
     def __init__(self, parent, text, **kwds):

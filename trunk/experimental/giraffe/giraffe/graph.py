@@ -247,6 +247,7 @@ class Axis(object):
                 if self.plot.ps:
                     gl2psText(str(x), "Times-Roman", h)
                 self.font.Render(str(x))
+                print str(x)
 
                 glPopMatrix()
         elif self.position == 'left':
@@ -263,6 +264,7 @@ class Axis(object):
                 if self.plot.ps:
                     gl2psText(str(y), "TimesRoman", h)
                 self.font.Render(str(y))
+                print str(y)
                 
                 glPopMatrix()
 

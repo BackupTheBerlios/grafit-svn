@@ -139,16 +139,17 @@ class GraphStylePanel(gui.Box):
         self.view = view
 
         self.symbol = gui.Frame(self, 'vertical', title='Symbol', stretch=0.)
-        grid = gui.Grid(self.symbol, 3, 2)#, expand=True, stretch=1.)
-        gui.Label(grid,  'Symbol', pos=(0,0))
-        c = gui.Choose(grid, pos=(0,1))
+        grid = gui.Grid(self.symbol, 3, 3)#, expand=True, stretch=1.)
+
+        gui.Label(grid,  'Symbol', pos=(0,1))
+        c = gui.Choose(grid, pos=(0,2))
         c._widget.SetSizeHints(-1, 20, 60, 30)
 #        for shape in ['circle', 'square', 'triangle up', 'triangle down', 'triangle left', 'triangle right',
 #                      'diamond', 'pentagon', 'star', 'cross', 'x']:
 #            c.append(shape)
 
-        gui.Label(grid,  'Color', pos=(1,0))
-        c = gui.Choose(grid, pos=(1,1))
+        gui.Label(grid,  'Color', pos=(1,1))
+        c = gui.Choose(grid, pos=(1,2))
         c._widget.SetSizeHints(-1, 20, 60, 30)
         self.colors = []
         for r in range(0, 256, 64):
@@ -158,10 +159,14 @@ class GraphStylePanel(gui.Box):
                     self.colors.append((r/256.,g/256.,b/256., 1.0))
         c.connect('select', self.on_select_color)
 
-        gui.Label(grid, 'Size', pos=(2,0))
+        gui.Label(grid, 'Size', pos=(2,1))
 
-        c = gui.Spin(grid, pos=(2,1))
+        c = gui.Spin(grid, pos=(2,2))
         c._widget.SetSizeHints(-1, 20, 60, 30)
+
+        b = gui.Checkbox(grid, pos=(0,0))
+        b = gui.Checkbox(grid, pos=(1,0))
+        b = gui.Checkbox(grid, pos=(2,0))
 
         grid.layout.AddGrowableCol(1)
 
@@ -189,6 +194,10 @@ class GraphStylePanel(gui.Box):
         c._widget.SetSizeHints(-1, 20, 60, 30)
 
         grid.layout.AddGrowableCol(1)
+
+        b = gui.Box(self, 'horizontal', expand=False, stretch=0)
+        gui.Label(b, 'Group')
+        c = gui.Choice(b)
 
     def on_select_color(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
