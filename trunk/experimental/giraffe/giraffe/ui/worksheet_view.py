@@ -27,10 +27,11 @@ class TableData(grid.PyGridTableBase):
         self._cached_col = None
         self._cached_data = None
 
-#    def GetAttr(self, row, col, kind):
-#        attr = self.normal_attr
-#        attr.IncRef()
-#        return attr
+    def GetAttr(self, row, col, kind):
+        print >>sys.stderr, 'A', row, col
+        attr = self.normal_attr
+        attr.IncRef()
+        return attr
 
     def GetNumberRows(self):
         return self.worksheet.nrows
@@ -42,6 +43,7 @@ class TableData(grid.PyGridTableBase):
         return self.worksheet[col][row] is nan
 
     def GetValue(self, row, col):
+        print >>sys.stderr, row, col
         return str(self.worksheet[col][row]).replace('nan', '')
 
     def SetValue(self, row, col, value):
@@ -87,11 +89,11 @@ class TableData(grid.PyGridTableBase):
         msg = grid.GridTableMessage(self, grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         view.ProcessTableMessage(msg)
 
-    def GetColLabelValue(self, col):
-        return self.worksheet.column_names[col]
+#    def GetColLabelValue(self, col):
+#        return self.worksheet.column_names[col]
 
-    def GetRowLabelValue(self, row):
-        return str(row)
+#    def GetRowLabelValue(self, row):
+#        return str(row)
 
 
 class WorksheetView(grid.Grid):
@@ -110,13 +112,16 @@ class WorksheetView(grid.Grid):
 
         table = TableData(self.worksheet)
 
+
         # The second parameter means that the grid is to take ownership of the
         # table and will destroy it when done.  Otherwise you would need to keep
         # a reference to it and call it's Destroy method later.
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
-        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
+        table.SetColAttr(0, table.normal_attr)
+        table.SetColAttr(1, table.normal_attr)
+#        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
         
     def OnKeyDown(self, evt):
         if evt.KeyCode() != wx.WXK_RETURN:

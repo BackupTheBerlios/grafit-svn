@@ -166,7 +166,7 @@ class CommandList(signals.HasSignals):
         for com in self.commands:
             if not com.done:
                 break
-        print >>sys.stderr, 'REDO:', com, [(type(c).__name__, c.done) for c in self.commands]
+#        print >>sys.stderr, 'REDO:', com, [(type(c).__name__, c.done) for c in self.commands]
         if com and not com.done:
             e = self.enabled
             self.disable()
@@ -191,7 +191,7 @@ class CommandList(signals.HasSignals):
             finally:
                 if e:
                     self.enable()
-            print >>sys.stderr, 'UNDO:', com
+#            print >>sys.stderr, 'UNDO:', com
 #            return True
 #        else:
 #            return False

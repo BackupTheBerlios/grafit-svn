@@ -3,9 +3,28 @@ import sys
 from giraffe.base.signals import HasSignals
 from giraffe.base.commands import command_from_methods
 from giraffe.base.item import Item, wrap_attribute, register_class, create_id
+
+import mkarray as arrays
+
 from giraffe.worksheet.mkarray import MkArray
 
-class Column(MkArray):
+def evaluate_expression(expression, project, worksheet):
+    namespace = {}
+
+    namespace.update(arrays.__dict__)
+
+    namespace['top'] = project.top
+    namespace['here'] = project.this
+    namespace['this'] = worksheet
+    namespace['up'] = worksheet.parent.parent
+    
+    namespace.update(dict([(c.name, c) for c in worksheet.columns]))
+    namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
+
+    return eval(expression, namespace)
+
+
+class Column(MkArray, HasSignals):
     def __init__(self, worksheet, ind):
         self.data = worksheet.data.columns[ind]
         self.worksheet = worksheet
@@ -28,6 +47,7 @@ class Column(MkArray):
         prev = self[key]
         MkArray.__setitem__(self, key, value)
         self.worksheet.emit('data-changed')
+        self.emit('data-changed')
         return [key, value, prev]
 
     def undo_setitem(self, state):
@@ -35,6 +55,7 @@ class Column(MkArray):
         self[key] = prev
 
     __setitem__ = command_from_methods('column_change_data', __setitem__, undo_setitem)
+
 
 
 class Worksheet(Item, HasSignals):
@@ -78,14 +99,14 @@ class Worksheet(Item, HasSignals):
 
     def add_column(self, name):
         ind = self.data.columns.append(name=name, id=create_id(), data='')
-        print >>sys.stderr, 'appended', ind
+#        print >>sys.stderr, 'appended', ind
         self.columns.append(Column(self, ind))
         self.emit('data-changed')
         return name
 
     def add_column_undo(self, name):
         ind = self.column_index(name=name)
-        print >>sys.stderr, 'found', ind
+#        print >>sys.stderr, 'found', ind
         self.data.columns.delete(ind)
         del self.columns[ind]
         self.emit('data-changed')
@@ -105,7 +126,7 @@ class Worksheet(Item, HasSignals):
             return (col, ind), None
 
     def undo_remove_column(self, c):
-        print >>sys.stderr, c
+#        print >>sys.stderr, c
         col, ind = c
         col.name = col.name[1:]
         self.columns.insert(ind, col)
@@ -161,4 +182,4 @@ class Worksheet(Item, HasSignals):
     _name = wrap_attribute('name')
     parent = wrap_attribute('parent')
 
-register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B]]')
+register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B,expr:S]]')

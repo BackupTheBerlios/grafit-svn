@@ -216,10 +216,8 @@ class Application(wx.App):
 
     def OnNewWs(self, evt):
         ws = self.project.new(Worksheet, 'test')
-        ws.add_column('a')
-        ws.add_column('other')
-        ws['a'] = [1,2,3]
-        ws['other'] = arange(1000000.)
+        ws.a = [1,2,3]
+        ws.other = arange(100000.)
 
     def on_new_graph(self, evt):
         g = self.project.new(Graph, 'graph1')

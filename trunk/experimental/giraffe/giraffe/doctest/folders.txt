@@ -49,5 +49,3 @@ The following special names are defined:
     >>> undo()
     >>> data1 == w
     True
-
-    >>> print >>sys.stderr, command_list.commands
