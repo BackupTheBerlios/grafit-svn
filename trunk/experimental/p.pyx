@@ -60,6 +60,7 @@ def makedata(ArrayType sx, ArrayType sy, double dx, double dy,
             continue
 
         glVertex3f(x, y, 0)
+#        glTranslate()
         glVertex3f(x+dx, y, 0)
         glVertex3f(x+dx, y+dy, 0)
         glVertex3f(x, y+dy, 0)

@@ -3,6 +3,7 @@
 import sys
 import time
 import math
+import ftgl
 from itertools import izip
 from qt import *
 from qtcanvas import *
@@ -249,19 +250,15 @@ class GLGraphWidget(QGLWidget):
 
         glLoadIdentity()
 
-        f = QFont('Times', self.res*2)
+        f = ftgl.FTGLPixmapFont('/usr/share/fonts/truetype/Times_New_Roman.ttf')
+        f.FaceSize(4 * int(self.res))
         for x in tics(self.xmin, self.xmax):
             glPushMatrix()
             glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0)
             glScalef(self.xscale_data, self.yscale_mm, 1.)
             
-            glTranslatef(x-self.xmin, -3, 0)
-
-            glScalef(self.xscale_pixel / self.xscale_data, 1., 1.)
-
-            fm = QFontMetrics(f)
-            w = fm.width(str(x))
-            self.renderText(-w/2, 0, 0, str(x), f)
+            glRasterPos2f(x, -3)
+            f.Render(str(x))
 
             glPopMatrix()
 
@@ -272,12 +269,9 @@ class GLGraphWidget(QGLWidget):
             
             glTranslatef(-2, y-self.ymin, 0)
 
-            glScalef(self.yscale_pixel / self.yscale_mm, 1., 1.)
+            glRasterPos2f(-3, y)
+            f.Render(str(y))
             
-            fm = QFontMetrics(f)
-            w = fm.width(str(y))
-            self.renderText(-w, 0, 0, str(y), f)
-
             glPopMatrix()
 
 
@@ -396,7 +390,7 @@ class GLGraphWidget(QGLWidget):
         self.res = self.w/100.
 
         # resize the viewport
-        glViewport(0, 0, self.w, self.h)
+        glViewport(0, 0, int(self.w), int(self.h))
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
         self.xscale_pixel = 2./self.w
@@ -426,7 +420,7 @@ class GLGraphWidget(QGLWidget):
 
 
     def make_data_list(self):
-        t = time.time()
+#        t = time.time()
 
         dx =  self.res * (self.xmax-self.xmin)/self.size().width()
         dy =  self.res * (self.ymax-self.ymin)/self.size().height()
@@ -437,7 +431,7 @@ class GLGraphWidget(QGLWidget):
             makedata(self.x[k], self.y[k], dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
         glEndList()
 
-        print (time.time()-t), "seconds"
+#        print (time.time()-t), "seconds"
 
     def mouse_to_ident(self, xm, ym):
         realy = self.viewport[3] - ym - 1
