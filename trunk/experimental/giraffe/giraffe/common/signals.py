@@ -113,6 +113,4 @@ class HasSignals(object):
             try:
                 slot(*args, **kwds)
             except ReferenceError:
-                print self.signals[signal]
                 self.signals[signal] = [s for s in self.signals[signal] if not s.is_expired()]
-                print self.signals[signal]

@@ -53,7 +53,7 @@ class Project(items.Folder, items.Item):
 
     def new(self):
         """Clear the project."""
-        for i in self.items[::-1]:
+        for i in self.items[:]:
             self.remove_item(i)
         self.modified = False
         self.filename = None
@@ -83,17 +83,29 @@ def test():
     p.filename = 'test.xml'
     p.save()
     p.new()
-    print sys.getrefcount(p)
 
     p2 = Project()
+#    f = items.Folder('Trivial', p2)
+    items.TrivialItem('opikou', p2)
+    items.TrivialItem('opi3ou', p2)
+    items.TrivialItem('op2kou', p2)
+    items.TrivialItem('oooooo', p2)
     def funq(self):
         pass
 
     print sys.getrefcount(p2)
+    import gc
+    print gc.get_referrers(p2)
+    p2.new()
+    print sys.getrefcount(p2)
+    print gc.get_referrers(p2)
     p2.connect('modified', funq)
-    print sys.getrefcount(funq)
     del funq
     p2.emit('modified')
+
+    del p2
+
+    import gc
 
     
 #    p2.new()
