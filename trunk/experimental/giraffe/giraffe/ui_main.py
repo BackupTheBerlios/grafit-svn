@@ -32,14 +32,15 @@ class ToolPanel(wx.SashLayoutWindow):
         else:
             self.SetDefaultSize((12, 1000))
 
-        data = { 'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, wx.SASH_RIGHT,
-                           wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
-                 'right' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_RIGHT, wx.SASH_LEFT, 
-                            wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
-                 'top' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_TOP, wx.SASH_BOTTOM, 
-                          wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL),
-                 'bottom' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_BOTTOM, wx.SASH_TOP, 
-                             wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL) }
+        data = { 
+            'left' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_LEFT, wx.SASH_RIGHT,
+                    wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
+            'right' : (wx.LAYOUT_VERTICAL, wx.LAYOUT_RIGHT, wx.SASH_LEFT, 
+                    wx.VERTICAL, wx.HORIZONTAL, wx.TB_VERTICAL),
+            'top' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_TOP, wx.SASH_BOTTOM, 
+                    wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL),
+            'bottom' : (wx.LAYOUT_HORIZONTAL, wx.LAYOUT_BOTTOM, wx.SASH_TOP, 
+                        wx.HORIZONTAL, wx.VERTICAL, wx.TB_HORIZONTAL) }
 
         d_orientation, d_alignment, d_showsash, d_btnbox, d_mainbox, d_toolbar = data[position]
 
@@ -58,7 +59,8 @@ class ToolPanel(wx.SashLayoutWindow):
             self.box.Add(self.contentbox, 1, wx.EXPAND)
             self.box.Add(self.btnbox, 0, wx.EXPAND)
 
-        self.toolbar = wx.ToolBar(self.panel, -1, style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
+        self.toolbar = wx.ToolBar(self.panel, -1, 
+                                  style=d_toolbar|wx.SUNKEN_BORDER|wx.TB_3DBUTTONS)
         self.btnbox.Add(self.toolbar, 1)
 
         self.panel.SetAutoLayout(True)
@@ -273,6 +275,24 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.project_tree.SetItemText(self.treeitems[item.id], name)
 
 
+class ScriptWindow(wx.py.shell.Shell):
+    def __init__(self, parent, project):
+        self.locals = {}
+        wx.py.shell.Shell.__init__(self, parent, -1, locals=self.locals)
+
+        self.push('from giraffe.worksheet.arrays import *')
+        self.push('from giraffe.worksheet.arrays import *')
+        self.push('from giraffe import *')
+
+        self.locals.update({'project': project})
+        self.push('project.set_dict(globals())')
+
+        self.setLocalShell()
+        self.clear()
+        self.prompt()
+        self.zoom(-1)
+
+
 class Application(wx.App):
     def __init__(self, project):
         self.name = 'name'
@@ -365,8 +385,6 @@ class Application(wx.App):
     def run(self):
         self.MainLoop()
 
-# TODO: make script window a separate class
-
 class MainPanel(wx.Panel):
     def __init__(self, parent, project):
         wx.Panel.__init__(self, parent, -1)
@@ -374,35 +392,21 @@ class MainPanel(wx.Panel):
         self.view = None
         self.active = None
 
-        self.locals = {}
-
         self.bottom_panel = ToolPanel(self, 'bottom')
-        self.script_window = wx.py.shell.Shell(self.bottom_panel.panel, -1,
-                                               locals=self.locals, introText='Welcome to giraffe')
-        self.script_window.push('from giraffe.worksheet.arrays import *')
-        self.script_window.push('from giraffe import *')
-        self.script_window.setLocalShell()
-        self.script_window.clear()
-        self.script_window.prompt()
-        self.script_window.zoom(-1)
-
-        self.locals.update({'project': self.project})
-        self.script_window.push('project.set_dict(globals())')
-
-        # bottom panel
-        self.bottom_panel.add_page('Script', 'console.png', self.script_window)
-
         self.right_panel = ToolPanel(self, 'right')
         self.left_panel = ToolPanel(self, 'left')
 
+        # bottom panel
+        self.script_window = ScriptWindow(self.bottom_panel.panel, self.project)
+        self.bottom_panel.add_page('Script', 'console.png', self.script_window)
+
         # the left panel
-        # project explorer
         explorer = ProjectExplorer(self.left_panel.panel, self.project)
         explorer.connect('activate-object', self.show_object)
         self.left_panel.add_page('Project', 'stock_navigator.png', explorer)
 
 
-         # will occupy the space not used by the Layout Algorithm
+        # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
 
         self.main_box = wx.BoxSizer(wx.VERTICAL)
