@@ -48,8 +48,8 @@ class Style(HasSignals):
     def set_line_style(self, val):
         if isinstance(val, int):
             val = self.line_styles[val % len(self.line_styles)]
-        self._line_style = val
-        self.emit('modified')
+        self._line_style, old = val, self._line_style
+        self.emit('modified', 'line_style', val, old)
     def get_line_style(self):
         return self._line_style
     line_style = property(get_line_style, set_line_style)
@@ -58,15 +58,15 @@ class Style(HasSignals):
     def set_line_type(self, val):
         if isinstance(val, int):
             val = self.line_types[val % len(self.line_types)]
-        self._line_type = val
-        self.emit('modified')
+        self._line_type, old = val, self._line_type
+        self.emit('modified', 'line_type', val, old)
     def get_line_type(self):
         return self._line_type
     line_type = property(get_line_type, set_line_type)
 
     def set_line_width(self, val):
-        self._line_width = val
-        self.emit('modified')
+        self._line_width, old = val, self._line_width
+        self.emit('modified', 'line_width', val, old)
     def get_line_width(self):
         return self._line_width
     line_width = property(get_line_width, set_line_width)
@@ -74,25 +74,24 @@ class Style(HasSignals):
     def set_symbol(self, val):
         if isinstance(val, int):
             val = self.symbols[val]
-        self._symbol = val
-        self.emit('modified')
+        self._symbol, old = val, self._symbol
+        self.emit('modified', 'symbol', val, old)
     def get_symbol(self):
         return self._symbol
     symbol = property(get_symbol, set_symbol)
 
     def set_symbol_size(self, val):
-        self._symbol_size = val
-        self.emit('modified')
+        self._symbol_size, old = val, self._symbol_size
+        self.emit('modified', 'symbol_size', val, old)
     def get_symbol_size(self):
         return self._symbol_size
     symbol_size = property(get_symbol_size, set_symbol_size)
 
-
     def set_color(self, val):
         if isinstance(val, int):
             val = self.colors[val % len(self.colors)]
-        self._color = val
-        self.emit('modified')
+        self._color, old = val, self._color
+        self.emit('modified', 'color', val, old)
     def get_color(self):
         return self._color
     color = property(get_color, set_color)
@@ -185,7 +184,8 @@ class Dataset(HasSignals):
 
         if self.style.symbol != 'none':
             gl2psPointSize(self.data.size)
-            glPointSize(self.data.size)
+            if self.data.size != 0:
+                glPointSize(self.data.size)
             dx =  res * (xmax-xmin)/width * self.style.symbol_size / 5.
             dy =  res * (ymax-ymin)/height * self.style.symbol_size / 5.
             render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
@@ -196,13 +196,35 @@ class Dataset(HasSignals):
     def on_data_changed(self):
         self.emit('modified', self)
 
-    def on_style_modified(self):
-        self.data.color = (self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256)
-        self.data.symbol = self.style.symbol
-        self.data.size = self.style.symbol_size
-        self.data.linetype = self.style.line_type
-        self.data.linestyle = self.style.line_style
-        self.data.linewidth = self.style.line_width
+    def change_style_do(self, item, value, old):
+        if item == 'color':
+            self.data.color = (self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256)
+        elif item == 'symbol':
+            self.data.symbol = self.style.symbol
+        elif item == 'symbol_size':
+            self.data.size = self.style.symbol_size
+        elif item == 'line_type':
+            self.data.linetype = self.style.line_type
+        elif item == 'line_style':
+            self.data.linestyle = self.style.line_style
+        elif item == 'line_width':
+            self.data.linewidth = self.style.line_width
+
+        return [item, value, old]
+
+    def change_style_redo(self, state):
+        item, value, old = state
+        setattr(self.style, item, value)
+
+    def change_style_undo(self, state):
+        item, value, old = state
+        setattr(self.style, item, old)
+
+    change_style = command_from_methods('dataset-change-style', change_style_do, 
+                                        change_style_undo, change_style_redo)
+
+    def on_style_modified(self, item, value, old):
+        self.change_style(item, value, old)
         self.emit('modified', self)
 
     def __str__(self):
@@ -521,12 +543,14 @@ class Graph(Item, HasSignals):
                                         x=x.name.encode('utf-8'), y=y.name.encode('utf-8'))
         d = Dataset(self, ind)
         self.datasets.append(d)
+        ind = len(self.datasets)-1
         d.connect('modified', self.on_dataset_modified)
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
         return ind
 
     def undo_add(self, ind):
+        print ind
         d = self.datasets[ind]
         del self.datasets[ind]
         d.disconnect('modified', self.on_dataset_modified)

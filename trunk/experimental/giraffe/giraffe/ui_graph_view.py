@@ -261,7 +261,7 @@ class GraphStylePanel(gui.Box):
     def on_select_property(self, prop, value):
         datasets = [self.graph.datasets[s] for s in self.view.legend.selection]
         if len(datasets) == 1:
-            setattr(d[0].style, prop, value)
+            setattr(datasets[0].style, prop, value)
         elif self.multi.value == 0:
             for d in datasets:
                 setattr(d.style, prop, value)
