@@ -68,6 +68,25 @@ class Folder(Item):
                 if row.parent == self.id and not row.id.startswith('-'):
                     yield self.project.items[row.id]
 
+    def __getitem__(self, key):
+        cn = list(i.name for i in self.contents())
+        ci = list(i.id for i in self.contents())
+
+        if key in cn:
+            return self.project.items[ci[cn.index(key)]]
+        else:
+            raise KeyError, "item '%s' does not exist" % key
+
+    def __contains__(self, key):
+        try:
+            self[key]
+            return True
+        except KeyError:
+            return False
+
+    def __repr__(self):
+        return '<Folder %s>' % self.name
+
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
 

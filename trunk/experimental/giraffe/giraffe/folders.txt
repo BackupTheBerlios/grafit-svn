@@ -14,6 +14,15 @@ The following special names are defined:
     >>> p.set_dict(globals())
     >>> p.mkfolder('ass')
     >>> ass
+    <Folder ass>
+    >>> p.rmfolder('ass')
+    >>> ass
+    Traceback (most recent call last):
+    ...
+    NameError: name 'ass' is not defined
+    >>> p.rmfolder('hole')
+    Traceback (most recent call last):
+    NameError: folder 'hole' does not exist
     >>> w = Worksheet(p, 'data1')
     >>> data1 == w
     True

@@ -83,15 +83,26 @@ class Project(HasSignals):
     def remove(self, id):
         obj = self.items[id]
         ind = obj.view.find(id=id)
+
+        if obj.name in self._dict:
+            del self._dict[obj.name]
+
         if ind == -1:
             raise NameError
         else:
             obj.data.id = obj.id = '-'+obj.id 
             del self.items[id]
             self.deleted[id] = obj
-
+        
     def mkfolder(self, path):
         Folder(self, path)
+
+    def rmfolder(self, path):
+        if path in self.this:
+            self.remove(self.this[path].id)
+        else:
+            raise NameError, "folder '%s' does not exist" % path
+
 
     def save(self):
         self.db.commit()
