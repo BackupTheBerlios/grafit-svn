@@ -25,6 +25,39 @@ class Splash(wx.SplashScreen):
 #        frame.Show()
 #        evt.Skip()  # Make sure the default handler runs too...
 
+class PanelToolbar(wx.ToolBar):
+    def __init__(self, parent):
+        wx.ToolBar.__init__(self, parent)
+
+class ToolPanel(wx.SashLayoutWindow):
+    def __init__(self, parent):
+        wx.SashLayoutWindow.__init__(self, parent, -1, 
+                                     wx.DefaultPosition, (200, 30), 
+                                     wx.NO_BORDER|wx.SW_3D)
+        self.SetDefaultSize((120, 1000))
+        self.SetOrientation(wx.LAYOUT_VERTICAL)
+        self.SetAlignment(wx.LAYOUT_LEFT)
+        self.SetSashVisible(wx.SASH_RIGHT, True)
+
+        self.panel = wx.Panel(self, -1)
+        self.btnbox = wx.BoxSizer(wx.VERTICAL)
+        self.contentbox = wx.BoxSizer(wx.VERTICAL)
+        self.box = wx.BoxSizer(wx.HORIZONTAL)
+        self.box.Add(self.btnbox, 0)
+        self.box.Add(self.contentbox, 1, wx.EXPAND)
+
+        self.panel.SetAutoLayout(True)
+        self.panel.SetSizer(self.box)
+
+    def add_page(self, widget):
+        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
+
+        self.btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, 10011, bmp, style=wx.BU_EXACTFIT)
+        self.btn.SetBezelWidth(1)
+#        self.Bind(wx.EVT_BUTTON, self.button_clicked, btn)
+        self.btnbox.Add(self.btn, 0)
+        self.contentbox.Add(widget, 1, wx.EXPAND)
+
 
 class ProjectTree(wx.TreeCtrl):
     def __init__(self, parent, project): 
@@ -50,8 +83,8 @@ class Application(wx.App):
 
     def OnInit(self):
         wx.Log_SetActiveTarget(wx.LogStderr())
-        s = Splash()
-        s.Show()
+#        s = Splash()
+#        s.Show()
 
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),
                         style=wx.DEFAULT_FRAME_STYLE)
@@ -93,7 +126,6 @@ class Application(wx.App):
         self.MainLoop()
 
 class MainWindow(wx.Panel):
-    ID_WINDOW_LEFT1  = 5101
     ID_WINDOW_LEFT2  = 5102
     ID_WINDOW_BOTTOM = 5103
 
@@ -113,20 +145,15 @@ class MainWindow(wx.Panel):
 
         panel = wx.Panel(self.bottomWindow, -1)
         self.script_window = wx.py.shell.Shell(panel, -1, introText='Welcome to giraffe')
-        self.script_window.zoom(-2)
+#        self.script_window.zoom(-2)
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(self.script_window, 1, wx.EXPAND)
         panel.SetAutoLayout(True)
         panel.SetSizer(box)
 
         # A window to the left of the client window
-        win =  wx.SashLayoutWindow(self, self.ID_WINDOW_LEFT1, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
+#wx.SashLayoutWindow(self, self.ID_WINDOW_LEFT1, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
 
-        win.SetDefaultSize((120, 1000))
-        win.SetOrientation(wx.LAYOUT_VERTICAL)
-        win.SetAlignment(wx.LAYOUT_LEFT)
-        win.SetSashVisible(wx.SASH_RIGHT, True)
-        self.leftWindow1 = win
 
         # Another window to the left of the client window
         win = wx.SashLayoutWindow(self, self.ID_WINDOW_LEFT2, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
@@ -138,35 +165,10 @@ class MainWindow(wx.Panel):
 
         self.leftWindow2 = win
 
-        win = wx.Panel(self.leftWindow1, -1)
+        self.leftWindow1 =  ToolPanel(self)
+        self.project_tree = ProjectTree(self.leftWindow1.panel, self.project)
+        self.leftWindow1.add_page(self.project_tree)
 
-        self.project_tree = ProjectTree(self, self.project)
-        bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
-
-#        btn = wx.ToggleButton(win, 10011, "He", style=wx.BU_EXACTFIT)
-        btn = wx.lib.buttons.GenBitmapToggleButton(win, 10011, bmp, style=wx.BU_EXACTFIT)
-        btn.SetBezelWidth(1)
-        self.btn = btn
-        self.Bind(wx.EVT_BUTTON, self.button_clicked, btn)
-        btn.SetBestSize()
-
-        btn2 = wx.lib.buttons.GenBitmapToggleButton(win, 10014, bmp, style=wx.BU_EXACTFIT)
-        self.Bind(wx.EVT_TOGGLEBUTTON, self.button_clicked, btn2)
-        btn2.SetBestSize()
-        btn2.SetBezelWidth(1)
-
-        btnbox = wx.BoxSizer(wx.VERTICAL)
-        btnbox.Add(btn, 0)
-        btnbox.Add(btn2, 0)
-
-        box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(btnbox, 0)
-        box.Add(self.project_tree, 1, wx.EXPAND)
-
-#        box.SetSizeHints(win)
-
-        win.SetAutoLayout(True)
-        win.SetSizer(box)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
@@ -178,7 +180,7 @@ class MainWindow(wx.Panel):
         box.Add(self.graphw, 1, wx.EXPAND)
         self.remainingSpace.SetSizer(box)
 
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT1)
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.leftWindow1.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT2)
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_BOTTOM)
         self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -186,14 +188,11 @@ class MainWindow(wx.Panel):
     def button_clicked(self, event):
         if event.GetIsDown():
             self.project_tree.Show()
-            self.leftWindow1.SetDefaultSize((300, -1))
+            self.leftWindow1.SetDefaultSize((300, -1)) # TODO: fix this
         else:
             self.project_tree.Hide()
-#            self.leftWindow1.Fit()
-            margin = self.leftWindow1.GetSize()[0] - self.leftWindow1.GetClientSize()[0]
-            print margin
-            self.leftWindow1.SetDefaultSize((self.btn.GetSize()[0]+margin, -1))
-#            self.leftWindow1.SetDefaultSize((self.leftWindow1.GetMinimumSizeX(), -1))
+            margin = self.leftWindow1.GetEdgeMargin(wx.SASH_RIGHT)
+            self.leftWindow1.SetDefaultSize((self.btn.GetSize()[0] + margin, -1))
 
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
         self.remainingSpace.Refresh()
@@ -205,7 +204,7 @@ class MainWindow(wx.Panel):
 
         id = event.GetId()
 
-        if id == self.ID_WINDOW_LEFT1:
+        if id == self.leftWindow1.GetId():
             self.leftWindow1.SetDefaultSize((event.GetDragRect().width, 1000))
         elif id == self.ID_WINDOW_LEFT2:
             self.leftWindow2.SetDefaultSize((event.GetDragRect().width, 1000))
