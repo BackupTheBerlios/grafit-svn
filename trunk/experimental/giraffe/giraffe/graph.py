@@ -100,23 +100,13 @@ class Dataset(HasSignals):
 
         N = len(x)
 
-        self.nurb = nurb = gluNewNurbsRenderer()
-        gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
-        gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
-        gluBeginCurve(nurb)
-        gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
-        gluEndCurve(nurb)
+#        self.nurb = nurb = gluNewNurbsRenderer()
+#        gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
+#        gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
+#        gluBeginCurve(nurb)
+#        gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
+#        gluEndCurve(nurb)
 
-#        glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, transpose(array([x-xmin, y-ymin, z])))
-#        glEnable(GL_MAP1_VERTEX_3)
-#        glBegin(GL_LINE_STRIP)
-#        for i in xrange(100):
-#            print i/100.
-#            glEvalCoord1f(i/100.)
-#        glEnd()
-#        glMapGrid1f(100, 0.0, 1.0)
-#        glEvalMesh1(GL_LINE, 0, 100)
-#        glDisable(GL_MAP1_VERTEX_3)
         render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
