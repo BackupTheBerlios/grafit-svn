@@ -1,0 +1,24 @@
+The ``giraffe.worksheet`` module
+================================
+
+Calculated columns
+------------------
+
+When evaluating calculated columns, the namespace used contains the following (in order of precedence):
+
+* math, using ``from giraffe.worksheet.mkarray import *`` (which includes numarray)
+
+* ``here``, ``top``, ``up`` and ``this`` with their usual meanings
+
+* all column names of the current worksheet
+
+* all objects in the current folder
+
+
+Dependencies
+------------
+
+We examine expression and determine the columns it depends on using the feedback mechanism of
+``Worksheet.__getitem__``. These are registered as dependencies as follows::
+
+    project.deps.add( 

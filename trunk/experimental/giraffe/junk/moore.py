@@ -11,6 +11,12 @@ def DFS2(graph, start, rlevel=0, seen = None):
                 for e in DFS2(graph, v, rlevel+1, seen):
                     yield e
 
+def has_cycle(graph):
+    for e, is_back, level in DFS2(graph, 1):
+        if is_back:
+            return True
+    return False
+
 if __name__ == '__main__':
     G = {
             1:      (2,3),
@@ -22,3 +28,12 @@ if __name__ == '__main__':
             }
     for e, is_back, level in DFS2(G, 1):
         print '%s%s -> %s%s' %(level*'     ',e[0], e[1], ('',' (back)')[is_back])
+
+    print has_cycle(G)
+    G = {
+        1: (2,),
+        3: (2,),
+        1: (4,),
+    }
+
+    print has_cycle(G)

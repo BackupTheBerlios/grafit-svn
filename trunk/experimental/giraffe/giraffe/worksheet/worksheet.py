@@ -2,7 +2,7 @@ import sys
 
 from giraffe.base.signals import HasSignals
 from giraffe.base.commands import command_from_methods
-from giraffe.base.item import Item, wrap_attribute, register_class
+from giraffe.base.item import Item, wrap_attribute, register_class, create_id
 from giraffe.worksheet.mkarray import MkArray
 
 class Column(MkArray):
@@ -17,6 +17,12 @@ class Column(MkArray):
     def get_name(self):
         return self.data.name
     name = property(get_name, set_name)
+
+    def set_id(self, id):
+        self.data.id = id
+    def get_id(self, id):
+        return self.data.id 
+    id = property(get_id, set_id)
 
     def __setitem__(self, key, value):
         prev = self[key]
@@ -50,7 +56,7 @@ class Worksheet(Item, HasSignals):
         if name in self.column_names:
             return self[name]
         else:
-            return object.__getattribute_(self, name)
+            return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
         if name.startswith('_') or hasattr(self.__class__, name) \
@@ -71,7 +77,7 @@ class Worksheet(Item, HasSignals):
         return self.data.columns.select(*[{'name': n} for n in self.column_names]).find(name=name)
 
     def add_column(self, name):
-        ind = self.data.columns.append([name, ''])
+        ind = self.data.columns.append(name=name, id=create_id(), data='')
         print >>sys.stderr, 'appended', ind
         self.columns.append(Column(self, ind))
         self.emit('data-changed')
@@ -155,4 +161,4 @@ class Worksheet(Item, HasSignals):
     _name = wrap_attribute('name')
     parent = wrap_attribute('parent')
 
-register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,data:B]]')
+register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,id:S,data:B]]')

@@ -58,9 +58,9 @@ class ToolPanel(wx.SashLayoutWindow):
         self.last_width = 120
         self.last_height = 120
 
-    def add_page(self, widget):
-        bimp = wx.Image("../data/images/console.png").ConvertToBitmap()
-        text = 'Console'
+    def add_page(self, label, pixmap, widget):
+        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
+        text = label
 
         dc = wx.MemoryDC()
         w, h = dc.GetTextExtent(text)
@@ -249,16 +249,16 @@ class MainWindow(wx.Panel):
         self.script_window.setLocalShell()
         self.script_window.clear()
         self.script_window.prompt()
-
-        self.bottom_panel.add_page(self.script_window)
         self.script_window.zoom(-1)
+
+        self.bottom_panel.add_page('Script', 'console.png', self.script_window)
 
         self.right_panel = ToolPanel(self, 'right')
     
         # the left panel
         self.left_panel = ToolPanel(self, 'left')
         self.project_tree = ProjectTree(self.left_panel.panel, self.project, self)
-        self.left_panel.add_page(self.project_tree)
+        self.left_panel.add_page('Project', 'closed-folder.png', self.project_tree)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
