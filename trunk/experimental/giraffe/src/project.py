@@ -1,5 +1,5 @@
 import items
-import shelf
+from common import shelf
 import lib.ElementTree as et
 
 class Project(items.Folder, items.Persistent):

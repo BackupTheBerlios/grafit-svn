@@ -1,6 +1,6 @@
 import common.signals
 import lib.ElementTree as et
-import shelf
+from common import shelf
 
 class Persistent(object):
     def to_element(self):

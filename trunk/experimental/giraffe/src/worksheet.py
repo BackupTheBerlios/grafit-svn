@@ -1,7 +1,7 @@
 from arrays import *
 
 from items import Item, Persistent
-import shelf
+from common import shelf
 from common.commands import Command, CommandList
 from common.signals import HasSignals
 from lib.ElementTree import Element, SubElement
