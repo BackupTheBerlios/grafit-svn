@@ -476,6 +476,7 @@ class MainWindow(QMainWindow):
 
          'prefs' : [ "Preferences", "&Preferences...", "properties.png", self.Preferences, False, None],
          'about' : [ "About", "&About...", None, self.about, False, None],
+         'manual' : [ "Manual", "&Manual...", None, self.help, False, None],
         }
 
         for k, a in self.actions.items():
@@ -496,7 +497,7 @@ class MainWindow(QMainWindow):
          [ '&Tools', [ 'run_script', 0,
                        'prefs', ]],
          [ '&Window', [ 'history', 0 ]],
-         [ '&Help', [ 'about' ]],
+         [ '&Help', [ 'about', 'manual']],
         ]
 
         self.MenuBar = QMenuBar(self,"MenuBar")
@@ -896,9 +897,15 @@ class MainWindow(QMainWindow):
         
     def status_message(self, msg, time = 1000):
         self.statusBar().message(msg, time)
+
     def about(self):
         a = AboutWindow(self)  
         a.exec_loop()
+
+    def help(self):
+        from grafit.help import HelpWidget
+        h = HelpWidget(self)
+        h.show()
 
 
     def open_project_do(self):

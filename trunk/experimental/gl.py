@@ -128,13 +128,13 @@ class GLGraphWidget(QGLWidget):
         self.y = {}
         self.range = {}
 
-        self.x[0] = arange(100000.)/100000
+        self.x[0] = arange(10000.)/10000
         self.y[0] = sin(self.x[0])
 
-        self.x[1] = arange(100000.)/100000
+        self.x[1] = arange(10000.)/10000
         self.y[1] = cos(self.x[1])
 
-        self.x[2] = arange(100000.)/100000
+        self.x[2] = arange(10000.)/10000
         self.y[2] = tan(self.x[2])
 
 

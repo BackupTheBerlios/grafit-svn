@@ -32,7 +32,7 @@ def parse_float(st):
 def import_ascii(str, delimiter=None, decimal_symbol='.', max_lines = None):
     """Read data from a delimited ascii file. Returns the data and header.
        We try to guess the delimiter by finding the one that occurs the
-       most times. The argument can be an open file, a filename or the
+       most times. The argument can be a file object, a filename or the
        ascii data as a string
 
        Limitations:
@@ -67,7 +67,8 @@ def import_ascii(str, delimiter=None, decimal_symbol='.', max_lines = None):
 
     if delimiter is None:
         # find delimiters
-        number_rexp = re.compile(r'[-+]?(?:[0-9]*%s)?[0-9]*(?:[eE][-+]?[0-9]+)?'%re.escape(decimal_symbol)) # matches numbers
+        number_rexp = re.compile(r'[-+]?(?:[0-9]*%s)?[0-9]*(?:[eE][-+]?[0-9]+)?'
+                                 % re.escape(decimal_symbol)) # matches numbers
         delimiters = []
         for line in text:
             for d in number_rexp.split(line.strip()):
