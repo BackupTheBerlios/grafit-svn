@@ -1,8 +1,18 @@
+#!/usr/bin/env python
+
+import sys
+
+import pygtk
+pygtk.require('2.0')
+from gtk.gtkgl.apputils import *
+
+from OpenGL.GLE import *
+
+# Implement the GLScene interface
+# to have a shape rendered.
+
 import sys
 import time
-
-from qt import *
-from qtgl import *
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -13,19 +23,6 @@ from render import makedata
 sys.path.append('/home/daniel/grafit/functions')
 sys.path.append('/home/daniel/grafit')
 import hn
-
-class Mouse:
-    Left, Right, Middle = range(3)
-    Press, Release, Move = range(3)
-
-class Key:
-    Shift, Ctrl, Alt = range(3)
-
-class Direction:
-    Left, Right, Top, Bottom = range(4)
-
-class Coordinates:
-    Pixel, Data, Physical = range(3)
 
 class Style(object):
     def __init__(self, color=(0,0,0,1)):
@@ -109,13 +106,16 @@ def tics(fr, to):
     return []
 
 
-class GLGraphWidget(QGLWidget):
-    def __init__(self,graph,parent=None, name=None):
-        fmt = QGLFormat()
-        fmt.setDepth(False)
-        fmt.setAlpha(True)
-        QGLWidget.__init__(self, fmt, parent, name)
-
+class Shapes(GLScene,
+             GLSceneButton,
+             GLSceneButtonMotion):
+    
+    def __init__(self, graph):
+        GLScene.__init__(self,
+#                         gtk.gdkgl.MODE_RGB   |
+#                         gtk.gdkgl.MODE_DEPTH |
+                         gtk.gdkgl.MODE_DOUBLE)
+    
         # mouse rubberbanding coordinates
         self.sx = None
         self.px = None
@@ -127,14 +127,7 @@ class GLGraphWidget(QGLWidget):
         self.buf =  False
 
         self.datasets = []
-#        self.datasets.append(Dataset(x = arange(10000.)/1000,
-#                                     y = sin(arange(10000.)/1000)))
-#        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
-#
-#        self.datasets.append(Dataset(x = arange(10000.)/1000,
-#                                     y = cos(arange(10000.)/1000)))
-#        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
-#
+
         x = arange(2, 6, 0.001)
         y = log10(hn.havriliak_negami(10.**x, 4, 1, 0.5, 1))
 
@@ -143,6 +136,13 @@ class GLGraphWidget(QGLWidget):
         d.graph = self
         self.datasets.append(d)
 
+        self.datasets.append(Dataset(x = arange(1000000.)/100000,
+                                     y = sin(arange(1000000.)/100000)))
+        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
+
+        self.datasets.append(Dataset(x = arange(10000.)/1000,
+                                     y = cos(arange(10000.)/1000)))
+        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
 
 #        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 
@@ -154,7 +154,7 @@ class GLGraphWidget(QGLWidget):
 
         glPushMatrix()
         glTranslatef(-1., -1., 0.)         # starting at bottom left corner
-        glScalef(self.xscale_pixel, self.yscale_pixel, 0.)
+        glScalef(self.xscale_pixel, self.yscale_pixel, 1.)
 
         glColor3f(1.0,1.0,1.0)      # black
 
@@ -310,41 +310,79 @@ class GLGraphWidget(QGLWidget):
 
         glPopMatrix()
 
-    def paintGL(self):
+    def set_data_scales(self):
+        self.xscale_data = self.xscale_pixel * ((self.w-self.marginl-self.marginr)/(self.xmax-self.xmin))
+        self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
+
+    def make_data_list(self):
+#        t = time.time()
+
+        dx =  self.res * (self.xmax-self.xmin)/self.w
+        dy =  self.res * (self.ymax-self.ymin)/self.h
+
+        glNewList(1, GL_COMPILE)
+        for d in self.datasets:
+            glColor4f(*d.style.color)
+            makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
+        glEndList()
+
+#        print (time.time()-t), "seconds"
+
+    def mouse_to_ident(self, xm, ym):
+        realy = self.viewport[3] - ym - 1
+        x, y, _ = gluUnProject(xm, realy, 0.0, self.mvmatrix, self.initmatrix, self.viewport)
+        return x, y
+
+    def mouse_to_real(self, xm, ym):
+        realy = self.viewport[3] - ym - 1
+        x, y, _ = gluUnProject(xm, realy, 0.0, self.mvmatrix, self.projmatrix, self.viewport)
+        return x, y
+
+    def autoscale(self):
+        self.xmin = min(self.datasets[0].x)
+        self.ymin = min(self.datasets[0].y)
+        self.xmax = max(self.datasets[0].x)
+        self.ymax = max(self.datasets[0].y)
+        if hasattr(self, 'xscale_pixel'):
+            self.set_data_scales()
+
+    def set_range(self, fr, to):
+        self.fr, self.to  = fr, to
+
+    def zoom(self, xmin, xmax, ymin, ymax):
+        self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
+        self.set_data_scales()
+
+ 
+    def zoomout(self,x1, x2,x3, x4):
+        a = (x2-x1)/(x4-x3)
+        c = x1 - a*x3
+        f1 = a*x1 + c
+        f2 = a*x2 + c
+        return min(f1, f2), max(f1, f2)
+
+    def init(self):
+        # enable transparency
+        glEnable (GL_BLEND)
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        glClearColor(252./256, 246./256, 238./256, 1.0)
+#        glClearColor(1., 1., 1., 1.0)
+
+        glDisable(GL_DEPTH_TEST)
+
+        glMatrixMode (GL_PROJECTION)
+        glLoadIdentity ()
+#        self.reshape(self.width, self.height)
+
         self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
-        self.pika = False
-        if self.pika:
-            glPushMatrix()
-            glLoadIdentity()
-
-            glColor3f(1.0,1.0,0.0)
-            glLineStipple (1, 0x4444) # dotted
-            glEnable(GL_LINE_STIPPLE)
-            glLogicOp(GL_XOR)
-            glEnable(GL_COLOR_LOGIC_OP)
-
-            glBegin(GL_LINE_LOOP)
-            glVertex3f(self.ix, self.iy, 0.0)
-            glVertex3f(self.ix, self.py, 0.0)
-            glVertex3f(self.px, self.py, 0.0)
-            glVertex3f(self.px, self.iy, 0.0)
-            glEnd()
-
-            glBegin(GL_LINE_LOOP)
-            glVertex3f(self.ix, self.iy, 0.0)
-            glVertex3f(self.ix, self.sy, 0.0)
-            glVertex3f(self.sx, self.sy, 0.0)
-            glVertex3f(self.sx, self.iy, 0.0)
-            glEnd()
-
-            glDisable(GL_LINE_STIPPLE)
-            glDisable(GL_COLOR_LOGIC_OP)
-            glPopMatrix()
-
+        self.make_data_list()
  
-        
+    def display(self, width, height):
+
+        gluOrtho2D (0, width, 0, height)
         if not self.buf:
             glClear(GL_COLOR_BUFFER_BIT)
             self.paint_axes()
@@ -393,12 +431,13 @@ class GLGraphWidget(QGLWidget):
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
 
-            glBegin(GL_LINE_LOOP)
-            glVertex3f(self.ix, self.iy, 0.0)
-            glVertex3f(self.ix, self.py, 0.0)
-            glVertex3f(self.px, self.py, 0.0)
-            glVertex3f(self.px, self.iy, 0.0)
-            glEnd()
+            if (self.px, self.py) != (None, None):
+                glBegin(GL_LINE_LOOP)
+                glVertex3f(self.ix, self.iy, 0.0)
+                glVertex3f(self.ix, self.py, 0.0)
+                glVertex3f(self.px, self.py, 0.0)
+                glVertex3f(self.px, self.iy, 0.0)
+                glEnd()
 
             glBegin(GL_LINE_LOOP)
             glVertex3f(self.ix, self.iy, 0.0)
@@ -406,29 +445,30 @@ class GLGraphWidget(QGLWidget):
             glVertex3f(self.sx, self.sy, 0.0)
             glVertex3f(self.sx, self.iy, 0.0)
             glEnd()
+            self.px, self.py = self.sx, self.sy
 
             glDisable(GL_LINE_STIPPLE)
             glDisable(GL_COLOR_LOGIC_OP)
             glPopMatrix()
 
-
-    def resizeGL(self,width,height):
-        """handles window resize events"""
+    
+    def reshape(self, width, height):
         # aspect ratio to keep 
         ratio = 4./3.
 
         # set width and height (in pixels)
-        self.w, self.h = width, height
+        self.ww, self.hh = self.w, self.h = width, height
         if (1.*self.w) / self.h > ratio:
-            self.w = ratio*self.h
+            self.ww = ratio*self.h
         else:
-            self.h = self.w/ratio
+            self.hh = self.w/ratio
 
-        self.excessh = height - self.h
-        self.excessw = width - self.w
+        self.excessh = height - self.hh
+        self.excessw = width - self.ww
+        self.w -= self.excessw
 
         # set margins (in pixels)
-        self.marginb = int(self.h * 0.1)
+        self.marginb = int(self.h * 0.1) + self.excessh
         self.margint = int(self.h * 0.05)
         self.marginl = int(self.w * 0.1)
         self.marginr = int(self.w * 0.05)
@@ -449,175 +489,186 @@ class GLGraphWidget(QGLWidget):
 
         self.set_data_scales()
 
-    def set_data_scales(self):
-        self.xscale_data = self.xscale_pixel * ((self.w-self.marginl-self.marginr)/(self.xmax-self.xmin))
-        self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
-
-    def initializeGL(self):
-
-
-        glEnable (GL_BLEND)
-
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-
-        glClearColor(252./256, 246./256, 238./256, 1.0)
-        glDisable(GL_DEPTH_TEST)
-        glMatrixMode (GL_PROJECTION)
-        glLoadIdentity ()
-        gluOrtho2D (0, self.size().width(), 0, self.size().height())
-        self.resizeGL(self.size().width(), self.size().height())
-
-        self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
-        self.viewport = glGetIntegerv(GL_VIEWPORT)
-
-        self.make_data_list()
-
-    def make_data_list(self):
-#        t = time.time()
-
-        dx =  self.res * (self.xmax-self.xmin)/self.size().width()
-        dy =  self.res * (self.ymax-self.ymin)/self.size().height()
-
-        glNewList(1, GL_COMPILE)
-        for d in self.datasets:
-            glColor4f(*d.style.color)
-            makedata(d.x, d.y, dx, dy, self.xmin, self.xmax, self.ymin, self.ymax)
-        glEndList()
-
-#        print (time.time()-t), "seconds"
-
-    def mouse_to_ident(self, xm, ym):
-        realy = self.viewport[3] - ym - 1
-        x, y, _ = gluUnProject(xm, realy, 0.0, self.mvmatrix, self.initmatrix, self.viewport)
-        return x, y
-
-    def mouse_to_real(self, xm, ym):
-        realy = self.viewport[3] - ym - 1
-        x, y, _ = gluUnProject(xm, realy, 0.0, self.mvmatrix, self.projmatrix, self.viewport)
-        return x, y
-
-    def autoscale(self):
-        self.xmin = min(self.datasets[0].x)
-        self.ymin = min(self.datasets[0].y)
-        self.xmax = max(self.datasets[0].x)
-        self.ymax = max(self.datasets[0].y)
-        if hasattr(self, 'xscale_pixel'):
-            self.set_data_scales()
-
-    def set_range(self, fr, to):
-        self.fr, self.to  = fr, to
-
-    def zoom(self, xmin, xmax, ymin, ymax):
-        self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
-        self.set_data_scales()
-
- 
-    def zoomout(self,x1, x2,x3, x4):
-        a = (x2-x1)/(x4-x3)
-        c = x1 - a*x3
-        f1 = a*x1 + c
-        f2 = a*x2 + c
-        return min(f1, f2), max(f1, f2)
-
     def rubberband_begin(self, x, y):
         self.buf = True
         self.pixx, self.pixy = x, y
+
+        # zooming box in identity coordinates
         self.ix, self.iy = self.mouse_to_ident(x, y)
-        self.px, self.py, self.sx, self.sy = self.ix, self.iy, self.ix, self.iy
-        self.zix, self.ziy = self.mouse_to_real(x, y)
-        self.rubberband_continue(x, y)
+        self.sx, self.sy = self.ix, self.iy
 
     def rubberband_active(self):
-        return self.px is not None
-        
+        return self.buf
 
     def rubberband_continue(self, x, y):
-        self.px, self.py = self.sx, self.sy
+#        self.px, self.py = self.sx, self.sy
         self.sx, self.sy = self.mouse_to_ident(x, y)
-        self.updateGL()
+        self.queue_draw()
 
     def rubberband_end(self, x, y):
         self.rubberband_continue(x, y)
         self.buf = False
+        self.px, self.py = None, None
         return self.pixx, self.pixy, x, y
 
-    btns = {Qt.LeftButton: Mouse.Left, Qt.MidButton: Mouse.Middle, Qt.RightButton: Mouse.Right, 0:None}
+    def button_press(self, width, height, event):
+        if event.button in (1,3):
+            self.rubberband_begin(event.x, event.y)
+    
+    def button_release(self, width, height, event):
+        if event.button == 2:
+            self.autoscale()
+            self.make_data_list()
+            self.queue_draw()
+        elif event.button == 1 or event.button == 3:
+            zix, ziy, zfx, zfy = self.rubberband_end(event.x, event.y)
 
-    def mouseMoveEvent(self, e):
-        self.graph.mouse_event(Mouse.Move, e.x(), e.y(), self.btns[e.button()])
-    def mousePressEvent(self, e):
-        self.graph.mouse_event(Mouse.Press, e.x(), e.y(), self.btns[e.button()])
+            zix, ziy = self.mouse_to_real(zix, ziy)
+            zfx, zfy = self.mouse_to_real(zfx, zfy)
 
-    def mouseReleaseEvent(self, e):
-        self.graph.mouse_event(Mouse.Release, e.x(), e.y(), self.btns[e.button()])
-#        x, y = self.mouse_to_real(e.x(), e.y())
-#        self.set_range(x, self.to)
-#        self.updateGL()
-#        return
-class glGraph(object):
-    def __init__(self, parent=None):
-        self.win = QTabWidget(parent)
-        self.win.setTabShape(self.win.Triangular)
-        self.win.setTabPosition(self.win.Bottom)
-        self.win.graph = self
+            _xmin, _xmax = min(zix, zfx), max(zix, zfx)
+            _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
 
-        self.main = QHBox(self.win)
-        self.win.addTab(self.main, 'graph')
+            if event.button == 3:
+                xmin, xmax = self.zoomout(self.xmin, self.xmax, _xmin, _xmax)
+                ymin, ymax = self.zoomout(self.ymin, self.ymax, _ymin, _ymax)
+            else:
+                xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
+            self.zoom(xmin, xmax, ymin, ymax)
 
-        self.gwidget = GLGraphWidget(self, self.main)
+            self.make_data_list()
+            self.queue_draw()
 
-    def mouse_event(self, event, x, y, button):
-        if event == Mouse.Press:
-            if button in [Mouse.Left, Mouse.Right]:
-                self.gwidget.rubberband_begin(x, y)
+    
+    def button_motion(self, width, height, event):
+        if self.rubberband_active():
+            self.rubberband_continue(event.x, event.y)
 
-        elif event == Mouse.Move:
-            if self.gwidget.rubberband_active():
-                self.gwidget.rubberband_continue(x, y)
+class ShapesWindow(gtk.Window):
+    def __init__(self):
+        gtk.Window.__init__(self)
+        
+        # Set self attfibutes.
+        self.set_title('Shapes')
+        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+        self.connect('destroy', lambda quit: gtk.main_quit())
+        if sys.platform != 'win32':
+            self.set_resize_mode(gtk.RESIZE_IMMEDIATE)
+        self.set_reallocate_redraws(gtk.TRUE)
+        
+        # Create the table that will hold everything.
+        self.box = gtk.VBox()
+        self.box.show()
+        self.add(self.box)
 
-#        x, y = self.mouse_to_real(e.x(), e.y())
-#        self.set_range(x, self.to)
-#        self.updateGL()
-#        return
-        elif event == Mouse.Release:
-            if button == Mouse.Middle:
-                self.gwidget.autoscale()
-                self.gwidget.make_data_list()
-                self.gwidget.update()
-            elif button == Mouse.Left or button == Mouse.Right:
-#                self.px, self.py = self.sx, self.sy
-#                self.sx, self.sy = self.ix, self.iy
-#                self.mouseMoveEvent(e)
-#                if self.px == self.sx or self.py == self.sy: #can't zoom!
-#                    self.px, self.py = None, None
-#                    return
-                zix, ziy, zfx, zfy = self.gwidget.rubberband_end(x, y)
+       
+        
+        self.table = gtk.HBox()
+#        self.table.set_border_width(5)
+#        self.table.set_col_spacings(5)
+#        self.table.set_row_spacings(5)
+        self.table.show()
+        self.box.pack_start(self.table)
+#        self.add(self.table)
 
-                zix, ziy = self.gwidget.mouse_to_real(zix, ziy)
-                zfx, zfy = self.gwidget.mouse_to_real(zfx, zfy)
-#
-                _xmin, _xmax = min(zix, zfx), max(zix, zfx)
-                _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
+        # The Shapes scene and the
+        # GLArea widget to
+        # display it.
+        self.toolbar = gtk.Toolbar()
+        self.toolbar.set_border_width(0)
+        self.toolbar.set_orientation(gtk.ORIENTATION_VERTICAL)
+        self.toolbar.set_style(gtk.TOOLBAR_ICONS)
 
-                if button == Mouse.Right:
-                    xmin, xmax = self.gwidget.zoomout(self.gwidget.xmin, self.gwidget.xmax, _xmin, _xmax)
-                    ymin, ymax = self.gwidget.zoomout(self.gwidget.ymin, self.gwidget.ymax, _ymin, _ymax)
-                else:
-                    xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
-                self.gwidget.zoom(xmin, xmax, ymin, ymax)
+        iconw = gtk.Image() # icon widget
+        iconw.set_from_file("../../pixmaps/range.png")
+        self.toolbar.append_item("Range", "Set range", "what is this?", iconw, None)
 
-                self.gwidget.make_data_list()
-                self.gwidget.updateGL()
-            self.px, self.py = None, None
+        iconw = gtk.Image()
+        iconw.set_from_file("../../pixmaps/zoom.png")
+        self.toolbar.append_item("Zoom", "Zoom", "what is this?", iconw, None)
+
+        iconw = gtk.Image()
+        iconw.set_from_file("../../pixmaps/hand.png")
+        self.toolbar.append_item("Zoom", "Zoom", "what is this?", iconw, None)
+
+        self.toolbar.show()
+        self.table.pack_start(self.toolbar, expand=False)
+ 
+        self.shape = Shapes(self)
+        self.glarea = GLArea(self.shape)
+        self.glarea.set_size_request(400,300)
+        self.glarea.show()
+        self.table.pack_start(self.glarea)
+
+        self.legendstore = gtk.ListStore(str)
+        self.legendstore.append(['this'])
+        self.legendstore.append(['that'])
+        self.listbox = gtk.TreeView(model=self.legendstore)
+        self.listbox.set_headers_visible(False)
+        column = gtk.TreeViewColumn('What')
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.add_attribute(cell, 'text', 0)
+        self.listbox.append_column(column)
+        self.listbox.show()
+        self.table.pack_start(self.listbox, expand=False)
+
+        
+    def shapeChanged(self, option):
+        self.shape.currentShape = self.shape.availableShapes[option.get_history()]
+        self.glarea.queue_draw()
+    
+    def shapeSolidityToggled(self, button):
+        self.shape.is_solid = not self.shape.is_solid
+        self.glarea.queue_draw()
+    
+    def changeColourBg(self, button):
+        dialog = gtk.ColorSelectionDialog("Changing colour of Background")
+        dialog.set_transient_for(self)
+        
+        colorsel = dialog.colorsel
+        colorsel.set_has_palette(gtk.TRUE)
+        
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            colour = colorsel.get_current_color()
+            self.shape.colourBg = [colour.red/65535.0, colour.green/65535.0, colour.blue/65535.0]
+            self.glarea.queue_draw()
+        
+        dialog.destroy()
+    
+    def changeColourFg(self, button):
+        dialog = gtk.ColorSelectionDialog("Choose colour of Object")
+        dialog.set_transient_for(self)
+        
+        colorsel = dialog.colorsel
+        colorsel.set_has_palette(gtk.TRUE)
+        
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            colour = colorsel.get_current_color()
+            self.shape.colourFg = [colour.red/65535.0, colour.green/65535.0, colour.blue/65535.0]
+            self.glarea.queue_draw()
+        
+        dialog.destroy()
+    
+    def zchanged(self, zadj):
+        self.shape.rotz = zadj.value
+        self.glarea.queue_draw()
+    
+    def xchanged(self, zadj):
+        self.shape.rotx = zadj.value
+        self.glarea.queue_draw()
+    
+    def ychanged(self, yadj):
+        self.shape.roty = yadj.value
+        self.glarea.queue_draw()
+    
+    def run(self):
+        self.show()
+        gtk.main()
 
 
-
-##############################################################################
-if __name__=='__main__':
-    app=QApplication(sys.argv)
-    g = glGraph()
-    app.setMainWidget(g.win)
-    g.win.show()
-    app.exec_loop()
-
+if __name__ == '__main__':
+    app = ShapesWindow()
+    app.run()
