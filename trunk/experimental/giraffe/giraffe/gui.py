@@ -20,6 +20,7 @@ from giraffe.signals import HasSignals
 #        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
 
 
+
 class FrameMixIn(wx.Window): 
     def prepareFrame(self, closeEventHandler=None): 
         self._closeHandler = closeEventHandler 
@@ -265,13 +266,10 @@ class DropTarget(wx.DropTarget):
         return d
 
     def OnDragOver(self, x, y, d):
-        self.window.OnHover(x, y)
-        return d
+        return self.window.OnHover(x, y)
 
-    def OnEnter(self, x, y, d):
-        self.enterTime = time.time()
-        return d
-
+#    def OnEnter(self, x, y, d):
+#        return self.window.OnEnter(x, y)
 
 
 class DropReceiveWidget (object):
@@ -282,26 +280,28 @@ class DropReceiveWidget (object):
 
     def OnRequestDrop(self, x, y):
         """
-          Override this to decide whether or not to accept a dropped
+        Override this to decide whether or not to accept a dropped
         item.
         """
         print 'request'
-        return True
+        return False
 
     def AddItem(self, itemUUID):
         """
-          Override this to add the dropped item to your widget.
+        Override this to add the dropped item to your widget.
         """
         print 'add', itemUUID
         pass
 
     def OnHover(self, x, y):
         """
-          Override this to perform an action when a drag action is
+        Override this to perform an action when a drag action is
         hovering over the widget.
         """
-        print 'hover'
-        pass
+        return wx.DragNone
+
+#    def OnEnter(self, x, y):
+#        return wx.DragNone
 
 
 class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix, DropReceiveWidget):
@@ -325,16 +325,51 @@ class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
         print event.GetItem(),
         dropSource = wx.DropSource(self)
 #        data = wx.CustomDataObject(wx.CustomDataFormat("ItemUUID"))
-        data = wx.FileDataObject()
+        data_file = wx.FileDataObject()
+        data_file.AddFile('/home/daniel/giraffe/giraffe/koali.gt')
+        data_text = wx.TextDataObject("koalaki")
+        data_bmp = wx.BitmapDataObject(wx.Image("../data/images/logo.png").ConvertToBitmap())
+
+        data = wx.DataObjectComposite()
+        data.Add(data_file)
+        data.Add(data_text)
+        data.Add(data_bmp, True)
 #        data.SetData('pikou')
 #        data.SetText('pikou')
-        data.AddFile('/home/daniel/giraffe/giraffe/koali.gt')
         dropSource.SetData(data)
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
         print result
 
 #        event.Allow()
-        
+
+    def OnHover(self, x, y):
+        """
+        Override this to perform an action when a drag action is
+        hovering over the widget.
+        """
+        item, flags = self.HitTest(wx.Point(x, y))
+        if not (flags & wx.LIST_HITTEST_ONITEM):
+            item = -1
+
+        result = self.lst.emit('drop-hover', item)
+        if 'move' in result:
+            return wx.DragMove
+        elif 'copy' in result:
+            return wx.DragCopy
+        else:
+            return wx.DragNone
+
+    def OnRequestDrop(self, x, y):
+        item, flags = self.HitTest(wx.Point(x, y))
+        if not (flags & wx.LIST_HITTEST_ONITEM):
+            item = -1
+
+        result = self.lst.emit('drop', item)
+        if True in result:
+            return True
+        else:
+            return False
+
     def getpixmap(self, filename):
         if filename is None:
             return None

@@ -10,11 +10,29 @@ from giraffe.import_ascii import import_ascii
 
 import wx
 import os
+import tempfile
 
 from giraffe.signals import HasSignals
 from giraffe.commands import command_list, undo, redo
 
 from giraffe import Graph, Worksheet, Folder, Project
+
+class WorksheetDragData(object):
+    def __init__(self, worksheet):
+        self.worksheet = worksheet
+    
+    def supported_formats(self):
+        return 'filename', 'grafit-object'
+
+    def get_data(self, format):
+        if format == 'filename':
+            fd, name = tempfile.mkstemp()
+            f = open(name)
+            self.worksheet.export_ascii(f)
+            f.close()
+            return name
+        elif format == 'grafit-object':
+            return worksheet.id
 
 class Cancel(Exception):
     pass
@@ -73,6 +91,11 @@ class ProjectExplorer(Box):
         self.list = List(self.splitter)
         self.tree.connect('selected', self.on_tree_selected)
         self.list.connect('item-activated', self.on_list_item_activated)
+        self.list.connect('drop-hover', self.on_drop_hover)
+
+    def on_drop_hover(self, item):
+        if item != -1:
+            return 'copy'
 
     def on_tree_selected(self, item):
         self.list.model = FolderListData(item.folder)
