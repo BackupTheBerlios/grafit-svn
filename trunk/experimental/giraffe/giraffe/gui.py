@@ -512,30 +512,64 @@ class Toolbar(Widget):
         self.tools = {}
 
     def on_tool(self, event):
-        print event
+        self.tools[event.GetId()]()
+
+    def append(self, action):
+        if action is None:
+            self._widget.AppendSeparator()
+        else:
+            bitmap = wx.Image('/home/daniel/giraffe/data/images/'+action.pixmap).ConvertToBitmap()
+            id = wx.NewId()
+            self._widget.AddSimpleTool(id, bitmap, action.name, action.desc)
+            self.tools[id] = action
+
+class Menubar(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.MenuBar()
+        self.frame = parent
+        Widget.__init__(self, parent, **place)
+        self.frame._widget.Bind(wx.EVT_MENU, self.on_menu)
+        self.items = {}
+
+    def on_menu(self, event):
+        self.items[event.GetId()]()
+
+class Menu(object):
+    def __init__(self, menubar, name):
+        self._menu = wx.Menu()
+        self.menubar = menubar
+        self.name = name
+#        self.items = {} # wxid: action
+        self._menu.Bind(wx.EVT_MENU, self.on_menu)
+        menubar._widget.Append(self._menu, name)
+
+    def append(self, action):
+        if action is None:
+            self._menu.AppendSeparator()
+        else:
+            id = wx.NewId()
+            self._menu.Append(id, action.name)
+            self.menubar.items[id] = action
+    def on_menu(self, event):
+        self.items[event.GetId()]()
 
 class Window(Widget):
-    def __init__(self, position=(50,50), size=(640,480), menubar=False, statusbar=False, toolbar=False):
+    def __init__(self, position=(50,50), size=(640,480), statusbar=False):
         self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
-        if toolbar:
-            self.toolbar = Toolbar(self)
-            bitmap = wx.Image('/home/daniel/giraffe/data/images/console.png').ConvertToBitmap()
-            tool = self.toolbar._widget.AddSimpleTool(-1, bitmap, 'help_s',' help_l')
         if statusbar:
             self._widget.CreateStatusBar()
 
-        if menubar:
-            menubar = wx.MenuBar()
-            menu = wx.Menu()
-            menu.Append(-1, 'S&trint')
-            menubar.Append(menu, '&Spring')
-            self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None)
+
+    def koal(self):
+        print 'koali'
 
     def _add(self, child, **place):
         if isinstance(child, Toolbar):
             self._widget.SetToolBar(child._widget)
+        elif isinstance(child, Menubar):
+            self._widget.SetMenuBar(child._widget)
 #        else:
 #            Widget._add(self, child, **place)
 

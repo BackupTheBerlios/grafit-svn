@@ -4,7 +4,7 @@ from OpenGL.GLU import *
 
 from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
-                        OpenGLWidget, Table, Action
+                        OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
 
 from giraffe.signals import HasSignals
 
@@ -62,7 +62,7 @@ class TableData(HasSignals):
 # example main window
 class MainWindow(Window):
     def __init__(self):
-        Window.__init__(self, menubar=True, statusbar=True, toolbar=True)
+        Window.__init__(self, statusbar=True)
 
         # for example
         self.main = MainPanel(self)
@@ -73,21 +73,40 @@ class MainWindow(Window):
                                         page_label='explorer', page_pixmap='stock_navigator.png')
 
         book = Notebook(self.main)
-        box = Box(book, 'vertical', page_label='koali.fasmata.maniquio')
+        box = Box(book, 'vertical', page_label='window1')
         Label(box, 'periex')
-        koalaki = MainPanel(book, page_label='arrhenius.koalaki')
+        koalaki = MainPanel(book, page_label='window2')
         Label(koalaki, 'perierxx')
         self.expl = Table(koalaki.right_panel, TableData(),
-                          page_label='poulo', page_pixmap='stock_navigator.png')
+                          page_label='koalaki', page_pixmap='stock_navigator.png')
 
         self.test = OpenGLWidget(koalaki.right_panel,
-                                 page_label='poulou', page_pixmap='graph.png')
+                                 page_label='koali', page_pixmap='graph.png')
         self.test.connect('initialize-gl', self.ini)
         self.test.connect('paint-gl', self.ini)
         self.test.connect('resize-gl', self.res)
-        act = Action('Act', 'Do an important action', self.act, 'graph.png', 'Ctrl+A')
-        self.test.connect('resize-gl', act)
 
+        menubar = Menubar(self)
+        actions = {
+            'file-new': Action('New', 'Create a new project', self.koal),
+            'file-open': Action('Open', 'Open a project', self.koal),
+            'file-save': Action('Save', 'Save the project', self.koal),
+            'edit-undo': Action('Undo', 'Undo the last action', self.koal, 'stock_undo.png'),
+            'edit-redo': Action('Redo', 'Redo the last action', self.koal),
+            'edit-copy': Action('Copy', 'Undo the last action', self.koal),
+            None: None,
+        }
+
+        menu = Menu(menubar, '&File')
+        for item in ['file-new', 'file-open', None, 'file-save']:
+            menu.append(actions[item])
+
+        menu = Menu(menubar, '&Edit')
+        for item in ['edit-undo', 'edit-redo', None, 'edit-copy']:
+            menu.append(actions[item])
+
+        self.toolbar = Toolbar(self)
+        self.toolbar.append(actions['edit-undo'])
 
     def act(self, x, y):
         print 'patataki'
