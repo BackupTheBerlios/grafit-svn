@@ -41,7 +41,8 @@ def create_list_id(start=[100]):
     start[0] += 1
     return start[0]
 
-class Dataset(object):
+
+class oDataset(object):
     def __init__(self, x=None, y=None, range=(None,None), style=default_style):
         self._style = Style()
         self._x = x
@@ -57,11 +58,11 @@ class Dataset(object):
         return self._style
     style = property(get_style, set_style)
 
-    def set_range(self, val):
-        self._range.line_width = val.line_width
-    def get_range(self):
-        return self._range
-    range = property(get_range, set_range)
+#    def set_range(self, val):
+#        self._range.line_width = val.line_width
+#    def get_range(self):
+#        return self._range
+#    range = property(get_range, set_range)
 
     def set_x(self, val):
         self._x = val
@@ -82,33 +83,32 @@ class Dataset(object):
         dx =  self.graph.res * (self.graph.xmax-self.graph.xmin)/self.graph.w
         dy =  self.graph.res * (self.graph.ymax-self.graph.ymin)/self.graph.h
 
-        p = 0.5
+#        p = 0.5
 
-        glNewList(1001, GL_COMPILE)
-        glPushMatrix()
-        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
+#        glNewList(1001, GL_COMPILE)
+#        glPushMatrix()
+#        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
+#
+#        glBegin(GL_QUADS)
+#        glVertex3d(-p, -p, 0)
+#        glVertex3d(-p, p, 0)
+#        glVertex3d(p, p, 0)
+#        glVertex3d(p, -p, 0)
+#        glEnd()
+#        glPopMatrix()
+#        glEndList()
 
-        glBegin(GL_QUADS)
-        glVertex3d(-p, -p, 0)
-        glVertex3d(-p, p, 0)
-        glVertex3d(p, p, 0)
-        glVertex3d(p, -p, 0)
-        glEnd()
-        glPopMatrix()
-        glEndList()
-
-        glNewList(1002, GL_COMPILE)
-        glPushMatrix()
-        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
-        glBegin(GL_POLYGON)
-        n = 20
-        for i in xrange(n):
-            c = p*exp(i*2j*pi/n)
-            glVertex(c.real, c.imag, 0)
-        glEnd()
-        glPopMatrix()
-
-        glEndList()
+#        glNewList(1002, GL_COMPILE)
+#        glPushMatrix()
+#        glScale(self.graph.xscale_mm/self.graph.xscale_data, self.graph.yscale_mm/self.graph.yscale_data, 1.)
+#        glBegin(GL_POLYGON)
+#        n = 20
+#        for i in xrange(n):
+#            c = p*exp(i*2j*pi/n)
+#            glVertex(c.real, c.imag, 0)
+#        glPopMatrix()
+#
+#        glEndList()
 
         glNewList(self.id, GL_COMPILE)
         glColor4f(*self.style.color)
@@ -116,6 +116,54 @@ class Dataset(object):
                  self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax, 
                  GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]  )
         glEndList()
+
+class Style(object):
+    def __init__(self, color=(0,0,0,1)):
+        self._line_width = 0
+        self._color = color
+
+    def set_line_width(self, val):
+        self._line_width = val
+    def get_line_width(self):
+        return self._line_width
+    line_width = property(get_line_width, set_line_width)
+
+    def set_color(self, val):
+        self._color = val
+    def get_color(self):
+        return self._color
+    color = property(get_color, set_color)
+
+
+default_style = Style()
+
+class Dataset(HasSignals):
+    def __init__(self, x, y, range=(None, None), style=default_style):
+        self.x, self.y = x, y
+        x.connect('data-changed', self.on_data_changed)
+        y.connect('data-changed', self.on_data_changed)
+        self.range = range
+        self.style = style
+        
+        self.listid = create_list_id()
+
+    def paint(self):
+        glCallList(self.listid)
+
+    def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
+        dx =  res * (xmax-xmin)/width
+        dy =  res * (ymax-ymin)/height
+
+        glNewList(self.listid, GL_COMPILE)
+        glColor4f(*self.style.color)
+        makedata(asarray(self.x[:]), asarray(self.y[:]), 
+                 xmin, xmax, ymin, ymax, 
+                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)])
+        glEndList()
+
+    def on_data_changed(self):
+        self.emit('modified')
+
 
 class Grid(object):
     def __init__(self, orientation, plot):
@@ -167,6 +215,7 @@ class Grid(object):
             glEnable(GL_LINE_STIPPLE)
             if self.ps:
                 gl2psEnable(GL2PS_LINE_STIPPLE)
+                gl2psLineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for y in self.axis_left.tics(self.ymin, self.ymax):
@@ -176,6 +225,7 @@ class Grid(object):
             glDisable(GL_LINE_STIPPLE)
             if self.ps:
                 gl2psDisable(GL2PS_LINE_STIPPLE)
+                gl2psLineWidth(0.1)
             glColor3f(0.0, 0.0, 0.0)
 
             glPopMatrix()
@@ -335,23 +385,21 @@ class Graph(Item, HasSignals):
         x = arange(2, 6, 0.001)
         y = log10(hn.havriliak_negami(10.**x, 4, 1, 0.5, 1))
 
-        d = Dataset(x, y)
-        d.style.color =  (0.3, 0.4, 0.7, 0.8)
-        d.graph = self
-        self.datasets.append(d)
-        self._shape = (-1, -1)
+#        d = Dataset(x, y)
+#        d.style.color =  (0.3, 0.4, 0.7, 0.8)
+#        d.graph = self
+#        self.datasets.append(d)
+#        self._shape = (-1, -1)
 
 #        self.datasets.append(Dataset(x = arange(100000.)/100000,
 #                                     y = sin(arange(100000.)/100000)))
 #        self.datasets[-1].style.color = (0.0, 0.1, 0.6, 0.8)
 #        self.datasets[-1].graph = self
-
+#
 #        self.datasets.append(Dataset(x = arange(10000.)/1000,
 #                                     y = cos(arange(10000.)/1000)))
 #        self.datasets[-1].style.color = (0.4, 0.0, 0.1, 0.5)
 #        self.datasets[-1].graph = self
-
-#        self.colors[2] = (0.3, 0.4, 0.7, 0.8)
 
         self.axis_top = Axis('top', self)
         self.axis_bottom = Axis('bottom', self)
@@ -364,6 +412,8 @@ class Graph(Item, HasSignals):
         self.grid_v = Grid('vertical', self)
 
         self.set_range(0.0, 100.5)
+        self.xmin, self.ymin = 0,0  
+        self.ymax, self.xmax = 10, 10
         self.autoscale()
 
     default_name_prefix = 'graph'
@@ -374,7 +424,7 @@ class Graph(Item, HasSignals):
     def add(self, *args, **kwds):
         d = Dataset(*args, **kwds)
         self.datasets.append(d)
-        d.graph = self
+#        d.graph = self
 
     def paint_frame(self):
         glPushMatrix()
@@ -420,7 +470,7 @@ class Graph(Item, HasSignals):
         t = time.time()
 
         for d in self.datasets:
-            d.build_display_list()
+            d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
 
 #        print (time.time()-t), "seconds"
 
@@ -435,12 +485,13 @@ class Graph(Item, HasSignals):
         return x, y
 
     def autoscale(self):
-        self.xmin = min(self.datasets[0].x)
-        self.ymin = min(self.datasets[0].y)
-        self.xmax = max(self.datasets[0].x)
-        self.ymax = max(self.datasets[0].y)
-        if hasattr(self, 'xscale_pixel'):
-            self.set_data_scales()
+        if len(self.datasets):
+            self.xmin = min(self.datasets[0].x)
+            self.ymin = min(self.datasets[0].y)
+            self.xmax = max(self.datasets[0].x)
+            self.ymax = max(self.datasets[0].y)
+            if hasattr(self, 'xscale_pixel'):
+                self.set_data_scales()
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
@@ -640,6 +691,7 @@ class Graph(Item, HasSignals):
 #                      const char *filename )
 
 
+            print >>sys.stderr, "exporting...",
             f = file('ar.eps', 'w')
             gl2psBeginPage("Title", "Producer", 
                            self.viewport,
@@ -656,6 +708,7 @@ class Graph(Item, HasSignals):
 
             gl2psEndPage()
             f.close()
+            print >>sys.stderr, "done"
                            
 
 
@@ -683,16 +736,16 @@ class Graph(Item, HasSignals):
 
     
     def button_motion(self, x, y):
-        if self.haha:
-            ex, ey = self.mouse_to_real(x, y)
-            x = arange(2, 6, 0.01)
-            params = hn.havriliak_negami.move(10.**ex, 10.**ey, 4, 1, 0.5, 1)
-            y = log10(hn.havriliak_negami(10.**x, *params))
-            self.datasets[0].x = x
-            self.datasets[0].y = y
-            self.datasets[0].build_display_list()
-            self.emit('redraw')
-        elif self.rubberband_active():
+#        if self.haha:
+#            ex, ey = self.mouse_to_real(x, y)
+#            x = arange(2, 6, 0.01)
+#            params = hn.havriliak_negami.move(10.**ex, 10.**ey, 4, 1, 0.5, 1)
+#            y = log10(hn.havriliak_negami(10.**x, *params))
+#            self.datasets[0].x = x
+#            self.datasets[0].y = y
+#            self.datasets[0].build_display_list()
+#            self.emit('redraw')
+#        elif self.rubberband_active():
             self.rubberband_continue(x, y)
 
     name = wrap_attribute('name')
@@ -700,4 +753,9 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph, 'graphs[name:S,id:S,parent:S]')
+
+if 0:
+    graph = project.new(Graph, 'graph')
+    d = graph.add(Dataset(w.a, w.b))
+    graph[d]
 
