@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import psyco ; psyco.full()
+
 import os
 import sys
 

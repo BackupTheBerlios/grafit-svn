@@ -106,6 +106,7 @@ class WorksheetView(grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
+        self.AutoSizeRows()
 
     def OnRightDown(self, event):
         print "hello"

@@ -64,7 +64,14 @@ class Worksheet(Item, HasSignals):
         return [c.name for c in self.data.columns]
     column_names = property(get_column_names)
 
-    name = wrap_attribute('name')
+    def set_name(self, n):
+        self._name = n
+        self.emit('rename', n, item=self)
+    def get_name(self):
+        return self._name
+    name = property(get_name, set_name)
+
+    _name = wrap_attribute('name')
     parent = wrap_attribute('parent')
 
 register_class(Worksheet, 'worksheets[name:S,id:S,parent:S,columns[name:S,data:B]]')

@@ -138,6 +138,7 @@ class ProjectTree(wx.TreeCtrl):
 
     def on_add_item(self, item):
         self.items[item.id] = self.AppendItem(self.root, item.name)
+        item.connect('rename', self.on_rename)
 
     def on_double_click(self, event):
         item, flags = self.HitTest(event.GetPosition())
@@ -145,6 +146,10 @@ class ProjectTree(wx.TreeCtrl):
             if v == item:
                 self.mainwin.show_object(self.project.items[k])
         event.Skip()
+
+    def on_rename(self, name, item):
+        self.SetItemText(self.items[item.id], name)
+
 
 class Application(wx.App):
     def __init__(self, project):
