@@ -101,7 +101,7 @@ class Dataset(HasSignals):
         N = len(x)
 
         self.nurb = nurb = gluNewNurbsRenderer()
-        gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, True)
+        gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
         gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
         gluBeginCurve(nurb)
         gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
