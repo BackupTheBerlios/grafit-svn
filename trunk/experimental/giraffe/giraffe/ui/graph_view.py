@@ -18,7 +18,7 @@ import wx.glcanvas
 #sys.path.append('/home/daniel/grafit')
 #import hn
 
-#from common.signals import HasSignals
+#from base.signals import HasSignals
 #from giraffe.graph import Graph
 
 class GraphView(wx.glcanvas.GLCanvas):

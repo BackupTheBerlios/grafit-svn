@@ -1,7 +1,7 @@
 import sys
 
-from giraffe.common.signals import HasSignals
-from giraffe.common.commands import command_from_methods
+from giraffe.base.signals import HasSignals
+from giraffe.base.commands import command_from_methods
 from giraffe.base.item import Item, wrap_attribute, register_class
 from giraffe.worksheet.mkarray import MkArray
 

@@ -1,4 +1,4 @@
-from giraffe.common.commands import Command, command_list
+from giraffe.base.commands import Command, command_list
 
 # The layout of the metakit project database.
 # For each type of object (worksheet, graph etc) we call

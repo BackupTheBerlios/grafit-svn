@@ -5,7 +5,7 @@ import time
 
 from Numeric import *
 
-from giraffe.common.signals import HasSignals
+from giraffe.base.signals import HasSignals
 from giraffe.base.item import Item, wrap_attribute, register_class
 
 from OpenGL.GL import *
@@ -20,9 +20,6 @@ from render import makedata
 sys.path.append('/home/daniel/grafit/functions')
 sys.path.append('/home/daniel/grafit')
 import hn
-
-from common.signals import HasSignals
-
 
 class Style(object):
     def __init__(self, color=(0,0,0,1)):

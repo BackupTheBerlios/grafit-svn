@@ -3,8 +3,8 @@ import time, random, socket, md5
 
 import metakit
 
-from giraffe.common.commands import Command, command_from_methods
-from giraffe.common.signals import HasSignals
+from giraffe.base.commands import Command, command_from_methods
+from giraffe.base.signals import HasSignals
 from giraffe.base.item import Item, Folder, storage_desc
 
 # import only in order to register object types
