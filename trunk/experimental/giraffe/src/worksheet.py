@@ -5,6 +5,8 @@ from common.commands import Command, CommandList
 from common.signals import HasSignals
 from lib.ElementTree import Element, SubElement
 import cPickle as pickle
+import base64
+import sys
 
 Command.command_list = CommandList()
 
@@ -54,7 +56,6 @@ class column_change_data(Command):
         self[com.key] = com.old_value
 
 
-
 class Column(VarArray, HasSignals, Persistent):
     def __init__(self, worksheet, name):
         VarArray.__init__(self)
@@ -85,6 +86,7 @@ class Column(VarArray, HasSignals, Persistent):
         return VarArray.__repr__(self)
 
     _element_name = 'Column'
+
 
 class Worksheet(Item, WithId, Persistent):
     def __init__(self, name, parent):
@@ -148,7 +150,8 @@ class Worksheet(Item, WithId, Persistent):
     def to_element(self):
         elem = Element('Worksheet', name=self.name, uuid=self.uuid, 
                                     rows=str(self.nrows), columns=str(self.ncolumns))
-        elem.text = pickle.dumps(self.get_data())
+#        elem.text = pickle.dumps(self.get_data())
+        elem.text = base64.encodestring(self.get_data().tostring())
         for c in self.columns:
             SubElement(elem, 'Column', name=c.name)
         return elem
@@ -157,7 +160,8 @@ class Worksheet(Item, WithId, Persistent):
         w = Worksheet(element.get('name'), parent)
         for celem in element:
             w.add_column(celem.get('name'))
-        w.set_data(pickle.loads(element.text))
+#        w.set_data(pickle.loads(element.text))
+        w.set_data(fromstring(base64.decodestring(element.text), shape=(int(element.get('columns')),int(element.get('rows'))), type=Float64))
         w.uuid = element.get('uuid')
         return w
     from_element = staticmethod(from_element)
