@@ -9,21 +9,6 @@ import wx.glcanvas
 from giraffe import Worksheet, Folder
 from giraffe.signals import HasSignals
 
-#from Numeric import *
-
-#from OpenGL.GL import *
-#from OpenGL.GLU import *
-#from lib import ftgl
-
-#from render import makedata
-
-#sys.path.append('/home/daniel/grafit/functions')
-#sys.path.append('/home/daniel/grafit')
-#import hn
-
-#from base.signals import HasSignals
-#from giraffe.graph import Graph
-
 class GraphView(wx.glcanvas.GLCanvas):
     def __init__(self, parent, graph):
         wx.glcanvas.GLCanvas.__init__(self, parent, -1)
@@ -99,8 +84,7 @@ class FolderListModel(HasSignals):
     def __init__(self, folder):
         self.folder = folder
         self.update()
-        self.folder.project.connect('add-item', self.update)
-        self.folder.project.connect('remove-item', self.update)
+        self.folder.project.connect(['add-item', 'remove-item'], self.update)
 
     def update(self, item=None):
         self.contents = [o for o in self.folder.contents() 
@@ -114,87 +98,47 @@ class FolderListModel(HasSignals):
     def __len__(self):
         return len(self.contents)
 
-class GraphDataPanel(wx.Panel):
+class GraphDataPanel(gui.Box):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
-
-        # create widgets 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-#        buttons = wx.BoxSizer(wx.HORIZONTAL)
+        # wrapper for wx parent widget
         class k: pass
         k = k()
-        k.__dict__.update({'_widget': self })
+        k.__dict__.update({'_widget': parent })
 
-        box = gui.Box(k, 'vertical')
-        sizer.Add(box._widget, 1, wx.EXPAND)
+        gui.Box.__init__(self, k, 'vertical')
 
-
-        btnbox = gui.Box(box, 'horizontal', stretch=0)
+        # create widgets 
+        btnbox = gui.Box(self, 'horizontal', stretch=0)
         button = gui.Button(btnbox, 'add', stretch=0)
         button.connect('clicked', self.on_add)
 
-        gui.Label(box, 'Worksheet', stretch=0)
-        self.worksheet_list = gui.List(box)
+        gui.Label(self, 'Worksheet', stretch=0)
+        self.worksheet_list = gui.List(self)
         self.worksheet_list.model.append('arse')
 
-        gui.Label(box, 'X column', stretch=0)
-        self.x_list = gui.List(box)
+        gui.Label(self, 'X column', stretch=0)
+        self.x_list = gui.List(self)
         self.x_list.columns = ['vame', 'vavel']
         self.x_list.model.append('arse')
 
-        gui.Label(box, 'Y column', stretch=0)
-        self.y_list = gui.List(box)
-
-#
-#        button = gui.Button(k, 'add')
-#        buttons.Add(button._widget, 0, wx.EXPAND)
-#        sizer.Add(buttons, 0, wx.EXPAND)
-#
-#        sizer.Add(wx.StaticText(self, -1, 'Worksheet'), 0, wx.EXPAND)
-#        self.worksheet_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
-#        sizer.Add(self.worksheet_list, 1, wx.EXPAND)
-#
-#        sizer.Add(wx.StaticText(self, -1, 'X column'), 0, wx.EXPAND)
-#        self.x_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
-#        sizer.Add(self.x_list, 1, wx.EXPAND)
-#
-#        sizer.Add(wx.StaticText(self, -1, 'Y column'), 0, wx.EXPAND)
-#        self.y_list = wx.ListCtrl(self, -1, style= wx.LC_LIST|wx.BORDER_SUNKEN|wx.LC_HRULES)
-#        sizer.Add(self.y_list, 1, wx.EXPAND)
-#
-        self.SetSizer(sizer)
-        sizer.SetSizeHints(self)
+        gui.Label(self, 'Y column', stretch=0)
+        self.y_list = gui.List(self)
 
         self.project = None
         self.folder = None
 
     def set_current_folder(self, folder):
         self.folder = folder
-#        self.worksheet_list.ClearAll()
-#
-#        for item in folder.contents():
-#            if isinstance(item, Worksheet):
-#                self.worksheet_list.InsertStringItem(0, item.name)
-#            elif isinstance(item, Folder):
-#                self.worksheet_list.InsertStringItem(0, item.name+'/')
+        self.worksheet_list.model = FolderListModel(folder)
 
     def on_add(self):
         print '1'
 
-    def on_project_changed(self, item):
-        if item.parent == self.folder:
-            self.set_current_folder(self.folder)
-
     def connect_project(self, project):
         self.project = project
-        self.project.connect('add-item', self.on_project_changed)
-        self.project.connect('remove-item', self.on_project_changed)
         self.worksheet_list.model = FolderListModel(self.project.top)
 
     def disconnect_project(self):
-        self.project.disconnect('add-item', self.on_project_changed)
-        self.project.disconnect('remove-item', self.on_project_changed)
         self.worksheet_list.model = None
         self.project = None
 

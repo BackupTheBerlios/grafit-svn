@@ -345,7 +345,7 @@ class MainPanel(wx.Panel):
 
         # the right panel
         self.graph_data_panel = GraphDataPanel(self.right_panel.panel)
-        self.right_panel.add_page('Data', 'worksheet.png', self.graph_data_panel)
+        self.right_panel.add_page('Data', 'worksheet.png', self.graph_data_panel._widget)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)

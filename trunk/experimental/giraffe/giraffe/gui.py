@@ -79,7 +79,7 @@ class _CustomListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
 
 class List(Widget):
     def __init__(self, parent, model=None, columns=None, headers=False, editable=True, **kwds):
-        flags = wx.LC_REPORT|wx.LC_VIRTUAL
+        flags = wx.LC_REPORT|wx.LC_VIRTUAL|wx.BORDER_SUNKEN
         if not headers:
             flags |= wx.LC_NO_HEADER
         if editable:
@@ -119,9 +119,9 @@ class List(Widget):
 
     def update(self):
         self._widget.ClearAll()
+        self._widget.SetItemCount(len(self.model))
         for num, name in enumerate(self.columns):
             self._widget.InsertColumn(num, str(name))
-        self._widget.SetItemCount(len(self.model))
 
 
 class Label(Widget):

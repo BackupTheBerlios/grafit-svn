@@ -78,6 +78,8 @@ class HasSignals(object):
         Connect a signal to a slot.  'signal' is a string, `slot` is any callable.
         """
 #        print "CONNECT: ", self, signal, slot
+        if not isinstance(signal, basestring) and hasattr(signal, '__len__'):
+            return [self.connect(sig, slot) for sig in signal]
         if not hasattr(self, '_signals'):
             self._signals = {}
         if signal not in self._signals:
