@@ -72,7 +72,7 @@ class ToolPanel(wx.SashLayoutWindow):
         dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
         dc.Clear()
         dc.SetFont(self.GetFont())
-        dc.DrawBitmap(bimp, 0, 0)
+        dc.DrawBitmap(bimp, 0, 0, True)
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
         bmp.SetMaskColour(self.GetBackgroundColour())
@@ -152,7 +152,7 @@ class ToolPanel(wx.SashLayoutWindow):
 class ProjectTree(wx.TreeCtrl):
     def __init__(self, parent, project, mainwin): 
         wx.TreeCtrl.__init__(self, parent, -1, 
-                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS)
+                             style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.TR_ROW_LINES)
         self.SetIndent(10)
         self.project = project
         self.mainwin = mainwin
@@ -172,7 +172,9 @@ class ProjectTree(wx.TreeCtrl):
         self.SetItemImage(self.root, self.fldridx, wx.TreeItemIcon_Normal)
         self.SetItemImage(self.root, self.fldropenidx, wx.TreeItemIcon_Expanded)
 
+        # object.id: treeitemid
         self.items = {}
+        self.current_item = None
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_double_click)
 
@@ -187,6 +189,11 @@ class ProjectTree(wx.TreeCtrl):
         for k, v in self.items.iteritems():
             if v == item:
                 self.mainwin.show_object(self.project.items[k])
+                if self.current_item != v:
+                    if self.current_item is not None:
+                        self.SetItemBold(self.current_item, False)
+                    self.SetItemBold(v, True)
+                    self.current_item = v
         event.Skip()
 
     def on_rename(self, name, item):
