@@ -26,6 +26,9 @@ class Item(object):
         self.project = project
         self.id = register(self, id)
 
+        self._update_view()
+
+    def _update_view(self):
         # create or get the view
         if self.viewname in self.project.db.contents().properties().keys():
             self.view = self.project.db.view(self.viewname)
@@ -54,8 +57,6 @@ print i.name
 i.name  = 'square'
 print i.name, i.id
 p.db.commit()
-        
-        
         
 """
 Project:
