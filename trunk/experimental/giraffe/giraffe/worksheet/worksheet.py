@@ -150,6 +150,13 @@ class Worksheet(Item, Persistent):
             s += '\n   ' + c.name + ": " + str(c)
         return s
 
+    def save(self, storage):
+        worksheets = storage.getas('worksheets[name:S,id:S,columns[worksheet:S,name:S,position:I,data:B]]')
+
+        n = worksheets.append(name=self.name, id=self.id)
+        for i, c in enumerate(self.columns):
+            worksheets[n].columns.append(worksheet=self.id, name=c.name, position=i, data=c.data.tostring())
+
     def to_element(self):
         elem = Element('Worksheet', name=self.name, id=self.id, 
                                     rows=str(self.nrows), columns=str(self.ncolumns),

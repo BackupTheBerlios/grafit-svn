@@ -18,11 +18,18 @@ print >>sys.stderr, 'creating...',
 project = Project()
 
 data1 = Worksheet('data1', project)
-for i in xrange(300):
+for i in xrange(5):
     data1.add_column('A'+str(i))
-    data1['A'+str(i)] = arange(190.)
+    data1['A'+str(i)] = arange(100000.)
 
 print >>sys.stderr, 'ok'
+import metakit
+db = metakit.storage('what.db', 2)
+data1.save(db)
+t = time.time()
+db.commit()
+print time.time()-t, 'seconds'
+
 
 print >>sys.stderr, 'saving...',
 t = time.time()

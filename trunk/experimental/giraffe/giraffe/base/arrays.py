@@ -42,6 +42,7 @@ class VarOperation(object):
     def __repr__(self):
         return repr(self.oper).replace('UFunc', 'vUFunc')
 
+# wrap all ufuncs with VarOperations
 mod_ufuncs = dict([(k, VarOperation(v)) for k, v in ufunc._UFuncs.iteritems() if v.arity in (1,2)])
 globals().update(mod_ufuncs)
 
@@ -120,17 +121,22 @@ class VarArray(object):
     def __rdiv__(self, other): return divide(asarray(other), self) 
     def __pow__(self,other): return power(self, asarray(other)) 
 
+# comparisons: should we have these?
 #    def __eq__(self,other): return equal(self,other) 
-    def __ne__(self,other): return not_equal(self,asarray(other)) 
-    def __lt__(self,other): return less(self,asarray(other)) 
-    def __le__(self,other): return less_equal(self,asarray(other)) 
-    def __gt__(self,other): return greater(self,asarray(other)) 
-    def __ge__(self,other): return greater_equal(self,asarray(other))
-
+#    def __ne__(self,other): return not_equal(self,asarray(other)) 
+#    def __lt__(self,other): return less(self,asarray(other)) 
+#    def __le__(self,other): return less_equal(self,asarray(other)) 
+#    def __gt__(self,other): return greater(self,asarray(other)) 
+#    def __ge__(self,other): return greater_equal(self,asarray(other))
 
     def __len__(self): return len(self.data)
     def __repr__(self): return repr(self.data).replace('nan', '--')
     def __str__(self): return str(self.data).replace('nan', '--')
+
+def column(data):
+    a = VarArray()
+    a[:] = data
+    return a
 
 if __name__ == '__main__':
     c = VarArray()
