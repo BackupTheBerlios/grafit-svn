@@ -57,7 +57,18 @@ class VarArray(object):
         if type(key) is int:
             length = key+1
         elif type(key) is slice:
-            length = max(key.start, key.stop)
+            if key.start is None:
+                start = 0
+            else:
+                start = key.start
+            if key.stop is None:
+                try:
+                    l = len(value)
+                except TypeError:
+                    l = 1
+                length = l + start
+            else:
+                length = max(key.start, key.stop)
         elif hasattr(key, '__len__'):
             length = max(key)+1
         self._extend(length)
@@ -118,8 +129,8 @@ class VarArray(object):
 
 
     def __len__(self): return len(self.data)
-    def __repr__(self): return repr(self.data)
-    def __str__(self): return str(self.data)
+    def __repr__(self): return repr(self.data).replace('nan', '--')
+    def __str__(self): return str(self.data).replace('nan', '--')
 
 if __name__ == '__main__':
     c = VarArray()
@@ -128,7 +139,5 @@ if __name__ == '__main__':
 #c[115] = 2
     c2 = VarArray()
     c2[0:4] = [1,2,3,4]
-    print sin(c)+sin(c2)
-    print c-c2
-    print c*c2
+    c[:] = [1,2,3,4,5,6,7]
     print c
