@@ -1,7 +1,7 @@
 wrapper:
-	@echo "creating wrapper..."
+	@echo "creating ftgl wrapper..."
 	@swig -c++ -python ftgl.i
-	@echo "compiling wrapper..."
+	@echo "compiling ftgl wrapper..."
 	@c++ ftgl_wrap.cxx -shared -o _ftgl.so -I/usr/include/python2.3 \
 					-I/usr/include/freetype2 -lfreetype -lftgl -lGL -lGLU
 

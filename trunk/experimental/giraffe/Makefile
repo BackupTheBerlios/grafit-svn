@@ -1,5 +1,5 @@
 render.so:
-	@echo compiling extension...
+	@echo compiling 'render' pyrex extension...
 	@pyrexc render.pyx
 	@gcc -fPIC -I/usr/include/python2.3/ -lGL -shared render.c -o render.so
 	@make -C ftgl
