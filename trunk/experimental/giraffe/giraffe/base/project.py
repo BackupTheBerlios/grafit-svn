@@ -71,7 +71,7 @@ class Project(HasSignals):
     def set_dict(self, d):
         self._dict = d
 
-    def create(self, cls, **kwds):
+    def create(self, cls):
         try:
             view = self.db.getas(storage_desc[cls])
         except KeyError:
@@ -83,26 +83,10 @@ class Project(HasSignals):
 
         return view, row, data, id
 
-    def add(self, item, id=None):
-        # the view corresponding to the item's type
-        view = self.db.getas(storage_desc[type(item)])
-
-        # the item's row
-        if id is None:
-            # This is a new object. We must create a new
-            # id for it and add a row to the view
-            id = create_id()
-            row = view.append(id=id)
-            data = view[row]
-        else:
-            # This is an object which exists in the database,
-            # so we are only adding it to project.items
-            data = view[view.find(id=id)]
-
-        self.items[id] = item
-
-        return view, data, id
-
+    def new(self, cls, *args, **kwds):
+        obj = cls(self, *args, **kwds)
+        self.items[obj.id] = obj
+        return obj.id
 
     def remove(self, id):
         obj = self.items[id]

@@ -1,5 +1,4 @@
 from giraffe.common.commands import Command, command_list
-import sys
 
 # The layout of the metakit project database.
 # For each type of object (worksheet, graph etc) we call
@@ -34,30 +33,29 @@ class Item(object):
 
         if location is None:
             self.view, self.row, self.data, self.id = project.create(type(self))
+            if hasattr(self, '_isroot') and self._isroot:
+                # this is the top folder, so we cannot specify 
+                # its parent when we create it!
+                parent = self
+
+            if parent is None:
+                # default to top-level folder
+                parent = self.project.top
+
+            self.name = name
+            self.parent = parent.id
         else:
             self.view, self.row, self.data, self.id = location
 
         self.project.items[self.id] = self
 
-        if location is None:
-            if hasattr(self, '_isroot') and self._isroot:
-                folder = self
-            elif parent is None:
-                folder = self.project.top
-
-            self.name = name
-            self.parent = folder
-
         if (not (hasattr(self, '_isroot') and self._isroot)) and self.parent is self.project.top:
             self.project._dict[self.name] = self
 
-        # We have to emit the signal after calling _update()
+        # We have to emit the signal at the end
         # so the signal handlers can access wrapped attributes.
         # We can't emit in project.add()
         self.project.emit('add-item', self)
-
-#    def _update(self, id):
-#        self.view, self.data, self.id = self.project.add(self, id)
 
 
 class Folder(Item):
