@@ -13,6 +13,8 @@ This is an example text file in reStructuredText format.  First import
 Now use it:
 
     >>> w = Worksheet(p, 'data1')
+    >>> p.remove(w.id)
+    >>> w = Worksheet(p, 'data1')
     >>> w.add_column('A')
     >>> w.add_column('B')
     >>> print w.column_names

@@ -7,7 +7,6 @@ from giraffe.base.mkarray import MkArray
 class WorksheetError(Exception):
     """Exception class for Worksheet errors"""
 
-
 def wrap(name):
     def get_data(self):
         return getattr(self.row, name)
@@ -20,8 +19,8 @@ class Item(object):
     def __init__(self, project, id=None):
         self.project = project
         self.id = register(self, id)
-
         self._update_view()
+        self.project.register(self)
 
     def _update_view(self):
         # create or get the view
@@ -99,54 +98,26 @@ class Project(object):
         else:
             self.db = metakit.storage(self.filename, 1)
 
-    itemclasses = [ Worksheet, Item ]
+        self.items = {}
+
+    itemviews = [ 'worksheets', 'items' ]
+
+
+    def register(self, item):
+        self.items[item.id] = item
+
+    def remove(self, id):
+        obj = self.items[id]
+        ind = obj.view.find(id=id)
+        if ind == -1:
+            raise NameError
+        else:
+            obj.view.delete(ind)
+            del self.items[id]
 
     def dump(self):
-        for cl in self.itemclasses:
-            
+        ids = []
+        for n in self.itemviews:
+           ids.append([r.id for r in self.db.view(n)])
+        print ids
 
-
-if __name__ == "__main__":
-
-    
-
-
-
-    id = '34444444444'
-            
-
-    p = Project('test.db')
-    i = Item(p, id)
-
-    w = Worksheet(p, "baka")
-    w.add_column('ass')
-    w.add_column('arse')
-    w.add_column('behind')
-    print w.column_names
-    w.remove_column('arse')
-    print w.column_names
-    print '---------------------'
-    print w['ass']
-    w['ass'][3:6] = 133
-    print w['ass']
-    print '---------------------'
-
-    print w.column_names
-
-    print i.name
-    i.name  = 'square'
-    print i.name, i.id
-    p.db.commit()
-            
-    """
-    Project:
-        container, encapsulates a metakit database
-        has a flat structure, may contain several types of Items, each type corresponds to a view
-    """
-
-    """
-    Item:
-        always associated with a Project
-        data is stored in a row of a metakit view in a Project
-        identified by uuid, (self.id)
-    """
