@@ -68,7 +68,8 @@ class Folder(Item):
             return False
         
         item.disconnect('modified', self.on_child_modified)
-        self.items.remove(i)
+        self.items.remove(item)
+        self.emit('remove-item', item)
 
     def _get_subfolders(self):
         return [i for i in self.items if isinstance(i, Folder)]
@@ -130,12 +131,12 @@ class TrivialItem(Item):
 
 if __name__ == '__main__':
     f = Folder('root', None)
-    f2 = Folder('child', f)
+    Folder('child', f)
     f3 = Folder('child2', f)
     i = TrivialItem('item', f3)
     f3 = Folder('child5', f)
-    i = TrivialItem('item', f3)
-    i = TrivialItem('item3', f3)
+    TrivialItem('item', f3)
+    TrivialItem('item3', f3)
     i = TrivialItem('item4', f3)
     i.emit('modified')
     e = f3.to_element()
