@@ -42,6 +42,7 @@ class Project(items.Folder, items.Persistent):
         - False: no file name. Set a file name, and call save again.
         """
         if self.filename is None:
+            print >>sys.stderr, self.emit('ask-for-filename')
             return False
         else:
             self.saveas(self.filename)
@@ -77,6 +78,7 @@ def test():
     i = items.TrivialItem('opikou', f)
     i.emit('modified')
 
+    p.save()
     p.filename = 'test.xml'
     p.save()
     p.new()
@@ -108,15 +110,10 @@ def test():
 #    p2.new()
 
     print p.desc()
-    print p.uuid
     p.load('test.xml')
     print p.desc()
-    print p.uuid
-    print identity.lookup(p.uuid), p
 
     p3 = items.Persistent.create(et.parse('test.xml').getroot())
-    print p3.uuid
-    print identity.lookup(p.uuid), p3, p
 
 
 if __name__== '__main__':

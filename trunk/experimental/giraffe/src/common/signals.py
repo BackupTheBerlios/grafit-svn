@@ -103,16 +103,19 @@ class HasSignals(object):
         """
 #        print "SIGNAL: ", self, "emitted signal", signal, args, kwds
         if not hasattr(self, 'signals'):
-            return
+            return []
         if signal not in self.signals:
-            return
+            return []
+
+        results = []
         for slot in self.signals[signal]:
             # Lazy handling of expired slots.
             # We don't care about them until they are called,
             # then we remove them from the slots list.
             try:
-                slot(*args, **kwds)
+                results.append(slot(*args, **kwds))
             except ReferenceError:
                 # We can't do self.signals[signal].remove(slot) because that calls slot.__eq__
                 # and raises another ReferenceError. So we might as well remove all expired slots.
                 self.signals[signal] = [s for s in self.signals[signal] if not s.is_expired()]
+        return results
