@@ -2,6 +2,7 @@ import sys
 sys.path.append('/home/daniel/giraffe')
 
 import os
+import new
 import wx
 import wx.py
 import wx.lib.buttons
@@ -34,6 +35,7 @@ class ToolPanel(wx.SashLayoutWindow):
         wx.SashLayoutWindow.__init__(self, parent, -1, 
                                      wx.DefaultPosition, (200, 30), 
                                      wx.NO_BORDER|wx.SW_3D)
+        self.parent = parent
         self.SetDefaultSize((120, 1000))
         self.SetOrientation(wx.LAYOUT_VERTICAL)
         self.SetAlignment(wx.LAYOUT_LEFT)
@@ -41,7 +43,7 @@ class ToolPanel(wx.SashLayoutWindow):
 
         self.panel = wx.Panel(self, -1)
         self.btnbox = wx.BoxSizer(wx.VERTICAL)
-        self.contentbox = wx.BoxSizer(wx.VERTICAL)
+        self.contentbox = wx.BoxSizer(wx.HORIZONTAL)
         self.box = wx.BoxSizer(wx.HORIZONTAL)
         self.box.Add(self.btnbox, 0)
         self.box.Add(self.contentbox, 1, wx.EXPAND)
@@ -49,15 +51,37 @@ class ToolPanel(wx.SashLayoutWindow):
         self.panel.SetAutoLayout(True)
         self.panel.SetSizer(self.box)
 
+        self.contents = []
+        self.buttons = []
+        self.last_width = 120
+
     def add_page(self, widget):
         bmp = wx.Bitmap("graph.xpm", wx.BITMAP_TYPE_XPM)
+        ind = len(self.contents)
 
-        self.btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, 10011, bmp, style=wx.BU_EXACTFIT)
-        self.btn.SetBezelWidth(1)
-#        self.Bind(wx.EVT_BUTTON, self.button_clicked, btn)
-        self.btnbox.Add(self.btn, 0)
+        btn = wx.lib.buttons.GenBitmapToggleButton(self.panel, -1, bmp, style=wx.BU_EXACTFIT)
+        btn.SetBezelWidth(1)
+        btn.Bind(wx.EVT_BUTTON, self.button_clicked(ind))
+        self.btnbox.Add(btn, 0)
         self.contentbox.Add(widget, 1, wx.EXPAND)
 
+        self.contents.append(widget)
+        self.buttons.append(btn)
+
+    def button_clicked(self, id):
+        def button_clicked_callback(self, event):
+            if event.GetIsDown():
+                self.contents[id].Show()
+                self.SetDefaultSize((self.last_width, -1)) # TODO: fix this
+            else:
+                self.last_width = self.GetSize()[0]
+                self.contents[id].Hide()
+                margin = self.GetEdgeMargin(wx.SASH_RIGHT)
+                self.SetDefaultSize((self.buttons[0].GetSize()[0] + margin, -1))
+
+            wx.LayoutAlgorithm().LayoutWindow(self.parent, self.parent.remainingSpace)
+            self.parent.remainingSpace.Refresh()
+        return new.instancemethod(button_clicked_callback, self, self.__class__)
 
 class ProjectTree(wx.TreeCtrl):
     def __init__(self, parent, project): 
@@ -151,9 +175,6 @@ class MainWindow(wx.Panel):
         panel.SetAutoLayout(True)
         panel.SetSizer(box)
 
-        # A window to the left of the client window
-#wx.SashLayoutWindow(self, self.ID_WINDOW_LEFT1, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
-
 
         # Another window to the left of the client window
         win = wx.SashLayoutWindow(self, self.ID_WINDOW_LEFT2, wx.DefaultPosition, (200, 30), wx.NO_BORDER|wx.SW_3D)
@@ -165,10 +186,13 @@ class MainWindow(wx.Panel):
 
         self.leftWindow2 = win
 
-        self.leftWindow1 =  ToolPanel(self)
-        self.project_tree = ProjectTree(self.leftWindow1.panel, self.project)
-        self.leftWindow1.add_page(self.project_tree)
+        # the left panel
+        self.left_panel =  ToolPanel(self)
+        self.project_tree = ProjectTree(self.left_panel.panel, self.project)
+        self.left_panel.add_page(self.project_tree)
 
+        self.pikou = wx.py.shell.Shell(panel, -1, introText='Welcome to giraffe')
+        self.left_panel.add_page(self.pikou)
 
         # will occupy the space not used by the Layout Algorithm
         self.remainingSpace = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
@@ -180,23 +204,10 @@ class MainWindow(wx.Panel):
         box.Add(self.graphw, 1, wx.EXPAND)
         self.remainingSpace.SetSizer(box)
 
-        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.leftWindow1.GetId())
+        self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.left_panel.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_LEFT2)
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.OnSashDrag, id=self.ID_WINDOW_BOTTOM)
         self.Bind(wx.EVT_SIZE, self.OnSize)
-
-    def button_clicked(self, event):
-        if event.GetIsDown():
-            self.project_tree.Show()
-            self.leftWindow1.SetDefaultSize((300, -1)) # TODO: fix this
-        else:
-            self.project_tree.Hide()
-            margin = self.leftWindow1.GetEdgeMargin(wx.SASH_RIGHT)
-            self.leftWindow1.SetDefaultSize((self.btn.GetSize()[0] + margin, -1))
-
-        wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
-        self.remainingSpace.Refresh()
-
 
     def OnSashDrag(self, event):
         if event.GetDragStatus() == wx.SASH_STATUS_OUT_OF_RANGE:
@@ -204,8 +215,8 @@ class MainWindow(wx.Panel):
 
         id = event.GetId()
 
-        if id == self.leftWindow1.GetId():
-            self.leftWindow1.SetDefaultSize((event.GetDragRect().width, 1000))
+        if id == self.left_panel.GetId():
+            self.left_panel.SetDefaultSize((event.GetDragRect().width, 1000))
         elif id == self.ID_WINDOW_LEFT2:
             self.leftWindow2.SetDefaultSize((event.GetDragRect().width, 1000))
         elif id == self.ID_WINDOW_BOTTOM:
