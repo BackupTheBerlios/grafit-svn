@@ -58,7 +58,7 @@ class Project(HasSignals):
             except KeyError:
                 pass
         self._dict.update(self.save_dict)
-        self.save_dict = {}
+        self._save_dict = {}
         
         self.here = folder
 
@@ -155,6 +155,8 @@ class Project(HasSignals):
             del self.items[id]
             obj.id = '-'+obj.id 
             self.deleted[obj.id] = obj
+
+        self.emit('remove-item', obj)
         return id
 
     def remove_undo(self, id):
@@ -167,6 +169,7 @@ class Project(HasSignals):
 
         if obj.parent is self.top:
             self._dict[obj.name] = obj
+        self.emit('add-item', obj)
 
     remove = command_from_methods('project_remove', remove, remove_undo)
 

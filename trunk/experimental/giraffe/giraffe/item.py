@@ -83,7 +83,7 @@ class Folder(Item, HasSignals):
     def contents(self):
         for desc in storage_desc.values():
             for row in self.project.db.getas(desc):
-                if row.parent == self.id and not row.id.startswith('-') and row.id != self.id:
+                if row.parent == self.id and '-'+row.id not in self.project.deleted and row.id != self.id:
                     yield self.project.items[row.id]
 
     def __getitem__(self, key):

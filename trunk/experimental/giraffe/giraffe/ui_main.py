@@ -200,6 +200,7 @@ class ProjectExplorer(wx.Panel, HasSignals):
         self.current_dir.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)
         self.on_sel_changed(None, self.project_tree.root)
         self.project.connect('add-item', self.on_add_item)
+        self.project.connect('remove-item', self.on_add_item)
         self.items = {}
 
     def on_add_item(self, item):
@@ -224,6 +225,8 @@ class ProjectExplorer(wx.Panel, HasSignals):
 
         self.project.cd(folder)
         for i, o in enumerate(folder.contents()):
+            if isinstance(o, Folder):
+                continue
             self.current_dir.InsertImageStringItem(0, o.name,
                             {Worksheet: self.img_worksheet,
                              Graph: self.img_graph,
@@ -245,7 +248,7 @@ class ProjectTree(wx.TreeCtrl, HasSignals):
         self.fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
         self.fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
         self.fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_REPORT_VIEW, wx.ART_OTHER, isz))
-        self.wsidx       = il.Add(wx.Image('../data/images/worksheet.png').ConvertToBitmap())
+        self.wsidx       = il.Add(wx.Image('../data/images/stock_folder.png').ConvertToBitmap())
         self.il = il
         self.SetImageList(il)
 
