@@ -3,7 +3,7 @@ import time, random, socket, md5
 
 import metakit
 
-from giraffe.common.commands import Command, command_list
+from giraffe.common.commands import Command, command_from_methods
 from giraffe.common.signals import HasSignals
 from giraffe.base.item import Item, Folder, storage_desc
 
@@ -28,43 +28,6 @@ def create_id(*args):
     return data
 
 
-def command_from_methods(name, do, undo, redo=None, cleanup=None):
-    def replace_init(selb, *args, **kwds):
-        class CommandFromMethod(Command):
-            def __init__(self):
-                self.args, self.kwds = args, kwds
-                self.__done = False
-
-            def do(self):
-                if not self.__done:
-                    ret = do(selb, *self.args, **self.kwds)
-                    if len(ret) > 1 and isinstance(ret, tuple):
-                        self.__state = ret[0]
-                        ret = ret[1:]
-                        if len(ret) == 1 and isinstance(ret, tuple):
-                            ret = ret[0]
-                    else:
-                        self.__state = ret
-                        ret = None
-                    self.__done = True
-                else:
-                    return redo(selb, self.__state)
-                return ret
-
-            def undo(self):
-                return undo(selb, self.__state)
-
-            if cleanup is not None:
-                def __del__(self):
-                    cleanup(selb, self.__state)
-
-        CommandFromMethod.__name__ = name
-        com = CommandFromMethod()
-        ret = com.do_and_register()
-        return ret
-    return replace_init
-
-
 class Project(HasSignals):
     def __init__(self, filename=None):
         self.filename = filename
@@ -76,18 +39,22 @@ class Project(HasSignals):
         else:
             self.db = metakit.storage(self.filename, 1)
 
+        self.cleanup()
+
         self.items = {}
         self.deleted = {}
-
         self._dict = {}
 
+        # Create top folder.
+        # - it must be created before all other items
+        # - it must be created with _isroot=True, to set itself as its parent folder
         try:
-            id = self.db.getas(storage_desc[Folder]).select(name='top')[0].id
-            self.top = self.items[id] = Folder(self, id=id, _isroot=True)
+            fv = self.db.getas(storage_desc[Folder])
+            row = fv.select(name='top')[0]
+            self.top = self.items[id] = Folder(self, location=(fv, row, row.id), _isroot=True)
         except IndexError:
+            # can't find it in the database, create a new one.
             self.top = Folder(self, 'top', _isroot=True)
-
-        self.cleanup()
 
         self.this = self.top
 
@@ -97,14 +64,15 @@ class Project(HasSignals):
             for i, row in enumerate(view):
                 if row.id != self.top.id:
                     if not row.id.startswith('-'):
-                        self.items[row.id] = cls(self, location=(view, i, row, row.id))
+                        self.items[row.id] = cls(self, location=(view, row, row.id))
                     else:
-                        self.deleted[row.id] = cls(self, location=(view, i, row, row.id))
+                        self.deleted[row.id] = cls(self, location=(view, row, row.id))
 
     def set_dict(self, d):
         self._dict = d
 
     def cleanup(self):
+        """Purge all deleted items from the database"""
         for cls, desc in storage_desc.iteritems():
             view = self.db.getas(desc)
             for i, row in enumerate(view):
@@ -112,6 +80,11 @@ class Project(HasSignals):
                     view.delete(i)
 
     def create(self, cls):
+        """Create an entry for a new item of class `cls` in the database
+
+        This method is called from the constructor of all `Item`-derived
+        classes, if the item is not already in the database
+        """
         try:
             view = self.db.getas(storage_desc[cls])
         except KeyError:
@@ -121,7 +94,7 @@ class Project(HasSignals):
         row = view.append(id=id)
         data = view[row]
 
-        return view, row, data, id
+        return view, data, id
 
     # new ##################################
 
@@ -149,7 +122,7 @@ class Project(HasSignals):
     def new_cleanup(self, obj):
         if obj.id in self.deleted:
             del self.deleted[obj.id]
-        obj.view.delete(obj.row)
+        obj.view.remove(obj.view.select(id=obj.id))
 
     new = command_from_methods('project_new', new, new_undo, new_redo, new_cleanup)
 
@@ -183,6 +156,8 @@ class Project(HasSignals):
 
     remove = command_from_methods('project_remove', remove, remove_undo)
 
+
+    # Shortcuts for creating and removing folders
         
     def mkfolder(self, path):
         self.new(Folder, path)

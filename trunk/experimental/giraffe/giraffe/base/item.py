@@ -32,7 +32,7 @@ class Item(object):
         self.project = project
 
         if location is None:
-            self.view, self.row, self.data, self.id = project.create(type(self))
+            self.view, self.data, self.id = project.create(type(self))
             if hasattr(self, '_isroot') and self._isroot:
                 # this is the top folder, so we cannot specify 
                 # its parent when we create it!
@@ -45,7 +45,7 @@ class Item(object):
             self.name = name
             self.parent = parent.id
         else:
-            self.view, self.row, self.data, self.id = location
+            self.view, self.data, self.id = location
 
         self.project.items[self.id] = self
 
@@ -56,15 +56,15 @@ class Item(object):
 
 
 class Folder(Item):
-    def __init__(self, project, name=None, parent=None, id=None, _isroot=False, location=None):
+    def __init__(self, project, name=None, parent=None, location=None, _isroot=False):
         self._isroot = _isroot
-        Item.__init__(self, project, name, parent, id)
+        Item.__init__(self, project, name, parent, location)
         self.project = project
 
     def contents(self):
         for desc in storage_desc.values():
             for row in self.project.db.getas(desc):
-                if row.parent == self.id and not row.id.startswith('-'):
+                if row.parent == self.id and not row.id.startswith('-') and row.id != self.id:
                     yield self.project.items[row.id]
 
     def __getitem__(self, key):

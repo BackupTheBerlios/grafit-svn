@@ -190,4 +190,43 @@ class CommandList(signals.HasSignals):
 #        else:
 #            return False
 
+def command_from_methods(name, do, undo, redo=None, cleanup=None):
+    def replace_init(selb, *args, **kwds):
+        class CommandFromMethod(Command):
+            def __init__(self):
+                self.args, self.kwds = args, kwds
+                self.__done = False
+
+            def do(self):
+                if not self.__done:
+                    ret = do(selb, *self.args, **self.kwds)
+                    if len(ret) > 1 and isinstance(ret, tuple):
+                        self.__state = ret[0]
+                        ret = ret[1:]
+                        if len(ret) == 1 and isinstance(ret, tuple):
+                            ret = ret[0]
+                    else:
+                        self.__state = ret
+                        ret = None
+                    self.__done = True
+                else:
+                    return redo(selb, self.__state)
+                return ret
+
+            def undo(self):
+                return undo(selb, self.__state)
+
+            if cleanup is not None:
+                def __del__(self):
+                    cleanup(selb, self.__state)
+
+        CommandFromMethod.__name__ = name
+        com = CommandFromMethod()
+        ret = com.do_and_register()
+        return ret
+    return replace_init
+
+
 command_list = CommandList()
+undo = command_list.undo
+redo = command_list.redo
