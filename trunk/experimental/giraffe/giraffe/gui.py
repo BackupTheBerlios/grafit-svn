@@ -504,16 +504,19 @@ class xMainPanel(wx.Panel):
     def on_size(self, event):
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
 
+class Toolbar(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.ToolBar(parent._widget)
+        Widget.__init__(self, parent, **place)
 
 class Window(Widget):
     def __init__(self, position=(50,50), size=(640,480), menubar=False, statusbar=False, toolbar=False):
         self._widget = wx.Frame(None, -1,  'grafit', pos=position, size=size,
                                 style=wx.DEFAULT_FRAME_STYLE)
         if toolbar:
-            self._widget.CreateToolBar()
-            tb = self._widget.GetToolBar()
+            self.toolbar = Toolbar(self)
             bitmap = wx.Image('/home/daniel/giraffe/data/images/console.png').ConvertToBitmap()
-            tool = tb.AddSimpleTool(-1, bitmap, 'help_s',' help_l')
+            tool = self.toolbar._widget.AddSimpleTool(-1, bitmap, 'help_s',' help_l')
         if statusbar:
             self._widget.CreateStatusBar()
 
@@ -524,6 +527,12 @@ class Window(Widget):
             menubar.Append(menu, '&Spring')
             self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None)
+
+    def _add(self, child, **place):
+        if isinstance(child, Toolbar):
+            self._widget.SetToolBar(child._widget)
+#        else:
+#            Widget._add(self, child, **place)
 
 class Shell(Widget):
     def __init__(self, parent, locals, **kwds):
@@ -796,3 +805,11 @@ class xGrid(wx.grid.Grid):
 
     def OnRightDown(self, event):
         print "hello"
+
+class Action(object):
+    def __init__(self, name, desc, call, pixmap=None, accel=None):
+        self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
+
+    def __call__(self, *args, **kwds):
+        print '# called action %s' % self.name
+        return self.call(*args, **kwds)

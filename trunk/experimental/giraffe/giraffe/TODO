@@ -42,13 +42,13 @@ m.append('file-new', '&New')
 m.append('file-open', '&Open')
 
 actions = { 
-    'file-new': gui.Action('&New', 'New', 'Create a new project', self.on_new_project),
-    'file-open': gui.Action('&Open', 'Open', 'Open a project', self.on_open_project),
+    'file-new': gui.Action('New', 'Create a new project', self.on_new_project, 'new.png', 'Ctrl+N'),
+    'file-open': gui.Action('Open', 'Open a project', self.on_open_project),
     }
 
-filemenu = [['file-new', '&New', 'Ctrl+N'],
-            ['file-open', '&Open', 'Ctrl+O'],
-            ['file-save', '&Save', 'Ctrl+S'],
+filemenu = [['file-new', '&New'],
+            ['file-open', '&Open'],
+            ['file-save', '&Save'],
             ['file-saveas', '&Save as...'],
             ['check-item?', 'check'],
             None,

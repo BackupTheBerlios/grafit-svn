@@ -4,7 +4,7 @@ from OpenGL.GLU import *
 
 from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
-                        OpenGLWidget, Table
+                        OpenGLWidget, Table, Action
 
 from giraffe.signals import HasSignals
 
@@ -78,16 +78,21 @@ class MainWindow(Window):
         koalaki = MainPanel(book, page_label='arrhenius.koalaki')
         Label(koalaki, 'perierxx')
         self.expl = Table(koalaki.right_panel, TableData(),
-                          page_label='poulorer', page_pixmap='stock_navigator.png')
+                          page_label='poulo', page_pixmap='stock_navigator.png')
 
         self.test = OpenGLWidget(koalaki.right_panel,
-                                 page_label='poulouir', page_pixmap='graph.png')
+                                 page_label='poulou', page_pixmap='graph.png')
         self.test.connect('initialize-gl', self.ini)
         self.test.connect('paint-gl', self.ini)
         self.test.connect('resize-gl', self.res)
+        act = Action('Act', 'Do an important action', self.act, 'graph.png', 'Ctrl+A')
+        self.test.connect('resize-gl', act)
+
+
+    def act(self, x, y):
+        print 'patataki'
 
     def ini(self, x=None, y=None):
-        print 'a', x, y
         glClearColor(0.4, 0.3, 0.7, 1)
         glClear(GL_COLOR_BUFFER_BIT)
 
