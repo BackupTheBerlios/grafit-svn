@@ -26,11 +26,11 @@ class Function(HasSignals):
     name = mod_property('name')
     parameters = mod_property('parameters')
 
-    def to_xml(self):
+    def to_xml(self, f):
         elem = Element('Function', name=self.name, text=self.text, extra=self.extra)
         for p in self.parameters:
             SubElement(elem, 'Parameter', name=p)
-        ElementTree(elem).write(sys.stdout)
+        ElementTree(elem).write(f)
         
 
 class FunctionsWindow(gui.Window):
@@ -70,14 +70,18 @@ class FunctionsWindow(gui.Window):
         self.scan('functions')
 
     def on_new(self):
-        pass
+        self.function = Function('new function', [], 'y=f(x)', '')
+        self.function.to_xml(open('functions/function'+str(len(self.functions))+'.function', 'wb'))
+        self.scan('functions')
+        self.update_gui()
 
     def on_save(self):
         self.function.to_xml()
         sys.stdout.flush()
+        self.scan('functions')
 
     def update_gui(self):
-        self.name.text = self.function.text
+        self.name.text = self.function.name
         self.params.text = ', '.join(self.function.parameters)
         self.extra.text = self.function.extra
         self.text.text = self.function.text
@@ -89,7 +93,11 @@ class FunctionsWindow(gui.Window):
 
     def scan(self, dir):
         for f in os.listdir(dir):
-            e = parse(dir + '/' + f).getroot()
+            print dir + '/' + f
+            try:
+                e = parse(dir + '/' + f).getroot()
+            except IOError:
+                continue
             self.add(Function(e.get('name'),
                               [c.get('name') for c in e.getchildren()],
                               e.get('text'),
