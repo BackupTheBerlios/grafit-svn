@@ -1,4 +1,6 @@
-# Signal / Slot framework
+"""
+Signal / Slot framework
+"""
 
 class HasSignals(object):
     """Base class for an object that can emit signals"""
