@@ -130,6 +130,10 @@ class Widget(HasSignals):
     def set_min_size(self, size): self._widget.SetMinSize(size)
     min_size = property(get_min_size, set_min_size)
 
+    def get_active(self): return self._widget.IsEnabled()
+    def set_active(self, value): self._widget.Enable(value)
+    active = property(get_active, set_active)
+
 
 # http://wiki.wxpython.org/index.cgi/_xProportionalSplitterWindow
 class _xProportionalSplitter(wx.SplitterWindow):
@@ -407,9 +411,23 @@ class Box(Widget):
 
 
 class Checkbox(Widget):
+    """ A a labelled box which by default is either on (checkmark is visible) 
+        or off (no checkmark). 
+    """
     def __init__(self, parent, **place):
         self._widget = wx.CheckBox(parent._widget, -1)
         Widget.__init__(self, parent, **place)
+
+        self._widget.Bind(wx.EVT_CHECKBOX, self.on_event)
+
+    def get_state(self):
+        return self._widget.GetValue()
+    def set_state(self, state):
+        self._widget.SetValue(state)
+    state = property(get_state, set_state)
+
+    def on_event(self, event):
+        self.emit('modified', self.state)
 
 class Button(Widget):
     def __init__(self, parent, text, **kwds):

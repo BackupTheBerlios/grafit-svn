@@ -93,7 +93,7 @@ class GraphView(gui.Box):
 
             colors = [self.style.colors.index(d.style.color) for d in selection]
             c0 = colors[0]
-            print colors, [c % len(self.style.colors) for c in range(c0, c0+len(colors))]
+            self.style.color.check.state = colors == [c % len(self.style.colors) for c in range(c0, c0+len(colors))]
         else:
             self.style.hide_checks()
 
