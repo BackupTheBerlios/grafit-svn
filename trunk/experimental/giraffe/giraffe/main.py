@@ -81,12 +81,8 @@ class FolderListData(HasSignals):
     def __init__(self, folder):
         self.folder = folder
 
-    def __len__(self):
-        print len(list(self.folder.contents()))
-        return len(list(self.folder.contents()))
-
-    def get(self, row, column):
-        return list(self.folder.contents())[row].name
+    def __len__(self): return len(list(self.folder.contents()))
+    def get(self, row, column): return list(self.folder.contents())[row].name
 
 
 class TableData(HasSignals):

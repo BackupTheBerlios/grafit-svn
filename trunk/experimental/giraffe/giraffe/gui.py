@@ -289,6 +289,7 @@ class Tree(Widget):
 
     def on_node_modified(self):
         self._widget.DeleteAllItems()
+        self.items = []
         for root in self.roots:
             root._nodeid = self._widget.AddRoot(str(root), self.getpixmap(root.get_pixmap()))
             self._widget.Expand(root._nodeid)
