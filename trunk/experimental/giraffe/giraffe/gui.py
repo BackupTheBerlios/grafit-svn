@@ -6,6 +6,8 @@ sys.path.append('..')
 sys.path.append('../lib')
 from giraffe.signals import HasSignals
 
+# this module absolutely needs documentation!
+
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
         if hasattr(parent, '_add'):
@@ -43,7 +45,7 @@ class Box(Widget):
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
         self.layout.SetSizeHints(self._widget)
 
-class CustomWxApp(wx.App):
+class xApplication(wx.App):
     def __init__(self, mainwinclass, *args, **kwds):
         self.mainwinclass = mainwinclass
         self.initargs, self.initkwds = args, kwds
@@ -57,7 +59,7 @@ class CustomWxApp(wx.App):
 
 class Application(object):
     def __init__(self, mainwinclass, *args, **kwds):
-        self._app = CustomWxApp(mainwinclass, *args, **kwds)
+        self._app = xApplication(mainwinclass, *args, **kwds)
 
     def get_mainwin(self):
         return self._app.mainwin
@@ -65,6 +67,10 @@ class Application(object):
 
     def run(self):
         return self._app.MainLoop()
+
+
+# tool panels and main window
+# long and ugly but it works nicely
 
 class ToolPanel(Widget):
     def __init__(self, parent, position, *args, **kwds):
@@ -220,7 +226,6 @@ class xToolPanel(wx.SashLayoutWindow):
         else:
             self.close(num)
 
-
 class MainPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -238,8 +243,6 @@ class MainPanel(wx.Panel):
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.right_panel._widget.GetId())
         self.Bind(wx.EVT_SASH_DRAGGED_RANGE, self.on_sash_drag, id=self.bottom_panel._widget.GetId())
         self.Bind(wx.EVT_SIZE, self.on_size)
-
-    # wx stuff
 
     def on_sash_drag(self, event):
         if event.GetDragStatus() == wx.SASH_STATUS_OUT_OF_RANGE:
@@ -277,8 +280,27 @@ class Window(Widget):
             self._widget.SetMenuBar(menubar)
         Widget.__init__(self, None, **kwds)
         self.main = MainPanel(self._widget)
-        self.b = Button(self.main.bottom_panel, 'arse', page_label='ass', page_pixmap='console.png')
-#        self.main.bottom_panel.add_page('ass', 'console.png', self.b)
+        self.bottom_panel = self.main.bottom_panel
+        self.left_panel = self.main.left_panel
+        self.right_panel = self.main.right_panel
+
+        # for example
+        self.b = Button(self.bottom_panel, 'arse', 
+                        page_label='ass', page_pixmap='console.png')
+
+        self.m = Button(self, 'papa')
+
+    def _add(self, widget, expand=True, stretch=1.0):
+        widget._widget.Reparent(self.main.remainingSpace)
+        if expand:
+            expand = wx.EXPAND
+        else:
+            expand = 0
+        self.main.main_box.Add(widget._widget, stretch, wx.EXPAND)
+        self.main.main_box.SetSizeHints(widget._widget)
+
+
+
 
 class Button(Widget):
     def __init__(self, parent, text, **kwds):
@@ -312,7 +334,7 @@ class ListModel(HasSignals):
     def __getitem__(self, key):
         return self.items[key]
 
-class _CustomListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
+class xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def __init__(self, lst, *args, **kwds):
         wx.ListCtrl.__init__(self, *args, **kwds)
         ListCtrlAutoWidthMixin.__init__(self)
@@ -329,7 +351,7 @@ class List(Widget):
         if editable:
             flags |= wx.LC_EDIT_LABELS
 
-        self._widget = _CustomListCtrl(self, parent._widget, -1, style=flags)
+        self._widget = xListCtrl(self, parent._widget, -1, style=flags)
         Widget.__init__(self, parent, **kwds)
 
         if model is None:
