@@ -47,6 +47,7 @@ class FunctionsWindow(gui.Window):
 
         toolbar = gui.Toolbar(rbox, stretch=0)
         toolbar.append(gui.Action('New', '', self.on_new, 'new.png'))
+        toolbar.append(gui.Action('Delete', '', self.on_remove, 'remove.png'))
         toolbar.append(gui.Action('Save', '', self.on_save, 'save.png'))
 
         book = gui.Notebook(rbox)
@@ -75,6 +76,9 @@ class FunctionsWindow(gui.Window):
         self.scan('functions')
         self.update_gui()
 
+    def on_remove(self):
+        print self.function
+
     def on_save(self):
         self.function.to_xml()
         sys.stdout.flush()
@@ -92,6 +96,8 @@ class FunctionsWindow(gui.Window):
         self.category.model.append(function.name)
 
     def scan(self, dir):
+        self.functions = []
+        del self.category.model[:]
         for f in os.listdir(dir):
             print dir + '/' + f
             try:
@@ -104,7 +110,10 @@ class FunctionsWindow(gui.Window):
                               e.get('extra')))
 
     def on_select_function(self):
-        name = self.category.model[self.category.selection[0]]
+        try:
+            name = self.category.model[self.category.selection[0]]
+        except IndexError:
+            return
         self.function = [f for f in self.functions if f.name == name][0]
         self.update_gui()
 
