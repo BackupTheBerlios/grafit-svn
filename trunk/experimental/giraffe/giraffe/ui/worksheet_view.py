@@ -119,8 +119,8 @@ class WorksheetView(grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
-        table.SetColAttr(0, table.normal_attr)
-        table.SetColAttr(1, table.normal_attr)
+#        table.SetColAttr(0, table.normal_attr)
+#        table.SetColAttr(1, table.normal_attr)
 #        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
         
     def OnKeyDown(self, evt):

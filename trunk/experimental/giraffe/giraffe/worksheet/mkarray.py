@@ -6,7 +6,74 @@ import metakit
 from numarray import *
 from numarray.ieeespecial import nan
 
-class MkArray(object):
+class VarOperation(object):
+    def __init__(self, oper):
+        self.oper = oper
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return self.__dict__[attr]
+        else:
+            return getattr(self.oper, attr)
+
+    def __call__(self, a, b=None):
+        # if the argument is a sequence,
+        # wrap the result in a varray, otherwise leave it alone
+        if self.oper.arity == 1:
+            try:
+                length = len(a)
+            except TypeError:
+                return self.oper(a)
+            else:
+                return asvarray(self.oper(a))
+        elif self.oper.arity == 2:
+            try:
+                length = min(len(a), len(b))
+            except TypeError:
+                return self.oper(a, b)
+            else:
+                return asvarray(self.oper(a[:length], b[:length]))
+
+    def __repr__(self):
+        return repr(self.oper).replace('UFunc', 'vUFunc')
+
+# wrap all ufuncs with VarOperations
+mod_ufuncs = dict([(k, VarOperation(v)) for k, v in ufunc._UFuncs.iteritems() if v.arity in (1,2)])
+globals().update(mod_ufuncs)
+
+def asvarray(*args, **kwds):
+    arr = asarray(*args, **kwds)
+    arr.__class__ = VArray
+    return arr
+
+def varray(*args, **kwds):
+    arr = array(*args, **kwds)
+    arr.__class__ = VArray
+    return arr
+
+class with_new_opers(object):
+    def __add__(self, other): return add(self, asvarray(other)) 
+    __radd__ = __add__
+    def __sub__(self, other): return subtract(self, asvarray(other)) 
+    def __rsub__(self, other): return subtract(asvarray(other), self) 
+    def __mul__(self, other): return multiply(self, asvarray(other))
+    __rmul__ = __mul__
+    def __div__(self, other): return divide(self, asvarray(other)) 
+    def __rdiv__(self, other): return divide(asvarray(other), self) 
+    def __pow__(self,other): return power(self, asvarray(other)) 
+
+# comparisons: should we have these?
+#    def __eq__(self,other): return equal(self,other) 
+#    def __ne__(self,other): return not_equal(self,asvarray(other)) 
+#    def __lt__(self,other): return less(self,asvarray(other)) 
+#    def __le__(self,other): return less_equal(self,asvarray(other)) 
+#    def __gt__(self,other): return greater(self,asvarray(other)) 
+#    def __ge__(self,other): return greater_equal(self,asvarray(other))
+
+class VArray(with_new_opers, NumArray):
+    pass
+
+class MkArray(with_new_opers):
     """
     a = MkArray(view, prop, col)
 
@@ -52,13 +119,13 @@ class MkArray(object):
                 length = abs(key.start - key.stop)
 
         # adjust size
-        if start > self.length:
-            buf = array([nan]*(start-self.length), type=Float64).tostring()
-            self.view.modify(self.prop, self.row, buf, self.length*8)
+        if start > len(self):
+            buf = array([nan]*(start-len(self)), type=Float64).tostring()
+            self.view.modify(self.prop, self.row, buf, len(self)*8)
         
-        arr = asarray(value, typecode=Float64)
+        arr = asvarray(value, type=Float64)
         if arr.shape == ():
-            arr = asarray([value]*length, typecode=Float64)
+            arr = asvarray([value]*length, type=Float64)
         buf = arr.tostring()
 
         if isinstance(key, slice) and key.start is None and key.stop is None:
@@ -66,18 +133,13 @@ class MkArray(object):
         else:
             self.view.modify(self.prop, self.row, buf, start * 8)
 
-
-    def get_length(self):
-        return self.view.itemsize(self.prop, self.row)/8
-    length = property(get_length)
-
     def __len__(self):
-        return self.length
+        return self.view.itemsize(self.prop, self.row)/8
 
     def __getitem__(self, key):
         # integer and (non-extended) slice keys supported
         if isinstance(key, int):
-            if key >= self.length:
+            if key >= len(self):
                 return nan
             buf = self.view.access(self.prop, self.row, key*8, 8)
             value = struct.unpack('d', buf)[0]
@@ -87,7 +149,7 @@ class MkArray(object):
             else:
                 start = key.start
             if key.stop is None:
-                stop = start+self.length
+                stop = start+len(self)
             else:
                 stop = key.stop
             buf = self.view.access(self.prop, self.row, start*8, (stop-start)*8)
@@ -95,7 +157,6 @@ class MkArray(object):
         return value
 
     def __repr__(self):
-        data = self[:]
-        return repr(data).replace('nan', '--')
+        return repr(self[:]).replace('nan', '--')
 
 
