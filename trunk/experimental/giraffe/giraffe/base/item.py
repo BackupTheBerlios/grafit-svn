@@ -17,6 +17,11 @@ class Item(object):
         self.project = project
         self._update(id)
 
+        # We have to emit the signal after calling _update()
+        # so the signal handlers can access wrapped attributes.
+        # We can't emit in project.add()
+        self.project.emit('add-item', self)
+
     def _update(self, id):
         self.view, self.data, self.id = self.project.add(self, id)
 

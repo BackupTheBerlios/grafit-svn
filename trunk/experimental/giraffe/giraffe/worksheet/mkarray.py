@@ -52,6 +52,9 @@ class MkArray(object):
         return self.view.itemsize(self.prop, self.row)/8
     length = property(get_length)
 
+    def __len__(self):
+        return self.length
+
     def __getitem__(self, key):
         if isinstance(key, int):
             if key >= self.length:

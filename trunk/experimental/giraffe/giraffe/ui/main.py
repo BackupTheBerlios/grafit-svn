@@ -141,9 +141,9 @@ class ProjectTree(wx.TreeCtrl):
 
     def on_double_click(self, event):
         item, flags = self.HitTest(event.GetPosition())
-#        for k, v in self.items.iteritems():
-#            if v == item:
-#                self.mainwin.show_object(identity.lookup(k))
+        for k, v in self.items.iteritems():
+            if v == item:
+                self.mainwin.show_object(self.project.items[k])
         event.Skip()
 
 class Application(wx.App):
@@ -189,11 +189,11 @@ class Application(wx.App):
         return True
 
     def OnNewWs(self, evt):
-        ws = Worksheet('test', self.project)
+        ws = Worksheet(self.project, 'test')
         ws.add_column('A')
         ws.add_column('other')
-        ws.A = [1,2,3]
-        ws.other = [2,4,5,6,7,15]
+        ws['A'] = [1,2,3]
+        ws['other'] = [2,4,5,6,7,15]
 
     def on_new_graph(self, evt):
         g = Graph('graph1', self.project)

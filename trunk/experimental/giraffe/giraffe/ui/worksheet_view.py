@@ -1,6 +1,6 @@
 import  wx
 from giraffe.worksheet.mkarray import nan
-from worksheet import Worksheet
+from giraffe.worksheet import Worksheet
 import wx.grid as grid
 
 class TableData(grid.PyGridTableBase):
