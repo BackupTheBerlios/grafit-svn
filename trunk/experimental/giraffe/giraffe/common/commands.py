@@ -37,8 +37,9 @@ class Command(signals.HasSignals):
         """
         Shorthand for command.do(); command_register().
         """
-        self.do()
+        ret = self.do()
         self.register()
+        return ret
 
 
     def combine(self, command):

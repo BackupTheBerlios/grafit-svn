@@ -49,9 +49,6 @@ class Item(object):
 
         self.project.items[self.id] = self
 
-        if (not (hasattr(self, '_isroot') and self._isroot)) and self.parent is self.project.top:
-            self.project._dict[self.name] = self
-
         # We have to emit the signal at the end
         # so the signal handlers can access wrapped attributes.
         # We can't emit in project.add()

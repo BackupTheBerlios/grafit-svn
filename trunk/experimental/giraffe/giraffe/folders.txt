@@ -10,6 +10,7 @@ The following special names are defined:
 * `top`: the top-level folder
 
     >>> from giraffe import Project, Worksheet
+    >>> from giraffe.common.commands import command_list
     >>> p = Project()
     >>> p.set_dict(globals())
     >>> p.mkfolder('ass')
@@ -26,3 +27,11 @@ The following special names are defined:
     >>> w = p.new(Worksheet, 'data1')
     >>> data1 == w
     True
+    >>> command_list.undo()
+    True
+    >>> data1 == w
+    Traceback (most recent call last):
+    ...
+    NameError: name 'data1' is not defined
+
+

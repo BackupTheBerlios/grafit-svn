@@ -55,7 +55,7 @@ def command_from_methods(init, undo, redo, cleanup):
 #            def __del__(self):
 #                cleanup(selb, self.__state)
         com = CommandFromMethod()
-        ret = com.do()
+        ret = com.do_and_register()
         return ret
     return replace_init
 
@@ -121,17 +121,24 @@ class Project(HasSignals):
     def new(self, cls, *args, **kwds):
         obj = cls(self, *args, **kwds)
         self.items[obj.id] = obj
+        if obj.parent is self.top:
+            self._dict[obj.name] = obj
+
         return obj
 
     def new_undo(self, obj):
         del self.items[obj.id]
         self.deleted[obj.id] = obj
         obj.id = '-'+obj.id
+        if obj.parent is self.top:
+            del self._dict[obj.name] 
 
     def new_redo(self, obj):
         del self.deleted[obj.id]
         self.items[obj.id] = obj
         obj.id = obj.id[1:]
+        if obj.parent is self.top:
+            self._dict[obj.name] = obj
 
     def new_cleanup(self, obj):
         del self.deleted[obj.id]
@@ -155,7 +162,7 @@ class Project(HasSignals):
             self.deleted[id] = obj
         
     def mkfolder(self, path):
-        Folder(self, path)
+        self.new(Folder, path)
 
     def rmfolder(self, path):
         if path in self.this:
