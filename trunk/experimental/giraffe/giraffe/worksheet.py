@@ -32,7 +32,7 @@ class Column(MkArray, HasSignals):
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
 
     def set_name(self, name):
-        self.data.name = name
+        self.data.name = str(name)
     def get_name(self):
         return self.data.name
     name = property(get_name, set_name)

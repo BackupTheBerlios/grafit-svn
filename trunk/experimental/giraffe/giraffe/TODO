@@ -4,25 +4,22 @@
 * make data entry possible in worksheetview
 
 
-
-
-
 for grafit M1:
 --------------
 - explorer
-    - work correctly
-    - move objects to folder
-    - delete objects
+    * work correctly
+    * move objects to folder
+    * delete objects
 
 - worksheets
-    - change column names
-    - change data from gui
+    * change column names
+    * change data from gui
 
 - graphs
     - working legend
     - add data from worksheet
     - remove data from worksheet
-    - save/load datasets and zooming 
+    * save/load datasets and zooming 
     
     
 * disable undo/redo buttons when nesessary

@@ -923,7 +923,8 @@ class Table(Widget):
 
 class xLabelEditor(wx.TextCtrl, HasSignals):
     def __init__(self, parent, column):
-        wx.TextCtrl.__init__(self, parent, -1, 'test'+str(column), style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
+        wx.TextCtrl.__init__(self, parent, -1, parent.GetTable().data.get_column_name(column), 
+                             style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
         self.parent, self.column = parent, column
         self.destroyed = False
 
