@@ -187,6 +187,75 @@ class MainWindow(Window):
     def res(self, width, height):
         glViewport(0, 0, int(width), int(height))
 
+    def on_new_worksheet(self, evt):
+        ws = self.main.project.new(Worksheet, None, self.main.project.here)
+        ws.a = [1,2,3]
+        ws.other = 2*ws.a
+
+    def on_project_open(self, evt=None):
+        try:
+            if self.main.project.modified and self.ask_savechanges():
+                self.on_project_save()
+
+            dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+                                defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.OPEN | wx.CHANGE_DIR)
+            if dlg.ShowModal() == wx.ID_OK:
+                path = dlg.GetPaths()[0]
+                self.main.close_project()
+                self.main.open_project(Project(str(path)))
+            dlg.Destroy()
+        except Cancel:
+            return
+
+    def ask_savechanges(self):
+        dlg = wx.MessageDialog(self.frame, 'Save <b>changes?</b>', 'Save?',
+                               wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+        result = dlg.ShowModal()
+        if result == wx.ID_YES:
+            return True
+        elif result == wx.ID_NO:
+            return False
+        elif result == wx.ID_CANCEL:
+            raise Cancel
+        dlg.Destroy()
+
+    def on_project_saveas(self, evt=None):
+        try:
+            dlg = wx.FileDialog(self.frame, message="Choose a file", defaultDir=os.getcwd(), 
+                                defaultFile="", wildcard="All Files|*.*|Projects|*.mk", style=wx.SAVE | wx.CHANGE_DIR)
+            if dlg.ShowModal() == wx.ID_OK:
+                path = dlg.GetPaths()[0]
+                self.main.project.saveto(path)
+                self.main.open_project(Project(str(path)))
+            dlg.Destroy()
+        except Cancel:
+            return
+
+    def on_project_save(self, evt=None):
+        try:
+            if self.main.project.filename is not None:
+                self.main.project.commit()
+            else:
+                self.on_project_saveas()
+        except Cancel:
+            return
+
+    def on_project_new(self, evt=None):
+        try:
+            if self.main.project.modified and self.ask_savechanges():
+                self.on_project_save()
+            self.main.close_project()
+            self.main.open_project(Project())
+        except Cancel:
+            return
+            
+    def on_new_graph(self, evt):
+        g = self.main.project.new(Graph, None, self.main.project.here)
+
+    def on_new_folder(self, evt):
+        self.main.project.new(Folder, None, self.main.project.here)
+
+
 if __name__ == '__main__':
     app = Application(MainWindow)
     app.run()

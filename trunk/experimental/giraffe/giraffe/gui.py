@@ -1,4 +1,5 @@
 import sys
+import weakref
 import wx
 import wx.py
 import wx.glcanvas
@@ -11,6 +12,11 @@ sys.path.append('../lib')
 from giraffe.signals import HasSignals
 
 # this module absolutely needs documentation!
+
+class Pixmap(object):
+    def __init__(self, name):
+        self.name = name
+        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
 
 class xApplication(wx.App):
     def __init__(self, mainwinclass, *args, **kwds):
