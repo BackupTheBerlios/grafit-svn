@@ -25,6 +25,19 @@ def intersection (ml):
             rslt.append(k)
     return rslt
 
+class LegendModel(HasSignals):
+    def __init__(self, graph):
+        self.graph = graph
+        self.graph.connect('add-dataset', self.on_modified)
+
+    def on_modified(self, dataset):
+        self.emit('modified')
+
+    def get(self, row, column): return str(self.graph.datasets[row])
+    def get_image(self, row): return None
+    def __len__(self): return len(self.graph.datasets)
+    def __getitem__(self, row): return self.graph.datasets[row]
+
 
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):
@@ -42,7 +55,7 @@ class GraphView(gui.Box):
                                        self.on_close, 'remove.png'))
 
         self.panel = gui.MainPanel(self)
-        self.box = gui.Box(self.panel, 'horizontal')
+        self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
         self.glwidget = gui.OpenGLWidget(self.box)
 
         self.glwidget.connect('initialize-gl', self.graph.init)
@@ -55,8 +68,7 @@ class GraphView(gui.Box):
 
         self.graph.connect('redraw', self.glwidget.redraw)
 
-        self.legend = gui.List(self.box, stretch=0)
-        self.legend.model.append('pis10sv_e1(f)')
+        self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
 
         self.graphdata = GraphDataPanel(self.graph, self.panel.right_panel, page_label='Data', page_pixmap='worksheet.png')
         self.graphdata.connect_project(self.graph.project)
@@ -77,7 +89,7 @@ class GraphView(gui.Box):
 
         self.parent.delete(self)
 
-class FolderListModel(HasSignals):
+class WorksheetListModel(HasSignals):
     def __init__(self, folder):
         self.folder = folder
         self.update()
@@ -85,7 +97,7 @@ class FolderListModel(HasSignals):
 
     def update(self, item=None):
         self.contents = [o for o in self.folder.contents() 
-                           if isinstance(o, (Folder, Worksheet))]
+                           if isinstance(o, (Worksheet))]
         self.emit('modified')
 
     # ListModel protocol
@@ -116,9 +128,12 @@ class GraphDataPanel(gui.Box):
         self.graph = graph
 
         # create widgets 
-        btnbox = gui.Box(self, 'horizontal', stretch=0)
-        button = gui.Button(btnbox, 'add', stretch=0)
-        button.connect('clicked', self.on_add)
+#        btnbox = gui.Box(self, 'horizontal', stretch=0)
+#        button = gui.Button(btnbox, 'add', stretch=0)
+        self.toolbar = gui.Toolbar(self, stretch=0)
+        self.toolbar.append(gui.Action('Add', 'Add datasets to the graph', 
+                                       self.on_add, 'stock_insert-columns.png'))
+#        button.connect('clicked', self.on_add)
 
         gui.Label(self, 'Worksheet', stretch=0)
         self.worksheet_list = gui.List(self, editable=False)
@@ -126,12 +141,10 @@ class GraphDataPanel(gui.Box):
         self.worksheet_list.connect('selection-changed', self.on_wslist_select)
 
         gui.Label(self, 'X column', stretch=0)
-        self.x_list = gui.List(self)
-        self.x_list.model = ColumnListModel()
+        self.x_list = gui.List(self, model=ColumnListModel())
 
         gui.Label(self, 'Y column', stretch=0)
-        self.y_list = gui.List(self)
-        self.y_list.model = ColumnListModel()
+        self.y_list = gui.List(self, model=ColumnListModel())
 
         self.project = None
         self.folder = None
@@ -146,7 +159,7 @@ class GraphDataPanel(gui.Box):
 
     def set_current_folder(self, folder):
         self.folder = folder
-        self.worksheet_list.model = FolderListModel(folder)
+        self.worksheet_list.model = WorksheetListModel(folder)
 
     def on_add(self):
         for ws in self.worksheet_list.selection:
@@ -157,7 +170,7 @@ class GraphDataPanel(gui.Box):
 
     def connect_project(self, project):
         self.project = project
-        self.worksheet_list.model = FolderListModel(self.project.top)
+        self.worksheet_list.model = WorksheetListModel(self.project.top)
 
     def disconnect_project(self):
         self.worksheet_list.model = None

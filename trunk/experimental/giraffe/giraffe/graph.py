@@ -164,6 +164,9 @@ class Dataset(HasSignals):
     def on_data_changed(self):
         self.emit('modified', self)
 
+    def __str__(self):
+        return self.x.worksheet.name+':'+self.y.name+'('+self.x.name+')'
+
 
 class Grid(object):
     def __init__(self, orientation, plot):
@@ -426,6 +429,7 @@ class Graph(Item, HasSignals):
         self.datasets.append(d)
         d.connect('modified', self.on_dataset_modified)
         self.on_dataset_modified(d)
+        self.emit('add-dataset', d)
 
     def on_dataset_modified(self, d):
         d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)

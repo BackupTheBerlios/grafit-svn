@@ -117,8 +117,8 @@ class ProportionalSplitter(wx.SplitterWindow):
                 event.Skip()
 
 class Splitter(Widget):
-    def __init__(self, parent, orientation, **place):
-        self._widget = ProportionalSplitter(parent._widget, -1)
+    def __init__(self, parent, orientation, proportion=0.33, **place):
+        self._widget = ProportionalSplitter(parent._widget, -1, proportion=proportion)
         Widget.__init__(self, parent, **place)
         self.first = None
         self.second = None
