@@ -9,15 +9,12 @@ class Command(signals.HasSignals):
     Abstract base class for commands.
     
     Derived classes must override do() and undo(), and optionally combine().
-    A program-wide Command.command_list can be set, and commands added to it using register().
 
     do() and undo() are replaced with wrappers that emit the appropriate signal.
     One can use commands in a one-liner like:
 
     FooCommand(param1, param2).do_and_register()
     """
-
-    command_list = None
 
     def __init__(self):
         self.done = False
@@ -53,12 +50,9 @@ class Command(signals.HasSignals):
 
     def register(self):
         """
-        Add the command to the global command list (Command.command_list), if one has been set.
+        Add the command to the global command list _command_list), if one has been set.
         """
-        if self.command_list is None:
-            raise NotImplementedError
-        else:
-            self.command_list.add(self)
+        command_list.add(self)
 
     def _do_wrapper(self):
         self.real_do()
@@ -192,3 +186,5 @@ class CommandList(signals.HasSignals):
             return True
         else:
             return False
+
+command_list = CommandList()

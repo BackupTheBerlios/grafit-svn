@@ -1,4 +1,4 @@
-from giraffe.project import Item, wrap_mk_attribute
+from giraffe.project import Item, wrap_attribute
 from giraffe.base.mkarray import MkArray
 
 class Column(MkArray):
@@ -28,10 +28,14 @@ class Worksheet(Item):
     def __getitem__(self, key):
         return self.columns[self.column_names.index(key)]
 
+    def __setitem__(self, key, value):
+        self[key][:] = value
+
     def get_column_names(self):
         return [c.name for c in self.data.columns]
     column_names = property(get_column_names)
 
     viewname = 'worksheets'
     description = 'worksheets[name:S,id:S,columns[name:S,data:B]]'
-    name = wrap_mk_attribute('name')
+
+    name = wrap_attribute('name')

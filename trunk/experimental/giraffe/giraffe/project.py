@@ -1,9 +1,10 @@
 import sys
+import time, random, socket, md5
 
 import metakit
 
-from giraffe.common.identity import register
 from giraffe.base.mkarray import MkArray
+from giraffe.common.commands import Command, command_list
 
 def create_id(*args):
     """
@@ -21,36 +22,24 @@ def create_id(*args):
     data = md5.md5(data).hexdigest()
     return data
 
-def wrap_mk_attribute(name):
+
+def wrap_attribute(name):
     def get_data(self):
         return getattr(self.data, name)
     def set_data(self, value):
         setattr(self.data, name, value)
     return property(get_data, set_data)
 
+
 class Item(object):
     def __init__(self, project, id=None):
         self.project = project
-        self.id = register(self, id)
-
-        # create or get the view
-        if self.viewname in self.project.db.contents().properties().keys():
-            self.view = self.project.db.view(self.viewname)
-        else:
-            self.view = self.project.db.getas(self.description)
-
-        # get the row
-        try:
-            self.data = self.view.select(id=self.id)[0]
-        except IndexError:
-            self.view.append(id=self.id)
-            self.data = self.view.select(id=self.id)[0]
-
-        self.project.register(self)
+        self.view, self.data, self.id = project.add(self)
 
     viewname = 'items'
     description = 'items[name:S,id:S]'
-    name = wrap_mk_attribute('name')
+    name = wrap_attribute('name')
+
 
 class Project(object):
     def __init__(self, filename=None):
@@ -65,8 +54,23 @@ class Project(object):
 
         self.items = {}
 
-    def register(self, item):
-        self.items[item.id] = item
+    def add(self, item, id=None):
+        # create or get the view
+        if item.viewname in self.db.contents().properties().keys():
+            view = self.db.view(item.viewname)
+        else:
+            view = self.db.getas(item.description)
+
+        # get the row
+        if id is None:
+            id = create_id()
+            view.append(id=id)
+            data = view[view.find(id=id)]
+        else:
+            data = view[view.find(id=id)]
+
+        self.items[id] = item
+        return view, data, id
 
     def remove(self, id):
         obj = self.items[id]

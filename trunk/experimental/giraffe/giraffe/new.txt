@@ -32,9 +32,8 @@ You can remove columns with remove(), like this:
     ...
     NameError: Worksheet does not have a column named C
 
-    >>> w.B = w['B']
-    >>> w.B[:] = [1,2,3,4] 
-    >>> w.B
+    >>> w['B'] = [1,2,3,4] 
+    >>> w['B']
     array([ 1.,  2.,  3.,  4.])
 
 
@@ -45,3 +44,9 @@ When an object is removed from the project, it is not deleted,
 but it is only removed from project._objects. and marked as deleted
 with data.id = '-'+data.id. When the action list is cleared, it cleans up
 all deleted objects.
+
+Items are created in two ways:
+
+* By the project, when loading the database
+
+* By the user, when adding a new object to the project
