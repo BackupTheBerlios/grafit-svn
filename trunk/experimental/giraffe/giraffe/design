@@ -8,6 +8,8 @@ We should never hold references to items or item names, only to item.id
 and use project.get(id). These references are guaranteed to be 
 valid even after saving/loading the project or deleting/undeleting the item.
 
+We can get objects from the project 
+
 
 Item:
     always associated with a Project

@@ -43,6 +43,12 @@ print >>sys.stderr, 'loading...',
 t = time.time()
 p2.load('test.xml')
 print p2
-print time.time()-t, 'seconds'
-print >>sys.stderr, 'ok'
+
+def _test():
+    import doctest
+    print '======================'
+#    doctest.testmod(verbose=1)
+    doctest.testfile('new.txt')
+    print '======================'
+
 

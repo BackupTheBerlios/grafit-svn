@@ -1,5 +1,5 @@
 import sys
-print >>sys.stderr, 'starting...',
+#print >>sys.stderr, 'starting...',
 
 import metakit
 import time
@@ -7,7 +7,7 @@ import struct
 from numarray import *
 from numarray.ieeespecial import nan
 
-print >>sys.stderr, 'ok'
+#print >>sys.stderr, 'ok'
 
 class MkArray(object):
     def __init__(self, view, prop, row, start=None, end=None):
@@ -39,7 +39,6 @@ class MkArray(object):
             else:
                 length = abs(key.start - key.stop)
 
-        self.length = len(self.view.access(self.prop, self.row, 0))/8
         if start > self.length:
             buf = array([nan]*(start-self.length), type=Float64).tostring()
             self.view.modify(self.prop, self.row, buf, self.length*8)
@@ -52,8 +51,11 @@ class MkArray(object):
 
         self.view.modify(self.prop, self.row, buf, start * 8)
 
+    def get_length(self):
+        return self.view.itemsize(self.prop, self.row)/8
+    length = property(get_length)
+
     def __getitem__(self, key):
-        self.length = len(self.view.access(self.prop, self.row, 0))/8
         if isinstance(key, int):
             if key >= self.length:
                 return nan
@@ -93,19 +95,20 @@ slices have n < m, no extended slices. Missing values (a[:n]) allowed.
 """
 
 
-db = metakit.storage('asshole', 1)
-v = db.getas('test[ass:B]')
-v.append()
+if __name__=='__main__':
+    db = metakit.storage('asshole', 1)
+    v = db.getas('test[ass:B]')
+    v.append()
 
-v = db.view('test')
+    v = db.view('test')
 
-a = MkArray(v, v.ass, 0)
+    a = MkArray(v, v.ass, 0)
 
-a[10000:10005] = 3.33
+    a[10000:10005] = 3.33
 #a[0] = 13
 #a[24]  = 5
 #a[30:35] = arange(5)
-print a
-print a[31]
+    print a
+    print a[31]
 
-db.commit()
+    db.commit()

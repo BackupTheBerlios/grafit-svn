@@ -1,0 +1,45 @@
+The ``giraffe.worksheet`` module
+================================
+
+Using ``Worksheet``
+-------------------
+
+This is an example text file in reStructuredText format.  First import
+``factorial`` from the ``example`` module:
+
+    >>> from new import Project, Worksheet
+    >>> p = Project()
+
+Now use it:
+
+    >>> w = Worksheet(p, 'data1')
+    >>> w.add_column('A')
+    >>> w.add_column('B')
+    >>> print w.column_names
+    ['A', 'B']
+
+You can remove columns with remove(), like this:
+
+    >>> w.remove_column('A')
+    >>> print w.column_names
+    ['B']
+    >>> w.remove_column('C')
+    Traceback (most recent call last):
+    ...
+    WorksheetError: Worksheet does not have a column named C
+
+    >>> w.B = w['B']
+    >>> w.B[:] = [1,2,3,4] 
+    >>> w.B
+    array([ 1.,  2.,  3.,  4.])
+
+
+How it works: Internals (subject to change!)
+--------------------------------------------
+
+When you reference an object using project.get(id), a new object is
+created and added to the project._objects weak-value dictionary.
+As long as there are other references to this object, it is
+kept alive, otherwise it is deleted and a new object created when it
+is requested again. This frees memory for objects that are not used,
+and is not a performance problem because creating Items is cheap.
