@@ -14,18 +14,6 @@ from giraffe.common import identity
 from giraffe.worksheet import Worksheet
 print >>sys.stderr, "ok"
 
-
-class Splash(wx.SplashScreen):
-    def __init__(self):
-        bmp = wx.Image("/home/daniel/grafit/pixmaps/logo.png").ConvertToBitmap()
-        wx.SplashScreen.__init__(self, bmp,
-                                 wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT,
-                                 3000, None, -1)
-
-class PanelToolbar(wx.ToolBar):
-    def __init__(self, parent):
-        wx.ToolBar.__init__(self, parent)
-
 class ToolPanel(wx.SashLayoutWindow):
     def __init__(self, parent, position):
         wx.SashLayoutWindow.__init__(self, parent, -1, 
@@ -132,6 +120,7 @@ class ToolPanel(wx.SashLayoutWindow):
                 self.close(id)
         return new.instancemethod(button_clicked_callback, self, self.__class__)
 
+
 class ProjectTree(wx.TreeCtrl):
     def __init__(self, parent, project, mainwin): 
         wx.TreeCtrl.__init__(self, parent, -1, 
@@ -165,7 +154,8 @@ class Application(wx.App):
 
     def OnInit(self):
         wx.Log_SetActiveTarget(wx.LogStderr())
-        s = Splash()
+        s = wx.SplashScreen(wx.Image("/home/daniel/grafit/pixmaps/logo.png").ConvertToBitmap(),
+                            wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 3000, None, -1)
         s.Show()
 
         frame = wx.Frame(None, -1,  self.name, pos=(50,50), size=(200,100),

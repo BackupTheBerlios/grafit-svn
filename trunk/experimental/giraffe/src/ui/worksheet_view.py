@@ -109,6 +109,8 @@ class WorksheetView(grid.Grid):
 
     def OnRightDown(self, event):
         print "hello"
+        for l in range(100):
+            self.GetTable().worksheet.add_column('col'+str(l))
         self.GetTable().worksheet.A[999] = 14
         print self.GetSelectedRows()
 
