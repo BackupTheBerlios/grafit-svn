@@ -12,7 +12,7 @@ print >>sys.stderr, "ok"
 
 print >>sys.stderr, "loading giraffe...",
 from giraffe import Project
-from giraffe.main import Application
+from giraffe.ui_main import Application
 print >>sys.stderr, "ok"
 
 def main():

@@ -80,11 +80,37 @@ class TableData(grid.PyGridTableBase):
     def GetRowLabelValue(self, row):
         return str(row)
 
+class WorksheetView(wx.Panel):
+    def __init__(self, parent, worksheet):
+        wx.Panel.__init__(self, parent, -1)
+        self.worksheet = worksheet
 
-class WorksheetView(grid.Grid):
+        self.box = wx.BoxSizer(wx.VERTICAL)
+        self.SetAutoLayout(True)
+        self.SetSizer(self.box)
+
+        self.toolbar = self.create_toolbar()
+        self.box.Add(self.toolbar, 0, wx.EXPAND)
+
+        self.grid = WorksheetGrid(self, worksheet)
+        self.box.Add(self.grid, 1, wx.EXPAND)
+
+    def create_toolbar(self):
+        toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL)
+
+        bmp = wx.Image('../data/images/stock_new-dir.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(10, bmp, "New")
+        bmp = wx.Image('../data/images/stock_delete.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(10, bmp, "Delete")
+        bmp = wx.Image('../data/images/stock_up-one-dir.png').ConvertToBitmap()
+        toolbar.AddSimpleTool(10, bmp, "Up")
+
+        return toolbar
+
+
+class WorksheetGrid(grid.Grid):
     def __init__(self, parent, worksheet):
         grid.Grid.__init__(self, parent, -1)
-
 
         self.worksheet = worksheet
 

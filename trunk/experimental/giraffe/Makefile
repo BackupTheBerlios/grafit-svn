@@ -1,7 +1,7 @@
 all:
-	@make -C giraffe/lib/ftgl
-	@make -C giraffe/graph
+	@make -C lib/ftgl
+	@make -C giraffe
 
 clean:
-	@make -C giraffe/graph clean
-	@make -C giraffe/lib/ftgl clean
+	@make -C giraffe clean
+	@make -C lib/ftgl clean

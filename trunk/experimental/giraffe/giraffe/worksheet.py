@@ -16,7 +16,7 @@ def evaluate_expression(expression, project, worksheet):
     namespace['here'] = project.this
     namespace['this'] = worksheet
     namespace['up'] = worksheet.parent.parent
-    
+
     namespace.update(dict([(c.name, c) for c in worksheet.columns]))
     namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
 
@@ -39,7 +39,7 @@ class Column(MkArray, HasSignals):
     def set_id(self, id):
         self.data.id = id
     def get_id(self, id):
-        return self.data.id 
+        return self.data.id
     id = property(get_id, set_id)
 
     def __setitem__(self, key, value):
@@ -150,7 +150,7 @@ class Worksheet(Item, HasSignals):
         if isinstance(key, int):
             return self.columns[key]
         elif isinstance(key, basestring) and key in self.column_names:
-            return self.columns[self.column_names.index(key)] 
+            return self.columns[self.column_names.index(key)]
         else:
             raise IndexError
 
@@ -165,7 +165,7 @@ class Worksheet(Item, HasSignals):
 
     def __repr__(self):
         return '<Worksheet %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
-        
+
 
     def get_column_names(self):
         return [c.name for c in self.columns]
