@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.4
+
 import doctest
 
 def _test():

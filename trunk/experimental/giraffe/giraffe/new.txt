@@ -17,6 +17,7 @@ Now use it:
     >>> w = Worksheet(p, 'data1')
     >>> w.add_column('A')
     >>> w.add_column('B')
+    >>> p.dump()
     >>> print w.column_names
     ['A', 'B']
 
@@ -28,7 +29,7 @@ You can remove columns with remove(), like this:
     >>> w.remove_column('C')
     Traceback (most recent call last):
     ...
-    WorksheetError: Worksheet does not have a column named C
+    NameError: Worksheet does not have a column named C
 
     >>> w.B = w['B']
     >>> w.B[:] = [1,2,3,4] 
@@ -39,9 +40,7 @@ You can remove columns with remove(), like this:
 How it works: Internals (subject to change!)
 --------------------------------------------
 
-When you reference an object using project.get(id), a new object is
-created and added to the project._objects weak-value dictionary.
-As long as there are other references to this object, it is
-kept alive, otherwise it is deleted and a new object created when it
-is requested again. This frees memory for objects that are not used,
-and is not a performance problem because creating Items is cheap.
+When an object is removed from the project, it is not deleted,
+but it is only removed from project._objects. and marked as deleted
+with data.id = '-'+data.id. When the action list is cleared, it cleans up
+all deleted objects.
