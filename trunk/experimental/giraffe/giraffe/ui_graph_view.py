@@ -89,7 +89,11 @@ class GraphView(gui.Box):
         style = [self.legend.model[i] for i in self.legend.selection][0].style
         self.style.color.selection = self.style.colors.index(style.color)
         self.style.shape.selection = self.style.shapes.index(style.symbol)
+        self.style.size.value = style.symbol_size
+
         self.style.line_type.selection = self.style.linetypes.index(style.line_type)
+        self.style.line_style.selection = self.style.linestyles.index(style.line_style)
+        self.style.line_width.value = style.line_width
 
     def on_new_column(self):
         pass
@@ -189,10 +193,10 @@ class GraphStylePanel(gui.Box):
         b = gui.Checkbox(grid, pos=(0,0))
         grid.layout.Hide(b._widget)
 
-        c = gui.Spin(grid, pos=(2,2))
-        c.min_size = (10, c.min_size[1])
-        c.connect('modified', self.on_select_size)
-        c.value = 5
+        self.size = gui.Spin(grid, pos=(2,2))
+        self.size.min_size = (10, c.min_size[1])
+        self.size.connect('modified', self.on_select_size)
+        self.size.value = 5
 
 
         # Line
@@ -219,9 +223,12 @@ class GraphStylePanel(gui.Box):
         grid.layout.Hide(b._widget)
         self.line_style = gui.Choice(grid, pos=(1,2))
         self.line_style.min_size = (10, self.line_style.min_size[1])
-        for p in ['solid', 'dash', 'dot',]:
+        self.linestyles = []
+        for p in ['solid', 'dashed', 'dotted',]:
             self.line_style.append(p)
+            self.linestyles.append(p)
         self.line_style.selection = 0
+        self.line_style.connect('select', self.on_select_line_style)
 
         # Line width
         labels.append(gui.Label(grid, 'Width', pos=(2,1)))
@@ -230,6 +237,7 @@ class GraphStylePanel(gui.Box):
         self.line_width = gui.Spin(grid, pos=(2,2))
         self.line_width.min_size = (10, self.line_width.min_size[1])
         self.line_width.value = 1
+        self.line_width.connect('modified', self.on_select_line_width)
 
         b = gui.Box(self, 'horizontal', expand=True, stretch=0)
         labels.append(gui.Label(b, 'Group', stretch=0))
@@ -246,22 +254,26 @@ class GraphStylePanel(gui.Box):
     def on_select_color(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             d.style.color = self.colors[ind]
-        self.graph.emit('redraw')
 
     def on_select_shape(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             d.style.symbol = self.shapes[ind]
-        self.graph.emit('redraw')
 
     def on_select_size(self, size):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
-            d.style.size = size
-        self.graph.emit('redraw')
+            d.style.symbol_size = size
 
     def on_select_line_type(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             d.style.line_type = self.linetypes[ind]
-        self.graph.emit('redraw')
+
+    def on_select_line_style(self, ind):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            d.style.line_style = self.linestyles[ind]
+
+    def on_select_line_width(self, width):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            d.style.line_width = width
 
 class GraphDataPanel(gui.Box):
     def __init__(self, graph, view, parent, **place):

@@ -16,11 +16,22 @@ from gl2ps import *
 from giraffe.graph_render import render
 
 class Style(HasSignals):
-    def __init__(self, color=(0,0,0), symbol='square-f', line_type='none'):
-        self._line_width = 0
+    def __init__(self, color=(0,0,0), symbol='square-f', symbol_size=8,line_type='none', line_style='solid', line_width=0):
         self._color = color
         self._symbol = symbol
+
         self._line_type = line_type
+        self._line_style = line_style
+        self._line_width = line_width
+        self._symbol_size = symbol_size
+
+    def set_line_style(self, val):
+        self._line_style = val
+        self.emit('modified')
+    def get_line_style(self):
+        return self._line_style
+    line_style = property(get_line_style, set_line_style)
+
 
     def set_line_type(self, val):
         self._line_type = val
@@ -42,6 +53,14 @@ class Style(HasSignals):
     def get_symbol(self):
         return self._symbol
     symbol = property(get_symbol, set_symbol)
+
+    def set_symbol_size(self, val):
+        self._symbol_size = val
+        self.emit('modified')
+    def get_symbol_size(self):
+        return self._symbol_size
+    symbol_size = property(get_symbol_size, set_symbol_size)
+
 
     def set_color(self, val):
         self._color = val
@@ -73,15 +92,21 @@ class Dataset(HasSignals):
             self.style.color = default_style.color
             self.data.color = '0'
 
-        self.style.size = self.data.size
+        self.style.symbol_size = self.data.size
 
         if self.data.symbol == '':
             self.data.symbol = 'square-f'
         self.style.symbol = self.data.symbol
 
+        if self.data.linestyle == '':
+            self.data.linestyle = 'solid'
+        self.style.line_style = self.data.linestyle
+
         if self.data.linetype == '':
             self.data.linetype = 'none'
         self.style.line_type = self.data.linetype
+
+        self.style.line_width = self.data.linewidth
         
         self.style.connect('modified', self.on_style_modified)
 
@@ -106,6 +131,15 @@ class Dataset(HasSignals):
 
         N = len(x)
 
+        if self.style.line_style == 'dotted':
+            glLineStipple (1, 0x4444)
+            glEnable(GL_LINE_STIPPLE)
+        elif self.style.line_style == 'dashed':
+            glLineStipple (3, 0xAAAA)
+            glEnable(GL_LINE_STIPPLE)
+        elif self.style.line_style == 'solid':
+            glDisable(GL_LINE_STIPPLE)
+
         if self.style.line_type == 'bspline':
             nurb = gluNewNurbsRenderer()
             gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
@@ -119,11 +153,13 @@ class Dataset(HasSignals):
             glDrawArrays(GL_LINE_STRIP, 0, N)
             glDisable(GL_VERTEX_ARRAY)
 
+        glDisable(GL_LINE_STIPPLE)
+
         if self.style.symbol != 'none':
             gl2psPointSize(self.data.size)
             glPointSize(self.data.size)
-            dx =  res * (xmax-xmin)/width * self.style.size / 5.
-            dy =  res * (ymax-ymin)/height * self.style.size / 5.
+            dx =  res * (xmax-xmin)/width * self.style.symbol_size / 5.
+            dy =  res * (ymax-ymin)/height * self.style.symbol_size / 5.
             render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
 
     def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
@@ -133,10 +169,12 @@ class Dataset(HasSignals):
         self.emit('modified', self)
 
     def on_style_modified(self):
-        self.data.color = (self.style.color[0] + self.style.color[1]*256 + 
-                           self.style.color[2]*256*256)
+        self.data.color = (self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256)
         self.data.symbol = self.style.symbol
-        self.data.size = self.style.size
+        self.data.size = self.style.symbol_size
+        self.data.linetype = self.style.line_type
+        self.data.linestyle = self.style.line_style
+        self.data.linewidth = self.style.line_width
         self.emit('modified', self)
 
     def __str__(self):
