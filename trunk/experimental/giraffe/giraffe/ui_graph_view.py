@@ -86,8 +86,9 @@ class GraphView(gui.Box):
         self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
-        col = [self.legend.model[i] for i in self.legend.selection][0].style.color
-        self.style.color.selection = self.style.colors.index(col)
+        style = [self.legend.model[i] for i in self.legend.selection][0].style
+        self.style.color.selection = self.style.colors.index(style.color)
+        self.style.shape.selection = self.style.shapes.index(style.symbol)
 
     def on_new_column(self):
         pass
@@ -155,12 +156,14 @@ class GraphStylePanel(gui.Box):
         labels.append(gui.Label(grid,  'Symbol', pos=(0,1)))
         b = gui.Checkbox(grid, pos=(1,0))
         grid.layout.Hide(b._widget)
-        c = gui.PixmapChoice(grid, pos=(0,2))
+        self.shape = c = gui.PixmapChoice(grid, pos=(0,2))
         c.min_size = (10, c.min_size[1])
+        self.shapes = ['uptriangle-f', 'square-f']
         for shape in ['circle', 'square']:
             for interior in ['o', 'f']:
                 c.append(shape+'-'+interior+'.png')
         c.selection = 0
+        c.connect('select', self.on_select_shape)
 
         # symbol color
         labels.append(gui.Label(grid,  'Color', pos=(1,1)))
@@ -235,6 +238,11 @@ class GraphStylePanel(gui.Box):
     def on_select_color(self, ind):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             d.style.color = self.colors[ind]
+        self.graph.emit('redraw')
+
+    def on_select_shape(self, ind):
+        for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
+            d.style.symbol = self.shapes[ind]
         self.graph.emit('redraw')
 
 

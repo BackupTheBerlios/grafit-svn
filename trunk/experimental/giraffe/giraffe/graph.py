@@ -16,9 +16,10 @@ from gl2ps import *
 from giraffe.graph_render import makedata
 
 class Style(HasSignals):
-    def __init__(self, color=(0,0,0)):
+    def __init__(self, color=(0,0,0), symbol='square-f'):
         self._line_width = 0
         self._color = color
+        self._symbol = symbol
 
     def set_line_width(self, val):
         self._line_width = val
@@ -26,6 +27,13 @@ class Style(HasSignals):
     def get_line_width(self):
         return self._line_width
     line_width = property(get_line_width, set_line_width)
+
+    def set_symbol(self, val):
+        self._symbol = val
+        self.emit('modified')
+    def get_symbol(self):
+        return self._symbol
+    symbol = property(get_symbol, set_symbol)
 
     def set_color(self, val):
         self._color = val
@@ -55,6 +63,11 @@ class Dataset(HasSignals):
         except ValueError:
             self.style.color = default_style.color
             self.data.color = '0'
+
+        if self.data.symbol == '':
+            self.data.symbol = 'square-f'
+        self.style.symbol = self.data.symbol
+        
         self.style.connect('modified', self.on_style_modified)
 
         self.listid = self.create_list_id()
@@ -80,10 +93,22 @@ class Dataset(HasSignals):
 
         glNewList(self.listid, GL_COMPILE)
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
+        
+#        vertices = []
+#        n=25
+#        for i in xrange(n):
+#            vertices.append((0,0))
+#            vertices.append((sin(i*2*pi/n)*dx, cos(i*2*pi/n)*dy))
+#            vertices.append((sin((i+1)*2*pi/n)*dx, cos((i+1)*2*pi/n)*dy))
+
+        
         makedata(asarray(self.x[:]), asarray(self.y[:]), 
                  xmin, xmax, ymin, ymax, 
+                 dx, dy, self.style.symbol)
+#                 GL_TRIANGLES, vertices)
+#                 GL_QUADS, [(dx,0), (0,dy), (-dx,0), (0,-dy)]) # squares
+
 #                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]) # squares
-                 GL_QUADS, [(dx,0), (0,dy), (-dx,0), (0,-dy)]) # squares
 #                 GL_TRIANGLES, [(0,dy), (-dx,-dy), (dx, -dy), (0, dx), (dx, dy), (0, 0)])
 #                 GL_POLYGONS, [(0,dy), (-dx,-dy), (dx, -dy)])
         glEndList()
@@ -96,9 +121,8 @@ class Dataset(HasSignals):
         self.emit('modified', self)
 
     def on_style_modified(self):
-        c = self.style.color
-        num = c[0] + c[1]*256 + c[2]*256*256
-        self.data.color = num
+        self.data.color = self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256
+        self.data.symbol = self.style.symbol
         self.emit('modified', self)
 
     def __str__(self):
@@ -174,7 +198,7 @@ class Grid(object):
 
             glPopMatrix()
 
-AXISFONT = ftgl.FTGLPixmapFont('/home/daniel/giraffe/data/fonts/bitstream-vera/Vera.ttf')
+AXISFONT = ftgl.FTGLPixmapFont('/home/daniel/giraffe/data/fonts/bitstream-vera/VeraSe.ttf')
 
 class Axis(object):
     def __init__(self, position, plot):
@@ -251,10 +275,12 @@ class Axis(object):
 #                glTranslated(-self.plot.xmin, 0, 0)
                 
                 w = self.font.Advance(str(x))
-                glRasterPos2d(x-self.plot.xmin-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), -3)
+                glRasterPos2d(x-self.plot.xmin,#-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), 
+                              -3)
                 if self.plot.ps:
                     gl2psText(str(x), "Times-Roman", h)
-                self.font.Render(str(x))
+                else:
+                    self.font.Render(str(x))
 #                print str(x)
 
                 glPopMatrix()
@@ -268,10 +294,11 @@ class Axis(object):
 
                 w = self.font.Advance(str(y))
                 glRasterPos2d(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
-                              y-self.plot.ymin-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
+                              y-self.plot.ymin)#-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
                 if self.plot.ps:
                     gl2psText(str(y), "TimesRoman", h)
-                self.font.Render(str(y))
+                else:
+                    self.font.Render(str(y))
 #                print str(y)
                 
                 glPopMatrix()

@@ -2,6 +2,10 @@
 # with the rest in pure python, we can easily handle a few million points 
 # (lines are even faster)
 
+cdef extern from "math.h":
+    double sin(double x)
+    double cos(double y)
+
 cdef extern from "numarray/libnumarray.h":
     ctypedef int maybelong
     cdef struct PyArray_Descr:
@@ -78,18 +82,51 @@ cdef extern from "GL/gl.h":
     void glEnd()
     void glCallList(int id)
     void glTranslated(double x, double y, double z)
-    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON
+    int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES
 
 
 def makedata(_numarray sx, _numarray sy,  
              double xmin, double xmax, double ymin, double ymax, 
-             shape, vertices):
-    cdef int n, l
+             double dx, double dy, symbol):
+#             shape, vertices):
+    cdef int n, m, l
     cdef double x, y
     cdef double *xd, *yd
     cdef int xbucket, ybucket
     cdef int xbucket_s, ybucket_s
+    cdef int i
     cdef double xinterval, yinterval
+    cdef double pi
+    cdef double v1x[28]
+    cdef double v1y[28]
+    cdef double v2x[28]
+    cdef double v2y[28]
+    cdef double v3x[28]
+    cdef double v3y[28]
+    cdef double v4x[28]
+    cdef double v4y[28]
+    cdef int sym
+
+    if symbol == 'square-f':
+        sym = 1
+        shape = GL_QUADS
+    elif symbol == 'uptriangle-f':
+        sym = 2
+        shape = GL_TRIANGLES
+        m=3
+        for i from 0 <= i < m:
+            v1x[i] = 0
+            v1y[i] = 0
+            v2x[i] = sin(i*2*pi/m)*dx
+            v2y[i] = cos(i*2*pi/m)*dy
+            v3x[i] = sin((i+1)*2*pi/m)*dx
+            v3y[i] = cos((i+1)*2*pi/m)*dy
+
+    else:
+        print 'unknown symbol', symbol
+        return 0
+
+#    pi = 3.14159
 
     xbucket, ybucket = -1, -1
 
@@ -98,6 +135,11 @@ def makedata(_numarray sx, _numarray sy,
 
     xinterval = (xmax-xmin)/1000.
     yinterval = (ymax-ymin)/1000.
+
+#        glVertex3d(x-xmin, y-ymin, 0.)
+#        glVertex3d(x-xmin+sin(i*2*pi/m)*dx, y-ymin+cos(i*2*pi/m)*dy, 0.)
+#        glVertex3d(x-xmin+sin((i+1)*2*pi/m)*dx, y-ymin+cos((i+1)*2*pi/m)*dy, 0.)
+#    
 
     l = sx.dimensions[0]
     glBegin(shape)
@@ -115,11 +157,28 @@ def makedata(_numarray sx, _numarray sy,
         xbucket = <int>((x-xmin)/xinterval)
         ybucket = <int>((y-ymin)/yinterval)
         if (xbucket == xbucket_s) and (ybucket == ybucket_s):
-#            print 'not ok'
             continue
-#        else:
-#            print 'ok'
 
-        for v in vertices:
-            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)
+#        for i from 0 <= i < m:
+        if sym == 1:
+            glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
+            glVertex3d(x-xmin+dx/2, y-ymin-dy/2, 0)
+            glVertex3d(x-xmin+dx/2, y-ymin+dy/2, 0)
+            glVertex3d(x-xmin-dx/2, y-ymin+dy/2, 0)
+        elif sym == 2:
+            glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
+            glVertex3d(x-xmin-dx/2, y-ymin+dy/2, 0)
+            glVertex3d(x-xmin+dx/2, y-ymin, 0)
+#            else:
+#            glVertex3d(x-xmin, y-ymin, 0.)
+#            glVertex3d(x-xmin+sin(i*2*pi/m)*dx, y-ymin+cos(i*2*pi/m)*dy, 0.)
+#            glVertex3d(x-xmin+sin((i+1)*2*pi/m)*dx, y-ymin+cos((i+1)*2*pi/m)*dy, 0.)
+#                vertices.append((0,0))
+#                vertices.append((sin(i*2*pi/n)*dx, cos(i*2*pi/n)*dy))
+#                vertices.append((sin((i+1)*2*pi/n)*dx, cos((i+1)*2*pi/n)*dy))
+
+
+#        for v in vertices:
+#            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)
     glEnd()
+    return 1
