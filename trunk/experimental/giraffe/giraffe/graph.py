@@ -87,15 +87,20 @@ class Dataset(HasSignals):
     def get_worksheet(self): return self.graph.project.items[self.data.worksheet]
 
     def paint(self):
+        res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         gl2psPointSize(self.data.size)
-        glCallList(self.listid)
-
-    def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
+#        glCallList(self.listid)
         dx =  res * (xmax-xmin)/width * 2
         dy =  res * (ymax-ymin)/height * 2
-
-        glNewList(self.listid, GL_COMPILE)
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
+        makedata(asarray(self.x[:]), asarray(self.y[:]), 
+                 xmin, xmax, ymin, ymax, 
+                 dx, dy, self.style.symbol)
+#
+    def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
+        self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
+
+#        glNewList(self.listid, GL_COMPILE)
         
 #        vertices = []
 #        n=25
@@ -105,16 +110,19 @@ class Dataset(HasSignals):
 #            vertices.append((sin((i+1)*2*pi/n)*dx, cos((i+1)*2*pi/n)*dy))
 
         
-        makedata(asarray(self.x[:]), asarray(self.y[:]), 
-                 xmin, xmax, ymin, ymax, 
-                 dx, dy, self.style.symbol)
+#        dx =  res * (xmax-xmin)/width * 2
+#        dy =  res * (ymax-ymin)/height * 2
+#        glColor4f(self.style.color[0]/256., self.style.color[1]/256., self.style.color[2]/256., 1.)
+#        makedata(asarray(self.x[:]), asarray(self.y[:]), 
+#                 xmin, xmax, ymin, ymax, 
+#                 dx, dy, self.style.symbol)
 #                 GL_TRIANGLES, vertices)
 #                 GL_QUADS, [(dx,0), (0,dy), (-dx,0), (0,-dy)]) # squares
 
 #                 GL_QUADS, [(0,0), (dx,0), (dx, dy), (0, dy)]) # squares
 #                 GL_TRIANGLES, [(0,dy), (-dx,-dy), (dx, -dy), (0, dx), (dx, dy), (0, 0)])
 #                 GL_POLYGONS, [(0,dy), (-dx,-dy), (dx, -dy)])
-        glEndList()
+#        glEndList()
 
 # square
 # up triangle
@@ -550,8 +558,8 @@ class Graph(Item, HasSignals):
         glClear(GL_COLOR_BUFFER_BIT)
 
         # enable transparency
-        glEnable (GL_BLEND)
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+#        glEnable (GL_BLEND)
+#        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         glDisable(GL_DEPTH_TEST)
 
@@ -727,7 +735,7 @@ class Graph(Item, HasSignals):
                        21055000, f,
                        "arxi.eps")
         self.ps = True
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+#        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.display()
         self.ps = False
 

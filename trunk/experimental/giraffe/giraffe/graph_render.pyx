@@ -74,6 +74,11 @@ cdef extern from "numarray/libnumarray.h":
 
 import_libnumarray()
 
+cdef extern from "GL/glu.h":
+
+    void gluDisk(void* quad, double inner, double outer, int slices, int loops)
+    void* gluNewQuadric()
+
 
 cdef extern from "GL/gl.h":
 
@@ -83,8 +88,10 @@ cdef extern from "GL/gl.h":
     void glEnd()
     void glCallList(int id)
     void glEnable(int)
+    void glPolygonMode(int, int)
     void glTranslated(double x, double y, double z)
     int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES, GL_LINE_STRIP, GL_POINTS, GL_POINT_SMOOTH
+    int GL_BACK, GL_LINE, GL_FRONT, GL_FILL
 
 
 def makedata(_numarray sx, _numarray sy,  
@@ -99,41 +106,40 @@ def makedata(_numarray sx, _numarray sy,
     cdef int i
     cdef double xinterval, yinterval
     cdef double pi
-    cdef double v1x[28]
-    cdef double v1y[28]
-    cdef double v2x[28]
-    cdef double v2y[28]
-    cdef double v3x[28]
-    cdef double v3y[28]
-    cdef double v4x[28]
-    cdef double v4y[28]
     cdef int sym
+    cdef void *quad
 
-    if symbol == 'square-f':
+
+    if symbol == 'square-f' or symbol == 'square-o':
         sym = 1
         shape = GL_QUADS
-    elif symbol == 'uptriangle-f':
+    elif symbol == 'uptriangle-f' or symbol == 'uptriangle-o':
         sym = 2
         shape = GL_TRIANGLES
-        m=3
-        for i from 0 <= i < m:
-            v1x[i] = 0
-            v1y[i] = 0
-            v2x[i] = sin(i*2*pi/m)*dx
-            v2y[i] = cos(i*2*pi/m)*dy
-            v3x[i] = sin((i+1)*2*pi/m)*dx
-            v3y[i] = cos((i+1)*2*pi/m)*dy
     elif symbol == 'circle-f':
         sym = 3
         shape = GL_POINTS
 #        glPointSize(4)
         glEnable(GL_POINT_SMOOTH)
-    elif symbol == 'diamond-f':
+    elif symbol == 'diamond-f' or symbol == 'diamond-o':
         sym = 4
         shape = GL_QUADS
+    elif symbol == 'circle-o':
+        sym = -100
+        shape = -1
+        print 'j'
+        quad = gluNewQuadric()
+        print 'k'
     else:
         print 'unknown symbol', symbol
         return 0
+
+    if symbol[-1] == 'f':
+        glPolygonMode(GL_BACK, GL_FILL)
+        glPolygonMode(GL_FRONT, GL_FILL)
+    elif symbol[-1] == 'o':
+        glPolygonMode(GL_BACK, GL_LINE)
+        glPolygonMode(GL_FRONT, GL_LINE)
 
 #    pi = 3.14159
 
@@ -151,7 +157,8 @@ def makedata(_numarray sx, _numarray sy,
 #    
 
     l = sx.dimensions[0]
-    glBegin(shape)
+    if shape != -1:
+        glBegin(shape)
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
@@ -185,12 +192,15 @@ def makedata(_numarray sx, _numarray sy,
             glVertex3d(x-xmin, y-ymin-dy/2, 0)
             glVertex3d(x-xmin+dx/2, y-ymin, 0)
             glVertex3d(x-xmin, y-ymin+dy/2, 0)
+        elif sym == -100:
+            gluDisk(quad, 1, 3, 10, 10)
             
 
 
 #        for v in vertices:
 #            glVertex3d(x-xmin+v[0], y-ymin+v[1], 0.)
-    glEnd()
+    if shape != -1:
+        glEnd()
 
         
     glBegin(GL_LINE_STRIP)
