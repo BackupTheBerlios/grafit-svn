@@ -6,14 +6,88 @@ from signals import HasSignals
 class FunctionsRegistry(HasSignals):
     def __init__(self, dir):
         """Create a new function registry from a directory"""
+        self.functions = []
+        self.dir = dir
+        self.scan()
 
     def rescan(self):
         """Rescan the directory and check for changed functions"""
+        dir = self.dir
+        names = []
+        for f in os.listdir(dir):
+            try:
+                func = Function()
+                func.fromstring(open(dir+'/'+f).read())
+                func.filename = dir + '/' + f
+                names.append(func.name)
+            except IOError, s:
+                continue
+
+            if func.name not in [f.name for f in self.functions]:
+                self.functions.append(func)
+                self.emit('added', func)
+            else:
+                for i, f in enumerate(self.functions):
+                    if f.name == func.name:
+                        self.functions[i] = func
+                        self.emit('modified', func)
+
+        for f in self:
+            if f.name not in names:
+                self.functions.remove(f)
+                self.emit('removed', f)
+
+#            self.functions.sort()
+
+    def scan(self, dir=None):
+        if dir == None:
+            dir = self.dir
+        self.functions = []
+
+        for f in os.listdir(dir):
+            try:
+                func = Function()
+                func.fromstring(open(dir+'/'+f).read())
+                func.filename = dir + '/' + f
+            except IOError, s:
+                continue
+
+            self.functions.append(func)
+#        self.functions.sort()
 
     def __getitem__(self, name):
-        """"""
+        return [f for f in self.functions if f.name == name][0]
+
+    def __contains__(self, name):
+        return name in [f.name for f in self.functions]
+
+    def __len__(self):
+        return len(self.functions)
+
+    def __iter__(self):
+        for f in self.functions:
+            yield(f)
 
     """emits 'modified'(function) : a function definition has been modified"""
+
+class RegModel(HasSignals):
+    def __init__(self, registry):
+        self.registry = registry
+        self.registry.connect('modified', self.mod)
+        self.registry.connect('added', self.mod)
+        self.registry.connect('removed', self.mod)
+
+    def mod(self, *args, **kwds):
+        self.emit('modified')
+
+    def __len__(self):
+        return len(self.registry)
+
+#    def get(self, row, column):
+#        return self.registry.functions[row].name
+#
+    def __getitem__(self, item):
+        return self.registry.functions[item]
 
 functions = []
 
@@ -23,7 +97,7 @@ def mod_property(name):
     def mod_set(self, value):
         old = mod_get(self)
         setattr(self, '_'+name, value)
-        self.emit('modified', name, value, old)
+#        self.emit('modified', name, value, old)
     return property(mod_get, mod_set)
 
 class Function(HasSignals):
@@ -41,6 +115,9 @@ class Function(HasSignals):
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return '<Function %s(%s)>' % (self.name, ', '.join(self.parameters))
+
     def to_module(self):
         st = []
         st.append('from numarray import *\n')
@@ -53,11 +130,11 @@ class Function(HasSignals):
 
         st = ''.join(st)
         exec st
-        print func
 
-        print >>sys.stderr, st
-        print self.tostring()
         self.fromstring(self.tostring())
+
+    def save(self):
+        file(self.filename, 'wb').write(self.tostring())
 
     def fromstring(self, s):
         self.name, param, self.text, self.extra = s.split('\n------\n')
@@ -72,6 +149,8 @@ class Function(HasSignals):
         st = '\n------\n'.join(st)
         return st
 
+registry = FunctionsRegistry('functions')
+
 class FunctionsWindow(gui.Window):
     def __init__(self):
         gui.Window.__init__(self, title='Functions')
@@ -79,7 +158,7 @@ class FunctionsWindow(gui.Window):
 
 #        split = gui.Splitter(box, 'horizontal', stretch=1)
 #        self.categories = gui.List(split)
-        self.category = gui.List(box, stretch=1)
+        self.category = gui.List(box, model=RegModel(registry), stretch=1)
         self.category.connect('selection-changed', self.on_select_function)
 
         rbox = gui.Box(box, 'vertical', stretch=2)
@@ -106,66 +185,36 @@ class FunctionsWindow(gui.Window):
         self.functions = functions
         self.function = None
 
-#        self.function = Function('Dielectric/Havriliak-Negami', ['logf0', 'de', 'a', 'b'], 'y=hn(x)', 'import Numeric\ndef')
-
-        self.scan('functions')
-
     def on_new(self):
-        self.function = Function('new function', [], 'y=f(x)', '')
-        open('functions/function'+str(len(self.functions))+'.function', 'wb').write(self.function.tostring())
-        self.scan('functions')
+        num = 0
+        while 'function%d'%num in registry:
+            num += 1
+        self.function = Function('function%d'%num, [], 'y=f(x)', '')
+        open('functions/function%d.function'%num, 'wb').write(self.function.tostring())
+#        self.scan('functions')
+        registry.rescan()
         self.update_gui()
 
     def on_remove(self):
         os.remove(self.function.filename)
-        self.scan('functions')
+        registry.rescan()
 
     def on_save(self):
+        print list(registry)
         self.function.name = self.name.text
         self.function.parameters = [p.strip() for p in self.params.text.split(',')]
         self.function.extra = self.extra.text
         self.function.text = self.text.text
 
-        file(self.function.filename, 'wb').write(self.function.tostring())
+        self.function.save()
 #        self.function.to_module()
-        self.scan('functions')
+        registry.rescan()
 
     def update_gui(self):
         self.name.text = self.function.name
         self.params.text = ', '.join(self.function.parameters)
         self.extra.text = self.function.extra
         self.text.text = self.function.text
-
-    def add(self, function):
-        self.functions.append(function)
-        self.category.model.append(function)
-
-    def scan(self, dir):
-        self.functions = []
-        sel = self.category.selection
-        del self.category.model[:]
-
-        for f in os.listdir(dir):
-            print 'reading ', f
-            try:
-                func = Function()
-                func.fromstring(open(dir+'/'+f).read())
-            except IOError, s:
-                print s
-                continue
-#
-#            try:
-#                e = parse(dir + '/' + f).getroot()
-#            except IOError:
-#                continue
-#            func = Function(e.get('name'),
-#                            [c.get('name') for c in e.getchildren()],
-#                            eval(e.get('text')),
-#                            eval(e.get('extra')))
-            func.filename = dir + '/' + f
-            self.add(func)
-        print sel
-        self.category.setsel(sel)
 
     def on_select_function(self):
         try:

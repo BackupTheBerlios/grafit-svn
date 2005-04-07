@@ -15,7 +15,7 @@ import sys
 
 import wx
 
-from giraffe import gui
+import gui
 
 #print >>sys.stderr, "loading giraffe...",
 #from giraffe import Project
