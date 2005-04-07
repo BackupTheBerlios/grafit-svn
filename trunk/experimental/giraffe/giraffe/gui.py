@@ -441,6 +441,19 @@ class Checkbox(Widget):
     def on_event(self, event):
         self.emit('modified', self.state)
 
+class Progressbar(Widget):
+    def __init__(self, parent, **place):
+        self._widget = wx.Gauge(parent._widget, -1, 100)
+        Widget.__init__(self, parent, **place)
+
+    def set_value(self, value): self._widget.SetValue(value); wx.Yield()
+    def get_value(self): return self._widget.GetValue()
+    value = property(get_value, set_value)
+
+    def set_range(self, range): self._widget.SetRange(range)
+    def get_range(self): return self._widget.GetRange()
+    range = property(get_range, set_range)
+
 class Button(Widget):
     def __init__(self, parent, text, **kwds):
         self._widget = wx.Button(parent._widget, -1, text)
@@ -1474,6 +1487,7 @@ class _xGrid(wx.grid.Grid):
 
     def OnRightDown(self, event):
         pass
+
 
 class Action(object):
     def __init__(self, name, desc, call, pixmap=None, accel=None, type='simple'):

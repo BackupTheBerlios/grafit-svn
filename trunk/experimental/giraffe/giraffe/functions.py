@@ -2,8 +2,6 @@ import sys
 import os
 import gui
 from signals import HasSignals
-from ElementTree import Element, SubElement, ElementTree, parse
-import StringIO
 
 class FunctionsRegistry(HasSignals):
     def __init__(self, dir):
@@ -29,7 +27,7 @@ def mod_property(name):
     return property(mod_get, mod_set)
 
 class Function(HasSignals):
-    def __init__(self, name, parameters, text, extra):
+    def __init__(self, name='', parameters=[], text='', extra=''):
         self._name = name
         self._parameters = parameters
         self._text = text
@@ -39,13 +37,6 @@ class Function(HasSignals):
     text = mod_property('text')
     name = mod_property('name')
     parameters = mod_property('parameters')
-
-    def to_xml(self, f):
-        
-        elem = Element('Function', name=self.name, text=repr(self.text), extra=repr(self.extra))
-        for p in self.parameters:
-            SubElement(elem, 'Parameter', name=p)
-        ElementTree(elem).write(f)
 
     def __str__(self):
         return self.name
@@ -65,6 +56,21 @@ class Function(HasSignals):
         print func
 
         print >>sys.stderr, st
+        print self.tostring()
+        self.fromstring(self.tostring())
+
+    def fromstring(self, s):
+        self.name, param, self.text, self.extra = s.split('\n------\n')
+        self.parameters = param.split(', ')
+
+    def tostring(self):
+        st = []
+        st.append(self.name)
+        st.append(', '.join(self.parameters))
+        st.append(self.text)
+        st.append(self.extra)
+        st = '\n------\n'.join(st)
+        return st
 
 class FunctionsWindow(gui.Window):
     def __init__(self):
@@ -106,7 +112,7 @@ class FunctionsWindow(gui.Window):
 
     def on_new(self):
         self.function = Function('new function', [], 'y=f(x)', '')
-        self.function.to_xml(open('functions/function'+str(len(self.functions))+'.function', 'wb'))
+        open('functions/function'+str(len(self.functions))+'.function', 'wb').write(self.function.tostring())
         self.scan('functions')
         self.update_gui()
 
@@ -120,8 +126,8 @@ class FunctionsWindow(gui.Window):
         self.function.extra = self.extra.text
         self.function.text = self.text.text
 
-        self.function.to_xml(self.function.filename)
-        self.function.to_module()
+        file(self.function.filename, 'wb').write(self.function.tostring())
+#        self.function.to_module()
         self.scan('functions')
 
     def update_gui(self):
@@ -138,15 +144,24 @@ class FunctionsWindow(gui.Window):
         self.functions = []
         sel = self.category.selection
         del self.category.model[:]
+
         for f in os.listdir(dir):
+            print 'reading ', f
             try:
-                e = parse(dir + '/' + f).getroot()
-            except IOError:
+                func = Function()
+                func.fromstring(open(dir+'/'+f).read())
+            except IOError, s:
+                print s
                 continue
-            func = Function(e.get('name'),
-                            [c.get('name') for c in e.getchildren()],
-                            eval(e.get('text')),
-                            eval(e.get('extra')))
+#
+#            try:
+#                e = parse(dir + '/' + f).getroot()
+#            except IOError:
+#                continue
+#            func = Function(e.get('name'),
+#                            [c.get('name') for c in e.getchildren()],
+#                            eval(e.get('text')),
+#                            eval(e.get('extra')))
             func.filename = dir + '/' + f
             self.add(func)
         print sel
