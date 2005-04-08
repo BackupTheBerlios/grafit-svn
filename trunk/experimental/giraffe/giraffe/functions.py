@@ -130,8 +130,7 @@ class Function(HasSignals):
 
         st = ''.join(st)
         exec st
-
-        self.fromstring(self.tostring())
+        return func
 
     def save(self):
         file(self.filename, 'wb').write(self.tostring())
@@ -153,7 +152,7 @@ registry = FunctionsRegistry('functions')
 
 class FunctionsWindow(gui.Window):
     def __init__(self):
-        gui.Window.__init__(self, title='Functions')
+        gui.Window.__init__(self, title='Functions', size=(300, 200))
         box = gui.Box(self, 'horizontal')
 
 #        split = gui.Splitter(box, 'horizontal', stretch=1)
@@ -200,7 +199,6 @@ class FunctionsWindow(gui.Window):
         registry.rescan()
 
     def on_save(self):
-        print list(registry)
         self.function.name = self.name.text
         self.function.parameters = [p.strip() for p in self.params.text.split(',')]
         self.function.extra = self.extra.text
