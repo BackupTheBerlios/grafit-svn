@@ -70,6 +70,8 @@ class FunctionsRegistry(HasSignals):
 
     """emits 'modified'(function) : a function definition has been modified"""
 
+
+
 class RegModel(HasSignals):
     def __init__(self, registry):
         self.registry = registry
@@ -100,6 +102,17 @@ def mod_property(name):
 #        self.emit('modified', name, value, old)
     return property(mod_get, mod_set)
 
+class FunctionInstance(HasSignals):
+    def __init__(self, function, name):
+        self.name = name
+        self.function = function
+        self.parameters = [None]*len(function.parameters)
+        self.callable = self.function.to_module()
+
+    def __call__(self, arg):
+        return self.callable(arg, *self.parameters)
+
+
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):
         self._name = name
@@ -129,8 +142,10 @@ class Function(HasSignals):
         st.append(self.extra+'\n')
 
         st = ''.join(st)
-        exec st
-        return func
+
+        ns = {}
+        exec st in ns
+        return ns['func']
 
     def save(self):
         file(self.filename, 'wb').write(self.tostring())
