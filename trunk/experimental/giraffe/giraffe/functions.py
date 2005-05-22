@@ -112,6 +112,24 @@ class FunctionInstance(HasSignals):
     def __call__(self, arg):
         return self.callable(arg, *self.parameters)
 
+class FunctionSum(HasSignals):
+    def __init__(self):
+        self.terms = []
+
+    def add(self, func, name):
+        self.terms.append(FunctionInstance(registry[func], name))
+
+    def remove(self, ind):
+        del self.terms[ind]
+
+    def __getitem__(self, key):
+        return self.terms[key]
+
+    def __call__(self, arg):
+        res = 0
+        for func in self.terms:
+            res += func(arg)
+        return res
 
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):

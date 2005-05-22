@@ -601,6 +601,7 @@ class Graph(Item, HasSignals):
         ind = self.data.functions.append(id=create_id())
         f = Function(self, ind)
         self.functions.append(f)
+        self.emit('add-function', f)
         return f
 
     # add and remove datasets

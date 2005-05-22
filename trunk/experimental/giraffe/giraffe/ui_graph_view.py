@@ -78,7 +78,7 @@ class GraphView(gui.Box):
         self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-        self.fit = gui.Box(self.panel.right_panel, 'horizontal', page_label='Func', page_pixmap='function.png')
+        self.fit = GraphFunctionsPanel(self.graph, self, self.panel.right_panel, 'horizontal', page_label='Func', page_pixmap='function.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
 
@@ -308,7 +308,6 @@ class ColumnListModel(HasSignals):
     def __len__(self): return len(self.colnames)
     def __getitem__(self, row): return self.colnames[row]
 
-
 class GraphDataPanel(gui.Box):
     def __init__(self, graph, view, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
@@ -359,3 +358,9 @@ class GraphDataPanel(gui.Box):
     def on_remove(self):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             self.graph.remove(d)
+
+class GraphFunctionsPanel(gui.Box):
+    def __init__(self, graph, view, *args, **kwds):
+        gui.Box.__init__(self, *args, **kwds)
+        print graph, view
+        self.graph, self.view = graph, view
