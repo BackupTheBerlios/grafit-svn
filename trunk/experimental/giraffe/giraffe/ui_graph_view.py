@@ -78,7 +78,7 @@ class GraphView(gui.Box):
         self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-        self.fit = GraphFunctionsPanel(self.graph, self, self.panel.right_panel, 'horizontal', page_label='Func', page_pixmap='function.png')
+        self.fit = GraphFunctionsPanel(self.panel.right_panel, 'vertical', page_label='Func', page_pixmap='function.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
 
@@ -359,8 +359,35 @@ class GraphDataPanel(gui.Box):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:
             self.graph.remove(d)
 
+from functions import *
+
 class GraphFunctionsPanel(gui.Box):
-    def __init__(self, graph, view, *args, **kwds):
+    def __init__(self, *args, **kwds):
         gui.Box.__init__(self, *args, **kwds)
-        print graph, view
-        self.graph, self.view = graph, view
+
+        self.set_function(FunctionSum())
+
+    def clear(self):
+        pass
+
+    def set_function(self, f):
+        self.function = f
+        self.function.connect('add-term', self.on_add_term)
+        self.function.connect('remove-term', self.on_remove_term)
+        self.clear()
+        for term in self.function:
+            self.on_add_term(term)
+
+    def on_add_term(self, term):
+        bpx = gui.Box(self, 'horizontal', expand=False, stretch=0)
+        gui.Label(bpx, 'function')
+        b = gui.Button(bpx, 'X', expand=False, stretch=0)
+        b.connect('clicked', lambda: self.on_close(term), keepref=True)
+        term._box = bpx
+
+    def on_remove_term(self, term):
+        pass
+
+    def on_close(self, f):
+        f._box._widget.Close()
+        f._box._widget.Destroy()

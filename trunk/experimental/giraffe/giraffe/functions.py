@@ -118,9 +118,12 @@ class FunctionSum(HasSignals):
 
     def add(self, func, name):
         self.terms.append(FunctionInstance(registry[func], name))
+        self.emit('add-term', self.terms[-1])
 
     def remove(self, ind):
+        t = self.terms[ind]
         del self.terms[ind]
+        self.emit('remove-term', t)
 
     def __getitem__(self, key):
         return self.terms[key]
