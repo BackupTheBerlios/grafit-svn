@@ -8,7 +8,7 @@ arrhenius.initial_values = (12, 0.5)
 arrhenius.tex = r'f_{max} = f_0 e^{-\frac{w}{T}}'
 
 def vtf(x, logf0, b, T0):
-    return logf0 - (b/((1000/x)-T0))
+    return logf0 - (b*log10(e)/((1000/x)-T0))
 
 vtf.name = 'Arrhenius/VTF'
 vtf.initial_values = (12, 1000, 200)

@@ -181,7 +181,9 @@ class Project (Observed, Singleton):
     def new_graph(self, name=None):
         if name is None:
             name = self.make_graph_name()
+        print >>sys.stderr, 'a'
         gra = graph.Graph(name)
+        print >>sys.stderr, 'v'
         self.add(gra)
         return self[name]
 

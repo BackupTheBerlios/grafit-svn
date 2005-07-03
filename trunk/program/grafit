@@ -72,6 +72,7 @@ def splash_message(text):
 
 import time
 import traceback
+
     
 from grafit.worksheet import Worksheet
 from grafit.graph import Graph

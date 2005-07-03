@@ -8,6 +8,7 @@ sys.modules['__main__'].splash_message('loading Graph')
 
 from qt import *
 from qwt.qplt import *
+from qwt import QwtSymbol
 from math import *
 from scipy import *
 
@@ -227,12 +228,13 @@ class Dataset (object):
  
     def _set_curve_style (self, property, value):
         prev = self.get_curve_style(property)
+        print >>sys.stderr, value
         if prev == value:
             return
         if property == 'symbol_style':
-            self.graph.plot.curve(self.curveid).symbol().setStyle (value)
+            self.graph.plot.curve(self.curveid).symbol().setStyle (QwtSymbol.Style(value))
         elif property == 'symbol_fill':
-            self.graph.plot.curve(self.curveid).symbol().brush().setStyle (value)
+            self.graph.plot.curve(self.curveid).symbol().brush().setStyle (Qt.BrushStyle(value))
         elif property == 'symbol_size':
             self.graph.plot.curve(self.curveid).symbol().setSize (value)
         elif property == 'symbol_color':
@@ -573,7 +575,9 @@ class Graph(object):
     def __init__(self, name = "__new_g", parent = None):
         if parent == None:
             parent = project.mainwin.workspace
+        print >>sys.stderr, 'init'
         self.tabs = GraphView(parent)
+        print >>sys.stderr, 'inits'
         self.tabs.graph = self
         self.tabs.setTabShape(self.tabs.Triangular)
         self.tabs.setTabPosition(self.tabs.Bottom)
@@ -599,10 +603,12 @@ class Graph(object):
         self.selected_fit_dataset = None
 
         self.tabs.setIcon (QPixmap(project.datadir + 'pixmaps/graph.png'))
+        print >>sys.stderr, 'initsi'
         self.bg_color = QColor('white')
 
         # plot
         self.plot = QwtPlot (self.mainpage, name)
+        print >>sys.stderr, 'initsi3'
         self.plot.setCanvasBackground (self.bg_color)
         self.plot.enableGridX(True)
         self.plot.enableGridY(True)

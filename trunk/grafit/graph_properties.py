@@ -8,6 +8,14 @@ colors = [Qt.black, Qt.red, Qt.darkRed, Qt.green, Qt.darkGreen,
           Qt.blue, Qt.darkBlue, Qt.cyan, Qt.darkCyan, Qt.magenta, Qt.darkMagenta, 
           Qt.yellow, Qt.darkYellow, Qt.gray, Qt.darkGray, Qt.lightGray, Qt.black]
 
+extracolornames = [ 'CadetBlue3', 'CornflowerBlue', 'DarkGoldenrod1',
+                    'DarkOliveGreen2', 'DarkOrange1', 'DarkSalmon',
+                    'DarkTurquoise', 'DeepPink2', 'DeepSkyBlue1',
+                    'DodgerBlue3', 'HotPink', 'HotPink3', 'IndianRed',
+                    'LightGreen', 'MediumPurple4', 'MediumViloetRed' ]
+
+colors += [QColor(s) for s in extracolornames]
+
 class autobject(object):
     def __setattr__(self, key, val):
         self.__dict__[key] = val

@@ -569,9 +569,9 @@ class GTable(QTable):
         painter.fillRect(0, 0, w, h, brush)
 
         pen = QPen(painter.pen())
-        painter.setPen(self.style().styleHint(QStyle.SH_Table_GridLineColor, self))
-        painter.drawLine(w-1, 0, w-1, h-1)
-        painter.drawLine(0, h-1, w-1, h-1)
+#        painter.setPen(QPen(self.style().styleHint(QStyle.SH_Table_GridLineColor, self)))
+#        painter.drawLine(w-1, 0, w-1, h-1)
+#        painter.drawLine(0, h-1, w-1, h-1)
         painter.setPen(pen)
 
         try:

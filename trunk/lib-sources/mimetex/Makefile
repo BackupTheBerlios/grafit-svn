@@ -4,7 +4,7 @@ unzip:
 	unzip -od upstrem-src mimetex.zip
 
 __mimetex.so: __mimetex.c upstrem-src/mimetex.c upstrem-src/gifsave.c
-	cc -w __mimetex.c upstrem-src/mimetex.c upstrem-src/gifsave.c -DGIF -DAA -Iupstrem-src -I/usr/include/python2.3 -lm -shared -o __mimetex.so
+	cc -w __mimetex.c upstrem-src/mimetex.c upstrem-src/gifsave.c -DGIF -DAA -Iupstrem-src -I/usr/include/python2.4 -lm -shared -o __mimetex.so
 
 install:
 	mkdir ../../grafit/lib/mimetex

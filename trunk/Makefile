@@ -6,4 +6,5 @@ all:
 clean: 
 	@find . -name "*.pyc" -exec rm -rf {} \;
 	@find . -name ".grafit-birds" -exec rm -rf {} \;
+	@rm -r grafit/lib/odr grafit/lib/mimetex
 
