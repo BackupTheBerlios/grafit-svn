@@ -2,7 +2,7 @@ import struct
 
 import metakit
 from numarray import *
-from numarray.ieeespecial import nan
+from numarray.ieeespecial import nan, inf
 
 class VarOperation(object):
     def __init__(self, oper):
@@ -152,6 +152,10 @@ class MkArray(with_new_opers):
                 stop = key.stop
             buf = self.view.access(self.prop, self.row, start*8, (stop-start)*8)
             value = fromstring(buf, type=Float64)
+        elif hasattr(key, '__getitem__'):
+            buf = self.view.access(self.prop, self.row, 0, len(self)*8)
+            value = fromstring(buf, type=Float64)
+            return value[key]
         return value
 
     def __repr__(self):

@@ -233,16 +233,36 @@ class Dataset(DrawWithStyle):
         self.worksheet = self.graph.project.items[self.data.worksheet]
         self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
 
-        self.x.connect('data-changed', lambda: self.emit('modified', self), True)#self.on_data_changed)
-        self.y.connect('data-changed', lambda: self.emit('modified', self), True)#self.on_data_changed)
+        self.xfrom, self.xto = -inf, inf
+        self.recalculate()
+
+        self.x.connect('data-changed', self.on_data_changed)
+        self.y.connect('data-changed', self.on_data_changed)
+
+    def on_data_changed(self):
+        self.recalculate()
+        self.emit('modified', self)
 
     def __repr__(self):
         return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
                                                          self.worksheet.name, self.x.name, self.y.name)
+    def recalculate(self):
+        ind = [i for i in range(len(self.x)) if self.x[i]>= self.xfrom and self.x[i]<=self.xto]
+        self.xx = asarray(self.x[ind][:])
+        self.yy = asarray(self.y[ind][:])
+
+    def set_range(self, range):
+        self.xfrom, self.xto = range
+        self.recalculate()
+        self.emit('modified', self)
+
+    def get_range(self):
+        return self.xfrom, self.xto
+
+    range = property(get_range, set_range)
 
     def paint(self):
-        x = asarray(self.x[:])
-        y = asarray(self.y[:])
+        x, y = self.xx, self.yy
         self.paint_lines(x, y)
         self.paint_symbols(x, y)
 
@@ -536,6 +556,9 @@ class Graph(Item, HasSignals):
         self.py = None
 
         self.buf =  False
+        self.selected_datasets = []
+
+        self.mode = 'arrow'
 
         self.datasets = []
         if location is not None:
@@ -905,14 +928,6 @@ class Graph(Item, HasSignals):
         self.px, self.py = None, None
         return self.pixx, self.pixy, x, y
 
-    def button_press(self, x, y, button):
-        if button in (1,3):
-            self.rubberband_begin(x, y)
-        if button == 2:
-            self.haha = True
-        else:
-            self.haha = False
-
     def export_ascii(self, f):
         gl2psBeginPage("Title", "Producer", 
                        self.viewport,
@@ -928,62 +943,52 @@ class Graph(Item, HasSignals):
         self.ps = False
 
         gl2psEndPage()
- 
-    def button_release(self, x, y, button):
-        if button == 2:
 
-#GLint gl2psBeginPage( const char *title, const char *producer,
-#                      GLint viewport[4],
-#                      GLint format, GLint sort, GLint options, 
-#                      GLint colormode, GLint colorsize, 
-#                      GL2PSrgba *colortable, 
-#                      GLint nr, GLint ng, GLint nb, 
-#                      GLint buffersize, FILE *stream,
-#                      const char *filename )
-
-#
-#            print >>sys.stderr, "exporting...",
-#            f = file('arxi.eps', 'w')
-#            gl2psBeginPage("Title", "Producer", 
-#                           self.viewport,
-#                           GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,
-#                           GL_RGBA, -1,
-#                           0,
-#                           0, 0, 0,
-#                           21055000, f,
-#                           "arxi.eps")
-#            self.ps = True
-#            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-#            self.display()
-#            self.ps = False
-#
-#            gl2psEndPage()
-#            f.close()
-#            print >>sys.stderr, "done"
-                           
-            self.autoscale()
-            self.make_data_list()
-            self.emit('redraw')
-        elif button == 1 or button == 3:
-            zix, ziy, zfx, zfy = self.rubberband_end(x, y)
-
-            zix, ziy = self.mouse_to_real(zix, ziy)
-            zfx, zfy = self.mouse_to_real(zfx, zfy)
-
-            _xmin, _xmax = min(zix, zfx), max(zix, zfx)
-            _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
-
-            if button == 3:
-                xmin, xmax = self.zoomout(self.xmin, self.xmax, _xmin, _xmax)
-                ymin, ymax = self.zoomout(self.ymin, self.ymax, _ymin, _ymax)
+    def button_press(self, x, y, button):
+        if self.mode == 'zoom':
+            if button in (1,3):
+                self.rubberband_begin(x, y)
+            if button == 2:
+                self.haha = True
             else:
-                xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
-            self.zoom(xmin, xmax, ymin, ymax)
+                self.haha = False
+        elif self.mode == 'range':
+            x, y = self.mouse_to_real(x, y)
+            for d in self.selected_datasets:
+                if button == 1:
+                    d.range = (x, d.range[1])
+                elif button == 3:
+                    d.range = (d.range[0], x)
+                elif button == 2:
+                    d.range = (-inf, inf)
 
-            self.make_data_list()
-            self.emit('redraw')
+     
+    def button_release(self, x, y, button):
+        if self.mode == 'zoom':
+            if button == 2:
+                self.autoscale()
+                self.make_data_list()
+                self.emit('redraw')
+            elif button == 1 or button == 3:
+                zix, ziy, zfx, zfy = self.rubberband_end(x, y)
 
-    
+                zix, ziy = self.mouse_to_real(zix, ziy)
+                zfx, zfy = self.mouse_to_real(zfx, zfy)
+
+                _xmin, _xmax = min(zix, zfx), max(zix, zfx)
+                _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
+
+                if button == 3:
+                    xmin, xmax = self.zoomout(self.xmin, self.xmax, _xmin, _xmax)
+                    ymin, ymax = self.zoomout(self.ymin, self.ymax, _ymin, _ymax)
+                else:
+                    xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
+                self.zoom(xmin, xmax, ymin, ymax)
+
+                self.make_data_list()
+                self.emit('redraw')
+
+        
     def button_motion(self, x, y):
 #        if self.haha:
 #            ex, ey = self.mouse_to_real(x, y)
@@ -995,6 +1000,7 @@ class Graph(Item, HasSignals):
 #            self.datasets[0].build_display_list()
 #            self.emit('redraw')
 #        elif self.rubberband_active():
+        if self.mode == 'zoom':
             self.rubberband_continue(x, y)
 
     name = wrap_attribute('name')
@@ -1003,4 +1009,4 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph,
-'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I],functions[id:S,func:S,name:S,params:S,lock:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:S]]')
+'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I,xfrom:D,xto:D],functions[id:S,func:S,name:S,params:S,lock:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:S]]')

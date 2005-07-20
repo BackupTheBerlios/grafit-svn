@@ -46,17 +46,21 @@ class GraphView(gui.Box):
 
         tbbox = gui.Box(self, 'horizontal', stretch=0)
 
+        def set_graph_mode(mode):
+            def _set(): self.graph.mode = mode
+            return _set
+
         self.toolbar = gui.Toolbar(tbbox, stretch=1)
-        self.toolbar.append(gui.Action('Arrow', '', object, 'arrow.png', type='radio'))
-        self.toolbar.append(gui.Action('Hand', '', object, 'hand.png', type='radio'))
-        self.toolbar.append(gui.Action('Zoom', '', object, 'zoom.png', type='radio'))
-        self.toolbar.append(gui.Action('Range', '', object, 'range.png', type='radio'))
-        self.toolbar.append(gui.Action('Data reader', '', object, 'dreader.png', type='radio'))
-        self.toolbar.append(gui.Action('Screen reader', '', object, 'sreader.png', type='radio'))
+        self.toolbar.append(gui.Action('Arrow', '', set_graph_mode('arrow'), 'arrow.png', type='radio'))
+        self.toolbar.append(gui.Action('Hand', '', set_graph_mode('hand'), 'hand.png', type='radio'))
+        self.toolbar.append(gui.Action('Zoom', '', set_graph_mode('zoom'), 'zoom.png', type='radio'))
+        self.toolbar.append(gui.Action('Range', '', set_graph_mode('range'), 'range.png', type='radio'))
+        self.toolbar.append(gui.Action('Data reader', '', set_graph_mode('d-reader'), 'dreader.png', type='radio'))
+        self.toolbar.append(gui.Action('Screen reader', '', set_graph_mode('s-reader'), 'sreader.png', type='radio'))
 
         self.closebar = gui.Toolbar(tbbox, stretch=0)
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
-                                       self.on_close, 'close.png'))
+                                        self.on_close, 'close.png'))
 
         self.panel = gui.MainPanel(self)
         self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
@@ -208,6 +212,7 @@ class GraphStylePanel(gui.Box):
 
     def on_legend_selection(self):
         datasets = [self.view.legend.model[i] for i in self.view.legend.selection]
+        self.graph.selected_datasets = datasets
 
         if len(datasets) == 0:
             return
