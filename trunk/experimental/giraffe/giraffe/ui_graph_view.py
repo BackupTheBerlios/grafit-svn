@@ -396,21 +396,39 @@ class GraphFunctionsPanel(gui.Box):
             self.on_add_term(term)
 
     def on_add_term(self, term):
-        box = gui.Box(self, 'vertical', expand=False, stretch=0)
-        bpx = gui.Box(box, 'horizontal', expand=False, stretch=0)
+        box = gui.Box(self, 'vertical', expand=True, stretch=0)
+        bpx = gui.Box(box, 'horizontal', expand=True, stretch=0)
         gui.Label(bpx, 'function')
         t = gui.Toolbar(bpx, expand=False, stretch=0)
         t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'close.png', type='check'))
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
 
-        parambox = gui.Grid(box, len(term.parameters), 3, expand=False)
+        term._box = box
+        self.create_parambox(term)
+
+    def create_parambox(self, term):
+        parambox = gui.Grid(term._box, len(term.parameters), 3, expand=True)
         parambox.layout.AddGrowableCol(1)
         for n, par in enumerate(term.function.parameters):
             gui.Label(parambox, par, pos=(n, 0))
-            gui.Text(parambox, pos=(n, 1))
+            text = gui.Text(parambox, pos=(n, 1))
+            text.connect('character', lambda char: self.on_activate(term, n, char), True)
+            text.connect('kill-focus', lambda: self.on_activate(term, n), True)
             gui.Checkbox(parambox, pos=(n, 2))
-        term._box = box
+        term._parambox = parambox
+        self._widget.Fit()
 
+    def on_activate(self, term, n, char=13):
+        if char != 13:
+            return
+        print term, n
+
+    def delete_parambox(self, term):
+        term._parambox._widget.Close()
+        term._parambox._widget.Destroy()
+        term._parambox = None
+        self._widget.Fit()
+ 
     def on_remove_term(self, term):
         print term
         term._box._widget.Close()
@@ -424,6 +442,11 @@ class GraphFunctionsPanel(gui.Box):
         self.on_remove_term(f)
 
     def on_use(self, f, isit):
+        if isit:
+            if f._parambox is None:
+                self.create_parambox(f)
+        else:
+            self.delete_parambox(f)
         print f, isit
         print f.function.name
         print f.function.parameters

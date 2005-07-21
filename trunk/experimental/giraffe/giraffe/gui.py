@@ -113,8 +113,11 @@ class Widget(HasSignals):
         if hasattr(parent, '_add'):
             parent._add(self, **kwds)
 
-    def show(self):
-        self._widget.Show()
+    def show(self, s=True):
+        if s:
+            self._widget.Show()
+        else:
+            self._widget.Hide() 
 
     def show_all(self):
         self._widget.Show(True)
@@ -211,8 +214,15 @@ class Splitter(Widget):
                 self._widget.SplitVertically(self.first._widget, self.second._widget)
         else:
             raise NameError, 'TODO'
+
         
 class Grid(Widget):
+    """
+    usage:
+    ------
+    >>> g = gui.Grid(parent, rows, columns, **place)
+    >>> child = gui.Label('Text', pos=(row, col), span=(x, y), expand=True)
+    """
     def __init__(self, parent, rows, columns, **place):
         self._widget = wx.Panel(parent._widget, -1)
         Widget.__init__(self, parent, **place)
@@ -239,6 +249,18 @@ class Grid(Widget):
 #        evt.Skip()
 
 class Spin(Widget):
+    """
+    usage:
+    ------
+    >>> spin = gui.Spin(parent, **place)
+    >>> spin.value = 16
+    >>> spin.value
+    16
+
+    signals:
+    --------
+    modified(value)
+    """
     def __init__(self, parent, **place):
         self._widget = wx.SpinCtrl(parent._widget, -1)
         Widget.__init__(self, parent, **place) 
@@ -252,12 +274,41 @@ class Spin(Widget):
         self.emit('modified', self.value)
 
 class Text(Widget):
+    """
+    usage:
+    ------
+    >>> t = gui.Text(parent, multiline=False, **place)
+    >>> t.text = 'hello'
+    >>> t.text
+    'hello, world'
+
+    signals:
+    --------
+    set-focus
+    kill-focus
+    character(keycode)
+    """
     def __init__(self, parent, multiline=False, **place):
         style = 0
         if multiline:
             style |= wx.TE_MULTILINE 
         self._widget = wx.TextCtrl(parent._widget, -1, style=style)
         Widget.__init__(self, parent, **place)
+        self._widget.Bind(wx.EVT_SET_FOCUS, self.evt_set_focus)
+        self._widget.Bind(wx.EVT_KILL_FOCUS, self.evt_kill_focus)
+        self._widget.Bind(wx.EVT_CHAR, self.evt_char)
+
+    def evt_kill_focus(self, evt):
+        self.emit('kill-focus')
+        evt.Skip()
+
+    def evt_char(self, evt):
+        self.emit('character', evt.GetKeyCode())
+        evt.Skip()
+
+    def evt_set_focus(self, evt):
+        self.emit('set-focus')
+        evt.Skip()
 
     def get_value(self): return self._widget.GetValue()
     def set_value(self, val): self._widget.SetValue(val)
