@@ -2,7 +2,6 @@ import sys
 print >>sys.stderr, "import graph"
 import time
 
-#from numarray import *
 from giraffe.arrays import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
