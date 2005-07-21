@@ -195,6 +195,7 @@ class FunctionsWindow(gui.Window):
 #        self.categories = gui.List(split)
         self.category = gui.List(box, model=RegModel(registry), stretch=1)
         self.category.connect('selection-changed', self.on_select_function)
+        self.category.connect('item-activated', self.on_item_activated)
 
         rbox = gui.Box(box, 'vertical', stretch=2)
 
@@ -259,6 +260,9 @@ class FunctionsWindow(gui.Window):
 #            print 'are you sure?'
 #        self.function = [f for f in self.functions if f.name == name][0]
         self.update_gui()
+
+    def on_item_activated(self, ind):
+        self.emit('function-activated', self.category.model[ind])
 
 
 if __name__ == '__main__':

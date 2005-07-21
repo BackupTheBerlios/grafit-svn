@@ -944,7 +944,7 @@ class Graph(Item, HasSignals):
 
         gl2psEndPage()
 
-    def button_press(self, x, y, button):
+    def button_press(self, x, y, button=None):
         if self.mode == 'zoom':
             if button in (1,3):
                 self.rubberband_begin(x, y)
@@ -953,6 +953,11 @@ class Graph(Item, HasSignals):
             else:
                 self.haha = False
         elif self.mode == 'range':
+            if button is None:
+                button = self.__button
+            else:
+                self.__button = button
+
             x, y = self.mouse_to_real(x, y)
             for d in self.selected_datasets:
                 if button == 1:
@@ -1002,6 +1007,8 @@ class Graph(Item, HasSignals):
 #        elif self.rubberband_active():
         if self.mode == 'zoom':
             self.rubberband_continue(x, y)
+        elif self.mode == 'range':
+            self.button_press(x, y)
 
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
@@ -1009,4 +1016,4 @@ class Graph(Item, HasSignals):
 
 
 register_class(Graph,
-'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I,xfrom:D,xto:D],functions[id:S,func:S,name:S,params:S,lock:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:S]]')
+'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I,xfrom:D,xto:D],functions[id:S,func:S,name:S,params:S,lock:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I]]')

@@ -155,7 +155,10 @@ class MkArray(with_new_opers):
         elif hasattr(key, '__getitem__'):
             buf = self.view.access(self.prop, self.row, 0, len(self)*8)
             value = fromstring(buf, type=Float64)
-            return value[key]
+            if len(key) == 0:
+                return array([], 'd')
+            else:
+                return value[key]
         return value
 
     def __repr__(self):

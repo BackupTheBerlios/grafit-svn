@@ -848,9 +848,9 @@ class Tree(Widget):
 
 
 class Label(Widget):
-    def __init__(self, parent, text, **kwds):
+    def __init__(self, parent, text, *args, **kwds):
         self._widget = wx.StaticText(parent._widget, -1, text)
-        Widget.__init__(self, parent, **kwds)
+        Widget.__init__(self, parent, *args, **kwds)
 
 
 # stuff for tool panels and main window
@@ -1102,7 +1102,12 @@ class Toolbar(Widget):
         self.tools = {}
 
     def on_tool(self, event):
-        self.tools[event.GetId()]()
+        
+        action = self.tools[event.GetId()]
+        if action.type == 'check':
+            action(event.IsChecked())
+        else:
+            action()
 
     def append(self, action):
         if action is None:

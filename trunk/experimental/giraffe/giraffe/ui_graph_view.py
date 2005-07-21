@@ -28,16 +28,20 @@ class LegendModel(HasSignals):
     def __init__(self, graph):
         self.graph = graph
         self.graph.connect('add-dataset', self.on_modified)
+        self.graph.connect('add-function', self.on_modified)
         self.graph.connect('remove-dataset', self.on_modified)
 
     def on_modified(self, dataset):
         self.emit('modified')
 
-    def get(self, row, column): return str(self.graph.datasets[row])
+    def get(self, row, column): return str(self[row])
     def get_image(self, row): return None
-    def __len__(self): return len(self.graph.datasets)
-    def __getitem__(self, row): return self.graph.datasets[row]
-
+    def __len__(self): return len(self.graph.datasets) + len(self.graph.functions)
+    def __getitem__(self, row): 
+        if row < len(self.graph.datasets):
+            return self.graph.datasets[row]
+        else:
+            return self.graph.functions[row-len(self.graph.datasets)]
 
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):
@@ -369,11 +373,19 @@ from functions import *
 class GraphFunctionsPanel(gui.Box):
     def __init__(self, *args, **kwds):
         gui.Box.__init__(self, *args, **kwds)
+        self.toolbar = gui.Toolbar(self, stretch=0)
+        self.toolbar.append(gui.Action('Add term', '', self.do_add, 'arrow.png'))
 
         self.set_function(FunctionSum())
 
     def clear(self):
         pass
+
+    def do_add(self):
+        f = FunctionsWindow()
+        f.connect('function-activated', self.on_function_activated)
+        f.show()
+        print >>sys.stderr, 'done'
 
     def set_function(self, f):
         self.function = f
@@ -384,15 +396,36 @@ class GraphFunctionsPanel(gui.Box):
             self.on_add_term(term)
 
     def on_add_term(self, term):
-        bpx = gui.Box(self, 'horizontal', expand=False, stretch=0)
+        box = gui.Box(self, 'vertical', expand=False, stretch=0)
+        bpx = gui.Box(box, 'horizontal', expand=False, stretch=0)
         gui.Label(bpx, 'function')
-        b = gui.Button(bpx, 'X', expand=False, stretch=0)
-        b.connect('clicked', lambda: self.on_close(term), keepref=True)
-        term._box = bpx
+        t = gui.Toolbar(bpx, expand=False, stretch=0)
+        t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'close.png', type='check'))
+        t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
+
+        parambox = gui.Grid(box, len(term.parameters), 3, expand=False)
+        parambox.layout.AddGrowableCol(1)
+        for n, par in enumerate(term.function.parameters):
+            gui.Label(parambox, par, pos=(n, 0))
+            gui.Text(parambox, pos=(n, 1))
+            gui.Checkbox(parambox, pos=(n, 2))
+        term._box = box
 
     def on_remove_term(self, term):
-        pass
+        print term
+        term._box._widget.Close()
+        term._box._widget.Destroy()
+
+    def on_function_activated(self, f):
+        print >>sys.stderr, f
+        self.function.add(f.name, 'foo')
 
     def on_close(self, f):
-        f._box._widget.Close()
-        f._box._widget.Destroy()
+        self.on_remove_term(f)
+
+    def on_use(self, f, isit):
+        print f, isit
+        print f.function.name
+        print f.function.parameters
+        print f.name
+        print f.parameters
