@@ -79,7 +79,17 @@ class Slot(object):
             return False
         except ReferenceError:
             return True
-        
+
+_global_signals = {}
+
+def global_connect(signal, slot, keepref=False):
+    if not isinstance(signal, basestring) and hasattr(signal, '__len__'):
+        return [global_connect(sig, slot, keepref) for sig in signal]
+    if signal not in _global_signals:
+        _global_signals[signal] = []
+    _global_signals[signal].append(Slot(slot, keepref))
+
+
 class HasSignals(object):
     """Base class for an object that can emit signals"""
 
@@ -89,7 +99,7 @@ class HasSignals(object):
         """
 #        print "CONNECT: ", self, signal, slot
         if not isinstance(signal, basestring) and hasattr(signal, '__len__'):
-            return [self.connect(sig, slot) for sig in signal]
+            return [self.connect(sig, slot, keepref) for sig in signal]
         if not hasattr(self, '_signals'):
             self._signals = {}
         if signal not in self._signals:
@@ -117,22 +127,25 @@ class HasSignals(object):
         Emit a signal. All slots connected to the signal will be called.
         *args and **kwds are passed to the slot unmodified.
         """
-#        print >>sys.stderr, "SIGNAL:", self, "emitted", signal
-        if not hasattr(self, '_signals'):
-            return []
-        if signal not in self._signals:
-            return []
-
         results = []
-        for slot in self._signals[signal]:
-            # Lazy handling of expired slots.
-            # We don't care about them until they are called,
-            # then we remove them from the slots list.
-            try:
-                results.append(slot(*args, **kwds))
-            except (ReferenceError, wx.PyDeadObjectError):
-                # We can't do self._signals[signal].remove(slot) because that calls slot.__eq__
-                # and raises another ReferenceError. So we might as well remove all expired slots.
+#        print >>sys.stderr, "SIGNAL:", self, "emitted", signal
+        if hasattr(self, '_signals') and signal in self._signals:
+            for slot in self._signals[signal]:
+                # Lazy handling of expired slots.
+                # We don't care about them until they are called,
+                # then we remove them from the slots list.
+                try:
+                    results.append(slot(*args, **kwds))
+                except (ReferenceError, wx.PyDeadObjectError):
+                    # We can't do self._signals[signal].remove(slot) because that calls slot.__eq__
+                    # and raises another ReferenceError. So we might as well remove all expired slots.
 #                print >>sys.stderr, "garbage collected slot", slot
-                self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
+                    self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
+        if signal in _global_signals:
+            for slot in _global_signals[signal]:
+                try:
+                    results.append(slot(*args, **kwds))
+                except (ReferenceError, wx.PyDeadObjectError):
+                    _global_signals[signal] = [s for s in _global_signals[signal] if not s.is_expired()]
+     
         return results

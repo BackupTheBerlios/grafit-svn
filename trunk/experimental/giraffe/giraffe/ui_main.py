@@ -9,7 +9,7 @@ import wx
 import os
 import tempfile
 
-from giraffe.signals import HasSignals
+from giraffe.signals import HasSignals, global_connect
 from giraffe.commands import command_list, undo, redo
 
 from giraffe import Graph, Worksheet, Folder, Project
@@ -17,7 +17,8 @@ from giraffe import Graph, Worksheet, Folder, Project
 from giraffe.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                         OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
-from giraffe.signals import HasSignals
+
+import giraffe.signals
 
 
 class WorksheetDragData(object):
@@ -212,6 +213,9 @@ class MainWindow(Window):
 
         self.main.left_panel.open(self.explorer)
 
+        global_connect('status-message', self.on_status_message)
+        print giraffe.signals._global_signals
+
         actions = {
             'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
             'file-open': Action('Open...', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
@@ -258,6 +262,10 @@ class MainWindow(Window):
             self.toolbar.append(actions[item])
         if len(sys.argv) > 1:
             self.open_project(Project(sys.argv[1]))
+        print giraffe.signals._global_signals
+
+    def on_status_message(self, msg, time=0):
+        self.status = msg
 
     def on_import_ascii(self):
         dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
