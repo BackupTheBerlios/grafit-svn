@@ -9,6 +9,7 @@ from OpenGL.GLU import *
 from giraffe.signals import HasSignals
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 from giraffe.commands import command_from_methods
+from giraffe.functions import FunctionSum
 
 import ftgl
 from gl2ps import *
@@ -289,7 +290,7 @@ class Function(DrawWithStyle):
         self.style.line_style = 'solid'
         self.style.line_type = 'straight'
 
-        self.func = sin
+        self.func = FunctionSum()
 
     def paint(self):
         x = arange(self.graph.xmin, self.graph.xmax, (self.graph.xmax-self.graph.xmin)/100)
@@ -592,6 +593,7 @@ class Graph(Item, HasSignals):
             self.xmin, self.ymin = 0,0  
             self.ymax, self.xmax = 10, 10
 #        self.autoscale()
+        self.newf()
 
     default_name_prefix = 'graph'
 

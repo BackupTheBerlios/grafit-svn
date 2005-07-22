@@ -9,9 +9,9 @@ import os
 import sys
 
 #DATADIR = os.path.normpath(os.path.dirname(os.path.realpath(os.path.abspath(__file__)))+'/../')+'/'
-#DATADIR='/home/daniel/giraffe'
-#sys.path.append(DATADIR)
-#sys.path.append(DATADIR+'lib/')
+DATADIR='/home/daniel/giraffe/'
+sys.path.append(DATADIR)
+sys.path.append(DATADIR+'lib/')
 
 import wx
 

@@ -1229,6 +1229,9 @@ class Window(Widget):
             self._widget.CreateStatusBar()
 
         Widget.__init__(self, None)
+        self.title = title
+
+    title = property(lambda self: self._widget.GetTitle(), lambda self, t: self._widget.SetTitle(t))
 
     def _add(self, child, **place):
         if isinstance(child, Toolbar):

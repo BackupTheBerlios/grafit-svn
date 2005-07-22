@@ -1,7 +1,32 @@
 import sys
 import os
 import gui
+
+import odr
+
 from signals import HasSignals
+from giraffe.arrays import zeros, nan
+
+def gen_flatten(s):
+    try:
+        iter(s)
+    except TypeError:
+        yield s
+    else:
+        for elem in s:
+            for subelem in flatten(elem):
+                yield subelem
+
+def flatten(l):
+    return list(gen_flatten(l))
+
+def splitlist(seq, sizes):
+    "Split list into list of lists with specified sizes"
+    sumsizes = [sum(sizes[:i]) for i in range(len(sizes)+1)]
+    slices = [sumsizes[i:i+2] for i in range(len(sizes))]
+    return [list(seq)[s[0]:s[1]] for s in slices]
+
+
 
 class FunctionsRegistry(HasSignals):
     def __init__(self, dir):
@@ -115,6 +140,7 @@ class FunctionInstance(HasSignals):
     def __call__(self, arg):
         return self.callable(arg, *self.parameters)
 
+
 class FunctionSum(HasSignals):
     def __init__(self):
         self.terms = []
@@ -132,10 +158,52 @@ class FunctionSum(HasSignals):
         return self.terms[key]
 
     def __call__(self, arg):
-        res = 0
+        try:
+            res = zeros(len(arg), 'd')
+        except TypeError:
+            res = 0.
         for func in self.terms:
             res += func(arg)
         return res
+
+    def fit(self, x, y, lock, maxiter):
+        def __fitfunction(*args):
+            if len(args) == 3:
+                niter, actred, wss = args
+                message  = 'Fitting: Iteration %d, xsqr=%g, reduced by %g' % (niter, wss, actred)
+                print >>sys.stderr, message
+                return
+            else:
+                params, x = args
+
+            params = splitlist(params, [len(t.parameters) for t in self.terms])
+
+            for p, t in zip(params, self.terms):
+                t.parameters = p
+
+            return self(x)
+                
+        model = odr.Model(__fitfunction)
+        data = odr.RealData(x, y)
+        initial = flatten(t.parameters for t in self.terms)
+        print >>sys.stderr, 'initial: ', initial
+
+        odrobj = odr.ODR(data, model, beta0=initial, partol=1e-100, sstol=1e-100, maxit=maxiter)
+        odrobj.set_job (fit_type=2)
+        odrobj.set_iprint (iter=3, iter_step=1)
+        try:
+            output = odrobj.run()
+            print >>sys.stderr, 'done'
+            print 'final:', output.beta
+            # Show results
+            
+#            flat = self.params_func_to_flat()[0]
+#            project.undolist.append(ChangeParameterValue(self, flat, prev))
+#            self.graph.update_function_curves ()
+#            self.params_func_to_ui ()
+        except:
+            raise
+            print >>sys.stderr, 'Fit den Vogel (but no problem)'
 
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):
