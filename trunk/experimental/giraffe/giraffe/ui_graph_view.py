@@ -6,6 +6,7 @@ from giraffe.graph import Style
 from giraffe.signals import HasSignals
 
 from giraffe import gui
+from giraffe.arrays import nan
 
 def intersection (ml):
     """Intersection of lists"""
@@ -370,13 +371,27 @@ class GraphDataPanel(gui.Box):
 
 from functions import *
 
+def efloat(f):
+    try:
+        return float(f)
+    except:
+        return nan
+
 class GraphFunctionsPanel(gui.Box):
     def __init__(self, *args, **kwds):
         gui.Box.__init__(self, *args, **kwds)
         self.toolbar = gui.Toolbar(self, stretch=0)
-        self.toolbar.append(gui.Action('Add term', '', self.do_add, 'arrow.png'))
+        self.toolbar.append(gui.Action('Add term', '', self.do_add, 'function.png'))
+        self.toolbar.append(gui.Action('Add term', '', self.do_configure, 'properties.png'))
+        self.toolbar.append(gui.Action('Add term', '', self.do_fit, 'manibela.png'))
 
         self.set_function(FunctionSum())
+
+    def do_configure(self):
+        pass
+
+    def do_fit(self):
+        pass
 
     def clear(self):
         pass
@@ -400,7 +415,7 @@ class GraphFunctionsPanel(gui.Box):
         bpx = gui.Box(box, 'horizontal', expand=True, stretch=0)
         gui.Label(bpx, 'function')
         t = gui.Toolbar(bpx, expand=False, stretch=0)
-        t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'close.png', type='check'))
+        t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check'))
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
 
         term._box = box
@@ -409,11 +424,13 @@ class GraphFunctionsPanel(gui.Box):
     def create_parambox(self, term):
         parambox = gui.Grid(term._box, len(term.parameters), 3, expand=True)
         parambox.layout.AddGrowableCol(1)
+        term._text = []
         for n, par in enumerate(term.function.parameters):
             gui.Label(parambox, par, pos=(n, 0))
             text = gui.Text(parambox, pos=(n, 1))
             text.connect('character', lambda char: self.on_activate(term, n, char), True)
             text.connect('kill-focus', lambda: self.on_activate(term, n), True)
+            term._text.append(text)
             gui.Checkbox(parambox, pos=(n, 2))
         term._parambox = parambox
         self._widget.Fit()
@@ -421,7 +438,12 @@ class GraphFunctionsPanel(gui.Box):
     def on_activate(self, term, n, char=13):
         if char != 13:
             return
-        print term, n
+        print [t.parameters for t in self.function.terms]
+        print [[efloat(txt.text) for txt in term._text] for term in self.function.terms]
+        for t in self.function.terms:
+            t.parameters = [efloat(txt.text) for txt in t._text]
+            for i, txt in enumerate(t._text):
+                txt.text = str(t.parameters[i])
 
     def delete_parambox(self, term):
         term._parambox._widget.Close()
@@ -452,3 +474,4 @@ class GraphFunctionsPanel(gui.Box):
         print f.function.parameters
         print f.name
         print f.parameters
+        print self.function(1)

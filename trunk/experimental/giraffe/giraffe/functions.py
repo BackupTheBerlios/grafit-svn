@@ -106,8 +106,11 @@ class FunctionInstance(HasSignals):
     def __init__(self, function, name):
         self.name = name
         self.function = function
-        self.parameters = [None]*len(function.parameters)
+        self.parameters = [1.]*len(function.parameters)
         self.callable = self.function.to_module()
+
+    def update(self):
+        self.emit('modified')
 
     def __call__(self, arg):
         return self.callable(arg, *self.parameters)
