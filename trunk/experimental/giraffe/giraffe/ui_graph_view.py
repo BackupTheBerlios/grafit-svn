@@ -87,7 +87,7 @@ class GraphView(gui.Box):
         self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-        self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.panel.right_panel,
+        self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, self.panel.right_panel,
                                        'vertical', page_label='Func', page_pixmap='function.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
@@ -379,7 +379,7 @@ def efloat(f):
         return nan
 
 class GraphFunctionsPanel(gui.Box):
-    def __init__(self, func, *args, **kwds):
+    def __init__(self, func, graph, *args, **kwds):
         gui.Box.__init__(self, *args, **kwds)
         self.toolbar = gui.Toolbar(self, stretch=0)
         self.toolbar.append(gui.Action('Add term', '', self.do_add, 'function.png'))
@@ -387,12 +387,19 @@ class GraphFunctionsPanel(gui.Box):
         self.toolbar.append(gui.Action('Fit', '', self.do_fit, 'manibela.png'))
 
         self.set_function(func)
+        self.graph = graph
 
     def do_configure(self):
         pass
 
     def do_fit(self):
-        pass
+        data = self.graph.selected_datasets[0]
+        self.function.fit(data.x, data.y, None, 50)
+        for t in self.function.terms:
+            for i, txt in enumerate(t._text):
+                txt.text = str(t.parameters[i])
+        self.function.emit('modified')
+
 
     def clear(self):
         pass
