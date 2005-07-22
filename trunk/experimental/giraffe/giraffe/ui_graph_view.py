@@ -37,12 +37,12 @@ class LegendModel(HasSignals):
 
     def get(self, row, column): return str(self[row])
     def get_image(self, row): return None
-    def __len__(self): return len(self.graph.datasets) + len(self.graph.functions)
+    def __len__(self): return len(self.graph.datasets) #+ len(self.graph.functions)
     def __getitem__(self, row): 
-        if row < len(self.graph.datasets):
+#        if row < len(self.graph.datasets):
             return self.graph.datasets[row]
-        else:
-            return self.graph.functions[row-len(self.graph.datasets)]
+#        else:
+#            return self.graph.functions[row-len(self.graph.datasets)]
 
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):
@@ -88,7 +88,7 @@ class GraphView(gui.Box):
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
         self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, self.panel.right_panel,
-                                       'vertical', page_label='Func', page_pixmap='function.png')
+                                       page_label='Func', page_pixmap='function.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
         self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
 
@@ -379,9 +379,12 @@ def efloat(f):
         return nan
 
 class GraphFunctionsPanel(gui.Box):
-    def __init__(self, func, graph, *args, **kwds):
-        gui.Box.__init__(self, *args, **kwds)
+    def __init__(self, func, graph, parent, **place):
+        gui.Box.__init__(self, parent, 'vertical', **place)
         self.toolbar = gui.Toolbar(self, stretch=0)
+
+        self.scroll = gui.Scrolled(self)
+        self.box = gui.Box(self.scroll, 'vertical')
         self.toolbar.append(gui.Action('Add term', '', self.do_add, 'function.png'))
         self.toolbar.append(gui.Action('Fit properties', '', self.do_configure, 'properties.png'))
         self.toolbar.append(gui.Action('Fit', '', self.do_fit, 'manibela.png'))
@@ -419,9 +422,9 @@ class GraphFunctionsPanel(gui.Box):
             self.on_add_term(term)
 
     def on_add_term(self, term):
-        box = gui.Box(self, 'vertical', expand=True, stretch=0)
+        box = gui.Box(self.box, 'vertical', expand=True, stretch=0)
         bpx = gui.Box(box, 'horizontal', expand=True, stretch=0)
-        gui.Label(bpx, 'function')
+        gui.Label(bpx, term.name)
         t = gui.Toolbar(bpx, expand=False, stretch=0)
         t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check'))
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
@@ -438,6 +441,7 @@ class GraphFunctionsPanel(gui.Box):
             text = gui.Text(parambox, pos=(n, 1))
             text.connect('character', lambda char: self.on_activate(term, n, char), True)
             text.connect('kill-focus', lambda: self.on_activate(term, n), True)
+            text.text = str(term.parameters[n])
             term._text.append(text)
             gui.Checkbox(parambox, pos=(n, 2))
         term._parambox = parambox
@@ -446,8 +450,6 @@ class GraphFunctionsPanel(gui.Box):
     def on_activate(self, term, n, char=13):
         if char != 13:
             return
-        print [t.parameters for t in self.function.terms]
-        print [[efloat(txt.text) for txt in term._text] for term in self.function.terms]
         for t in self.function.terms:
             t.parameters = [efloat(txt.text) for txt in t._text]
             for i, txt in enumerate(t._text):
@@ -461,16 +463,14 @@ class GraphFunctionsPanel(gui.Box):
         self._widget.Fit()
  
     def on_remove_term(self, term):
-        print term
         term._box._widget.Close()
         term._box._widget.Destroy()
 
     def on_function_activated(self, f):
-        print >>sys.stderr, f
         self.function.add(f.name, 'foo')
 
     def on_close(self, f):
-        self.on_remove_term(f)
+        self.function.remove(self.function.terms.index(f))
 
     def on_use(self, f, isit):
         if isit:

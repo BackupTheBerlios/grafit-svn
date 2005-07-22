@@ -575,6 +575,7 @@ class Graph(Item, HasSignals):
                     f = Function(self, i)
                     self.functions.append(f)
                     f.connect('modified', self.on_dataset_modified)
+                    f.func.connect('modified', self.on_dataset_modified)
 
         self.ps = False
 
@@ -624,6 +625,8 @@ class Graph(Item, HasSignals):
     def newf(self):
         ind = self.data.functions.append(id=create_id())
         f = Function(self, ind)
+        f.connect('modified', self.on_dataset_modified)
+        f.func.connect('modified', self.on_dataset_modified)
         self.functions.append(f)
         self.emit('add-function', f)
         return f
@@ -689,8 +692,9 @@ class Graph(Item, HasSignals):
 
 
 
-    def on_dataset_modified(self, d):
-        d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
+    def on_dataset_modified(self, d=None):
+        if d is not None:
+            d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
         self.emit('redraw')
 
     def paint_frame(self):

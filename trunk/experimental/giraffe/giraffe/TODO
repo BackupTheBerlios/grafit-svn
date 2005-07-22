@@ -1,8 +1,11 @@
-We can add functions to graphs.
+- make function window scroll
+* make arrows work and change color
+* automatic names for functions
+* rename functions
+* filenames for functions
+* save functions
+* move functions for initial values
 
-We want to be able to add 
-- simple functions easily. We don't have to be able to fit them.
-- functions with parameters
 
 * command_from_methods: make __state a dictionary
 * make combine work for dataset-change-style command

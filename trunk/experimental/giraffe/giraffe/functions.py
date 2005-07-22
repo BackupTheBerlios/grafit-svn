@@ -151,8 +151,8 @@ class FunctionSum(HasSignals):
 
     def remove(self, ind):
         t = self.terms[ind]
-        del self.terms[ind]
         self.emit('remove-term', t)
+        del self.terms[ind]
 
     def __getitem__(self, key):
         return self.terms[key]

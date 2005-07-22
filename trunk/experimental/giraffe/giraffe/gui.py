@@ -8,6 +8,7 @@ import wx.glcanvas
 import wx.grid
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
 from wx.lib.colourselect import ColourSelect, EVT_COLOURSELECT
+from wx.lib.scrolledpanel import ScrolledPanel
 
 from signals import HasSignals
 
@@ -448,6 +449,21 @@ class Frame(Widget):
         self.layout.Add(widget._widget, stretch, wx.EXPAND)
 #        self.layout.SetSizeHints(self._widget)
 #        self._widget.Layout()
+
+class Scrolled(Widget):
+    def __init__(self, parent, **place):
+        self._widget = ScrolledPanel(parent._widget, -1, style=wx.SUNKEN_BORDER)
+        Widget.__init__(self, parent, **place)
+
+        self.layout = wx.BoxSizer(wx.VERTICAL)
+        self._widget.SetSizer(self.layout)
+        self._widget.SetAutoLayout(True)
+        self._widget.SetupScrolling()
+
+    def _add(self, widget):
+        self.layout.Add(widget._widget, 1., wx.EXPAND)
+#        self.layout.SetSizeHints(self._widget)
+
 
 
 class Box(Widget):
@@ -1456,6 +1472,7 @@ class _xTableData(wx.grid.PyGridTableBase):
 
     def GetRowLabelValue(self, row):
         return self.data.get_row_name(row)
+
 
 class Table(Widget):
     def __init__(self, parent, data, **place):
