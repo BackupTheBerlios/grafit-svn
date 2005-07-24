@@ -1,4 +1,6 @@
 
+import sys
+sys.path.append('/home/daniel/giraffe/giraffe')
 import gui
 
 class MainWindow(gui.Window):
@@ -9,9 +11,11 @@ class MainWindow(gui.Window):
 
         self.label = gui.Label(box, 'hello, world!', stretch=0)
         self.button = gui.Button(box, 'hello, world!', expand=True)
+        self.button.connect('clicked', self.on_button_clicked)
+        
+    def on_button_clicked(self):
+        print 'click!'
 
 if __name__ == '__main__':
-    app = gui.Application(MainWindow)
-    app.run()
-
+    gui.Application().run(MainWindow)
 

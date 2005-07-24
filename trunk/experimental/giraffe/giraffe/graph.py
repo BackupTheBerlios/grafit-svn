@@ -1,6 +1,8 @@
 import sys
 print >>sys.stderr, "import graph"
 import time
+import string
+
 
 from giraffe.arrays import *
 from OpenGL.GL import *
@@ -184,6 +186,8 @@ class DrawWithStyle(HasSignals):
 
 
     def paint_lines(self, x, y):
+        if len(x) == 0:
+            return
         res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
@@ -263,6 +267,10 @@ class Dataset(DrawWithStyle):
 
     def paint(self):
         x, y = self.xx, self.yy
+#        if self.graph.xtype == 'log':
+#            x = log10(x)
+#        if self.graph.ytype == 'log':
+#            y = log10(y)
         self.paint_lines(x, y)
         self.paint_symbols(x, y)
 
@@ -293,8 +301,19 @@ class Function(DrawWithStyle):
         self.func = FunctionSum()
 
     def paint(self):
-        x = arange(self.graph.xmin, self.graph.xmax, (self.graph.xmax-self.graph.xmin)/100)
+        if self.graph.xtype == 'log':
+            x = 10**arange(self.graph.xmin, self.graph.xmax, 
+                           (self.graph.xmax-self.graph.xmin)/100)
+        else:
+            x = arange(self.graph.xmin, self.graph.xmax, 
+                       (self.graph.xmax-self.graph.xmin)/100)
+
         y = self.func(x)
+
+        if self.graph.xtype == 'log':
+            x = log10(x)
+        if self.graph.ytype == 'log':
+            y = log10(y)
 
         self.paint_lines(x, y)
 
@@ -618,6 +637,20 @@ class Graph(Item, HasSignals):
     xmax = property(get_xmax, set_xmax)
     ymin = property(get_ymin, set_ymin)
     ymax = property(get_ymax, set_ymax)
+
+    def set_xtype(self, tp):
+        self._xtype = tp
+        self.emit('redraw')
+    def get_xtype(self):
+        return self._xtype
+    xtype = property(get_xtype, set_xtype)
+
+    def set_ytype(self, tp):
+        self._ytype = tp
+        self.emit('redraw')
+    def get_ytype(self):
+        return self._ytype
+    ytype = property(get_ytype, set_ytype)
 
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
@@ -1017,8 +1050,49 @@ class Graph(Item, HasSignals):
 
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
+    _xtype = wrap_attribute('xtype')
+    _ytype = wrap_attribute('ytype')
     _zoom = wrap_attribute('zoom')
 
+desc="""
+graphs [
+    name:S,
+    id:S,
+    parent:S,
+    zoom:S,
+    xtype:S,
+    ytype:S,
+    datasets [
+        id:S,
+        worksheet:S,
+        x:S,
+        y:S,
+        symbol:S,
+        color:I,
+        size:I,
+        linetype:S,
+        linestyle:S,
+        linewidth:I,
+        xfrom:D,
+        xto:D 
+    ],
+    functions [
+        id:S,
+        func:S,
+        name:S,
+        params:S,
+        lock:S,
+        symbol:S,
+        color:I,
+        size:I,
+        linetype:S,
+        linestyle:S,
+        linewidth:I
+    ]
+]
+"""
 
-register_class(Graph,
-'graphs[name:S,id:S,parent:S,zoom:S,datasets[id:S,worksheet:S,x:S,y:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I,xfrom:D,xto:D],functions[id:S,func:S,name:S,params:S,lock:S,symbol:S,color:I,size:I,linetype:S,linestyle:S,linewidth:I]]')
+for w in string.whitespace:
+    desc = desc.replace(w, '')
+
+register_class(Graph, desc)

@@ -87,10 +87,13 @@ class GraphView(gui.Box):
         self.legend.connect('selection-changed', self.on_legend_select)
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-        self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, self.panel.right_panel,
+        self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, 
+                                       self.panel.right_panel,
                                        page_label='Func', page_pixmap='function.png')
-        self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, page_label='Style', page_pixmap='style.png')
-        self.axes = gui.Box(self.panel.right_panel, 'horizontal', page_label='Axes', page_pixmap='axes.png')
+        self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, 
+                                     page_label='Style', page_pixmap='style.png')
+        self.axes = GraphAxesPanel(self.graph, self, self.panel.right_panel, 
+                                   page_label='Axes', page_pixmap='axes.png')
 
     def on_legend_select(self):
         self.style.on_legend_selection()
@@ -111,6 +114,26 @@ class GraphView(gui.Box):
 
         self.parent.delete(self)
 
+class GraphAxesPanel(gui.Box):
+    def __init__(self, graph, view, parent, **place):
+        gui.Box.__init__(self, parent, "vertical", **place)
+        self.graph, self.view = graph, view
+
+        xframe = gui.Frame(self, 'vertical', title='X axis', stretch=0.)
+        grid = gui.Grid(xframe, 4, 2, expand=False)
+        gui.Label(grid, 'Title', pos=(0,0))
+        gui.Text(grid, pos=(0,1))
+        gui.Label(grid, 'From', pos=(1,0))
+        gui.Text(grid, pos=(1,1))
+        gui.Label(grid, 'To', pos=(2,0))
+        gui.Text(grid, pos=(2,1))
+        gui.Label(grid, 'Type', pos=(3,0))
+        t = gui.Choice(grid, pos=(3,1))
+        t.append('Linear')
+        t.append('Logarithmic')
+
+
+        
 
 ###############################################################################
 # style panel                                                                  #
@@ -388,6 +411,9 @@ class GraphFunctionsPanel(gui.Box):
         self.toolbar.append(gui.Action('Add term', '', self.do_add, 'function.png'))
         self.toolbar.append(gui.Action('Fit properties', '', self.do_configure, 'properties.png'))
         self.toolbar.append(gui.Action('Fit', '', self.do_fit, 'manibela.png'))
+        self.toolbar.append(gui.Action('Save parameters', '', 
+                            self.do_fit, 'pencil.png'))
+
 
         self.set_function(func)
         self.graph = graph
