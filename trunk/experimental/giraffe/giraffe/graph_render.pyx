@@ -89,8 +89,9 @@ cdef extern from "GL/gl.h":
 
 
 def render(_numarray sx, _numarray sy,  
-           double xmin, double xmax, double ymin, double ymax, 
-           double dx, double dy, symbol):
+#           double xmin, double xmax, double ymin, double ymax, 
+#           double dx, double dy, 
+            symbol, int size):
 #             shape, vertices):
     cdef int n, m, l
     cdef double x, y, xnext, ynext
@@ -106,8 +107,8 @@ def render(_numarray sx, _numarray sy,
     cdef double circlex[11], circley[11]
 
     for n from 0<=n<11:
-        circlex[n] = cos(n*2*pi/10)*dx
-        circley[n] = sin(n*2*pi/10)*dy
+        circlex[n] = cos(n*2*pi/10)*size
+        circley[n] = sin(n*2*pi/10)*size
 
     if symbol == 'square-f' or symbol == 'square-o':
         sym = 1
@@ -144,49 +145,51 @@ def render(_numarray sx, _numarray sy,
     xd = <double *>NA_OFFSETDATA(sx)
     yd = <double *>NA_OFFSETDATA(sy)
 
-    xinterval = (xmax-xmin)/1000.
-    yinterval = (ymax-ymin)/1000.
+#    xinterval = (xmax-xmin)/1000.
+#    yinterval = (ymax-ymin)/1000.
 
     l = sx.dimensions[0]
 
     # draw symbols
     glBegin(shape)
+    print "a", l
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
+        print n 
 
         # skip if outside limits
-        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
-            continue
+#        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
+#            continue
 
         # skip if we would land within 1/1000th of the graph from the previous point
-        xbucket_s = xbucket
-        ybucket_s = ybucket
-        xbucket = <int>((x-xmin)/xinterval)
-        ybucket = <int>((y-ymin)/yinterval)
-        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
-            continue
+#        xbucket_s = xbucket
+#        ybucket_s = ybucket
+#        xbucket = <int>((x-xmin)/xinterval)
+#        ybucket = <int>((y-ymin)/yinterval)
+#        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
+#            continue
 
         if sym == 1:
-            glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
-            glVertex3d(x-xmin+dx/2, y-ymin-dy/2, 0)
-            glVertex3d(x-xmin+dx/2, y-ymin+dy/2, 0)
-            glVertex3d(x-xmin-dx/2, y-ymin+dy/2, 0)
+            glVertex3d(x-size/2, y-size/2, 0)
+            glVertex3d(x+size/2, y-size/2, 0)
+            glVertex3d(x+size/2, y+size/2, 0)
+            glVertex3d(x-size/2, y+size/2, 0)
         elif sym == 2:
-            glVertex3d(x-xmin-dx/2, y-ymin-dy/2, 0)
-            glVertex3d(x-xmin+dx/2, y-ymin-dy/2, 0)
-            glVertex3d(x-xmin, y-ymin+dy/2, 0)
+            glVertex3d(x-size/2, y-size/2, 0)
+            glVertex3d(x+size/2, y-size/2, 0)
+            glVertex3d(x, y+size/2, 0)
         elif sym == 3:
-            glVertex3d(x-xmin, y-ymin, 0)
+            glVertex3d(x, y, 0)
         elif sym == 4:
-            glVertex3d(x-xmin-dx/2, y-ymin, 0)
-            glVertex3d(x-xmin, y-ymin-dy/2, 0)
-            glVertex3d(x-xmin+dx/2, y-ymin, 0)
-            glVertex3d(x-xmin, y-ymin+dy/2, 0)
+            glVertex3d(x-size/2, y, 0)
+            glVertex3d(x, y-size/2, 0)
+            glVertex3d(x+size/2, y, 0)
+            glVertex3d(x, y+size/2, 0)
         elif sym == -100:
             for m from 0<=m<10:
-                glVertex3d(x-xmin+circlex[m], y-ymin+circley[m], 0)
-                glVertex3d(x-xmin+circlex[m+1], y-ymin+circley[m+1], 0)
+                glVertex3d(x+circlex[m], y+circley[m], 0)
+                glVertex3d(x+circlex[m+1], y+circley[m+1], 0)
             
     glEnd()
 
@@ -212,13 +215,13 @@ def render(_numarray sx, _numarray sy,
 #                continue
 #
         # skip if we would land within 1/1000th of the graph from the previous point
-        xbucket_s = xbucket
-        ybucket_s = ybucket
-        xbucket = <int>((x-xmin)/xinterval)
-        ybucket = <int>((y-ymin)/yinterval)
-        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
-            continue
-        glVertex3d(x-xmin, y-ymin, 0)
+#        xbucket_s = xbucket
+#        ybucket_s = ybucket
+#        xbucket = <int>((x-xmin)/xinterval)
+#        ybucket = <int>((y-ymin)/yinterval)
+#        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
+#            continue
+        glVertex3d(x, y, 0)
 
     glEnd()
     return 1

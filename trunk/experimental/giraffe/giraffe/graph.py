@@ -170,30 +170,26 @@ class DrawWithStyle(HasSignals):
         self.emit('modified', self)
 
     def paint_symbols(self, x, y):
-        res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
-
-        z = zeros(len(x))
 
         if self.style.symbol != 'none':
             gl2psPointSize(self.data.size)
             if self.data.size != 0:
                 glPointSize(self.data.size)
-            dx =  res * (xmax-xmin)/width * self.style.symbol_size / 5.
-            dy =  res * (ymax-ymin)/height * self.style.symbol_size / 5.
-            render(x, y, xmin, xmax, ymin, ymax, dx, dy, self.style.symbol)
-
+            x, y = self.graph.proj(x, y)
+            render(x, y, self.style.symbol, self.style.symbol_size/5.)
 
     def paint_lines(self, x, y):
         if len(x) == 0:
             return
-        res, xmin, xmax, ymin, ymax, width, height = self.paintdata
+#        res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
 
 #        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
 #        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
+        x, y = self.graph.proj(x, y)
         z = zeros(len(x))
 
         N = len(x)
@@ -212,10 +208,10 @@ class DrawWithStyle(HasSignals):
             gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
             gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
             gluBeginCurve(nurb)
-            gluNurbsCurve(nurb,arange(3+N), transpose(array([x-xmin, y-ymin, z])), GL_MAP1_VERTEX_3)
+            gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
-            glVertexPointerd(transpose(array([x-xmin, y-ymin, z])))
+            glVertexPointerd(transpose(array([x, y, z])))
             glEnable(GL_VERTEX_ARRAY)
             glDrawArrays(GL_LINE_STRIP, 0, N)
             glDisable(GL_VERTEX_ARRAY)
@@ -288,7 +284,6 @@ class Dataset(DrawWithStyle):
     def __str__(self):
         return self.x.worksheet.name+':'+self.y.name+'('+self.x.name+')'
 
-
 class Function(DrawWithStyle):
     def __init__(self, graph, ind):
         self.graph, self.ind = graph, ind
@@ -336,64 +331,41 @@ class Grid(object):
 
     def paint(self):
         if self.orientation == 'horizontal':
-            self = self.plot
-            glLoadIdentity()
-            glPushMatrix()
-            glTranslate(-1.+2.*self.marginl/self.w, 
-                        -1.+2.*self.marginb/self.h, 0)
-            glScaled(self.xscale_data, self.yscale_mm, 1.)
-#            glTranslate(-self.xmin, 0, 0)
-
-            plot_height_mm = (self.h - self.marginb - self.margint)/self.res
-            plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
-
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
-            if self.ps:
+            if self.plot.ps:
                 gl2psEnable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
-            for x in self.axis_bottom.tics(self.xmin, self.xmax)[0]:
-                glVertex3d(x-self.xmin, 0.0, 0.0)
-                glVertex3d(x-self.xmin, plot_height_mm, 0.0)
+            for x in self.plot.axis_bottom.tics(self.plot.xmin, self.plot.xmax)[0]:
+                x, _ = self.plot.proj(x, 0)
+                print >>sys.stderr, x
+                glVertex3d(x, 0.0, 0.0)
+                glVertex3d(x, self.plot.plot_height, 0.0)
             glEnd()
-            if self.ps:
+            if self.plot.ps:
                 gl2psDisable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.1)
             glDisable(GL_LINE_STIPPLE)
-            glColor3f(0.0, 0.0, 0.0)
 
-            glPopMatrix()
         elif self.orientation == 'vertical':
-            self = self.plot
-            glPushMatrix()
-            glTranslate(-1.+2.*self.marginl/self.w, 
-                        -1.+2.*self.marginb/self.h, 0)
-            glScaled(self.xscale_mm, self.yscale_data, 1.)
-#            glTranslate(0, -self.ymin, 0)
-
-            plot_height_mm = (self.h - self.marginb - self.margint)/self.res
-            plot_width_mm = (self.w - self.marginr - self.marginl)/self.res
-
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
-            if self.ps:
+            if self.plot.ps:
                 gl2psEnable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
-            for y in self.axis_left.tics(self.ymin, self.ymax)[0]:
-                glVertex3d(0, y-self.ymin, 0.0)
-                glVertex3d(plot_width_mm, y-self.ymin, 0.0)
+            for y in self.plot.axis_left.tics(self.plot.ymin, self.plot.ymax)[0]:
+                _, y = self.plot.proj(0, y)
+                glVertex3d(0, y, 0.0)
+                glVertex3d(self.plot.plot_width, y, 0.0)
             glEnd()
             glDisable(GL_LINE_STIPPLE)
-            if self.ps:
+            if self.plot.ps:
                 gl2psDisable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.1)
-            glColor3f(0.0, 0.0, 0.0)
-
-            glPopMatrix()
 
 FONTFILE = '/home/daniel/giraffe/data/fonts/bitstream-vera/VeraSe.ttf'
 AXISFONT = ftgl.FTGLPixmapFont(FONTFILE)
@@ -404,125 +376,130 @@ class Axis(object):
         self.plot = plot
         self.font = AXISFONT
 
-    def paint(self):
-        glPushMatrix()
-        glLoadIdentity()
-        glTranslated(-1., -1., 0.)         # starting at bottom left corner
-        glScaled(self.plot.xscale_pixel, self.plot.yscale_pixel, 1.) # pixel scale
+    def transform(self, data):
+        if self.position in ['bottom', 'top'] and self.plot.xtype == 'log':
+            return log10(data)
+        if self.position in ['left', 'right'] and self.plot.ytype == 'log':
+            return log10(data)
+        return data
 
-        glColor3d(0.98, 0.97, 0.94) # background color
-        if self.position == 'bottom':
-            glRectd(0, 0, self.plot.w, self.plot.marginb)
-        elif self.position == 'right':
-            glRectd(self.plot.w, 0, self.plot.w - self.plot.marginr, self.plot.h)
-        elif self.position == 'top':
-            glRectd(0, self.plot.h, self.plot.w, self.plot.h - self.plot.margint)
-        elif self.position == 'left':
-            glRectd(0, 0, self.plot.marginl, self.plot.h)
+    def invtransform(self, data):
+        if self.position in ['bottom', 'top'] and self.plot.xtype == 'log':
+            return 10**data
+        if self.position in ['left', 'right'] and self.plot.ytype == 'log':
+            return 10**data
+        return data
+
+    def paint(self):
+
+#        glColor3d(0.98, 0.97, 0.94) # background color
+#        if self.position == 'bottom':
+#            glRectd(0, 0, self.plot.w, self.plot.marginb)
+#        elif self.position == 'right':
+#            glRectd(self.plot.w, 0, self.plot.w - self.plot.marginr, self.plot.h)
+#        elif self.position == 'top':
+#            glRectd(0, self.plot.h, self.plot.w, self.plot.h - self.plot.margint)
+#        elif self.position == 'left':
+#            glRectd(0, 0, self.plot.marginl, self.plot.h)
 
         glColor3d(0.0, 0.0, 0.0) # axis color
 
         # Axis lines
         glBegin(GL_LINES)
         if self.position == 'bottom':
-            glVertex3d(self.plot.marginl, self.plot.marginb, 0.0)
-            glVertex3d(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
+            glVertex3d(0., 0., 0.)
+            glVertex3d(self.plot.plot_width, 0., 0.0)
         elif self.position == 'right':
-            glVertex3d(self.plot.w - self.plot.marginr, self.plot.marginb, 0.0)
-            glVertex3d(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
+            glVertex3d(self.plot.plot_width, 0., 0.)
+            glVertex3d(self.plot.plot_width, self.plot.plot_height, 0.0)
         elif self.position == 'top':
-            glVertex3d(self.plot.w - self.plot.marginr, self.plot.h - self.plot.margint, 0.0)
-            glVertex3d(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
+            glVertex3d(0., self.plot.plot_height, 0.)
+            glVertex3d(self.plot.plot_width, self.plot.plot_height, 0.0)
         elif self.position == 'left':
-            glVertex3d(self.plot.marginl, self.plot.h - self.plot.margint, 0.0)
-            glVertex3d(self.plot.marginl, self.plot.marginb, 0.0)
+            glVertex3d(0., 0., 0.)
+            glVertex3d(0., self.plot.plot_height, 0.0)
         glEnd()
 
-        glPopMatrix()
-
+        # Tics
         if self.position == 'bottom':
-            glPushMatrix()
-            glLoadIdentity()
-            glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-            glScaled(self.plot.xscale_data, self.plot.yscale_mm, 1.)
-#            glTranslate(-self.plot.xmin, 0, 0)
 
             glBegin(GL_LINES)
             major, minor = self.tics(self.plot.xmin, self.plot.xmax)
 
             for x in major:
-                glVertex3d(x-self.plot.xmin, 0.0, 0.0)
-                glVertex3d(x-self.plot.xmin, 2, 0.0)
+                x, _ = self.plot.proj(x, 0.)
+                glVertex3d(x, 0.0, 0.0)
+                glVertex3d(x, 2, 0.0)
             for x in minor:
-                glVertex3d(x-self.plot.xmin, 0.0, 0.0)
-                glVertex3d(x-self.plot.xmin, 1, 0.0)
+                x, _ = self.plot.proj(x, 0.)
+                glVertex3d(x, 0.0, 0.0)
+                glVertex3d(x, 1, 0.0)
             glEnd()
 
-            glPopMatrix()
- 
         elif self.position == 'left':
-            glPushMatrix()
-            glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-            glScaled(self.plot.xscale_mm, self.plot.yscale_data, 1.)
-#            glTranslate(0, -self.plot.ymin, 0)
-
             glBegin(GL_LINES)
             major, minor = self.tics(self.plot.ymin, self.plot.ymax)
+
             for y in major:
+                _, y = self.plot.proj(0., y)
                 glVertex3d(0, y-self.plot.ymin, 0.0)
                 glVertex3d(2, y-self.plot.ymin, 0.0)
             for y in minor:
+                _, y = self.plot.proj(0., y)
                 glVertex3d(0, y-self.plot.ymin, 0.0)
                 glVertex3d(1, y-self.plot.ymin, 0.0)
             glEnd()
 
-            glPopMatrix()
         self.paint_text()
 
     def paint_text(self):
-        glLoadIdentity()
         h = int(2.6*self.plot.res)
         self.font.FaceSize(h)
         if self.position == 'bottom':
             for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
-                glPushMatrix()
-                glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-                glScaled(self.plot.xscale_data, self.plot.yscale_mm, 1.)
-#                glTranslated(-self.plot.xmin, 0, 0)
-                
+                xm, _ = self.plot.proj(x, 0.)
                 w = self.font.Advance(str(x))
-                glRasterPos2d(x-self.plot.xmin,#-(self.plot.xscale_pixel/self.plot.xscale_data)*(w/2.), 
-                              -3)
+                glRasterPos2d(xm, -3)
                 if self.plot.ps:
                     gl2psText(str(x), "Times-Roman", h)
                 else:
                     self.font.Render(str(x))
-#                print str(x)
-
-                glPopMatrix()
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
-                glPushMatrix()
-                glTranslate(-1.+2.*self.plot.marginl/self.plot.w, -1.+2.*self.plot.marginb/self.plot.h, 0)
-                glScaled(self.plot.xscale_mm, self.plot.yscale_data, 1.)
-                
-#                glTranslated(0, -self.plot.ymin, 0)
-
+                _, ym = self.plot.proj(0., y)
                 w = self.font.Advance(str(y))
-                glRasterPos2d(-2.-(self.plot.xscale_pixel/self.plot.xscale_mm)*w, 
-                              y-self.plot.ymin)#-(self.plot.xscale_pixel/self.plot.xscale_data)*(h*0.35277138/4.))
+                glRasterPos2d(-2, ym)
                 if self.plot.ps:
                     gl2psText(str(y), "TimesRoman", h)
                 else:
                     self.font.Render(str(y))
-#                print str(y)
-                
-                glPopMatrix()
 
     def tics(self, fr, to):
+        if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
+           (self.position in ['bottom', 'top'] and self.plot.xtype == 'log'):
+                return self.logtics(fr, to)
+        else:
+            return self.lintics(fr, to)
+
+
+    def logtics(self, fr, to):
+        if fr <= 0 or to <= 0:
+            return [], []
+        if fr == to:
+            return [fr], []
+
+        bottom = floor(log10(fr))
+        top = ceil(log10(to))
+
+        major = 10**arange(bottom, top+1)
+        minor = []
+        print >>sys.stderr, major, minor
+        return major, minor
+
+    def lintics(self, fr, to):
         # 3-8 major tics
         if fr == to:
-            return [fr]
+            return [fr], []
         exponent = floor(log10(to-fr)) - 1
 
         for interval in (1,5,2):#,4,6,7,8,9,3):
@@ -557,13 +534,6 @@ class Axis(object):
         print "cannot tick", fr, to, len(rng)
         return []
 
-# matrix_physical: starting at lower left corner of plot; units in mm
-# matrix_data: starting at data (0, 0); units are data
-# resolution: pixels per mm (but we _should not care about pixels_!)
-
-# TODO:
-# - convert drawing to use the above data
-# - more generic mechanism for symbols, in pyrex if nescessary
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         Item.__init__(self, project, name, parent, location)
@@ -723,51 +693,17 @@ class Graph(Item, HasSignals):
 
     remove = command_from_methods('graph_remove_dataset', remove, undo_remove)
 
-
-
     def on_dataset_modified(self, d=None):
         if d is not None:
             d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
         self.emit('redraw')
 
-    def paint_frame(self):
-        glPushMatrix()
-        glLoadIdentity()
-        glTranslated(-1., -1., 0.)         # starting at bottom left corner
-        glScaled(self.xscale_pixel, self.yscale_pixel, 1.)
-
-        glColor3f(1.0,1.0,1.0)      # black
-
-        glBegin(GL_LINES)
-        glVertex3d(self.marginl, self.marginb, 0.0)
-        glVertex3d(self.w - self.marginr, self.marginb, 0.0)
-
-        glVertex3d(self.w - self.marginr, self.marginb, 0.0)
-        glVertex3d(self.w - self.marginr, self.h - self.margint, 0.0)
-
-        glVertex3d(self.w - self.marginr, self.h - self.margint, 0.0)
-        glVertex3d(self.marginl, self.h - self.margint, 0.0)
-
-        glVertex3d(self.marginl, self.h - self.margint, 0.0)
-        glVertex3d(self.marginl, self.marginb, 0.0)
-
-        glEnd()
-
-        glPopMatrix()
-
     def paint_axes(self):
-
-        self.paint_frame()
-
         for a in self.axes:
             a.paint()
 
         self.grid_h.paint()
         self.grid_v.paint()
-
-    def set_data_scales(self):
-        self.xscale_data = self.xscale_pixel * ((self.w-self.marginl-self.marginr)/(self.xmax-self.xmin))
-        self.yscale_data = self.yscale_pixel * ((self.h-self.margint-self.marginb)/(self.ymax-self.ymin))
 
     def make_data_list(self):
         t = time.time()
@@ -780,15 +716,32 @@ class Graph(Item, HasSignals):
 
 #        print (time.time()-t), "seconds"
 
+    def proj(self, x, y):
+        x, xmin, xmax = map(self.axis_bottom.transform, (x, self.xmin, self.xmax))
+        y, ymin, ymax = map(self.axis_left.transform, (y, self.ymin, self.ymax))
+
+        px = self.plot_width * (x-xmin)/(xmax-xmin)
+        py = self.plot_height * (y-ymin)/(ymax-ymin)
+
+        return px, py
+
+    def invproj(self, x, y):
+        xmin, xmax = map(self.axis_bottom.transform, (self.xmin, self.xmax))
+        ymin, ymax = map(self.axis_left.transform, (self.ymin, self.ymax))
+
+        px = x*(xmax-xmin)/self.plot_width + xmin
+        py = y*(ymax-ymin)/self.plot_height + ymin
+
+        return self.axis_bottom.invtransform(px), self.axis_left.invtransform(py)
+
     def mouse_to_ident(self, xm, ym):
-        realy = self.viewport[3] - ym - 1
-        x, y, _ = gluUnProject(xm, realy, 0.0, self.mvmatrix, self.initmatrix, self.viewport)
+        x = (xm / self.res) - self.marginl
+        y = ((self.h-ym) / self.res) - self.marginb
         return x, y
 
     def mouse_to_real(self, xm, ym):
-        realy = self.viewport[3] - ym - 1
-        x, y, _ = gluUnProject(xm, realy, 0.0, self.mvmatrix, self.projmatrix, self.viewport)
-        return x, y
+        x, y = self.mouse_to_ident(xm, ym)
+        return self.invproj(x, y)
 
     def autoscale(self):
         if len(self.datasets):
@@ -796,8 +749,6 @@ class Graph(Item, HasSignals):
             self.ymin = array(self.datasets[0].y).min()
             self.xmax = array(self.datasets[0].x).max()
             self.ymax = array(self.datasets[0].y).max()
-            if hasattr(self, 'xscale_pixel'):
-                self.set_data_scales()
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
@@ -807,7 +758,6 @@ class Graph(Item, HasSignals):
         if abs(xmin-xmax)<=eps or abs(ymin-ymax)<=eps:
             return
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
-        self.set_data_scales()
  
     def zoomout(self,x1, x2,x3, x4):
         a = (x2-x1)/(x4-x3)
@@ -820,7 +770,7 @@ class Graph(Item, HasSignals):
         glClearColor(252./256, 252./256, 252./256, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
 
-        # enable transparency
+#        # enable transparency
 #        glEnable (GL_BLEND)
 #        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
@@ -829,9 +779,6 @@ class Graph(Item, HasSignals):
 
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
-
-        self.mvmatrix = glGetDoublev(GL_MODELVIEW_MATRIX)
-        self.viewport = glGetIntegerv(GL_VIEWPORT)
 
         self.dl = False
 
@@ -845,34 +792,15 @@ class Graph(Item, HasSignals):
             self.make_data_list()
             self.dl = True
 
-        gluOrtho2D (0, width, 0, height)
         if not self.buf:
             glClear(GL_COLOR_BUFFER_BIT)
-
-            glPushMatrix()
-            glLoadIdentity()
-            self.initmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
-            glTranslate(-1.+2.*self.marginl/self.w, -1.+2.*self.marginb/self.h, 0) # go to origin
-            glScaled(self.xscale_data, self.yscale_data, 1) # scale to coordinates
-            self.projmatrix0 = glGetDoublev(GL_PROJECTION_MATRIX)
-            glTranslated(-self.xmin, -self.ymin, 0) # go to (0, 0)
-            self.projmatrix = glGetDoublev(GL_PROJECTION_MATRIX)
-            glPopMatrix()
-
-            glPushMatrix()
-            glLoadIdentity()
-            glLoadMatrixd(self.projmatrix0)
             for d in self.datasets:
                 d.paint()
             for f in self.functions:
                 f.paint()
-            glPopMatrix()
 
             self.paint_axes()
         else:
-            glPushMatrix()
-            glLoadIdentity()
-
             glColor3f(1.0,1.0,0.0)
             glLineStipple (1, 0x4444) # dotted
             if self.ps:
@@ -903,16 +831,23 @@ class Graph(Item, HasSignals):
             else:
                 glDisable(GL_LINE_STIPPLE)
             glDisable(GL_COLOR_LOGIC_OP)
-            glPopMatrix()
 
     
     def reshape(self, width, height):
         self._shape = (width, height)
-        # aspect ratio to keep 
-        ratio = 4./3.
+
+#        # aspect ratio to keep 
+#        ratio = 4./3.
 
         # set width and height (in pixels)
         self.ww, self.hh = self.w, self.h = width, height
+
+        # resolution (in pixels/mm)
+        self.res = self.w/100.
+
+        self.width_mm = self.w / self.res
+        self.height_mm = self.h / self.res
+
 #        if (1.*self.w) / self.h > ratio:
 #            self.ww = ratio*self.h
 #        else:
@@ -922,15 +857,14 @@ class Graph(Item, HasSignals):
 #        self.excessw = width - self.ww
 #        self.w -= self.excessw
 
-        # set margins (in pixels)
-        self.marginb = int(self.h * 0.1)# + self.excessh
-        self.margint = int(self.h * 0.05)
-        self.marginl = int(self.w * 0.15)
-        self.marginr = int(self.w * 0.05)
+        # set margins 
+        self.marginb = self.height_mm * 0.1
+        self.margint = self.height_mm * 0.05
+        self.marginl = self.width_mm * 0.15
+        self.marginr = self.width_mm * 0.05
 
-
-        # resolution (in pixels/mm)
-        self.res = self.w/100.
+        self.plot_width = self.width_mm - self.marginl - self.marginr
+        self.plot_height = self.height_mm - self.margint - self.marginb
 
         # resize the viewport
         glViewport(0, 0, int(self.w), int(self.h))
@@ -942,7 +876,14 @@ class Graph(Item, HasSignals):
         self.xscale_mm = self.xscale_pixel * self.res
         self.yscale_mm = self.yscale_pixel * self.res
 
-        self.set_data_scales()
+        self.reset_matrix()
+
+    def reset_matrix(self):
+        """Reset the matrix at the bottom left corner of the graph with scale in mm"""
+        glLoadIdentity()
+        glTranslate(-1.+2.*self.marginl/self.width_mm, 
+                    -1.+2.*self.marginb/self.height_mm, 0) # go to corner
+        glScaled(2./self.width_mm, 2./self.height_mm, 1) # scale is mm
 
     def rubberband_begin(self, x, y):
         self.buf = True
@@ -958,6 +899,7 @@ class Graph(Item, HasSignals):
     def rubberband_continue(self, x, y):
 #        self.px, self.py = self.sx, self.sy
         self.sx, self.sy = self.mouse_to_ident(x, y)
+        print >>sys.stderr, "mouse", self.mouse_to_real(x, y), self.mouse_to_ident(x, y)
         self.emit('redraw')
 
     def rubberband_end(self, x, y):
@@ -1022,11 +964,20 @@ class Graph(Item, HasSignals):
                 _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
 
                 if button == 3:
-                    xmin, xmax = self.zoomout(self.xmin, self.xmax, _xmin, _xmax)
-                    ymin, ymax = self.zoomout(self.ymin, self.ymax, _ymin, _ymax)
+                    _xmin, _xmax = self.axis_bottom.transform(_xmin), self.axis_bottom.transform(_xmax)
+                    _ymin, _ymax = self.axis_left.transform(_ymin), self.axis_left.transform(_ymax)
+
+                    xmin, xmax = self.zoomout(self.axis_bottom.transform(self.xmin), 
+                                              self.axis_bottom.transform(self.xmax), _xmin, _xmax)
+                    ymin, ymax = self.zoomout(self.axis_left.transform(self.ymin), 
+                                              self.axis_left.transform(self.ymax), _ymin, _ymax)
+
+                    xmin, xmax = self.axis_bottom.invtransform(xmin), self.axis_bottom.invtransform(xmax)
+                    ymin, ymax = self.axis_left.invtransform(ymin), self.axis_left.invtransform(ymax)
                 else:
                     xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
                 self.zoom(xmin, xmax, ymin, ymax)
+                print >>sys.stderr, 'zoom', [xmin, xmax], [ymin, ymax]
 
                 self.make_data_list()
                 self.emit('redraw')
