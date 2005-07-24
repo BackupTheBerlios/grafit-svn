@@ -102,6 +102,9 @@ def render(_numarray sx, _numarray sy,
     cdef double xinterval, yinterval
     cdef double pi
     cdef int sym
+    cdef double si
+
+    si = size/5.
 
     pi = 3.14159265358979
     cdef double circlex[11], circley[11]
@@ -152,11 +155,9 @@ def render(_numarray sx, _numarray sy,
 
     # draw symbols
     glBegin(shape)
-    print "a", l
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
-        print n 
 
         # skip if outside limits
 #        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
@@ -171,21 +172,21 @@ def render(_numarray sx, _numarray sy,
 #            continue
 
         if sym == 1:
-            glVertex3d(x-size/2, y-size/2, 0)
-            glVertex3d(x+size/2, y-size/2, 0)
-            glVertex3d(x+size/2, y+size/2, 0)
-            glVertex3d(x-size/2, y+size/2, 0)
+            glVertex3d(x-si/2, y-si/2, 0)
+            glVertex3d(x+si/2, y-si/2, 0)
+            glVertex3d(x+si/2, y+si/2, 0)
+            glVertex3d(x-si/2, y+si/2, 0)
         elif sym == 2:
-            glVertex3d(x-size/2, y-size/2, 0)
-            glVertex3d(x+size/2, y-size/2, 0)
-            glVertex3d(x, y+size/2, 0)
+            glVertex3d(x-si/2, y-si/2, 0)
+            glVertex3d(x+si/2, y-si/2, 0)
+            glVertex3d(x, y+si/2, 0)
         elif sym == 3:
             glVertex3d(x, y, 0)
         elif sym == 4:
-            glVertex3d(x-size/2, y, 0)
-            glVertex3d(x, y-size/2, 0)
-            glVertex3d(x+size/2, y, 0)
-            glVertex3d(x, y+size/2, 0)
+            glVertex3d(x-si/2, y, 0)
+            glVertex3d(x, y-si/2, 0)
+            glVertex3d(x+si/2, y, 0)
+            glVertex3d(x, y+si/2, 0)
         elif sym == -100:
             for m from 0<=m<10:
                 glVertex3d(x+circlex[m], y+circley[m], 0)

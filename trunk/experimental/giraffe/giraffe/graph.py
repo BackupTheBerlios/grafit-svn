@@ -178,7 +178,7 @@ class DrawWithStyle(HasSignals):
             if self.data.size != 0:
                 glPointSize(self.data.size)
             x, y = self.graph.proj(x, y)
-            render(x, y, self.style.symbol, self.style.symbol_size/5.)
+            render(x, y, self.style.symbol, self.style.symbol_size)
 
     def paint_lines(self, x, y):
         if len(x) == 0:
@@ -262,13 +262,8 @@ class Dataset(DrawWithStyle):
     range = property(get_range, set_range)
 
     def paint(self):
-        x, y = self.xx, self.yy
-#        if self.graph.xtype == 'log':
-#            x = log10(x)
-#        if self.graph.ytype == 'log':
-#            y = log10(y)
-        self.paint_lines(x, y)
-        self.paint_symbols(x, y)
+        self.paint_lines(self.xx, self.yy)
+        self.paint_symbols(self.xx, self.yy)
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
@@ -297,29 +292,21 @@ class Function(DrawWithStyle):
 
     def paint(self):
         if self.graph.xtype == 'log':
-            x = 10**arange(self.graph.xmin, self.graph.xmax, 
-                           (self.graph.xmax-self.graph.xmin)/100)
+            x = 10**arange(log10(self.graph.xmin), log10(self.graph.xmax), 
+                           (log10(self.graph.xmax/self.graph.xmin))/100)
         else:
             x = arange(self.graph.xmin, self.graph.xmax, 
                        (self.graph.xmax-self.graph.xmin)/100)
 
         y = self.func(x)
 
-        if self.graph.xtype == 'log':
-            x = log10(x)
-        if self.graph.ytype == 'log':
-            y = log10(y)
-
         self.paint_lines(x, y)
-
-#    def set_function(self, func):
-#        self._func = func
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
     id = property(get_id, set_id)
 
-    # this is nescessary! see graph.remove
+    # this is necessary! see graph.remove
     def __eq__(self, other):
         return self.id == other.id
 
@@ -340,7 +327,6 @@ class Grid(object):
             glBegin(GL_LINES)
             for x in self.plot.axis_bottom.tics(self.plot.xmin, self.plot.xmax)[0]:
                 x, _ = self.plot.proj(x, 0)
-                print >>sys.stderr, x
                 glVertex3d(x, 0.0, 0.0)
                 glVertex3d(x, self.plot.plot_height, 0.0)
             glEnd()
@@ -391,16 +377,19 @@ class Axis(object):
         return data
 
     def paint(self):
-
-#        glColor3d(0.98, 0.97, 0.94) # background color
-#        if self.position == 'bottom':
-#            glRectd(0, 0, self.plot.w, self.plot.marginb)
-#        elif self.position == 'right':
-#            glRectd(self.plot.w, 0, self.plot.w - self.plot.marginr, self.plot.h)
-#        elif self.position == 'top':
-#            glRectd(0, self.plot.h, self.plot.w, self.plot.h - self.plot.margint)
-#        elif self.position == 'left':
-#            glRectd(0, 0, self.plot.marginl, self.plot.h)
+        glColor3d(0.97, 0.95, 0.93) # background color
+        if self.position == 'bottom':
+            glRectd(-self.plot.marginl, -self.plot.marginb, 
+                    self.plot.width_mm-self.plot.marginl, 0)
+        elif self.position == 'right':
+            glRectd(self.plot.plot_width, -self.plot.marginb,
+                    self.plot.width_mm-self.plot.marginl, self.plot.height_mm-self.plot.marginb)
+        elif self.position == 'top':
+            glRectd(-self.plot.marginl, self.plot.height_mm-self.plot.marginb,
+                    self.plot.width_mm-self.plot.marginl, self.plot.plot_height)
+        elif self.position == 'left':
+            glRectd(-self.plot.marginl, self.plot.height_mm-self.plot.marginb,
+                    0, 0)
 
         glColor3d(0.0, 0.0, 0.0) # axis color
 
@@ -422,32 +411,29 @@ class Axis(object):
 
         # Tics
         if self.position == 'bottom':
-
-            glBegin(GL_LINES)
             major, minor = self.tics(self.plot.xmin, self.plot.xmax)
-
+            glBegin(GL_LINES)
             for x in major:
-                x, _ = self.plot.proj(x, 0.)
-                glVertex3d(x, 0.0, 0.0)
-                glVertex3d(x, 2, 0.0)
+                x, _ = self.plot.proj(x, 0)
+                glVertex3d(x, 0, 0)
+                glVertex3d(x, 2, 0)
             for x in minor:
-                x, _ = self.plot.proj(x, 0.)
-                glVertex3d(x, 0.0, 0.0)
-                glVertex3d(x, 1, 0.0)
+                x, _ = self.plot.proj(x, 0)
+                glVertex3d(x, 0, 0)
+                glVertex3d(x, 1, 0)
             glEnd()
 
         elif self.position == 'left':
-            glBegin(GL_LINES)
             major, minor = self.tics(self.plot.ymin, self.plot.ymax)
-
+            glBegin(GL_LINES)
             for y in major:
-                _, y = self.plot.proj(0., y)
-                glVertex3d(0, y-self.plot.ymin, 0.0)
-                glVertex3d(2, y-self.plot.ymin, 0.0)
+                _, y = self.plot.proj(0, y)
+                glVertex3d(0, y, 0)
+                glVertex3d(2, y, 0)
             for y in minor:
-                _, y = self.plot.proj(0., y)
-                glVertex3d(0, y-self.plot.ymin, 0.0)
-                glVertex3d(1, y-self.plot.ymin, 0.0)
+                _, y = self.plot.proj(0, y)
+                glVertex3d(0, y, 0)
+                glVertex3d(1, y, 0)
             glEnd()
 
         self.paint_text()
@@ -459,7 +445,7 @@ class Axis(object):
             for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
                 xm, _ = self.plot.proj(x, 0.)
                 w = self.font.Advance(str(x))
-                glRasterPos2d(xm, -3)
+                glRasterPos2d(xm - (w/2)/self.plot.res, -4)
                 if self.plot.ps:
                     gl2psText(str(x), "Times-Roman", h)
                 else:
@@ -468,7 +454,7 @@ class Axis(object):
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
                 _, ym = self.plot.proj(0., y)
                 w = self.font.Advance(str(y))
-                glRasterPos2d(-2, ym)
+                glRasterPos2d(-w/self.plot.res - 2, ym - (h/2)/self.plot.res)
                 if self.plot.ps:
                     gl2psText(str(y), "TimesRoman", h)
                 else:
@@ -477,7 +463,7 @@ class Axis(object):
     def tics(self, fr, to):
         if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
            (self.position in ['bottom', 'top'] and self.plot.xtype == 'log'):
-                return self.logtics(fr, to)
+            return self.logtics(fr, to)
         else:
             return self.lintics(fr, to)
 
@@ -492,8 +478,8 @@ class Axis(object):
         top = ceil(log10(to))
 
         major = 10**arange(bottom, top+1)
-        minor = []
-        print >>sys.stderr, major, minor
+        minor = array([])
+        major = array([n for n in major if fr<=n<=to])
         return major, minor
 
     def lintics(self, fr, to):
@@ -508,12 +494,14 @@ class Axis(object):
                 first = fr
             else:
                 first = fr + (interval-fr%interval)
+            first -= interval
             rng = arange(first, to, interval)
-            if 3 <= len(rng) <= 8:
+            if 4 <= len(rng) <= 8:
                 minor = []
                 for n in rng:
                     minor.extend(arange(n, n+interval, interval/5))
-
+                rng = array([n for n in rng if fr<=n<=to])
+                minor = array([n for n in minor if fr<=n<=to])
                 return rng, minor
 #
         exponent += 1
@@ -523,13 +511,15 @@ class Axis(object):
                 first = fr
             else:
                 first = fr + (interval-fr%interval)
+            first -= interval
             rng = arange(first, to, interval)
-            if 3 <= len(rng) <= 8:
+            if 4 <= len(rng) <= 8:
 #                print 'from %f to %f:'%(fr, to), rng
                 minor = []
                 for n in rng:
                     minor.extend(arange(n, n+interval, interval/5))
-
+                rng = array([n for n in rng if fr<=n<=to])
+                minor = array([n for n in minor if fr<=n<=to])
                 return rng, minor
         print "cannot tick", fr, to, len(rng)
         return []
@@ -582,7 +572,6 @@ class Graph(Item, HasSignals):
         if location is None:
             self.xmin, self.ymin = 0,0  
             self.ymax, self.xmax = 10, 10
-#        self.autoscale()
         self.newf()
 
     default_name_prefix = 'graph'
@@ -881,8 +870,8 @@ class Graph(Item, HasSignals):
     def reset_matrix(self):
         """Reset the matrix at the bottom left corner of the graph with scale in mm"""
         glLoadIdentity()
-        glTranslate(-1.+2.*self.marginl/self.width_mm, 
-                    -1.+2.*self.marginb/self.height_mm, 0) # go to corner
+        glTranslated(-1.+2.*self.marginl/self.width_mm, 
+                     -1.+2.*self.marginb/self.height_mm, 0) # go to corner
         glScaled(2./self.width_mm, 2./self.height_mm, 1) # scale is mm
 
     def rubberband_begin(self, x, y):
@@ -897,9 +886,7 @@ class Graph(Item, HasSignals):
         return self.buf
 
     def rubberband_continue(self, x, y):
-#        self.px, self.py = self.sx, self.sy
         self.sx, self.sy = self.mouse_to_ident(x, y)
-        print >>sys.stderr, "mouse", self.mouse_to_real(x, y), self.mouse_to_ident(x, y)
         self.emit('redraw')
 
     def rubberband_end(self, x, y):
@@ -977,23 +964,12 @@ class Graph(Item, HasSignals):
                 else:
                     xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
                 self.zoom(xmin, xmax, ymin, ymax)
-                print >>sys.stderr, 'zoom', [xmin, xmax], [ymin, ymax]
 
                 self.make_data_list()
                 self.emit('redraw')
 
         
     def button_motion(self, x, y):
-#        if self.haha:
-#            ex, ey = self.mouse_to_real(x, y)
-#            x = arange(2, 6, 0.01)
-#            params = hn.havriliak_negami.move(10.**ex, 10.**ey, 4, 1, 0.5, 1)
-#            y = log10(hn.havriliak_negami(10.**x, *params))
-#            self.datasets[0].x = x
-#            self.datasets[0].y = y
-#            self.datasets[0].build_display_list()
-#            self.emit('redraw')
-#        elif self.rubberband_active():
         if self.mode == 'zoom':
             self.rubberband_continue(x, y)
         elif self.mode == 'range':
