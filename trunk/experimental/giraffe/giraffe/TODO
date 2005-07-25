@@ -1,5 +1,5 @@
 - make function window scroll
-* logarithmic axes
+- logarithmic axes
 * make arrows work and change color
 * automatic names for functions
 * rename functions
@@ -7,8 +7,6 @@
 * show individual terms
 * save functions
 * move functions for initial values
-
-
 
 * command_from_methods: make __state a dictionary
 * make combine work for dataset-change-style command

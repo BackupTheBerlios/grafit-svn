@@ -74,7 +74,6 @@ class GraphView(gui.Box):
         self.glwidget.connect('initialize-gl', self.graph.init)
         self.glwidget.connect('resize-gl', self.graph.reshape)
         self.glwidget.connect('paint-gl', self.graph.display)
-
         self.glwidget.connect('button-pressed', self.graph.button_press)
         self.glwidget.connect('button-released', self.graph.button_release)
         self.glwidget.connect('mouse-moved', self.graph.button_motion)
@@ -82,18 +81,17 @@ class GraphView(gui.Box):
         self.graph.connect('redraw', self.glwidget.redraw)
 
         self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
-
-
         self.legend.connect('selection-changed', self.on_legend_select)
+
         self.graphdata = GraphDataPanel(self.graph, self, self.panel.right_panel, 
                                         page_label='Data', page_pixmap='worksheet.png')
-        self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, 
-                                       self.panel.right_panel,
-                                       page_label='Func', page_pixmap='function.png')
         self.style = GraphStylePanel(self.graph, self, self.panel.right_panel, 
                                      page_label='Style', page_pixmap='style.png')
         self.axes = GraphAxesPanel(self.graph, self, self.panel.right_panel, 
                                    page_label='Axes', page_pixmap='axes.png')
+        self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, 
+                                       self.panel.right_panel,
+                                       page_label='Fit', page_pixmap='function.png')
 
     def on_legend_select(self):
         self.style.on_legend_selection()
@@ -114,6 +112,7 @@ class GraphView(gui.Box):
 
         self.parent.delete(self)
 
+
 class GraphAxesPanel(gui.Box):
     def __init__(self, graph, view, parent, **place):
         gui.Box.__init__(self, parent, "vertical", **place)
@@ -129,9 +128,11 @@ class GraphAxesPanel(gui.Box):
         gui.Label(grid, 'To', pos=(2,0))
         x_to = gui.Text(grid, pos=(2,1))
         gui.Label(grid, 'Type', pos=(3,0))
-        x_type = gui.Choice(grid, pos=(3,1))
+        x_type = self.x_type = gui.Choice(grid, pos=(3,1))
         x_type.append('Linear')
         x_type.append('Logarithmic')
+        x_type.value = ['linear', 'log'].index(self.graph.xtype)
+        x_type.connect('select', lambda value: self.on_set_xtype(value), True)
 
         yframe = gui.Frame(self, 'vertical', title='Y axis', stretch=0.)
         grid = gui.Grid(yframe, 4, 2, expand=False)
@@ -143,13 +144,22 @@ class GraphAxesPanel(gui.Box):
         gui.Label(grid, 'To', pos=(2,0))
         y_to = gui.Text(grid, pos=(2,1))
         gui.Label(grid, 'Type', pos=(3,0))
-        y_type = gui.Choice(grid, pos=(3,1))
+        y_type = self.y_type = gui.Choice(grid, pos=(3,1))
         y_type.append('Linear')
         y_type.append('Logarithmic')
+        y_type.value = ['linear', 'log'].index(self.graph.ytype)
+        y_type.connect('select', lambda value: self.on_set_ytype(value), True)
 
         for w in [x_title, x_from, x_to, x_type, y_title, y_from, y_to, y_type]:
             w.min_size = (10, w.min_size[1])
         
+    def on_set_xtype(self, value):
+        self.graph.xtype = ['linear', 'log'][value]
+        self.x_type.value = ['linear', 'log'].index(self.graph.xtype)
+
+    def on_set_ytype(self, value):
+        self.graph.ytype = ['linear', 'log'][value]
+        self.y_type.value = ['linear', 'log'].index(self.graph.xtype)
 
 ###############################################################################
 # style panel                                                                  #

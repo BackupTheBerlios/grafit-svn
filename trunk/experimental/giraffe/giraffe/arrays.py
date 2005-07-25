@@ -4,6 +4,8 @@ import metakit
 from numarray import *
 from numarray.ieeespecial import nan, inf
 
+Error.setMode(all='ignore')
+
 class VarOperation(object):
     def __init__(self, oper):
         self.oper = oper

@@ -124,8 +124,8 @@ class Widget(HasSignals):
         self._widget.Show(True)
 
     def hide(self):
-        pass        
-#        self._widget.Hide()
+#        pass        
+        self._widget.Hide()
 
     def place(self, **kwds):
         return self, kwds

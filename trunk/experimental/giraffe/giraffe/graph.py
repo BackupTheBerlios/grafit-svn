@@ -437,22 +437,24 @@ class Axis(object):
         self.font.FaceSize(h)
         if self.position == 'bottom':
             for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
+                st = '%g'%x
                 xm, _ = self.plot.proj(x, 0.)
-                w = self.font.Advance(str(x))
+                w = self.font.Advance(st)
                 glRasterPos2d(xm - (w/2)/self.plot.res, -4)
                 if self.plot.ps:
-                    gl2psText(str(x), "Times-Roman", h)
+                    gl2psText(st, "Times-Roman", h)
                 else:
-                    self.font.Render(str(x))
+                    self.font.Render(st)
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
+                st = '%g'%y
                 _, ym = self.plot.proj(0., y)
-                w = self.font.Advance(str(y))
+                w = self.font.Advance(st)
                 glRasterPos2d(-w/self.plot.res - 2, ym - (h/2)/self.plot.res)
                 if self.plot.ps:
-                    gl2psText(str(y), "TimesRoman", h)
+                    gl2psText(st, "TimesRoman", h)
                 else:
-                    self.font.Render(str(y))
+                    self.font.Render(st)
 
     def tics(self, fr, to):
         if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
@@ -568,6 +570,11 @@ class Graph(Item, HasSignals):
             self.ymax, self.xmax = 10, 10
         self.newf()
 
+        if self.xtype == '':
+            self.xtype = 'linear'
+        if self.ytype == '':
+            self.ytype = 'linear'
+
     default_name_prefix = 'graph'
 
     def get_xmin(self): 
@@ -592,6 +599,8 @@ class Graph(Item, HasSignals):
     ymax = property(get_ymax, set_ymax)
 
     def set_xtype(self, tp):
+        if tp == 'log' and (self.xmin <= 0 or self.xmax <= 0):
+            return
         self._xtype = tp
         self.emit('redraw')
     def get_xtype(self):
@@ -599,6 +608,8 @@ class Graph(Item, HasSignals):
     xtype = property(get_xtype, set_xtype)
 
     def set_ytype(self, tp):
+        if tp == 'log' and (self.ymin <= 0 or self.ymax <= 0):
+            return
         self._ytype = tp
         self.emit('redraw')
     def get_ytype(self):
