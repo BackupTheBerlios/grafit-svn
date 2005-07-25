@@ -183,7 +183,6 @@ class DrawWithStyle(HasSignals):
     def paint_lines(self, x, y):
         if len(x) == 0:
             return
-#        res, xmin, xmax, ymin, ymax, width, height = self.paintdata
         glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                   self.style.color[2]/256., 1.)
 
@@ -217,11 +216,6 @@ class DrawWithStyle(HasSignals):
             glDisable(GL_VERTEX_ARRAY)
 
         glDisable(GL_LINE_STIPPLE)
-
-    def build_display_list(self, res, xmin, xmax, ymin, ymax, width, height):
-        self.paintdata = (res, xmin, xmax, ymin, ymax, width, height)
-
-
 
 class Dataset(DrawWithStyle):
     def __init__(self, graph, ind):
@@ -683,8 +677,6 @@ class Graph(Item, HasSignals):
     remove = command_from_methods('graph_remove_dataset', remove, undo_remove)
 
     def on_dataset_modified(self, d=None):
-        if d is not None:
-            d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
         self.emit('redraw')
 
     def paint_axes(self):
@@ -693,17 +685,6 @@ class Graph(Item, HasSignals):
 
         self.grid_h.paint()
         self.grid_v.paint()
-
-    def make_data_list(self):
-        t = time.time()
-
-        for d in self.datasets:
-            d.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
-
-        for f in self.functions:
-            f.build_display_list(self.res, self.xmin, self.xmax, self.ymin, self.ymax, self.w, self.h)
-
-#        print (time.time()-t), "seconds"
 
     def proj(self, x, y):
         x, xmin, xmax = map(self.axis_bottom.transform, (x, self.xmin, self.xmax))
@@ -769,17 +750,11 @@ class Graph(Item, HasSignals):
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
 
-        self.dl = False
-
     def display(self, width=-1, height=-1):
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
             self.last_width, self.last_height = width, height
-
-        if not self.dl:
-            self.make_data_list()
-            self.dl = True
 
         if not self.buf:
             glClear(GL_COLOR_BUFFER_BIT)
@@ -939,7 +914,6 @@ class Graph(Item, HasSignals):
         if self.mode == 'zoom':
             if button == 2:
                 self.autoscale()
-                self.make_data_list()
                 self.emit('redraw')
             elif button == 1 or button == 3:
                 zix, ziy, zfx, zfy = self.rubberband_end(x, y)
@@ -965,7 +939,6 @@ class Graph(Item, HasSignals):
                     xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
                 self.zoom(xmin, xmax, ymin, ymax)
 
-                self.make_data_list()
                 self.emit('redraw')
 
         

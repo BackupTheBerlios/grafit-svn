@@ -121,18 +121,34 @@ class GraphAxesPanel(gui.Box):
 
         xframe = gui.Frame(self, 'vertical', title='X axis', stretch=0.)
         grid = gui.Grid(xframe, 4, 2, expand=False)
+        grid.layout.AddGrowableCol(1)
         gui.Label(grid, 'Title', pos=(0,0))
-        gui.Text(grid, pos=(0,1))
+        x_title = gui.Text(grid, pos=(0,1))
         gui.Label(grid, 'From', pos=(1,0))
-        gui.Text(grid, pos=(1,1))
+        x_from = gui.Text(grid, pos=(1,1))
         gui.Label(grid, 'To', pos=(2,0))
-        gui.Text(grid, pos=(2,1))
+        x_to = gui.Text(grid, pos=(2,1))
         gui.Label(grid, 'Type', pos=(3,0))
-        t = gui.Choice(grid, pos=(3,1))
-        t.append('Linear')
-        t.append('Logarithmic')
+        x_type = gui.Choice(grid, pos=(3,1))
+        x_type.append('Linear')
+        x_type.append('Logarithmic')
 
+        yframe = gui.Frame(self, 'vertical', title='Y axis', stretch=0.)
+        grid = gui.Grid(yframe, 4, 2, expand=False)
+        grid.layout.AddGrowableCol(1)
+        gui.Label(grid, 'Title', pos=(0,0))
+        y_title = gui.Text(grid, pos=(0,1))
+        gui.Label(grid, 'From', pos=(1,0))
+        y_from = gui.Text(grid, pos=(1,1))
+        gui.Label(grid, 'To', pos=(2,0))
+        y_to = gui.Text(grid, pos=(2,1))
+        gui.Label(grid, 'Type', pos=(3,0))
+        y_type = gui.Choice(grid, pos=(3,1))
+        y_type.append('Linear')
+        y_type.append('Logarithmic')
 
+        for w in [x_title, x_from, x_to, x_type, y_title, y_from, y_to, y_type]:
+            w.min_size = (10, w.min_size[1])
         
 
 ###############################################################################
@@ -353,12 +369,12 @@ class GraphDataPanel(gui.Box):
         self.folder = None
 
         self.toolbar = gui.Toolbar(self, stretch=0)
+        gui.Label(self, 'Worksheet', stretch=0)
         self.toolbar.append(gui.Action('Add', 'Add datasets to the graph', 
                                        self.on_add, 'add.png'))
         self.toolbar.append(gui.Action('Remove', 'Remove datasets from the graph', 
                                        self.on_remove, 'remove.png'))
 
-        gui.Label(self, 'Worksheet', stretch=0)
         self.worksheet_list = gui.List(self, editable=False, 
                                        model=WorksheetListModel(self.project.top))
 #        self.worksheet_list.connect('item-activated', self.on_wslist_activated)
@@ -450,13 +466,26 @@ class GraphFunctionsPanel(gui.Box):
     def on_add_term(self, term):
         box = gui.Box(self.box, 'vertical', expand=True, stretch=0)
         bpx = gui.Box(box, 'horizontal', expand=True, stretch=0)
-        gui.Label(bpx, term.name)
         t = gui.Toolbar(bpx, expand=False, stretch=0)
+        term._butt = gui.Button(t, term.name, toggle=True)
+        term._butt.connect('toggled', lambda on: self.on_toggled(term, on), True)
+#        t.append(gui.Action(term.name, term.name, lambda: self.on_close(term), None))
         t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check'))
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
 
         term._box = box
         self.create_parambox(term)
+        if sum(t._butt.state for t in self.function.terms) == 0:
+            self.function.terms[0]._butt.state = True
+
+    def on_toggled(self, term, on):
+        if sum(t._butt.state for t in self.function.terms) == 0:
+            term._butt.state = True
+        else:
+            for t in self.function.terms:
+                t._butt.state = False
+            term._butt.state = True
+        print >>sys.stderr, term
 
     def create_parambox(self, term):
         parambox = gui.Grid(term._box, len(term.parameters), 3, expand=True)
@@ -491,12 +520,14 @@ class GraphFunctionsPanel(gui.Box):
     def on_remove_term(self, term):
         term._box._widget.Close()
         term._box._widget.Destroy()
-
+        
     def on_function_activated(self, f):
         self.function.add(f.name, 'foo')
 
     def on_close(self, f):
         self.function.remove(self.function.terms.index(f))
+        if len(self.function.terms) != 0 and sum(t._butt.state for t in self.function.terms) == 0:
+            self.function.terms[0]._butt.state = True
 
     def on_use(self, f, isit):
         if isit:

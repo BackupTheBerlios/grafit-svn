@@ -161,9 +161,11 @@ class ActionListModel(HasSignals):
     def get_image(self, row): return None
     def __len__(self): return len(self.actionlist.commands)
 
-class ActionList(List):
+class ActionList(Box):
     def __init__(self, actionlist, parent, **place):
-        List.__init__(self, parent, model=ActionListModel(actionlist), **place)
+        Box.__init__(self, parent, 'vertical', **place)
+        self.list = List(self, model=ActionListModel(actionlist), stretch=1.)
+        self.label = Label(self, 'Action', stretch=0.)
 
 class FolderListData(HasSignals):
     def __init__(self, folder):

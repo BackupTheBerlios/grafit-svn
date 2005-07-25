@@ -522,13 +522,28 @@ class Progressbar(Widget):
     range = property(get_range, set_range)
 
 class Button(Widget):
-    def __init__(self, parent, text, **kwds):
-        self._widget = wx.Button(parent._widget, -1, text)
+    def __init__(self, parent, text, toggle=False, **kwds):
+        if toggle:
+            self._widget = wx.ToggleButton(parent._widget, -1, text)
+            self._widget.Bind(wx.EVT_TOGGLEBUTTON, self.on_toggled)
+        else:
+            self._widget = wx.Button(parent._widget, -1, text)
+            self._widget.Bind(wx.EVT_BUTTON, self.on_clicked)
+
         Widget.__init__(self, parent, **kwds)
-        self._widget.Bind(wx.EVT_BUTTON, self.on_clicked)
 
     def on_clicked(self, evt):
         self.emit('clicked')
+
+    def on_toggled(self, evt):
+        self.emit('toggled', evt.IsChecked())
+
+    def get_state(self):
+        return self._widget.GetValue()
+    def set_state(self, state):
+        self._widget.SetValue(state)
+    state = property(get_state, set_state)
+
 
 class ListModel(HasSignals):
     def __init__(self):
@@ -1169,7 +1184,6 @@ class Toolbar(Widget):
         self.tools = {}
 
     def on_tool(self, event):
-        
         action = self.tools[event.GetId()]
         if action.type == 'check':
             action(event.IsChecked())
@@ -1180,7 +1194,10 @@ class Toolbar(Widget):
         if action is None:
             self._widget.AddSeparator()
         else:
-            bitmap = wx.Image('/home/daniel/giraffe/data/images/'+action.pixmap).ConvertToBitmap()
+            if action.pixmap is not None:
+                bitmap = wx.Image('/home/daniel/giraffe/data/images/'+action.pixmap).ConvertToBitmap()
+            else:
+                bitmap = None
             id = wx.NewId()
             if action.type == 'check':
                 self._widget.AddCheckTool(id, bitmap, bitmap, action.name, action.desc)
@@ -1189,6 +1206,10 @@ class Toolbar(Widget):
             else:
                 self._widget.AddSimpleTool(id, bitmap, action.name, action.desc)
             self.tools[id] = action
+
+    def _add(self, child, **place):
+        self._widget.AddControl(child._widget)
+ 
 
 class Menubar(Widget):
     def __init__(self, parent, **place):
@@ -1567,7 +1588,7 @@ class _xGrid(wx.grid.Grid):
         pass
 
 
-class Action(object):
+class Action(HasSignals):
     def __init__(self, name, desc, call, pixmap=None, accel=None, type='simple'):
         self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
         self.type = type

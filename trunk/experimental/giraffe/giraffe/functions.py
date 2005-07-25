@@ -294,7 +294,7 @@ class FunctionsWindow(gui.Window):
 
     def on_new(self):
         num = 0
-        while 'function%d'%num in registry:
+        while 'function%d.function'%num in (f.filename.split('/')[-1] for f in registry):
             print >>sys.stderr, num
             num += 1
         self.function = Function('function%d'%num, [], 'y=f(x)', '')
