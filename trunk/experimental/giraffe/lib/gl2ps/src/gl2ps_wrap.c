@@ -4600,8 +4600,8 @@ static PyObject *_wrap_gl2psBeginPage(PyObject *self, PyObject *args) {
     if (PyErr_Occurred()) SWIG_fail;
     arg8 = (int)SWIG_As_int(obj7); 
     if (PyErr_Occurred()) SWIG_fail;
-//    if ((SWIG_ConvertPtr(obj8,(void **)(&arg9),SWIGTYPE_p_GL2PSrgba,
- //   SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj8,(void **)(&arg9),SWIGTYPE_p_GL2PSrgba,
+    SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     arg10 = (int)SWIG_As_int(obj9); 
     if (PyErr_Occurred()) SWIG_fail;
     arg11 = (int)SWIG_As_int(obj10); 
@@ -4618,7 +4618,7 @@ static PyObject *_wrap_gl2psBeginPage(PyObject *self, PyObject *args) {
         arg14 = PyFile_AsFile(obj13);
     }
     if (!SWIG_AsCharPtr(obj14, (char**)&arg15)) SWIG_fail;
-    result = (int)gl2psBeginPage((char const *)arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,NULL,arg10,arg11,arg12,arg13,arg14,(char const *)arg15);
+    result = (int)gl2psBeginPage((char const *)arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14,(char const *)arg15);
     
     resultobj = SWIG_From_int((int)result);
     return resultobj;
