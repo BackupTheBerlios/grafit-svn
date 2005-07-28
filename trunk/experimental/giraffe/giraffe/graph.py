@@ -273,10 +273,22 @@ class Dataset(DrawWithStyle):
     def __str__(self):
         return self.x.worksheet.name+':'+self.y.name+'('+self.x.name+')'
 
+class Nop:
+    pass
+
 class Function(DrawWithStyle):
     def __init__(self, graph, ind):
         self.graph, self.ind = graph, ind
-        self.data = self.graph.data.functions[ind]
+        self.data =  Nop()
+        self.data.color = '0'
+        self.data.size = '0'
+        self.data.symbol = ''
+        self.data.color = 0
+        self.data.linestyle = ''
+        self.data.linetype = ''
+        self.data.linewidth = ''
+#        self.data['color']
+#self.graph.data.functions[ind]
 
         DrawWithStyle.__init__(self, graph, self.data)
         self.style.line_style = 'solid'
@@ -285,15 +297,15 @@ class Function(DrawWithStyle):
         self.func = FunctionSum()
 
     def paint(self):
+        npoints = 100
         if self.graph.xtype == 'log':
             x = 10**arange(log10(self.graph.xmin), log10(self.graph.xmax), 
-                           (log10(self.graph.xmax/self.graph.xmin))/100)
+                           (log10(self.graph.xmax/self.graph.xmin))/npoints)
         else:
             x = arange(self.graph.xmin, self.graph.xmax, 
-                       (self.graph.xmax-self.graph.xmin)/100)
+                       (self.graph.xmax-self.graph.xmin)/npoints)
 
         y = self.func(x)
-
         self.paint_lines(x, y)
 
     def set_id(self, id): self.data.id = id
@@ -998,7 +1010,8 @@ graphs [
         size:I,
         linetype:S,
         linestyle:S,
-        linewidth:I
+        linewidth:I,
+        visible:I
     ]
 ]
 """
