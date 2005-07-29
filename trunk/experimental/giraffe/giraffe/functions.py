@@ -225,7 +225,10 @@ class MFunctionSum(FunctionSum):
         self.data = data
         for f in self.data:
             print >>sys.stderr, f.func, f.name
-            self.add(f.func, f.name)
+            if f.func in registry:
+                self.add(f.func, f.name)
+            else:
+                print >>sys.stderr, "function '%s' not found." %f.func
         self.connect('add-term', self.on_add_term)
         self.connect('remove-term', self.on_remove_term)
 
@@ -235,7 +238,8 @@ class MFunctionSum(FunctionSum):
         print >>sys.stderr, 'add', term
 
     def on_remove_term(self, term):
-        self.data.remove(id=term._id)
+        ind = self.data.find(id=term._id)
+        self.data.delete(ind)
         print >>sys.stderr, 'remove', term
     
 class Function(HasSignals):

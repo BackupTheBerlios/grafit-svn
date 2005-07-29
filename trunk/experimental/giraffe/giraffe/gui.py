@@ -1,3 +1,4 @@
+# mingui
 import sys
 import time
 import weakref
@@ -531,6 +532,13 @@ class Button(Widget):
             self._widget.Bind(wx.EVT_BUTTON, self.on_clicked)
 
         Widget.__init__(self, parent, **kwds)
+
+#        self._widget.Bind(wx.EVT_LEFT_DCLICK, self.OnMouse)
+#
+#    def OnMouse(self, evt):
+#        print >>sys.stderr, "click"
+#        tx = wx.TextCtrl(self.parent._widget, -1)
+#        evt.Skip()
 
     def on_clicked(self, evt):
         self.emit('clicked')

@@ -455,7 +455,6 @@ class GraphFunctionsPanel(gui.Box):
                 txt.text = str(t.parameters[i])
         self.function.emit('modified')
 
-
     def clear(self):
         pass
 
@@ -476,10 +475,9 @@ class GraphFunctionsPanel(gui.Box):
     def on_add_term(self, term):
         box = gui.Box(self.box, 'vertical', expand=True, stretch=0)
         bpx = gui.Box(box, 'horizontal', expand=True, stretch=0)
-        t = gui.Toolbar(bpx, expand=False, stretch=0)
-        term._butt = gui.Button(t, term.name, toggle=True)
+        term._butt = gui.Button(bpx, term.name, toggle=True)
         term._butt.connect('toggled', lambda on: self.on_toggled(term, on), True)
-#        t.append(gui.Action(term.name, term.name, lambda: self.on_close(term), None))
+        t = gui.Toolbar(bpx, expand=False, stretch=0)
         t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check'))
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
 
