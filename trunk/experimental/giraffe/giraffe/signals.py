@@ -1,5 +1,7 @@
 """
-Signal / Slot framework
+minsig
+------
+Minimalist signal / slot framework for Python
 """
 
 import sys

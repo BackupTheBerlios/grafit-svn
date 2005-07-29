@@ -11,9 +11,9 @@ from OpenGL.GLU import *
 from giraffe.signals import HasSignals
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 from giraffe.commands import command_from_methods
-from giraffe.functions import FunctionSum
+from giraffe.functions import MFunctionSum
 
-import ftgl
+from ftgl import FTGLPixmapFont
 from gl2ps import *
 
 from giraffe.graph_render import render
@@ -277,8 +277,8 @@ class Nop:
     pass
 
 class Function(DrawWithStyle):
-    def __init__(self, graph, ind):
-        self.graph, self.ind = graph, ind
+    def __init__(self, graph):
+        self.graph = graph
         self.data =  Nop()
         self.data.color = '0'
         self.data.size = '0'
@@ -294,7 +294,7 @@ class Function(DrawWithStyle):
         self.style.line_style = 'solid'
         self.style.line_type = 'straight'
 
-        self.func = FunctionSum()
+        self.func = MFunctionSum(self.graph.data.functions)
 
     def paint(self):
         npoints = 100
@@ -360,7 +360,7 @@ class Grid(object):
                 gl2psLineWidth(0.1)
 
 FONTFILE = '/home/daniel/giraffe/data/fonts/bitstream-vera/VeraSe.ttf'
-AXISFONT = ftgl.FTGLPixmapFont(FONTFILE)
+AXISFONT = FTGLPixmapFont(FONTFILE)
 
 class Axis(object):
     def __init__(self, position, plot):
@@ -383,7 +383,7 @@ class Axis(object):
         return data
 
     def paint(self):
-        glColor3d(0.97, 0.95, 0.93) # background color
+        glColor3d(0.87, 0.85, 0.83) # background color
         if self.position == 'bottom':
             glRectd(-self.plot.marginl, -self.plot.marginb, 
                     self.plot.width_mm-self.plot.marginl, 0)
@@ -556,13 +556,13 @@ class Graph(Item, HasSignals):
                     d.connect('modified', self.on_dataset_modified)
 
         self.functions = []
-        if location is not None:
-            for i in range(len(self.data.functions)):
-                if not self.data.functions[i].id.startswith('-'):
-                    f = Function(self, i)
-                    self.functions.append(f)
-                    f.connect('modified', self.on_dataset_modified)
-                    f.func.connect('modified', self.on_dataset_modified)
+#        if location is not None:
+#            for i in range(len(self.data.functions)):
+#                if not self.data.functions[i].id.startswith('-'):
+#                    f = Function(self, i)
+#                    self.functions.append(f)
+#                    f.connect('modified', self.on_dataset_modified)
+#                    f.func.connect('modified', self.on_dataset_modified)
 
         self.ps = False
 
@@ -632,8 +632,8 @@ class Graph(Item, HasSignals):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
 
     def newf(self):
-        ind = self.data.functions.append(id=create_id())
-        f = Function(self, ind)
+#        ind = self.data.functions.append(id=create_id())
+        f = Function(self)
         f.connect('modified', self.on_dataset_modified)
         f.func.connect('modified', self.on_dataset_modified)
         self.functions.append(f)
@@ -1005,13 +1005,7 @@ graphs [
         name:S,
         params:S,
         lock:S,
-        symbol:S,
-        color:I,
-        size:I,
-        linetype:S,
-        linestyle:S,
-        linewidth:I,
-        visible:I
+        use:I
     ]
 ]
 """

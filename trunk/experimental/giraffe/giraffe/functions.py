@@ -205,6 +205,39 @@ class FunctionSum(HasSignals):
             raise
             print >>sys.stderr, 'Fit den Vogel (but no problem)'
 
+"""
+    functions [
+        id:S,
+        func:S,
+        name:S,
+        params:S,
+        lock:S,
+        use:I
+    ]
+]
+"""
+
+from giraffe.project import create_id
+
+class MFunctionSum(FunctionSum):
+    def __init__(self, data):
+        FunctionSum.__init__(self)
+        self.data = data
+        for f in self.data:
+            print >>sys.stderr, f.func, f.name
+            self.add(f.func, f.name)
+        self.connect('add-term', self.on_add_term)
+        self.connect('remove-term', self.on_remove_term)
+
+    def on_add_term(self, term):
+        term._id = create_id()
+        self.data.append(id=term._id, func=term.function.name, name=term.name)
+        print >>sys.stderr, 'add', term
+
+    def on_remove_term(self, term):
+        self.data.remove(id=term._id)
+        print >>sys.stderr, 'remove', term
+    
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):
         self._name = name

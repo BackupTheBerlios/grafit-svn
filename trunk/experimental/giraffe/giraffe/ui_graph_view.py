@@ -485,7 +485,7 @@ class GraphFunctionsPanel(gui.Box):
 
         term._box = box
         self.create_parambox(term)
-        if sum(t._butt.state for t in self.function.terms) == 0:
+        if sum((hasattr(t, '_butt') and t._butt.state) for t in self.function.terms) == 0:
             self.function.terms[0]._butt.state = True
 
     def on_toggled(self, term, on):
