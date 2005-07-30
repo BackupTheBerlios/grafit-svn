@@ -430,6 +430,7 @@ def efloat(f):
 class GraphFunctionsPanel(gui.Box):
     def __init__(self, func, graph, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
+        self.graph = graph
         self.toolbar = gui.Toolbar(self, stretch=0)
 
         self.scroll = gui.Scrolled(self)
@@ -442,7 +443,6 @@ class GraphFunctionsPanel(gui.Box):
 
 
         self.set_function(func)
-        self.graph = graph
 
     def do_configure(self):
         pass

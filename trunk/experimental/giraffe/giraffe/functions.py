@@ -143,7 +143,15 @@ class FunctionInstance(HasSignals):
         self.parameters = self.function.move(x, y, *self.parameters)
 
     def __call__(self, arg):
-        return self.callable(arg, *self.parameters)
+        try:
+            return self.callable(arg, *self.parameters)
+        except (ValueError, OverflowError):
+            # If we don't catch these errors here,
+            # odr segfaults on us!
+            if hasattr(arg, '__len__'):
+                return array([nan]*len(arg))
+            else:
+                return nan
 
 
 class FunctionSum(HasSignals):
