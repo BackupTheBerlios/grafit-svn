@@ -13,6 +13,8 @@ from wx.lib.scrolledpanel import ScrolledPanel
 
 from signals import HasSignals
 
+DATADIR='/home/daniel/giraffe/'
+
 # this module absolutely needs documentation!
 
 #class Pixmap(object):
@@ -41,7 +43,7 @@ class MySplashScreen(wx.SplashScreen):
     def __init__(self):
         # This is a recipe to a the screen.
         # Modify the following variables as necessary.
-        aBitmap = wx.Image(name = "../data/images/logo.png").ConvertToBitmap()
+        aBitmap = wx.Image(name = DATADIR+"data/images/logo.png").ConvertToBitmap()
         splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT | wx.NO_BORDER
         splashDuration = 1000 # milliseconds
         splashCallback = None
@@ -417,7 +419,7 @@ class PixmapChoice(Widget):
 
     def append(self, bitmap):
         if isinstance(bitmap, basestring):
-            bitmap = wx.Image('../data/images/'+bitmap).ConvertToBitmap()
+            bitmap = wx.Image(DATADIR+'data/images/'+bitmap).ConvertToBitmap()
         id = self.imagelist.Add(bitmap)
         self.images[id] = bitmap
         self.items.append(id)
@@ -727,7 +729,7 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
         if filename is None:
             return None
         if filename not in self.pixmaps:
-            self.pixmaps[filename] = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
 
     def OnGetItemText(self, item, col):
@@ -901,7 +903,7 @@ class Tree(Widget):
         if filename is None:
             return None
         if filename not in self.pixmaps:
-            self.pixmaps[filename] = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
 
     def append(self, node):
@@ -1031,7 +1033,7 @@ class _xToolPanel(wx.SashLayoutWindow):
         return bmp
 
     def add_page(self, text, pixmap, widget):
-        bimp = wx.Image("../data/images/"+pixmap).ConvertToBitmap()
+        bimp = wx.Image(DATADIR+"data/images/"+pixmap).ConvertToBitmap()
 
         # create an empty bitmap
         dc = wx.MemoryDC()
@@ -1255,7 +1257,7 @@ class Menu(object):
 #            self._menu.Append(id, name, help)
             item = wx.MenuItem(self._menu, id, name, help)
             if action.pixmap is not None:
-                item.SetBitmap(wx.Image('../data/images/'+action.pixmap).ConvertToBitmap())
+                item.SetBitmap(wx.Image(DATADIR+'data/images/'+action.pixmap).ConvertToBitmap())
             self._menu.AppendItem(item)
 
             self.menubar.items[id] = action
@@ -1401,7 +1403,7 @@ class Notebook(Widget):
         if filename is None:
             return None
         if filename not in self.pixmaps:
-            self.pixmaps[filename] = self.imagelist.Add(wx.Image('../data/images/'+filename).ConvertToBitmap())
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
 
     def _add(self, widget, page_label, page_pixmap=None):

@@ -137,6 +137,11 @@ class FunctionInstance(HasSignals):
     def update(self):
         self.emit('modified')
 
+    def move(self, x, y):
+        if not hasattr(self.function, 'move'):
+            return
+        self.parameters = self.function.move(x, y, *self.parameters)
+
     def __call__(self, arg):
         return self.callable(arg, *self.parameters)
 
@@ -274,6 +279,9 @@ class Function(HasSignals):
 
         ns = {}
         exec st in ns
+
+        if 'move' in ns:
+            self.move = ns['move']
         return ns['func']
 
     def save(self):

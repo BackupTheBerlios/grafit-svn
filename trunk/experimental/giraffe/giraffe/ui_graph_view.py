@@ -485,14 +485,17 @@ class GraphFunctionsPanel(gui.Box):
         self.create_parambox(term)
         if sum((hasattr(t, '_butt') and t._butt.state) for t in self.function.terms) == 0:
             self.function.terms[0]._butt.state = True
+            self.graph.selected_function = self.function.terms[0]
 
     def on_toggled(self, term, on):
         if sum(t._butt.state for t in self.function.terms) == 0:
             term._butt.state = True
+            self.graph.selected_function = term
         else:
             for t in self.function.terms:
                 t._butt.state = False
             term._butt.state = True
+            self.graph.selected_function = term
         print >>sys.stderr, term
 
     def create_parambox(self, term):
@@ -536,6 +539,7 @@ class GraphFunctionsPanel(gui.Box):
         self.function.remove(self.function.terms.index(f))
         if len(self.function.terms) != 0 and sum(t._butt.state for t in self.function.terms) == 0:
             self.function.terms[0]._butt.state = True
+            self.graph.selected_function = self.function.terms[0]
 
     def on_use(self, f, isit):
         if isit:

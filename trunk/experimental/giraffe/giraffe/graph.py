@@ -586,6 +586,7 @@ class Graph(Item, HasSignals):
             self.xtype = 'linear'
         if self.ytype == '':
             self.ytype = 'linear'
+        self.selected_function = None
 
     default_name_prefix = 'graph'
 
@@ -931,6 +932,10 @@ class Graph(Item, HasSignals):
                     d.range = (d.range[0], x)
                 elif button == 2:
                     d.range = (-inf, inf)
+        elif self.mode == 'hand':
+            if self.selected_function is not None:
+                self.selected_function.move(*self.mouse_to_real(x, y))
+                self.emit('redraw')
 
      
     def button_release(self, x, y, button):
@@ -969,6 +974,8 @@ class Graph(Item, HasSignals):
         if self.mode == 'zoom':
             self.rubberband_continue(x, y)
         elif self.mode == 'range':
+            self.button_press(x, y)
+        elif self.mode == 'hand':
             self.button_press(x, y)
 
     name = wrap_attribute('name')
