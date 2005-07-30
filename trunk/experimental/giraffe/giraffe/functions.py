@@ -184,7 +184,7 @@ class FunctionSum(HasSignals):
             if len(args) == 3:
                 niter, actred, wss = args
                 message  = 'Fitting: Iteration %d, xsqr=%g, reduced by %g' % (niter, wss, actred)
-                print >>sys.stderr, message
+                self.emit('status-message', message)
                 return
             else:
                 params, x = args
@@ -199,21 +199,12 @@ class FunctionSum(HasSignals):
         model = odr.Model(__fitfunction)
         data = odr.RealData(x, y)
         initial = flatten(t.parameters for t in self.terms)
-        print >>sys.stderr, 'initial: ', initial
 
         odrobj = odr.ODR(data, model, beta0=initial, partol=1e-100, sstol=1e-100, maxit=maxiter)
         odrobj.set_job (fit_type=2)
         odrobj.set_iprint (iter=3, iter_step=1)
         try:
             output = odrobj.run()
-            print >>sys.stderr, 'done'
-            print 'final:', output.beta
-            # Show results
-            
-#            flat = self.params_func_to_flat()[0]
-#            project.undolist.append(ChangeParameterValue(self, flat, prev))
-#            self.graph.update_function_curves ()
-#            self.params_func_to_ui ()
         except:
             raise
             print >>sys.stderr, 'Fit den Vogel (but no problem)'
@@ -240,6 +231,7 @@ class MFunctionSum(FunctionSum):
             print >>sys.stderr, f.func, f.name
             if f.func in registry:
                 self.add(f.func, f.name)
+                self.terms[-1]._id = f.id
             else:
                 print >>sys.stderr, "function '%s' not found." %f.func
         self.connect('add-term', self.on_add_term)

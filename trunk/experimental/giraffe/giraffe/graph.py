@@ -242,8 +242,8 @@ class Dataset(DrawWithStyle):
                                                          self.worksheet.name, self.x.name, self.y.name)
     def recalculate(self):
         ind = [i for i in range(len(self.x)) if self.x[i]>= self.xfrom and self.x[i]<=self.xto]
-        self.xx = asarray(self.x[ind][:])
-        self.yy = asarray(self.y[ind][:])
+        self.xx = asarray(self.x[ind])
+        self.yy = asarray(self.y[ind])
 
     def set_range(self, range):
         self.xfrom, self.xto = range
@@ -305,6 +305,12 @@ class Function(DrawWithStyle):
             x = arange(self.graph.xmin, self.graph.xmax, 
                        (self.graph.xmax-self.graph.xmin)/npoints)
 
+        self.style._color = (0,0,0)
+        for term in self.func.terms:
+            y = term(x)
+            self.paint_lines(x, y)
+
+        self.style._color = (0, 0, 155)
         y = self.func(x)
         self.paint_lines(x, y)
 
@@ -936,6 +942,8 @@ class Graph(Item, HasSignals):
             if self.selected_function is not None:
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
+        elif self.mode == 's-reader':
+            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
 
      
     def button_release(self, x, y, button):
@@ -973,9 +981,7 @@ class Graph(Item, HasSignals):
     def button_motion(self, x, y):
         if self.mode == 'zoom':
             self.rubberband_continue(x, y)
-        elif self.mode == 'range':
-            self.button_press(x, y)
-        elif self.mode == 'hand':
+        elif self.mode in ['range', 'hand', 's-reader', 'd-reader']:
             self.button_press(x, y)
 
     name = wrap_attribute('name')

@@ -1,12 +1,25 @@
 - make function window scroll
 - logarithmic axes
+- show individual terms
+- save functions
+- move functions for initial values
 * make arrows work and change color
 * automatic names for functions
 * rename functions
 * filenames for functions
-* show individual terms
-* save functions
-* move functions for initial values
 
 * command_from_methods: make __state a dictionary
 * make combine work for dataset-change-style command
+
+basic features
+--------------
+* data reader
+* screen reader
+
+
+planned features
+----------------
+* error bars
+* fit multiple datasets w/ shared and non-shared parameters
+* filters (like functions, with window)
+* framework for graph tools?

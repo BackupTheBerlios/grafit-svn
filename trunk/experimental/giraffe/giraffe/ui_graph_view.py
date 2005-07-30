@@ -449,7 +449,7 @@ class GraphFunctionsPanel(gui.Box):
 
     def do_fit(self):
         data = self.graph.selected_datasets[0]
-        self.function.fit(data.x, data.y, None, 50)
+        self.function.fit(data.xx, data.yy, None, 50)
         for t in self.function.terms:
             for i, txt in enumerate(t._text):
                 txt.text = str(t.parameters[i])
