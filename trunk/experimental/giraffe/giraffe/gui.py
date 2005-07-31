@@ -1281,8 +1281,14 @@ class Window(Widget):
         self.title = title
 
     title = property(lambda self: self._widget.GetTitle(), lambda self, t: self._widget.SetTitle(t))
+
+    def set_status(self, t):
+        sb = self._widget.GetStatusBar()
+        sb.SetStatusText(t,0 )
+        sb.Update()
+        wx.Yield()
     status = property(lambda self: self._widget.GetStatusBar().GetStatusText(), 
-                      lambda self, t: self._widget.GetStatusBar().SetStatusText(t,0 ))
+                      set_status)
 
     def _add(self, child, **place):
         if isinstance(child, Toolbar):
@@ -1594,7 +1600,6 @@ class _xGrid(wx.grid.Grid):
         if not self.MoveCursorDown(True): 
             # add a new row
             self.GetTable().worksheet[self.GetGridCursorCol()][self.GetTable().GetNumberRows()] = nan
-
 
     def OnRightDown(self, event):
         pass

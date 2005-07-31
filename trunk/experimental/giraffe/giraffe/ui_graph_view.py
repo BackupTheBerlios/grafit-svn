@@ -462,7 +462,6 @@ class GraphFunctionsPanel(gui.Box):
         f = FunctionsWindow()
         f.connect('function-activated', self.on_function_activated)
         f.show()
-        print >>sys.stderr, 'done'
 
     def set_function(self, f):
         self.function = f
@@ -496,7 +495,6 @@ class GraphFunctionsPanel(gui.Box):
                 t._butt.state = False
             term._butt.state = True
             self.graph.selected_function = term
-        print >>sys.stderr, term
 
     def create_parambox(self, term):
         parambox = gui.Grid(term._box, len(term.parameters), 3, expand=True)
@@ -511,7 +509,8 @@ class GraphFunctionsPanel(gui.Box):
             term._text.append(text)
             gui.Checkbox(parambox, pos=(n, 2))
         term._parambox = parambox
-        self._widget.Fit()
+
+        self.update_widget()
 
     def on_activate(self, term, n, char=13):
         if char != 13:
@@ -526,11 +525,12 @@ class GraphFunctionsPanel(gui.Box):
         term._parambox._widget.Close()
         term._parambox._widget.Destroy()
         term._parambox = None
-        self._widget.Fit()
+        self.update_widget()
  
     def on_remove_term(self, term):
         term._box._widget.Close()
         term._box._widget.Destroy()
+        self.update_widget()
         
     def on_function_activated(self, f):
         self.function.add(f.name, 'foo')
@@ -547,9 +547,9 @@ class GraphFunctionsPanel(gui.Box):
                 self.create_parambox(f)
         else:
             self.delete_parambox(f)
-        print f, isit
-        print f.function.name
-        print f.function.parameters
-        print f.name
-        print f.parameters
-        print self.function(1)
+        self.update_widget()
+
+    def update_widget(self):
+        s = self.parent._widget.GetSize()
+        self.parent._widget.SetSize((s[0]+1, s[1]))
+        self.parent._widget.SetSize(s)

@@ -183,7 +183,7 @@ class FunctionSum(HasSignals):
         def __fitfunction(*args):
             if len(args) == 3:
                 niter, actred, wss = args
-                message  = 'Fitting: Iteration %d, xsqr=%g, reduced by %g' % (niter, wss, actred)
+                message  = 'Fitting: Iteration %d, xsqr=%g, reduced xsqr=%g' % (niter, wss, actred)
                 self.emit('status-message', message)
                 return
             else:
@@ -228,7 +228,6 @@ class MFunctionSum(FunctionSum):
         FunctionSum.__init__(self)
         self.data = data
         for f in self.data:
-            print >>sys.stderr, f.func, f.name
             if f.func in registry:
                 self.add(f.func, f.name)
                 self.terms[-1]._id = f.id
@@ -240,12 +239,10 @@ class MFunctionSum(FunctionSum):
     def on_add_term(self, term):
         term._id = create_id()
         self.data.append(id=term._id, func=term.function.name, name=term.name)
-        print >>sys.stderr, 'add', term
 
     def on_remove_term(self, term):
         ind = self.data.find(id=term._id)
         self.data.delete(ind)
-        print >>sys.stderr, 'remove', term
     
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):
@@ -340,7 +337,6 @@ class FunctionsWindow(gui.Window):
     def on_new(self):
         num = 0
         while 'function%d.function'%num in (f.filename.split('/')[-1] for f in registry):
-            print >>sys.stderr, num
             num += 1
         self.function = Function('function%d'%num, [], 'y=f(x)', '')
         open('functions/function%d.function'%num, 'wb').write(self.function.tostring())
