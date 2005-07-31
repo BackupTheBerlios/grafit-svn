@@ -216,7 +216,6 @@ class MainWindow(Window):
         self.main.left_panel.open(self.explorer)
 
         global_connect('status-message', self.on_status_message)
-        print giraffe.signals._global_signals
 
         actions = {
             'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
@@ -264,7 +263,6 @@ class MainWindow(Window):
             self.toolbar.append(actions[item])
         if len(sys.argv) > 1:
             self.open_project(Project(sys.argv[1]))
-        print giraffe.signals._global_signals
 
     def on_status_message(self, msg, time=0):
         self.status = msg

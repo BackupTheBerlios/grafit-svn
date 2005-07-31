@@ -44,6 +44,8 @@ class LegendModel(HasSignals):
 #        else:
 #            return self.graph.functions[row-len(self.graph.datasets)]
 
+import wx
+
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
@@ -52,7 +54,15 @@ class GraphView(gui.Box):
         tbbox = gui.Box(self, 'horizontal', stretch=0)
 
         def set_graph_mode(mode):
-            def _set(): self.graph.mode = mode
+            def _set(): 
+                self.graph.mode = mode
+                cur = {'arrow': wx.CURSOR_ARROW,
+                       'hand': wx.CURSOR_HAND,
+                       'zoom': wx.CURSOR_MAGNIFIER,
+                       'range': wx.CURSOR_SIZEWE,
+                       'd-reader': wx.CURSOR_CROSS,
+                       's-reader': wx.CURSOR_CROSS }[mode]
+                self.glwidget._widget.SetCursor(wx.StockCursor(cur))
             return _set
 
         self.toolbar = gui.Toolbar(tbbox, stretch=1)
@@ -450,9 +460,9 @@ class GraphFunctionsPanel(gui.Box):
     def do_fit(self):
         data = self.graph.selected_datasets[0]
         self.function.fit(data.xx, data.yy, None, 50)
-        for t in self.function.terms:
-            for i, txt in enumerate(t._text):
-                txt.text = str(t.parameters[i])
+#        for t in self.function.terms:
+#            for i, txt in enumerate(t._text):
+#                txt.text = str(t.parameters[i])
         self.function.emit('modified')
 
     def clear(self):
@@ -467,24 +477,62 @@ class GraphFunctionsPanel(gui.Box):
         self.function = f
         self.function.connect('add-term', self.on_add_term)
         self.function.connect('remove-term', self.on_remove_term)
+        self.function.connect('modified', self.on_modified_f)
         self.clear()
         for term in self.function:
             self.on_add_term(term)
+
+    def on_modified_f(self):
+        for t in self.function.terms:
+            for i, txt in enumerate(t._text):
+                txt.text = str(t.parameters[i])
 
     def on_add_term(self, term):
         box = gui.Box(self.box, 'vertical', expand=True, stretch=0)
         bpx = gui.Box(box, 'horizontal', expand=True, stretch=0)
         term._butt = gui.Button(bpx, term.name, toggle=True)
         term._butt.connect('toggled', lambda on: self.on_toggled(term, on), True)
+        term._butt.connect('double-clicked', lambda: self.on_btn_doubleclicked(term), True)
         t = gui.Toolbar(bpx, expand=False, stretch=0)
-        t.append(gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check'))
+        term._act = gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check')
+        t.append(term._act)
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
 
         term._box = box
+        term._tx = None
+
         self.create_parambox(term)
         if sum((hasattr(t, '_butt') and t._butt.state) for t in self.function.terms) == 0:
             self.function.terms[0]._butt.state = True
             self.graph.selected_function = self.function.terms[0]
+
+        term._act.state = True
+
+
+    def on_btn_doubleclicked(self, term):
+        if term._tx is None:
+            term._tx = gui.Text(term._butt.parent.parent, align='center')
+
+            term._tx._widget.SetPosition(term._butt._widget.GetPosition())
+            term._tx._widget.SetSize(term._butt._widget.GetSize())
+
+            term._tx.connect('enter', lambda: self.on_done(term), True)
+            term._tx.connect('kill-focus', lambda: self.on_done(term), True)
+            term._tx.min_size = (1,1)
+
+        term._tx.show()
+        term._tx.text = term.name
+        term._tx._widget.SetFocus()
+
+    def on_done(self, term):
+        if term._tx is None:
+            return
+        t = term._tx
+        term._tx = None
+
+        term.name = t.text
+        t._widget.Destroy()
+        term._butt.text = term.name
 
     def on_toggled(self, term, on):
         if sum(t._butt.state for t in self.function.terms) == 0:
@@ -517,8 +565,6 @@ class GraphFunctionsPanel(gui.Box):
             return
         for t in self.function.terms:
             t.parameters = [efloat(txt.text) for txt in t._text]
-            for i, txt in enumerate(t._text):
-                txt.text = str(t.parameters[i])
         self.function.emit('modified')
 
     def delete_parambox(self, term):
@@ -533,7 +579,10 @@ class GraphFunctionsPanel(gui.Box):
         self.update_widget()
         
     def on_function_activated(self, f):
-        self.function.add(f.name, 'foo')
+        n = 0
+        while 'f%d'%n in [t.name for t in self.function.terms]:
+            n+= 1
+        self.function.add(f.name, 'f%d'%n)
 
     def on_close(self, f):
         self.function.remove(self.function.terms.index(f))

@@ -141,6 +141,7 @@ class FunctionInstance(HasSignals):
         if not hasattr(self.function, 'move'):
             return
         self.parameters = self.function.move(x, y, *self.parameters)
+        self.emit('modified')
 
     def __call__(self, arg):
         try:
@@ -161,6 +162,7 @@ class FunctionSum(HasSignals):
     def add(self, func, name):
         self.terms.append(FunctionInstance(registry[func], name))
         self.emit('add-term', self.terms[-1])
+        self.terms[-1].connect('modified', lambda: self.emit('modified'), True)
 
     def remove(self, ind):
         t = self.terms[ind]

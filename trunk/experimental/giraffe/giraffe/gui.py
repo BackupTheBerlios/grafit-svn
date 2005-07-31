@@ -116,6 +116,11 @@ class Widget(HasSignals):
             self.parent = None
         if hasattr(parent, '_add'):
             parent._add(self, **kwds)
+        self._destroyed = False
+
+    def destroy(self):
+        self.destroyed = True
+        self._widget.Destroy()
 
     def show(self, s=True):
         if s:
@@ -292,31 +297,52 @@ class Text(Widget):
     kill-focus
     character(keycode)
     """
-    def __init__(self, parent, multiline=False, **place):
+    def __init__(self, parent, multiline=False, align='default', **place):
         style = 0
+        style |= wx.TE_PROCESS_ENTER
         if multiline:
             style |= wx.TE_MULTILINE 
+        if align != 'default':
+            style |= {'left':wx.TE_LEFT, 'right':wx.TE_RIGHT, 'center':wx.TE_CENTRE}[align]
         self._widget = wx.TextCtrl(parent._widget, -1, style=style)
         Widget.__init__(self, parent, **place)
         self._widget.Bind(wx.EVT_SET_FOCUS, self.evt_set_focus)
         self._widget.Bind(wx.EVT_KILL_FOCUS, self.evt_kill_focus)
         self._widget.Bind(wx.EVT_CHAR, self.evt_char)
+        self._widget.Bind(wx.EVT_TEXT_ENTER, self.evt_enter)
 
     def evt_kill_focus(self, evt):
+        if self._destroyed:
+            return
         self.emit('kill-focus')
-        evt.Skip()
 
     def evt_char(self, evt):
+        if self._destroyed:
+            return
         self.emit('character', evt.GetKeyCode())
         evt.Skip()
 
     def evt_set_focus(self, evt):
+        if self._destroyed:
+            return
         self.emit('set-focus')
         evt.Skip()
 
-    def get_value(self): return self._widget.GetValue()
-    def set_value(self, val): self._widget.SetValue(val)
+    def evt_enter(self, evt):
+        if self._destroyed:
+            return
+        self.emit('enter')
+
+    def get_value(self): 
+        if self._destroyed:
+            return
+        return self._widget.GetValue()
+    def set_value(self, val): 
+        if self._destroyed:
+            return
+        self._widget.SetValue(val)
     text = property(get_value, set_value)
+
     
 class Choice(Widget):
     def __init__(self, parent, **place):
@@ -538,11 +564,7 @@ class Button(Widget):
         self._widget.Bind(wx.EVT_LEFT_DCLICK, self.OnMouse)
 
     def OnMouse(self, evt):
-        print >>sys.stderr, "click"
-        tx = wx.TextCtrl(self.parent._widget, -1)
-        tx.SetPosition(self._widget.GetPosition())
-        tx.SetSize(self._widget.GetSize())
-        evt.Skip()
+        self.emit('double-clicked')
 
     def on_clicked(self, evt):
         self.emit('clicked')
@@ -555,6 +577,8 @@ class Button(Widget):
     def set_state(self, state):
         self._widget.SetValue(state)
     state = property(get_state, set_state)
+
+    text = property(lambda self: self._widget.GetLabel(), lambda self, t: self._widget.SetLabel(t))
 
 
 class ListModel(HasSignals):
@@ -1218,6 +1242,7 @@ class Toolbar(Widget):
             else:
                 self._widget.AddSimpleTool(id, bitmap, action.name, action.desc)
             self.tools[id] = action
+            action.upd.append([self._widget, id])
 
     def _add(self, child, **place):
         self._widget.AddControl(child._widget)
@@ -1609,6 +1634,17 @@ class Action(HasSignals):
     def __init__(self, name, desc, call, pixmap=None, accel=None, type='simple'):
         self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
         self.type = type
+
+        self._state = False
+        self.upd = []
+
+    def get_state(self):
+        return self._state
+    def set_state(self, state):
+        self._state = state
+        for w, id in self.upd:
+            w.ToggleTool(id, state)
+    state = property(get_state, set_state)
 
     def __call__(self, *args, **kwds):
         return self.call(*args, **kwds)
