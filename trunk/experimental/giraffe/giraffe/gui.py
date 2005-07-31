@@ -111,7 +111,7 @@ class Application(Borg):
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
         if parent is not None:
-            self.parent = weakref.proxy(parent)
+            self.parent = parent #weakref.proxy(parent)
         else:
             self.parent = None
         if hasattr(parent, '_add'):
@@ -535,12 +535,14 @@ class Button(Widget):
 
         Widget.__init__(self, parent, **kwds)
 
-#        self._widget.Bind(wx.EVT_LEFT_DCLICK, self.OnMouse)
-#
-#    def OnMouse(self, evt):
-#        print >>sys.stderr, "click"
-#        tx = wx.TextCtrl(self.parent._widget, -1)
-#        evt.Skip()
+        self._widget.Bind(wx.EVT_LEFT_DCLICK, self.OnMouse)
+
+    def OnMouse(self, evt):
+        print >>sys.stderr, "click"
+        tx = wx.TextCtrl(self.parent._widget, -1)
+        tx.SetPosition(self._widget.GetPosition())
+        tx.SetSize(self._widget.GetSize())
+        evt.Skip()
 
     def on_clicked(self, evt):
         self.emit('clicked')
