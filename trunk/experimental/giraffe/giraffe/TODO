@@ -1,11 +1,6 @@
-- make function window scroll
-- logarithmic axes
-- show individual terms
-- save functions
-- move functions for initial values
-- rename functions
-- make arrows work
-- automatic names for functions
+
+
+
 
 * command_from_methods: make __state a dictionary
 * make combine work for dataset-change-style command

@@ -218,6 +218,9 @@ class CommandList(signals.HasSignals):
         self.enabled = True
         self.emit('enabled')
 
+class StopCommand(Exception):
+    pass
+
 
 def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
     """Create a command from a bunch of methods of another object.
@@ -268,8 +271,12 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
 
         CommandFromMethod.__name__ = name
         com = CommandFromMethod()
-        ret = com.do_and_register()
-        return ret
+        try:
+            ret = com.do_and_register()
+            return ret
+        except StopCommand:
+            print >>sys.stderr, "comand stopped"
+            return None
     return replace_init
 
 # global command list

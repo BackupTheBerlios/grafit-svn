@@ -596,7 +596,9 @@ class GraphFunctionsPanel(gui.Box):
                 self.create_parambox(f)
         else:
             self.delete_parambox(f)
+        f.enabled = isit
         self.update_widget()
+        self.function.emit('modified')
 
     def update_widget(self):
         s = self.parent._widget.GetSize()

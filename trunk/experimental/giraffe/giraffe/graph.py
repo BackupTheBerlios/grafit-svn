@@ -307,8 +307,9 @@ class Function(DrawWithStyle):
 
         self.style._color = (0,0,0)
         for term in self.func.terms:
-            y = term(x)
-            self.paint_lines(x, y)
+            if term.enabled:
+                y = term(x)
+                self.paint_lines(x, y)
 
         self.style._color = (0, 0, 155)
         y = self.func(x)
@@ -940,6 +941,7 @@ class Graph(Item, HasSignals):
                     d.range = (-inf, inf)
         elif self.mode == 'hand':
             if self.selected_function is not None:
+                self.selected_function.set_reg(False)
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
         elif self.mode == 's-reader':
@@ -976,14 +978,23 @@ class Graph(Item, HasSignals):
                 self.zoom(xmin, xmax, ymin, ymax)
 
                 self.emit('redraw')
-
+        elif self.mode == 'hand':
+            if self.selected_function is not None:
+                self.selected_function.set_reg(True)
+                self.selected_function.move(*self.mouse_to_real(x, y))
+                self.emit('redraw')
+ 
         
     def button_motion(self, x, y):
         if self.mode == 'zoom':
             self.rubberband_continue(x, y)
-        elif self.mode in ['range', 'hand', 's-reader', 'd-reader']:
+        elif self.mode in ['range', 's-reader', 'd-reader']:
             self.button_press(x, y)
-
+        elif self.mode == 'hand':
+            if self.selected_function is not None:
+                self.selected_function.move(*self.mouse_to_real(x, y))
+                self.emit('redraw')
+ 
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
     _xtype = wrap_attribute('xtype')

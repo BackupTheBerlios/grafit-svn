@@ -6,6 +6,7 @@ import odr
 
 from signals import HasSignals
 from giraffe.arrays import zeros, nan
+from giraffe.commands import command_from_methods, StopCommand
 
 def gen_flatten(s):
     try:
@@ -131,8 +132,11 @@ class FunctionInstance(HasSignals):
     def __init__(self, function, name):
         self.name = name
         self.function = function
-        self.parameters = [1.]*len(function.parameters)
         self.callable = self.function.to_module()
+        self._parameters = [1.]*len(function.parameters)
+        self.reg = True
+        self._old = None
+        self.__old = None
 
     def update(self):
         self.emit('modified')
@@ -154,6 +158,43 @@ class FunctionInstance(HasSignals):
             else:
                 return nan
 
+    def set_reg(self, on):
+        if self.reg == on:
+            return
+        elif on:
+            self._old = self.__old 
+        else:
+            self.__old = self._parameters
+        self.reg = on
+
+    def set_parameters(self, p):
+        print >>sys.stderr, self, self._parameters, p
+        if self._old is not None:
+            old = self._old
+            self._old = None
+        else:
+            old = self._parameters
+        self._parameters = p
+        if not self.reg:
+            raise StopCommand
+        return [old, p]
+    def get_parameters(self):
+        return self._parameters
+
+    def undo_set_parameters(self, state):
+        old, p = state
+        self._parameters = old
+
+    def combine_set_parameters(self, state, other):
+        self.emit('modified')
+#        print state, other
+        print 'attempt to combine', state, other
+        return False
+
+    set_parameters = command_from_methods('function-change-parameters', set_parameters, 
+                                        undo_set_parameters, combine=combine_set_parameters)
+    parameters = property(get_parameters, set_parameters)
+
 
 class FunctionSum(HasSignals):
     def __init__(self):
@@ -163,6 +204,7 @@ class FunctionSum(HasSignals):
         self.terms.append(FunctionInstance(registry[func], name))
         self.emit('add-term', self.terms[-1])
         self.terms[-1].connect('modified', lambda: self.emit('modified'), True)
+        self.terms[-1].enabled = True
 
     def remove(self, ind):
         t = self.terms[ind]
@@ -178,7 +220,8 @@ class FunctionSum(HasSignals):
         except TypeError:
             res = 0.
         for func in self.terms:
-            res += func(arg)
+            if func.enabled:
+                res += func(arg)
         return res
 
     def fit(self, x, y, lock, maxiter):
