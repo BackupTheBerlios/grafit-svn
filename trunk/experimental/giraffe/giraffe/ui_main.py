@@ -152,19 +152,31 @@ class ActionListModel(HasSignals):
         self.actionlist = actionlist
         self.actionlist.connect('added', self.on_modified)
         self.actionlist.connect('removed', self.on_modified)
+        self.actionlist.connect('modified', self.on_modified)
 
-    def on_modified(self, command):
+    def on_modified(self, command=None):
         self.emit('modified')
         
     # list model interface
-    def get(self, row, column): return str(self.actionlist.commands[row])
-    def get_image(self, row): return None
+    def get(self, row, column): 
+        com = self.actionlist.commands[row]
+        if com.done:
+            return str(com)
+        else:
+            return '('+str(com)+')'
+    def get_image(self, row): 
+        com = self.actionlist.commands[row]
+        if com.done:
+            return 'command-done.png'
+        else:
+            return 'command-undone.png'
     def __len__(self): return len(self.actionlist.commands)
 
 class ActionList(Box):
     def __init__(self, actionlist, parent, **place):
         Box.__init__(self, parent, 'vertical', **place)
         self.list = List(self, model=ActionListModel(actionlist), stretch=1.)
+        self.list._widget.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
         self.label = Label(self, 'Action', stretch=0.)
 
 class FolderListData(HasSignals):

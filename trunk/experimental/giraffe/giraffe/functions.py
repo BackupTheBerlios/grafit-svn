@@ -168,7 +168,7 @@ class FunctionInstance(HasSignals):
         self.reg = on
 
     def set_parameters(self, p):
-        print >>sys.stderr, self, self._parameters, p
+#        print >>sys.stderr, self, self._parameters, p
         if self._old is not None:
             old = self._old
             self._old = None
@@ -177,22 +177,30 @@ class FunctionInstance(HasSignals):
         self._parameters = p
         if not self.reg:
             raise StopCommand
+        if old == p:
+            # if the values haven't changed, don't bother
+            raise StopCommand
         return [old, p]
     def get_parameters(self):
         return self._parameters
 
+    def redo_set_parameters(self, state):
+        old, p = state
+        self._parameters = p
+        self.emit('modified')
+
     def undo_set_parameters(self, state):
         old, p = state
         self._parameters = old
+        self.emit('modified')
 
     def combine_set_parameters(self, state, other):
-        self.emit('modified')
 #        print state, other
-        print 'attempt to combine', state, other
+#        print 'attempt to combine', state, other
         return False
 
     set_parameters = command_from_methods('function-change-parameters', set_parameters, 
-                                        undo_set_parameters, combine=combine_set_parameters)
+                                        undo_set_parameters, redo_set_parameters, combine=combine_set_parameters)
     parameters = property(get_parameters, set_parameters)
 
 
@@ -248,11 +256,18 @@ class FunctionSum(HasSignals):
         odrobj = odr.ODR(data, model, beta0=initial, partol=1e-100, sstol=1e-100, maxit=maxiter)
         odrobj.set_job (fit_type=2)
         odrobj.set_iprint (iter=3, iter_step=1)
+        for term in self.terms:
+            term.set_reg(False)
         try:
             output = odrobj.run()
-        except:
-            raise
-            print >>sys.stderr, 'Fit den Vogel (but no problem)'
+        finally:
+            for term in self.terms:
+                term.set_reg(True)
+
+#        except:
+#            raise
+#            print >>sys.stderr, 'Fit den Vogel (but no problem)'
+            
 
 """
     functions [

@@ -1,6 +1,6 @@
 import sys
-print >>sys.stderr, "import graph"
 import time
+print >>sys.stderr, "import graph"
 import string
 
 
@@ -291,8 +291,8 @@ class Function(DrawWithStyle):
 #self.graph.data.functions[ind]
 
         DrawWithStyle.__init__(self, graph, self.data)
-        self.style.line_style = 'solid'
-        self.style.line_type = 'straight'
+        self.style._line_style = 'solid'
+        self.style._line_type = 'straight'
 
         self.func = MFunctionSum(self.graph.data.functions)
 
@@ -788,6 +788,7 @@ class Graph(Item, HasSignals):
             self.last_width, self.last_height = width, height
 
         if not self.buf:
+            t = time.time()
             glClear(GL_COLOR_BUFFER_BIT)
             for d in self.datasets:
                 d.paint()
@@ -795,6 +796,7 @@ class Graph(Item, HasSignals):
                 f.paint()
 
             self.paint_axes()
+            print >>sys.stderr, time.time()-t, "seconds"
         else:
             glColor3f(1.0,1.0,0.0)
             glLineStipple (1, 0x4444) # dotted

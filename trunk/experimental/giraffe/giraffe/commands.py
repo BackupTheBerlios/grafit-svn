@@ -156,6 +156,7 @@ class CommandList(signals.HasSignals):
             finally:
                 if e:
                     self.enable()
+            self.emit('modified')
         else:
             raise NoMoreCommandsError
 
@@ -185,6 +186,7 @@ class CommandList(signals.HasSignals):
             finally:
                 if e:
                     self.enable()
+            self.emit('modified')
         else:
             raise NoMoreCommandsError
 
@@ -275,7 +277,7 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
             ret = com.do_and_register()
             return ret
         except StopCommand:
-            print >>sys.stderr, "comand stopped"
+#            print >>sys.stderr, "comand stopped"
             return None
     return replace_init
 
