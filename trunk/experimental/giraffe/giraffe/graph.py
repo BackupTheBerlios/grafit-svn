@@ -170,14 +170,13 @@ class DrawWithStyle(HasSignals):
         self.emit('modified', self)
 
     def paint_symbols(self, x, y):
-        glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
-                  self.style.color[2]/256., 1.)
-
-        if self.style.symbol != 'none':
+        if self.style.symbol != 'none' and self.style.symbol_size != 0:
+            glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
+                      self.style.color[2]/256., 1.)
             gl2psPointSize(self.data.size)
             if self.data.size != 0:
                 glPointSize(self.data.size)
-            x, y = self.graph.proj(x, y)
+#            x, y = self.graph.proj(x, y)
             render(x, y, self.style.symbol, self.style.symbol_size)
 
     def paint_lines(self, x, y):
@@ -188,7 +187,7 @@ class DrawWithStyle(HasSignals):
 
 #        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
 #        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
-        x, y = self.graph.proj(x, y)
+#        x, y = self.graph.proj(x, y)
         z = zeros(len(x))
 
         N = len(x)
@@ -256,8 +255,9 @@ class Dataset(DrawWithStyle):
     range = property(get_range, set_range)
 
     def paint(self):
-        self.paint_lines(self.xx, self.yy)
-        self.paint_symbols(self.xx, self.yy)
+        xx, yy = self.graph.proj(self.xx, self.yy)
+        self.paint_lines(xx, yy)
+        self.paint_symbols(xx, yy)
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
@@ -309,11 +309,11 @@ class Function(DrawWithStyle):
         for term in self.func.terms:
             if term.enabled:
                 y = term(x)
-                self.paint_lines(x, y)
+                self.paint_lines(*self.graph.proj(x, y))
 
         self.style._color = (0, 0, 155)
         y = self.func(x)
-        self.paint_lines(x, y)
+        self.paint_lines(*self.graph.proj(x, y))
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
