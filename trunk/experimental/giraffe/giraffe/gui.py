@@ -2,6 +2,7 @@
 import sys
 import time
 import weakref
+import os
 
 import wx
 import wx.py
@@ -13,7 +14,9 @@ from wx.lib.scrolledpanel import ScrolledPanel
 
 from signals import HasSignals
 
-DATADIR='/home/daniel/giraffe/'
+#DATADIR='/home/daniel/giraffe/'
+DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
+
 
 # this module absolutely needs documentation!
 
@@ -1231,7 +1234,7 @@ class Toolbar(Widget):
             self._widget.AddSeparator()
         else:
             if action.pixmap is not None:
-                bitmap = wx.Image('/home/daniel/giraffe/data/images/'+action.pixmap).ConvertToBitmap()
+                bitmap = wx.Image(DATADIR+'data/images/'+action.pixmap).ConvertToBitmap()
             else:
                 bitmap = None
             id = wx.NewId()

@@ -366,7 +366,8 @@ class Grid(object):
                 gl2psDisable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.1)
 
-FONTFILE = '/home/daniel/giraffe/data/fonts/bitstream-vera/VeraSe.ttf'
+DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
+FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
 AXISFONT = FTGLPixmapFont(FONTFILE)
 
 class Axis(object):
