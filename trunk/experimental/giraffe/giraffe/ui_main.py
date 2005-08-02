@@ -20,7 +20,7 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
 
 import giraffe.signals
 
-from globals import settings
+from giraffe import settings
 
 
 class WorksheetDragData(object):

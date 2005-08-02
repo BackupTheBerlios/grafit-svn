@@ -8,7 +8,7 @@ import numarray._sort,      numarray._ufuncInt16,     numarray._ufuncUInt64
 import os
 import sys
 
-from globals import DATADIR
+from giraffe import DATADIR
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'lib/')
 
