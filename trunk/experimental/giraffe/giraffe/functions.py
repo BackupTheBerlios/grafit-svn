@@ -357,7 +357,8 @@ class Function(HasSignals):
         st = '\n------\n'.join(st)
         return st
 
-registry = FunctionsRegistry('functions')
+from globals import DATADIR
+registry = FunctionsRegistry(DATADIR+'data/functions')
 
 class FunctionsWindow(gui.Window):
     def __init__(self):

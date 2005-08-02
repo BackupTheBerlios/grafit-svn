@@ -2,7 +2,8 @@ import os
 import sys
 import ConfigParser
 
-DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
+#DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
+from globals import DATADIR
 
 class Settings(object):
     def __init__(self):

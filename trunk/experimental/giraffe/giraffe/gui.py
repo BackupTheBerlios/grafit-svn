@@ -14,8 +14,7 @@ from wx.lib.scrolledpanel import ScrolledPanel
 
 from signals import HasSignals
 
-#DATADIR='/home/daniel/giraffe/'
-DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
+from globals import DATADIR
 
 
 # this module absolutely needs documentation!
@@ -1309,6 +1308,7 @@ class Window(Widget):
 
         Widget.__init__(self, None)
         self.title = title
+        self._widget.Bind(wx.EVT_CLOSE, self.on_close)
 
     title = property(lambda self: self._widget.GetTitle(), lambda self, t: self._widget.SetTitle(t))
 
@@ -1331,6 +1331,9 @@ class Window(Widget):
     def close(self):
         self._widget.Close(True)
 
+    def on_close(self, evt):
+        ret = self.emit('close')
+
 class Shell(Widget):
     def __init__(self, parent, locals, **kwds):
         self._widget = wx.py.shell.Shell(parent._widget, -1, locals=locals)
@@ -1350,7 +1353,7 @@ class Shell(Widget):
 
 class OpenGLWidget(Widget):
     def __init__(self, parent, **place):
-        self._widget = wx.glcanvas.GLCanvas(parent._widget, -1)
+        self._widget = wx.glcanvas.GLCanvas(parent._widget, -1, attribList =[wx.glcanvas.WX_GL_DOUBLEBUFFER])
         Widget.__init__(self, parent, **place)
 
         self.init = False

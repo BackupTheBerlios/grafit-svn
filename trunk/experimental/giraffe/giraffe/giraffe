@@ -8,9 +8,7 @@ import numarray._sort,      numarray._ufuncInt16,     numarray._ufuncUInt64
 import os
 import sys
 
-#DATADIR = os.path.normpath(os.path.dirname(os.path.realpath(os.path.abspath(__file__)))+'/../')+'/'
-DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
-#DATADIR='/home/daniel/giraffe/'
+from globals import DATADIR
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'lib/')
 

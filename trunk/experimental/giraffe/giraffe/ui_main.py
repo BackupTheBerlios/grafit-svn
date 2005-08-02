@@ -291,6 +291,8 @@ class MainWindow(Window):
         if len(sys.argv) > 1:
             self.open_project(Project(sys.argv[1]))
 
+        self.connect('close', self.on_quit)
+
     def on_status_message(self, msg, time=0):
         self.status = msg
 
@@ -334,7 +336,8 @@ class MainWindow(Window):
 
 
     def on_quit(self):
-        self.close()
+        print >>sys.stderr, 'quit'
+        self._widget.Destroy()
 
     def close_project(self):
         for panel in (self.shell, self.explorer):
