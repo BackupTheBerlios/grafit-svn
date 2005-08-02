@@ -20,6 +20,8 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
 
 import giraffe.signals
 
+from globals import settings
+
 
 class WorksheetDragData(object):
     def __init__(self, worksheet):
@@ -49,8 +51,10 @@ class ScriptWindow(Shell):
         self.locals = {}
         Shell.__init__(self, parent, locals=self.locals, **kwds)
 
+        h = self._widget.history
         self.run('from giraffe.arrays import *')
         self.run('from giraffe import *')
+        self._widget.history = h
 
         self.clear()
         self.prompt()
@@ -228,6 +232,12 @@ class MainWindow(Window):
         self.shell = ScriptWindow(self.main.bottom_panel,
                                   page_label='console', page_pixmap='console.png')
         self.shell.locals['mainwin'] = self
+
+        try:
+            self.shell._widget.history = settings.get('script', 'history').split('\n')
+        except:
+            self.shell._widget.history = []
+            pass
         self.explorer = ProjectExplorer(self.main.left_panel,
                                         page_label='explorer', page_pixmap='stock_navigator.png')
         self.actionlist = ActionList(command_list, self.main.left_panel,
@@ -336,6 +346,7 @@ class MainWindow(Window):
 
 
     def on_quit(self):
+        settings.set('script', 'history', '\n'.join(self.shell._widget.history))
         print >>sys.stderr, 'quit'
         self._widget.Destroy()
 

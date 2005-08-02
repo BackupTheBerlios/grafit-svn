@@ -2,12 +2,9 @@ import os
 import sys
 import ConfigParser
 
-#DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
-from globals import DATADIR
-
 class Settings(object):
-    def __init__(self):
-        self.filename = DATADIR+'/grafit.cfg'
+    def __init__(self, filename):
+        self.filename = filename
         self.config = ConfigParser.ConfigParser()
         self.config.read(self.filename)
 
@@ -23,4 +20,3 @@ class Settings(object):
     def get(self, section, key):
         return self.config.get(section, key)
 
-settings = Settings()    
