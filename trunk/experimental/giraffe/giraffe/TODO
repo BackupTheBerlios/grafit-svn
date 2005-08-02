@@ -1,15 +1,14 @@
-
-
+immediate
+---------
+- make zoom a command
+* make range a command
+* make add/remove functions commands
+* make console history work with arrows
+* save console history
 
 
 * command_from_methods: make __state a dictionary
 * make combine work for dataset-change-style command
-
-basic features
---------------
-* data reader
-- screen reader
-
 
 planned features
 ----------------

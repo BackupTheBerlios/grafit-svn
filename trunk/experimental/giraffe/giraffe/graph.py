@@ -3,7 +3,6 @@ import time
 print >>sys.stderr, "import graph"
 import string
 
-
 from giraffe.arrays import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -747,19 +746,43 @@ class Graph(Item, HasSignals):
 
     def autoscale(self):
         if len(self.datasets):
-            self.xmin = array(self.datasets[0].x).min()
-            self.ymin = array(self.datasets[0].y).min()
-            self.xmax = array(self.datasets[0].x).max()
-            self.ymax = array(self.datasets[0].y).max()
+            self.zoom(
+                array(self.datasets[0].x).min(),
+                array(self.datasets[0].y).min(),
+                array(self.datasets[0].x).max(),
+                array(self.datasets[0].y).max())
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
 
-    def zoom(self, xmin, xmax, ymin, ymax):
+    #####################
+    # zoom command      #
+    #####################
+
+    def zoom_do(self, xmin, xmax, ymin, ymax):
         eps = 1e-24
+        old = (self.xmin, self.xmax, self.ymin, self.ymax)
         if abs(xmin-xmax)<=eps or abs(ymin-ymax)<=eps:
             return
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
+        new = (xmin, xmax, ymin, ymax)
+        return [new, old]
+
+    def zoom_redo(self, state):
+        new, old = state
+        self.xmin, self.xmax, self.ymin, self.ymax = new
+        self.emit('redraw')
+
+    def zoom_undo(self, state):
+        new, old = state
+        self.xmin, self.xmax, self.ymin, self.ymax = old
+        self.emit('redraw')
+
+    def zoom_combine(self, state, other):
+        return False
+
+    zoom = command_from_methods('graph-zoom', zoom_do, zoom_undo, zoom_redo, combine=zoom_combine)
+
  
     def zoomout(self,x1, x2,x3, x4):
         a = (x2-x1)/(x4-x3)
@@ -979,14 +1002,12 @@ class Graph(Item, HasSignals):
                 else:
                     xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
                 self.zoom(xmin, xmax, ymin, ymax)
-
                 self.emit('redraw')
         elif self.mode == 'hand':
             if self.selected_function is not None:
                 self.selected_function.set_reg(True)
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
- 
         
     def button_motion(self, x, y):
         if self.mode == 'zoom':
@@ -1006,33 +1027,16 @@ class Graph(Item, HasSignals):
 
 desc="""
 graphs [
-    name:S,
-    id:S,
-    parent:S,
-    zoom:S,
-    xtype:S,
-    ytype:S,
+    name:S, id:S, parent:S, zoom:S, xtype:S, ytype:S,
     datasets [
-        id:S,
-        worksheet:S,
-        x:S,
-        y:S,
-        symbol:S,
-        color:I,
-        size:I,
-        linetype:S,
-        linestyle:S,
-        linewidth:I,
-        xfrom:D,
-        xto:D 
+        id:S, worksheet:S, x:S, y:S,
+        symbol:S, color:I, size:I, linetype:S,
+        linestyle:S, linewidth:I,
+        xfrom:D, xto:D 
     ],
     functions [
-        id:S,
-        func:S,
-        name:S,
-        params:S,
-        lock:S,
-        use:I
+        id:S, func:S, name:S,
+        params:S, lock:S, use:I
     ]
 ]
 """

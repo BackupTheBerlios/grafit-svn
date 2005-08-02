@@ -973,6 +973,8 @@ class Label(Widget):
         self._widget = wx.StaticText(parent._widget, -1, text)
         Widget.__init__(self, parent, *args, **kwds)
 
+    text = property(lambda self: self._widget.GetLabel(), lambda self, t: self._widget.SetLabel(t))
+
 
 # stuff for tool panels and main window
 # long and ugly but it works nicely

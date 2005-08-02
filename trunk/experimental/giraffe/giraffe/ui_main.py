@@ -177,7 +177,22 @@ class ActionList(Box):
         Box.__init__(self, parent, 'vertical', **place)
         self.list = List(self, model=ActionListModel(actionlist), stretch=1.)
         self.list._widget.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.list.connect('item-activated', self.on_list_item_activated)
+        self.list.connect('selection-changed', self.on_list_selection_changed)
         self.label = Label(self, 'Action', stretch=0.)
+
+    def on_list_item_activated(self, idx):
+        com = self.list.model.actionlist.commands[idx]
+        if com.done:
+            while com.done:
+                undo()
+        else:
+            while not com.done:
+                redo()
+
+    def on_list_selection_changed(self):
+        com = self.list.model.actionlist.commands[self.list.selection[0]]
+        self.label.text = str(com)
 
 class FolderListData(HasSignals):
     def __init__(self, folder):
