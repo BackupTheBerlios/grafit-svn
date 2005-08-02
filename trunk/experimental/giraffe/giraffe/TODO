@@ -5,6 +5,8 @@ immediate
 * make add/remove functions commands
 * make console history work with arrows
 * save console history
+* make axis scale change a command
+* fix exit handling and session saving
 
 
 * command_from_methods: make __state a dictionary

@@ -357,7 +357,7 @@ class Function(HasSignals):
         st = '\n------\n'.join(st)
         return st
 
-from giraffe import DATADIR
+from settings import DATADIR
 registry = FunctionsRegistry(DATADIR+'data/functions')
 
 class FunctionsWindow(gui.Window):

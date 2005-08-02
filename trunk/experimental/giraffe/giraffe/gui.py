@@ -14,7 +14,7 @@ from wx.lib.scrolledpanel import ScrolledPanel
 
 from signals import HasSignals
 
-from giraffe import DATADIR
+from settings import DATADIR
 
 
 # this module absolutely needs documentation!

@@ -20,7 +20,7 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
 
 import giraffe.signals
 
-from giraffe import settings
+from settings import settings
 
 
 class WorksheetDragData(object):
@@ -51,10 +51,8 @@ class ScriptWindow(Shell):
         self.locals = {}
         Shell.__init__(self, parent, locals=self.locals, **kwds)
 
-        h = self._widget.history
         self.run('from giraffe.arrays import *')
         self.run('from giraffe import *')
-        self._widget.history = h
 
         self.clear()
         self.prompt()

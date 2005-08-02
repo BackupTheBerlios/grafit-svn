@@ -20,3 +20,5 @@ class Settings(object):
     def get(self, section, key):
         return self.config.get(section, key)
 
+DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
+settings = Settings(DATADIR+'grafit.cfg')

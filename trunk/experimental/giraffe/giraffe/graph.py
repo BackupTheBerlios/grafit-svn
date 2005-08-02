@@ -365,7 +365,7 @@ class Grid(object):
                 gl2psDisable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.1)
 
-from globals import DATADIR
+from settings import DATADIR
 FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
 AXISFONT = FTGLPixmapFont(FONTFILE)
 
