@@ -24,21 +24,21 @@ from settings import DATADIR
 #        self.name = name
 #        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
 
-class _xFrameMixIn(wx.Window): 
-    def prepareFrame(self, closeEventHandler=None): 
-        self._closeHandler = closeEventHandler 
-        wx.EVT_CLOSE(self, self.closeFrame) 
+#class _xFrameMixIn(wx.Window): 
+#    def prepareFrame(self, closeEventHandler=None): 
+#        self._closeHandler = closeEventHandler 
+#        wx.EVT_CLOSE(self, self.closeFrame) 
+#
+#    def closeFrame(self, event): 
+#        win = wx.Window_FindFocus() 
+#        if win != None: 
+#            win.Disconnect(-1, -1, wxEVT_KILL_FOCUS) 
+#        if self._closeHandler != None: 
+#            apply(self._closeHandler, [event]) 
+#        else: 
+#            event.Skip() 
 
-    def closeFrame(self, event): 
-        win = wx.Window_FindFocus() 
-        if win != None: 
-            win.Disconnect(-1, -1, wxEVT_KILL_FOCUS) 
-        if self._closeHandler != None: 
-            apply(self._closeHandler, [event]) 
-        else: 
-            event.Skip() 
-
-class MySplashScreen(wx.SplashScreen):
+class _xSplashScreen(wx.SplashScreen):
     """
     Create a splash screen widget.
     """
@@ -71,30 +71,26 @@ class MySplashScreen(wx.SplashScreen):
 
 class _xApplication(wx.App):
     def __init__(self):
-#        self.mainwinclass = mainwinclass
-#        self.initargs, self.initkwds = args, kwds
         wx.App.__init__(self, redirect=False)
-
-#    def OnInit(self):
-#        self.mainwin = self.mainwinclass(*self.initargs, **self.initkwds)
-#        self.SetTopWindow(self.mainwin._widget)
-#        self.mainwin.show_all()
-#        return True
 
     def run(self, mainwinclass, *args, **kwds):
         self.mainwin = mainwinclass(*args, **kwds)
         self.SetTopWindow(self.mainwin._widget)
-        self.mainwin.show_all()
+        self.mainwin.show(all=True)
+
+    def OnExit(self):
+#        print >>sys.stderr, "Exit"
+        pass
 
 
-class Borg(object):
+class Singleton(object):
     _state = {}
     def __new__(cls, *p, **k):
         self = object.__new__(cls, *p, **k)
         self.__dict__ = cls._state
         return self
 
-class Application(Borg):
+class Application(Singleton):
     def __init__(self):
         self._app = _xApplication()
 
@@ -107,8 +103,12 @@ class Application(Borg):
         return self._app.MainLoop()
 
     def splash(self):
-        splash = MySplashScreen()
+        splash = _xSplashScreen()
         splash.Show()
+
+def run(mainwinclass):
+    Application().run(mainwinclass)
+
 
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
@@ -124,14 +124,11 @@ class Widget(HasSignals):
         self.destroyed = True
         self._widget.Destroy()
 
-    def show(self, s=True):
+    def show(self, s=True, all=True):
         if s:
-            self._widget.Show()
+            self._widget.Show(all)
         else:
             self._widget.Hide() 
-
-    def show_all(self):
-        self._widget.Show(True)
 
     def hide(self):
 #        pass        
@@ -147,6 +144,12 @@ class Widget(HasSignals):
     def get_active(self): return self._widget.IsEnabled()
     def set_active(self, value): self._widget.Enable(value)
     active = property(get_active, set_active)
+
+    size = property(lambda self: tuple(self._widget.GetSize()),
+                    lambda self, sz: self._widget.SetSize(sz))
+
+    position = property(lambda self: tuple(self._widget.GetPosition()),
+                        lambda self, po: self._widget.SetPosition(po))
 
 
 # http://wiki.wxpython.org/index.cgi/_xProportionalSplitterWindow
@@ -1333,6 +1336,8 @@ class Window(Widget):
 
     def on_close(self, evt):
         ret = self.emit('close')
+        if sum(bool(r) for r in ret) == len(ret):
+            evt.Skip()
 
 class Shell(Widget):
     def __init__(self, parent, locals, **kwds):
@@ -1403,24 +1408,14 @@ class OpenGLWidget(Widget):
     def OnMouseDown(self, evt):
         self._widget.CaptureMouse()
         x, y = evt.GetPosition()
-        btn = evt.GetButton()
-        if btn is wx.MOUSE_BTN_LEFT:
-            self.emit('button-pressed', x, y, 1)
-        elif btn is wx.MOUSE_BTN_RIGHT:
-            self.emit('button-pressed', x, y, 3)
-        elif btn is wx.MOUSE_BTN_MIDDLE:
-            self.emit('button-pressed', x, y, 2)
+        btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
+        self.emit('button-pressed', x, y, btn)
 
     def OnMouseUp(self, evt):
         self._widget.ReleaseMouse()
         x, y = evt.GetPosition()
-        btn = evt.GetButton()
-        if btn is wx.MOUSE_BTN_LEFT:
-            self.emit('button-released', x, y, 1)
-        elif btn is wx.MOUSE_BTN_RIGHT:
-            self.emit('button-released', x, y, 3)
-        elif btn is wx.MOUSE_BTN_MIDDLE:
-            self.emit('button-released', x, y, 2)
+        btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
+        self.emit('button-released', x, y, btn)
 
     def OnMouseMotion(self, evt):
         if evt.Dragging():

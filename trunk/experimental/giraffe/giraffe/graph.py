@@ -930,7 +930,7 @@ class Graph(Item, HasSignals):
     def export_ascii(self, f):
         gl2psBeginPage("Title", "Producer", 
                        self.viewport,
-                       GL2PS_EPS, GL2PS_NO_SORT, GL2PS_NONE,
+                       GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE,
                        GL_RGBA, -1,
                        0,
                        0, 0, 0,

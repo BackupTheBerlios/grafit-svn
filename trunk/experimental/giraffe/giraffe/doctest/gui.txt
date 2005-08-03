@@ -17,5 +17,5 @@ class MainWindow(gui.Window):
         print 'click!'
 
 if __name__ == '__main__':
-    gui.Application().run(MainWindow)
+    gui.run(MainWindow)
 
