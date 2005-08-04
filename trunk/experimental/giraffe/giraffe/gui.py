@@ -900,10 +900,83 @@ class TreeNode(HasSignals):
     def on_child_modified(self):
         self.emit('modified')
 
+class _xTreeCtrl(wx.TreeCtrl):
+    def __init__(self, tree, parent):
+        wx.TreeCtrl.__init__(self, parent, -1, style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
+        self.tree = tree
+
+    def OnHover(self, x, y):
+        """
+        Override this to perform an action when a drag action is
+        hovering over the widget.
+        """
+        item, flags = self.HitTest(wx.Point(x, y))
+#        if not (flags & wx.TREE_HITTEST_ONITEM):
+#            item = -1
+        try:
+            items = self.tree.items + self.tree.roots
+            item = items[[i._nodeid for i in items].index(item)]
+        except ValueError:
+            return wx.DragNone
+
+        result = self.tree.emit('drop-hover', item)
+        if 'move' in result:
+            return wx.DragMove
+        elif 'copy' in result:
+            return wx.DragCopy
+        else:
+            return wx.DragNone
+
+    def OnRequestDrop(self, x, y):
+        item, flags = self.HitTest(wx.Point(x, y))
+#        if not (flags & wx.LIST_HITTEST_ONITEM):
+#            item = -1
+        try:
+            items = self.tree.items + self.tree.roots
+            item = items[[i._nodeid for i in items].index(item)]
+        except ValueError:
+            return False
+
+        result = self.tree.emit('drop-ask', item)
+        if True in result:
+            return True
+        else:
+            return False
+
+    def AddItem(self, x, y):
+        item, flags = self.HitTest(wx.Point(x, y))
+
+        try:
+            items = self.tree.items + self.tree.roots
+            item = items[[i._nodeid for i in items].index(item)]
+        except ValueError:
+            return
+
+
+        for obj in self.tree.dropobjs:
+            if obj.GetFormat() == wx.DataFormat(wx.DF_UNICODETEXT):
+                format, data = 'text', obj.GetText()
+                if len(data):
+                    obj.SetData('')
+                    break
+            elif obj.GetFormat() == wx.DataFormat(wx.DF_FILENAME):
+                format, data = 'filename', obj.GetFilenames()
+                if len(data):
+                    obj.SetData('')
+                    break
+            else:
+                if obj.GetDataSize() > 0:
+                    format, data = obj.GetFormat().GetId(), obj.GetDataHere()
+                    if data is not None:
+                        obj.SetData('')
+                        break
+
+        result = self.tree.emit('dropped', item, format, data)
+
+
 class Tree(Widget):
     def __init__(self, parent, **place):
-        self._widget = wx.TreeCtrl(parent._widget, -1,
-                                   style=wx.TR_DEFAULT_STYLE|wx.TR_EDIT_LABELS|wx.SUNKEN_BORDER)
+        self._widget = _xTreeCtrl(self, parent._widget)
         Widget.__init__(self, parent, **place)
         self.roots = []
         self.items = []
@@ -968,6 +1041,18 @@ class Tree(Widget):
         self._widget.DeleteAllItems()
         self.roots = []
         self.items = []
+
+    def enable_drop(self, formats):
+        self.can_drop = True
+        self.formats = formats
+        self.setup_drop()
+
+    def setup_drop(self):
+        target = _xDropTarget(self._widget)
+        composite, self.dropobjs = create_wx_data_object(self.formats)
+        target.SetDataObject(composite)
+        self._widget.SetDropTarget(target)
+
 
 
 class Label(Widget):

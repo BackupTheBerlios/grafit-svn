@@ -23,25 +23,28 @@ import giraffe.signals
 from settings import settings
 
 
-class WorksheetDragData(object):
-    def __init__(self, worksheet):
-        self.worksheet = worksheet
+class ItemDragData(object):
+    def __init__(self, items):
+        self.items = items
     
     supported_formats = ['grafit-object', 'filename']
 
     def get_data(self, format):
-        if format == 'filename':
-            if isinstance(self.worksheet, Worksheet):
-                filename = self.worksheet.name + '.txt'
-            elif isinstance(self.worksheet, Graph):
-                filename = self.worksheet.name + '.ps'
-            d = tempfile.mkdtemp()
-            f = open(d+'/'+filename, 'wb')
-            self.worksheet.export_ascii(f)
-            f.close()
-            return [d+'/'+filename]
-        elif format == 'grafit-object':
-            return self.worksheet.id
+        if format == 'grafit-object':
+            return '\n'.join(i.id for i in self.items)
+        elif format == 'filename':
+            r = []
+            for item in self.items:
+                if isinstance(item, Worksheet):
+                    filename = item.name + '.txt'
+                elif isinstance(item, Graph):
+                    filename = item.name + '.ps'
+                d = tempfile.mkdtemp()
+                f = open(d+'/'+filename, 'wb')
+                item.export_ascii(f)
+                f.close()
+                r.append(d+'/'+filename)
+            return r
 
 class Cancel(Exception):
     pass
@@ -99,17 +102,32 @@ class ProjectExplorer(Box):
         self.splitter = Splitter(self, 'horizontal')
 
         self.tree = Tree(self.splitter)
+        self.tree.enable_drop(['grafit-object', 'text'])
+
+        self.tree.connect('drop-hover', self.on_drop_hover)
+        self.tree.connect('drop-ask', self.on_tree_drop_ask)
+        self.tree.connect('dropped', self.on_tree_dropped)
+
         self.tree.connect('selected', self.on_tree_selected)
 
         self.list = List(self.splitter)
         self.list.enable_drop(['grafit-object', 'filename', 'text'])
-        self.list.connect('item-activated', self.on_list_item_activated)
-
         self.list.connect('drop-hover', self.on_drop_hover)
         self.list.connect('dropped', self.on_dropped)
         self.list.connect('drop-ask', self.on_drop)
 
         self.list.connect('drag-begin', self.on_begin_drag)
+        self.list.connect('item-activated', self.on_list_item_activated)
+
+    def on_tree_drop_ask(self, item):
+        return True
+
+    def on_tree_dropped(self, item, format, data):
+        if format == 'grafit-object':
+            for d in data.split('\n'):
+                self.project.items[d].parent = item.folder
+        else:
+            print 'DROPPED: ', item, format, data
 
     def on_drop_hover(self, item):
         if item != -1:
@@ -123,14 +141,13 @@ class ProjectExplorer(Box):
 
     def on_dropped(self, item, format, data):
         if format == 'grafit-object':
-            folder = self.list.model[item]
-            obj = self.project.items[data]
-            obj.parent = folder
+            for d in data.split('\n'):
+                self.project.items[d].parent = self.list.model[item]
         else:
             print 'DROPPED: ', format, data
 
     def on_begin_drag(self, item):
-        return WorksheetDragData(self.list.model[item])
+        return ItemDragData([self.list.model[i] for i in self.list.selection])
 
     def on_tree_selected(self, item):
         self.list.model = FolderListData(item.folder)
