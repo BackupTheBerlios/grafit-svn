@@ -235,16 +235,18 @@ class XorDraw(object):
         self.coords = None
 
     def move(self, *pos):
-        self.need_redraw = True
-        self.previous = self.coords
+        if not self.need_redraw:
+            self.previous = self.coords
         self.coords = pos
+        self.need_redraw = True
 
     def redraw(self):
-        if self.previous is not None:
-            self.draw(*self.previous)
-        if self.coords is not None:
-            self.draw(*self.coords)
-        self.need_redraw = False
+        if self.need_redraw:
+            if self.previous is not None:
+                self.draw(*self.previous)
+            if self.coords is not None:
+                self.draw(*self.coords)
+            self.need_redraw = False
 
 
 class Rubberband(XorDraw):
@@ -264,6 +266,20 @@ class Rubberband(XorDraw):
         glEnd()
 
         glDisable(GL_LINE_STIPPLE)
+
+class Cross(XorDraw):
+    def __init__(self, graph):
+        XorDraw.__init__(self, graph)
+
+    def draw(self, x, y):
+        glColor3f(1.0,0.5,1.0)
+        glBegin(GL_LINES)
+        glVertex3d(x-15, y, 0)
+        glVertex3d(x+15, y, 0)
+
+        glVertex3d(x, y-15, 0)
+        glVertex3d(x, y+15, 0)
+        glEnd()
 
 
 class Dataset(DrawWithStyle):
@@ -641,6 +657,9 @@ class Graph(Item, HasSignals):
         self.selected_function = None
 
         self.rubberband = Rubberband(self)
+        self.cross = Cross(self)
+
+        self.objects = [self.rubberband, self.cross]
 
     default_name_prefix = 'graph'
 
@@ -871,7 +890,8 @@ class Graph(Item, HasSignals):
         else:
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
-            self.rubberband.redraw()
+            for o in self.objects:
+                o,redraw()
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width, height):
@@ -926,23 +946,6 @@ class Graph(Item, HasSignals):
                      -1.+2.*self.marginb/self.height_mm, 0) # go to corner
         glScaled(2./self.width_mm, 2./self.height_mm, 1) # scale is mm
 
-    def rubberband_begin(self, x, y):
-        self.buf = True
-        self.pixx, self.pixy = x, y
-
-        # zooming box in identity coordinates
-        self.ix, self.iy = self.mouse_to_ident(x, y)
-        self.rubberband.show(self.ix, self.iy, self.ix, self.iy)
-
-    def rubberband_continue(self, x, y):
-        self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
-        self.emit('redraw')
-
-    def rubberband_end(self, x, y):
-        self.rubberband.hide()
-        self.buf = False
-        return self.pixx, self.pixy, x, y
-
     def export_ascii(self, f):
         gl2psBeginPage("Title", "Producer", 
                        self.viewport,
@@ -962,7 +965,10 @@ class Graph(Item, HasSignals):
     def button_press(self, x, y, button=None):
         if self.mode == 'zoom':
             if button in (1,3):
-                self.rubberband_begin(x, y)
+                self.buf = True
+                self.pixx, self.pixy = x, y
+                self.ix, self.iy = self.mouse_to_ident(x, y)
+                self.rubberband.show(self.ix, self.iy, self.ix, self.iy)
             if button == 2:
                 self.haha = True
             else:
@@ -987,6 +993,9 @@ class Graph(Item, HasSignals):
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
         elif self.mode == 's-reader':
+            self.buf = True
+            self.cross.show(*self.mouse_to_ident(x, y))
+#            self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
 
      
@@ -996,10 +1005,12 @@ class Graph(Item, HasSignals):
                 self.autoscale()
                 self.emit('redraw')
             elif button == 1 or button == 3:
-                zix, ziy, zfx, zfy = self.rubberband_end(x, y)
+                self.rubberband.hide()
+                self.emit('redraw')
+                self.buf = False
 
-                zix, ziy = self.mouse_to_real(zix, ziy)
-                zfx, zfy = self.mouse_to_real(zfx, zfy)
+                zix, ziy = self.mouse_to_real(self.pixx, self.pixy)
+                zfx, zfy = self.mouse_to_real(x, y)
 
                 _xmin, _xmax = min(zix, zfx), max(zix, zfx)
                 _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
@@ -1024,16 +1035,25 @@ class Graph(Item, HasSignals):
                 self.selected_function.set_reg(True)
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
+        elif self.mode == 's-reader':
+            self.cross.hide()
+            self.emit('redraw')
+            self.buf = False
         
     def button_motion(self, x, y):
         if self.mode == 'zoom':
-            self.rubberband_continue(x, y)
-        elif self.mode in ['range', 's-reader', 'd-reader']:
+            self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
+            self.emit('redraw')
+        elif self.mode in ['range', 'd-reader']:
             self.button_press(x, y)
         elif self.mode == 'hand':
             if self.selected_function is not None:
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
+        elif self.mode == 's-reader':
+            self.cross.move(*self.mouse_to_ident(x, y))
+            self.emit('redraw')
+            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
  
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
