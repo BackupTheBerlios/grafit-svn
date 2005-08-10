@@ -5,6 +5,7 @@
 cdef extern from "math.h":
     double sin(double x)
     double cos(double y)
+    int isnan(double x)
 
 cdef extern from "numarray/libnumarray.h":
     ctypedef int maybelong
@@ -158,6 +159,8 @@ def render(_numarray sx, _numarray sy,
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
+        if isnan(x) or isnan(y):
+            continue
 
         # skip if outside limits
 #        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):

@@ -95,6 +95,14 @@ class FolderTreeNode(HasSignals):
     def on_modified(self, item=None): 
         self.emit('modified')
 
+    def rename(self, newname):
+        print newname
+        if newname == 'ass':
+            return False
+        else:
+            self.folder.name = str(newname)
+            self.emit('modified')
+            return True
 
 class ProjectExplorer(Box):
     def __init__(self, parent, **kwds):
@@ -254,7 +262,7 @@ class MainWindow(Window):
             self.shell._widget.history = []
             pass
         self.explorer = ProjectExplorer(self.main.left_panel,
-                                        page_label='explorer', page_pixmap='stock_navigator.png')
+                                        page_label='project', page_pixmap='stock_navigator.png')
         self.actionlist = ActionList(command_list, self.main.left_panel,
                                         page_label='actions', page_pixmap='stock_undo.png')
         self.explorer.connect('item-activated', self.on_item_activated)

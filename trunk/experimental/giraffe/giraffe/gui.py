@@ -988,6 +988,7 @@ class Tree(Widget):
         self.pixmaps = {}
 
         self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
+        self._widget.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.on_label_edit)
 
         self.tree = self._widget
         self.selection = None
@@ -1002,6 +1003,11 @@ class Tree(Widget):
                 return
         self.selection = None
 
+    def on_label_edit(self, evt):
+        items = self.items + self.roots
+        item = items[[i._nodeid for i in items].index(evt.GetItem())]
+        if item.rename(evt.GetLabel()):
+            evt.Veto()
 
     def getpixmap(self, filename):
         if filename is None:
