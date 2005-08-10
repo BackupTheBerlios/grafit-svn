@@ -1443,7 +1443,7 @@ class Shell(Widget):
 
 class OpenGLWidget(Widget):
     def __init__(self, parent, **place):
-        self._widget = wx.glcanvas.GLCanvas(parent._widget, -1, attribList =[wx.glcanvas.WX_GL_DOUBLEBUFFER])
+        self._widget = wx.glcanvas.GLCanvas(parent._widget, -1)#, attribList =[wx.glcanvas.WX_GL_DOUBLEBUFFER])
         Widget.__init__(self, parent, **place)
 
         self.init = False

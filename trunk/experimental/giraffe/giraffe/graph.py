@@ -215,6 +215,57 @@ class DrawWithStyle(HasSignals):
 
         glDisable(GL_LINE_STIPPLE)
 
+class XorDraw(object):
+    def __init__(self, graph):
+        self.graph = graph
+        self.coords = None
+        self.previous = None
+        self.need_redraw = False
+
+    def draw(self, *coords):
+        raise NotImplementedError
+
+    def show(self, *pos):
+        self.coords = pos
+        self.previous = None
+        self.need_redraw = True
+
+    def hide(self):
+        self.need_redraw = True
+        self.coords = None
+
+    def move(self, *pos):
+        self.need_redraw = True
+        self.previous = self.coords
+        self.coords = pos
+
+    def redraw(self):
+        if self.previous is not None:
+            self.draw(*self.previous)
+        if self.coords is not None:
+            self.draw(*self.coords)
+        self.need_redraw = False
+
+
+class Rubberband(XorDraw):
+    def __init__(self, graph):
+        XorDraw.__init__(self, graph)
+
+    def draw(self, ix, iy, sx, sy):
+        glColor3f(1.0,1.0,0.0) # blue
+        glLineStipple (1, 0x4444) # dotted
+        glEnable(GL_LINE_STIPPLE)
+
+        glBegin(GL_LINE_LOOP)
+        glVertex3d(ix, iy, 0.0)
+        glVertex3d(ix, sy, 0.0)
+        glVertex3d(sx, sy, 0.0)
+        glVertex3d(sx, iy, 0.0)
+        glEnd()
+
+        glDisable(GL_LINE_STIPPLE)
+
+
 class Dataset(DrawWithStyle):
     def __init__(self, graph, ind):
         self.graph, self.ind = graph, ind
@@ -543,12 +594,6 @@ class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         Item.__init__(self, project, name, parent, location)
     
-        # mouse rubberbanding coordinates
-        self.sx = None
-        self.px = None
-        self.sy = None
-        self.py = None
-
         self.buf =  False
         self.selected_datasets = []
 
@@ -594,6 +639,8 @@ class Graph(Item, HasSignals):
         if self.ytype == '':
             self.ytype = 'linear'
         self.selected_function = None
+
+        self.rubberband = Rubberband(self)
 
     default_name_prefix = 'graph'
 
@@ -822,38 +869,11 @@ class Graph(Item, HasSignals):
             self.paint_axes()
             print >>sys.stderr, time.time()-t, "seconds"
         else:
-            glColor3f(1.0,1.0,0.0)
-            glLineStipple (1, 0x4444) # dotted
-            if self.ps:
-                gl2psEnable(GL2PS_LINE_STIPPLE)
-            else:
-                glEnable(GL_LINE_STIPPLE)
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
-
-            if (self.px, self.py) != (None, None):
-                glBegin(GL_LINE_LOOP)
-                glVertex3d(self.ix, self.iy, 0.0)
-                glVertex3d(self.ix, self.py, 0.0)
-                glVertex3d(self.px, self.py, 0.0)
-                glVertex3d(self.px, self.iy, 0.0)
-                glEnd()
-
-            glBegin(GL_LINE_LOOP)
-            glVertex3d(self.ix, self.iy, 0.0)
-            glVertex3d(self.ix, self.sy, 0.0)
-            glVertex3d(self.sx, self.sy, 0.0)
-            glVertex3d(self.sx, self.iy, 0.0)
-            glEnd()
-            self.px, self.py = self.sx, self.sy
-
-            if self.ps:
-                gl2psDisable(GL2PS_LINE_STIPPLE)
-            else:
-                glDisable(GL_LINE_STIPPLE)
+            self.rubberband.redraw()
             glDisable(GL_COLOR_LOGIC_OP)
 
-    
     def reshape(self, width, height):
         self._shape = (width, height)
 
@@ -912,19 +932,15 @@ class Graph(Item, HasSignals):
 
         # zooming box in identity coordinates
         self.ix, self.iy = self.mouse_to_ident(x, y)
-        self.sx, self.sy = self.ix, self.iy
-
-    def rubberband_active(self):
-        return self.buf
+        self.rubberband.show(self.ix, self.iy, self.ix, self.iy)
 
     def rubberband_continue(self, x, y):
-        self.sx, self.sy = self.mouse_to_ident(x, y)
+        self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
         self.emit('redraw')
 
     def rubberband_end(self, x, y):
-        self.rubberband_continue(x, y)
+        self.rubberband.hide()
         self.buf = False
-        self.px, self.py = None, None
         return self.pixx, self.pixy, x, y
 
     def export_ascii(self, f):
