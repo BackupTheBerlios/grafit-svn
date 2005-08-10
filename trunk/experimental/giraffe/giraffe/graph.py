@@ -281,6 +281,16 @@ class Cross(XorDraw):
         glVertex3d(x, y+15, 0)
         glEnd()
 
+class DrawFunction(XorDraw):
+    def __init__(self, graph, function):
+        XorDraw.__init__(self, graph)
+        self.f = Function(self.graph, totalcolor=(55, 255, 255))
+        self.f.func = function
+
+    def draw(self, x, y):
+        self.f.func.move(x, y)
+        self.f.paint()
+
 
 class Dataset(DrawWithStyle):
     def __init__(self, graph, ind):
@@ -343,7 +353,7 @@ class Nop:
     pass
 
 class Function(DrawWithStyle):
-    def __init__(self, graph):
+    def __init__(self, graph, totalcolor=(0, 0, 155), termcolor=(0, 0, 0)):
         self.graph = graph
         self.data =  Nop()
         self.data.color = '0'
@@ -360,6 +370,8 @@ class Function(DrawWithStyle):
         self.style._line_style = 'solid'
         self.style._line_type = 'straight'
 
+        self.totalcolor, self.termcolor = totalcolor, termcolor
+
         self.func = MFunctionSum(self.graph.data.functions)
 
     def paint(self):
@@ -371,13 +383,14 @@ class Function(DrawWithStyle):
             x = arange(self.graph.xmin, self.graph.xmax, 
                        (self.graph.xmax-self.graph.xmin)/npoints)
 
-        self.style._color = (0,0,0)
-        for term in self.func.terms:
-            if term.enabled:
-                y = term(x)
-                self.paint_lines(*self.graph.proj(x, y))
+        self.style._color = self.termcolor
+        if hasattr(self.func, 'terms'):
+            for term in self.func.terms:
+                if term.enabled:
+                    y = term(x)
+                    self.paint_lines(*self.graph.proj(x, y))
 
-        self.style._color = (0, 0, 155)
+        self.style._color = self.totalcolor
         y = self.func(x)
         self.paint_lines(*self.graph.proj(x, y))
 
@@ -891,7 +904,7 @@ class Graph(Item, HasSignals):
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
             for o in self.objects:
-                o,redraw()
+                o.redraw()
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width, height):
@@ -991,11 +1004,14 @@ class Graph(Item, HasSignals):
             if self.selected_function is not None:
                 self.selected_function.set_reg(False)
                 self.selected_function.move(*self.mouse_to_real(x, y))
-                self.emit('redraw')
+#                self.emit('redraw')
+                self._movefunc = DrawFunction(self, self.selected_function)
+                self.objects.append(self._movefunc)
+                self.buf = True
+                self._movefunc.show(*self.mouse_to_real(x, y))
         elif self.mode == 's-reader':
             self.buf = True
             self.cross.show(*self.mouse_to_ident(x, y))
-#            self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
 
      
@@ -1034,6 +1050,8 @@ class Graph(Item, HasSignals):
             if self.selected_function is not None:
                 self.selected_function.set_reg(True)
                 self.selected_function.move(*self.mouse_to_real(x, y))
+                del self.objects[-1]
+                self.buf = False
                 self.emit('redraw')
         elif self.mode == 's-reader':
             self.cross.hide()
@@ -1049,6 +1067,7 @@ class Graph(Item, HasSignals):
         elif self.mode == 'hand':
             if self.selected_function is not None:
                 self.selected_function.move(*self.mouse_to_real(x, y))
+                self._movefunc.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
         elif self.mode == 's-reader':
             self.cross.move(*self.mouse_to_ident(x, y))
