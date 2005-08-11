@@ -990,9 +990,11 @@ class Tree(Widget):
         self._widget.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
         self._widget.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.on_label_edit)
 
+        self._widget.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.on_expand)
+        self._widget.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.on_collapse)
+
         self.tree = self._widget
         self.selection = None
-
 
     def on_sel_changed(self, evt):
         from itertools import chain
@@ -1004,10 +1006,24 @@ class Tree(Widget):
         self.selection = None
 
     def on_label_edit(self, evt):
-        items = self.items + self.roots
-        item = items[[i._nodeid for i in items].index(evt.GetItem())]
-        if item.rename(evt.GetLabel()):
+        item = self.id_to_item(evt.GetItem())
+        label = evt.GetLabel()
+        if hasattr(item, 'rename') and label != '' and item.rename(label):
             evt.Veto()
+
+    def on_expand(self, evt):
+        item = self.id_to_item(evt.GetItem())
+        if hasattr(item, 'open'):
+            item.open()
+
+    def on_collapse(self, evt):
+        item = self.id_to_item(evt.GetItem())
+        if hasattr(item, 'close'):
+            item.close()
+
+    def id_to_item(self, id):
+        items = self.items + self.roots
+        return items[[i._nodeid for i in items].index(id)]
 
     def getpixmap(self, filename):
         if filename is None:
@@ -1029,10 +1045,10 @@ class Tree(Widget):
     def _add_node_and_children(self, parent, node):
         node._nodeid = self._widget.AppendItem(parent._nodeid, str(node), 
                                                self.getpixmap(node.get_pixmap()))
-        self._widget.Expand(node._nodeid)
         self.items.append(node)
         for child in node:
             self._add_node_and_children(node, child)
+        self._widget.Expand(node._nodeid)
 
     def on_node_modified(self):
         self._widget.DeleteAllItems()
@@ -1042,6 +1058,9 @@ class Tree(Widget):
             for node in root:
                 self._add_node_and_children(root, node)
             self._widget.Expand(root._nodeid)
+        if self.selection is not None:
+            self._widget.SelectItem(self.selection._nodeid)
+
 
     def clear(self):
         self._widget.DeleteAllItems()

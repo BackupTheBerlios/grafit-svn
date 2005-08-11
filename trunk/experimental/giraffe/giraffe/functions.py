@@ -253,7 +253,8 @@ class FunctionSum(HasSignals):
         data = odr.RealData(x, y)
         initial = flatten(t.parameters for t in self.terms)
 
-        odrobj = odr.ODR(data, model, beta0=initial, partol=1e-100, sstol=1e-100, maxit=maxiter)
+        odrobj = odr.ODR(data, model, beta0=initial,  ifixb=[not k for k in lock], 
+                         partol=1e-100, sstol=1e-100, maxit=maxiter)
         odrobj.set_job (fit_type=2)
         odrobj.set_iprint (iter=3, iter_step=1)
         for term in self.terms:

@@ -459,7 +459,12 @@ class GraphFunctionsPanel(gui.Box):
 
     def do_fit(self):
         data = self.graph.selected_datasets[0]
-        self.function.fit(data.xx, data.yy, None, 50)
+        lock = []
+        for t in self.function.terms:
+            for c in t._lock:
+                lock.append(c.state)
+        print >>sys.stderr, lock
+        self.function.fit(data.xx, data.yy, lock, 50)
 #        for t in self.function.terms:
 #            for i, txt in enumerate(t._text):
 #                txt.text = str(t.parameters[i])
@@ -548,6 +553,7 @@ class GraphFunctionsPanel(gui.Box):
         parambox = gui.Grid(term._box, len(term.parameters), 3, expand=True)
         parambox.layout.AddGrowableCol(1)
         term._text = []
+        term._lock = []
         for n, par in enumerate(term.function.parameters):
             gui.Label(parambox, par, pos=(n, 0))
             text = gui.Text(parambox, pos=(n, 1))
@@ -555,7 +561,8 @@ class GraphFunctionsPanel(gui.Box):
             text.connect('kill-focus', lambda: self.on_activate(term, n), True)
             text.text = str(term.parameters[n])
             term._text.append(text)
-            gui.Checkbox(parambox, pos=(n, 2))
+            lock = gui.Checkbox(parambox, pos=(n, 2))
+            term._lock.append(lock)
         term._parambox = parambox
 
         self.update_widget()

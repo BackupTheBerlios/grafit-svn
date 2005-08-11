@@ -73,6 +73,13 @@ class ScriptWindow(Shell):
 
 class FolderTreeNode(HasSignals):
     """Adapter from a folder to a Tree node"""
+    def __new__(cls, folder, **kwds):
+        if hasattr(folder, '_treenode'):
+            return folder._treenode
+        else:
+            obj = HasSignals.__new__(cls, folder, **kwds)
+            folder._treenode = obj
+            return obj
 
     def __init__(self, folder, isroot=False):
         self.folder = folder
@@ -96,13 +103,17 @@ class FolderTreeNode(HasSignals):
         self.emit('modified')
 
     def rename(self, newname):
-        print newname
-        if newname == 'ass':
+        if newname == '':
             return False
         else:
             self.folder.name = str(newname)
-            self.emit('modified')
+            self.folder.project.top.emit('modified')
             return True
+
+#    def close(self):
+#        print >>sys.stderr, 'close'
+#    def open(self):
+#        print >>sys.stderr, 'open'
 
 class ProjectExplorer(Box):
     def __init__(self, parent, **kwds):
