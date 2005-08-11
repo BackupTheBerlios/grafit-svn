@@ -363,7 +363,7 @@ registry = FunctionsRegistry(DATADIR+'data/functions')
 
 class FunctionsWindow(gui.Window):
     def __init__(self):
-        gui.Window.__init__(self, title='Functions', size=(300, 200))
+        gui.Window.__init__(self, title='Functions', size=(500, 300))
         box = gui.Box(self, 'horizontal')
 
 #        split = gui.Splitter(box, 'horizontal', stretch=1)

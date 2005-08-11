@@ -84,14 +84,11 @@ def import_ascii(str, delimiter=None, decimal_symbol='.', max_lines = None):
         delim = delim.strip()
 
     # extract numbers
-    if max_lines is None:
-        max_lines = -1
-    numbers = []
-    for line in text[:max_lines]:
-        numbers.append ([parse_float (s.replace(decimal_symbol, '.')) for s in line.strip().split(delim)])
+    numbers = [[parse_float(s.replace(decimal_symbol, '.')) for s in line.strip().split(delim)] 
+                    for line in text[:max_lines]]
 
     # make all lines the same length
-    columns = max ([len(l) for l in numbers])
+    columns = max (len(l) for l in numbers)
     for n in numbers:
         n.extend ([nan] * (columns - len(n)))
 

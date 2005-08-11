@@ -266,7 +266,8 @@ class FolderListData(HasSignals):
 class MainWindow(Window):
     def __init__(self):
         print >>sys.stderr, "creating main window"
-        Window.__init__(self, statusbar=True)
+        Window.__init__(self, statusbar=True, size=(800, 600))
+        self.title = 'Grafit'
 
         # for example
         self.main = MainPanel(self)
