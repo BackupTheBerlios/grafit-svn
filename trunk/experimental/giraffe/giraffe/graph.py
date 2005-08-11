@@ -982,6 +982,7 @@ class Graph(Item, HasSignals):
                 self.pixx, self.pixy = x, y
                 self.ix, self.iy = self.mouse_to_ident(x, y)
                 self.rubberband.show(self.ix, self.iy, self.ix, self.iy)
+                self.emit('redraw')
             if button == 2:
                 self.haha = True
             else:
@@ -1009,9 +1010,11 @@ class Graph(Item, HasSignals):
                 self.objects.append(self._movefunc)
                 self.buf = True
                 self._movefunc.show(*self.mouse_to_real(x, y))
+                self.emit('redraw')
         elif self.mode == 's-reader':
             self.buf = True
             self.cross.show(*self.mouse_to_ident(x, y))
+            self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
 
      

@@ -22,7 +22,6 @@ import giraffe.signals
 
 from settings import settings
 
-
 class ItemDragData(object):
     def __init__(self, items):
         self.items = items
@@ -39,9 +38,12 @@ class ItemDragData(object):
                     filename = item.name + '.txt'
                 elif isinstance(item, Graph):
                     filename = item.name + '.ps'
+                elif isinstance(item, Folder):
+                    filename = item.name
                 d = tempfile.mkdtemp()
                 f = open(d+'/'+filename, 'wb')
-                item.export_ascii(f)
+                if isinstance(item, Worksheet) or isinstance(item, Graph):
+                    item.export_ascii(f)
                 f.close()
                 r.append(d+'/'+filename)
             return r
@@ -133,7 +135,7 @@ class ProjectExplorer(Box):
         self.list.enable_drop(['grafit-object', 'filename', 'text'])
         self.list.connect('drop-hover', self.on_drop_hover)
         self.list.connect('dropped', self.on_dropped)
-        self.list.connect('drop-ask', self.on_drop)
+        self.list.connect('drop-ask', self.on_drop_ask)
 
         self.list.connect('drag-begin', self.on_begin_drag)
         self.list.connect('item-activated', self.on_list_item_activated)
@@ -149,19 +151,25 @@ class ProjectExplorer(Box):
             print 'DROPPED: ', item, format, data
 
     def on_drop_hover(self, item):
-        if item != -1:
+#        if item != -1:
             return 'copy'
 
-    def on_drop(self, item):
+    def on_drop_ask(self, item):
         if item != -1 and isinstance(self.list.model[item], Folder):
             return True
         else:
-            return False
+            return True
+#            return False
 
     def on_dropped(self, item, format, data):
         if format == 'grafit-object':
             for d in data.split('\n'):
                 self.project.items[d].parent = self.list.model[item]
+        elif format == 'filename' and item == -1:
+            # import ascii
+            for path in data:
+                ws = self.project.new(Worksheet, str(os.path.basename(path).split('.')[0]), self.project.here)
+                ws.array, ws._header = import_ascii(path)
         else:
             print 'DROPPED: ', format, data
 
