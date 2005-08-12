@@ -27,6 +27,11 @@
             </Component>
             <Component Id='HelperLibrary' Guid='99a53150-316c-44d1-9b9c-53cba00f9154'>
               <File Id='HelperDLL' Name='Helper.dll' DiskId='1' src='Helper.dll' Vital='yes' />
+		<ProgId Id='AcmeFoobar.xyzfile' Description='Acme Foobar data file' Advertise='yes'>
+  <Extension Id='gt' ContentType='application/grafit'>
+    <Verb Id='open' Sequence='10' Command='Open' Argument='"%1"' />
+  </Extension>
+</ProgId>
             </Component>
 
             <Component Id='Manual' Guid='6c4b608b-af29-4d5f-adc2-0ea1c8ec3388'>
