@@ -73,9 +73,13 @@ class GraphView(gui.Box):
         self.toolbar.append(gui.Action('Data reader', '', set_graph_mode('d-reader'), 'dreader.png', type='radio'))
         self.toolbar.append(gui.Action('Screen reader', '', set_graph_mode('s-reader'), 'sreader.png', type='radio'))
 
+
+	self.toolbar._widget.Realize()	
+
         self.closebar = gui.Toolbar(tbbox, stretch=0)
         self.closebar.append(gui.Action('Close', 'Close this worksheet', 
                                         self.on_close, 'close.png'))
+	self.closebar._widget.Realize()
 
         self.panel = gui.MainPanel(self)
         self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
@@ -102,6 +106,7 @@ class GraphView(gui.Box):
         self.fit = GraphFunctionsPanel(self.graph.functions[0].func, self.graph, 
                                        self.panel.right_panel,
                                        page_label='Fit', page_pixmap='function.png')
+	self.panel.right_panel._widget.toolbar.Realize()
 
     def on_legend_select(self):
         self.style.on_legend_selection()

@@ -341,10 +341,16 @@ class MainWindow(Window):
             'import-ascii'
         ]:
             self.toolbar.append(actions[item])
+        self.toolbar._widget.Realize()
+
         if len(sys.argv) > 1:
             self.open_project(Project(sys.argv[1]))
 
         self.connect('close', self.on_quit)
+
+        self.main.bottom_panel._widget.toolbar.Realize()
+        self.main.left_panel._widget.toolbar.Realize()
+        self.main.right_panel._widget.toolbar.Realize()
 
     def on_status_message(self, msg, time=0):
         self.status = msg

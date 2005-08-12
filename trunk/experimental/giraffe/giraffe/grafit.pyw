@@ -9,6 +9,7 @@ import os
 import sys
 
 from settings import DATADIR
+print DATADIR
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'lib/')
 

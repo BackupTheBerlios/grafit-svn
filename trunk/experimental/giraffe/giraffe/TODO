@@ -21,3 +21,7 @@ planned features
 * fit multiple datasets w/ shared and non-shared parameters
 * filters (like functions, with window)
 * framework for graph tools?
+
+windows
+-------
+* see how a cross-platform app handles the main executable

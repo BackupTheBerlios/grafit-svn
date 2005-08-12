@@ -1,0 +1,8 @@
+src/gl2ps.c
+src/gl2ps_wrap.c
+src/gl2ps.h
+src/gl2ps.i
+__init__.py
+gl2ps.py
+setup.py
+MANIFEST

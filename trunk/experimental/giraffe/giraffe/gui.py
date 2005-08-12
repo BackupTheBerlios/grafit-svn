@@ -1183,6 +1183,7 @@ class _xToolPanel(wx.SashLayoutWindow):
         w, h = dc.GetTextExtent(text)
         wb, hb = bimp.GetSize()
         bmp = wx.EmptyBitmap(w + wb, max([h, hb]))
+        bmp.SetMaskColour(self.GetBackgroundColour())
         dc.SelectObject(bmp)
 
         # draw bitmap and text
@@ -1193,7 +1194,6 @@ class _xToolPanel(wx.SashLayoutWindow):
         dc.DrawBitmap(bimp, 0, 0, True)
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
-        bmp.SetMaskColour(self.GetBackgroundColour())
 
         # rotate if nescessary
         if self.position in ['left', 'right']:
@@ -1203,6 +1203,9 @@ class _xToolPanel(wx.SashLayoutWindow):
 
         btn = wx.NewId()
         self.toolbar.AddCheckTool(btn, bmp, bmp)#, "New")
+        x, y = self.toolbar.GetToolBitmapSize()
+	xb, yb = bmp.GetSize()
+	self.toolbar.SetToolBitmapSize((max(x, xb), max(y, yb)))
 
         self.contentbox.Add(widget._widget, 1, wx.EXPAND)
         widget.hide()
@@ -1359,6 +1362,10 @@ class Toolbar(Widget):
             else:
                 self._widget.AddSimpleTool(id, bitmap, action.name, action.desc)
             self.tools[id] = action
+            
+            x, y = self._widget.GetToolBitmapSize()
+            xb, yb = bitmap.GetSize()
+            self._widget.SetToolBitmapSize((max(x, xb), max(y, yb)))
             action.upd.append([self._widget, id])
 
     def _add(self, child, **place):
