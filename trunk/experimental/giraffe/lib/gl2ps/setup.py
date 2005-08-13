@@ -6,7 +6,7 @@ if platform.system() == 'Windows':
 elif platform.system() == 'Linux':
     libs = ['GL']
 
-setup(name='gl2ps',
+setup(name='pygl2ps',
       version='0.1',
       packages=['gl2ps'],
       package_dir={'gl2ps':''},
@@ -15,6 +15,4 @@ setup(name='gl2ps',
                              ['src/gl2ps_wrap.c', 'src/gl2ps.c',], 
                              include_dirs=['src'],
                              libraries=libs,
-                             )],
-
-      )
+                             )], )

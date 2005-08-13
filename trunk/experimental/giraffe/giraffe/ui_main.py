@@ -339,6 +339,8 @@ class MainWindow(Window):
                        'file-quit']),
             ('&Edit', ['edit-undo', 'edit-redo', None, 
                        'edit-copy']),
+            ('&Tools', []),
+            ('&Help', []),
         ]:
             menu = Menu(self.menubar, title)
             for item in items:

@@ -851,7 +851,7 @@ class List(Widget):
         except wx.PyDeadObjectError:
             return
         if selection != self.selection:
-            self._selection = selection
+            self.selection = selection
             self.emit('selection-changed')
 
     def set_columns(self, columns):
@@ -1444,6 +1444,10 @@ class Window(Widget):
         Widget.__init__(self, None)
         self.title = title
         self._widget.Bind(wx.EVT_CLOSE, self.on_close)
+        icon = wx.EmptyIcon()
+        icon.LoadFile(DATADIR+'install/grafit.ico', wx.BITMAP_TYPE_ICO)
+        icon.CopyFromBitmap(wx.Image(DATADIR+'install/grafit16x16.png').ConvertToBitmap())
+        self._widget.SetIcon(icon)
 
     title = property(lambda self: self._widget.GetTitle(), lambda self, t: self._widget.SetTitle(t))
 
