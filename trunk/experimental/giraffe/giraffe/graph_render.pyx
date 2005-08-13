@@ -89,11 +89,7 @@ cdef extern from "GL/gl.h":
     int GL_BACK, GL_LINE, GL_FRONT, GL_FILL
 
 
-def render(_numarray sx, _numarray sy,  
-#           double xmin, double xmax, double ymin, double ymax, 
-#           double dx, double dy, 
-            symbol, int size):
-#             shape, vertices):
+def render_symbols(_numarray sx, _numarray sy,  symbol, int size):
     cdef int n, m, l
     cdef double x, y, xnext, ynext
     cdef double *xd, *yd
@@ -199,6 +195,15 @@ def render(_numarray sx, _numarray sy,
 
     return 1
 
+def render_lines(_numarray sx, _numarray sy):
+    cdef int n, l
+    cdef double x, y
+    cdef double *xd, *yd
+
+    xd = <double *>NA_OFFSETDATA(sx)
+    yd = <double *>NA_OFFSETDATA(sy)
+    l = sx.dimensions[0]
+
     # draw lines
     glBegin(GL_LINE_STRIP)
     for n from 0 <= n < l:
@@ -225,7 +230,9 @@ def render(_numarray sx, _numarray sy,
 #        ybucket = <int>((y-ymin)/yinterval)
 #        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
 #            continue
-        glVertex3d(x, y, 0)
+        glVertex3d(x, y, 0.1)
 
     glEnd()
     return 1
+
+

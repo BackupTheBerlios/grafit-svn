@@ -15,7 +15,7 @@ from giraffe.functions import MFunctionSum
 from ftgl import FTGLPixmapFont
 from gl2ps import *
 
-from giraffe.graph_render import render
+from giraffe.graph_render import render_symbols, render_lines
 
 class Style(HasSignals):
     def __init__(self, color=(0,0,0), symbol='square-f', symbol_size=8,line_type='none', line_style='solid', line_width=0):
@@ -176,7 +176,7 @@ class DrawWithStyle(HasSignals):
             if self.data.size != 0:
                 glPointSize(self.data.size)
 #            x, y = self.graph.proj(x, y)
-            render(x, y, self.style.symbol, self.style.symbol_size)
+            render_symbols(x, y, self.style.symbol, self.style.symbol_size)
 
     def paint_lines(self, x, y):
         if len(x) == 0:
@@ -208,10 +208,11 @@ class DrawWithStyle(HasSignals):
             gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
-            glVertexPointerd(transpose(array([x, y, z])))
-            glEnable(GL_VERTEX_ARRAY)
-            glDrawArrays(GL_LINE_STRIP, 0, N)
-            glDisable(GL_VERTEX_ARRAY)
+            render_lines(x, y)
+#            glVertexPointerd(transpose(array([x, y, z])))
+#            glEnable(GL_VERTEX_ARRAY)
+#            glDrawArrays(GL_LINE_STRIP, 0, N)
+#            glDisable(GL_VERTEX_ARRAY)
 
         glDisable(GL_LINE_STIPPLE)
 
