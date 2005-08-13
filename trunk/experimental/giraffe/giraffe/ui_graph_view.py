@@ -399,7 +399,8 @@ class GraphDataPanel(gui.Box):
                                        self.on_add, 'add.png'))
         self.toolbar.append(gui.Action('Remove', 'Remove datasets from the graph', 
                                        self.on_remove, 'remove.png'))
-
+        self.toolbar._widget.Realize()
+        
         self.worksheet_list = gui.List(self, editable=False, 
                                        model=WorksheetListModel(self.project.top))
 #        self.worksheet_list.connect('item-activated', self.on_wslist_activated)
@@ -410,6 +411,7 @@ class GraphDataPanel(gui.Box):
 
         gui.Label(self, 'Y column', stretch=0)
         self.y_list = gui.List(self, model=ColumnListModel())
+
 
 #    def on_wslist_activated(self, ind):
 #        print 'activated:', self.worksheet_list.model[ind]
@@ -455,7 +457,7 @@ class GraphFunctionsPanel(gui.Box):
         self.toolbar.append(gui.Action('Fit', '', self.do_fit, 'manibela.png'))
         self.toolbar.append(gui.Action('Save parameters', '', 
                             self.do_fit, 'pencil.png'))
-
+        self.toolbar._widget.Realize()
 
         self.set_function(func)
 
@@ -507,7 +509,7 @@ class GraphFunctionsPanel(gui.Box):
         term._act = gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check')
         t.append(term._act)
         t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
-
+        t._widget.Realize()
         term._box = box
         term._tx = None
 

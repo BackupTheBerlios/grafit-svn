@@ -304,9 +304,10 @@ class Text(Widget):
     """
     def __init__(self, parent, multiline=False, align='default', **place):
         style = 0
-        style |= wx.TE_PROCESS_ENTER
         if multiline:
             style |= wx.TE_MULTILINE 
+	else:
+            style |= wx.TE_PROCESS_ENTER
         if align != 'default':
             style |= {'left':wx.TE_LEFT, 'right':wx.TE_RIGHT, 'center':wx.TE_CENTRE}[align]
         self._widget = wx.TextCtrl(parent._widget, -1, style=style)
