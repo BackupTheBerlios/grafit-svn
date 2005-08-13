@@ -139,11 +139,22 @@ class ProjectExplorer(Box):
 
         self.list.connect('drag-begin', self.on_begin_drag)
         self.list.connect('item-activated', self.on_list_item_activated)
+        self.list.connect('right-click', self.on_list_right_click)
+
+    def on_list_right_click(self, item):
+        if item == -1:
+            return
+        item = self.list.model[item]
+        menu = Menu()
+        menu.append(Action('Delete', 'delete', object))#, 'open.png'))
+        self.list._widget.PopupMenu(menu._menu)
+
 
     def on_tree_drop_ask(self, item):
         return True
 
     def on_tree_dropped(self, item, format, data):
+        print >>sys.stderr, "dropped", item, format, item
         if format == 'grafit-object':
             for d in data.split('\n'):
                 self.project.items[d].parent = item.folder

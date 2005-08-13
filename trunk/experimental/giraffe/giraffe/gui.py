@@ -736,6 +736,7 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
 
     def AddItem(self, x, y):
         item, flags = self.HitTest(wx.Point(x, y))
+        print >>sys.stderr, item, flags
 
         for obj in self.lst.dropobjs:
             if obj.GetFormat() == wx.DataFormat(wx.DF_UNICODETEXT):
@@ -811,6 +812,15 @@ class List(Widget):
         self.can_drop = False
         self.drop_formats = []
 
+        self._widget.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
+
+    def on_right_click(self, evt):
+        item, flags = self._widget.HitTest(evt.GetPosition())
+        if not (flags & wx.LIST_HITTEST_ONITEM):
+            item = -1
+        self.emit('right-click', item)
+        evt.Skip()
+
     def enable_drop(self, formats):
         self.can_drop = True
         self.formats = formats
@@ -841,7 +851,7 @@ class List(Widget):
         except wx.PyDeadObjectError:
             return
         if selection != self.selection:
-            self.selection = selection
+            self._selection = selection
             self.emit('selection-changed')
 
     def set_columns(self, columns):
@@ -1385,19 +1395,21 @@ class Menubar(Widget):
         self.items[event.GetId()]()
 
 class Menu(object):
-    def __init__(self, menubar, name):
+    def __init__(self, menubar=None, name=None):
         self._menu = wx.Menu()
         self.menubar = menubar
         self.name = name
-#        self.items = {} # wxid: action
+        self.items = {}
         self._menu.Bind(wx.EVT_MENU, self.on_menu)
-        menubar._widget.Append(self._menu, name)
+        if menubar is not None:
+            menubar._widget.Append(self._menu, name)
 
     def append(self, action):
         if action is None:
             self._menu.AppendSeparator()
         else:
             id = wx.NewId()
+            self.items[id] = action
             if action.accel is not None:
                 name = action.name + '\t' + action.accel
             else:
@@ -1411,8 +1423,10 @@ class Menu(object):
             if action.pixmap is not None:
                 item.SetBitmap(wx.Image(DATADIR+'data/images/'+action.pixmap).ConvertToBitmap())
             self._menu.AppendItem(item)
+    
+            if self.menubar is not None:
+                self.menubar.items[id] = action
 
-            self.menubar.items[id] = action
     def on_menu(self, event):
         self.items[event.GetId()]()
         
