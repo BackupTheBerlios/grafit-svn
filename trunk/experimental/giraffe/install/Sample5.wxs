@@ -1,61 +1,66 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'>
-  <Product Name='Foobar 1.0' Id='3402feef-86C7-4D14-AEC0-86416A69ABDE'
+  <Product Name='Grafit 1.0' Id='3402feef-86C7-4D14-AEC0-86416A69ABDE'
     Language='1033' Codepage='1252' Version='1.0.0' Manufacturer='Acme Ltd.'>
 
     <Package Id='????????-????-????-????-????????????' Keywords='Installer'
-      Description="Acme's Foobar 1.0 Installer"
-      Comments='Foobar is a registered trademark of Acme Ltd.' Manufacturer='Acme Ltd.'
+      Description="Grafit 1.0 Installer"
+      Comments='No Comment' Manufacturer='Home Made Software'
       InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
 
-    <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
-    <Property Id='DiskPrompt' Value="Acme's Foobar 1.0 Installation [1]" />
+    <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="Grafit CD-ROM" />
+    <Property Id='DiskPrompt' Value="Grafit 1.0 Installation CD" />
+
+
+    <!-- files and directories -->
 
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
-        <Directory Id='Acme' Name='Acme'>
-          <Directory Id='INSTALLDIR' Name='Foobar10' LongName='Foobar 1.0'>
+        <Directory Id='INSTALLDIR' Name='Grafit10' LongName='Grafit 1.0'>
+          
+	  <!-- main executable -->
 
-            <Component Id='MainExecutable' Guid='3402feef-83F1-4F22-985B-FDB3C8ABD471'>
-              <File Id='FoobarEXE' Name='Foobar10.exe' LongName='FoobarAppl10.exe' DiskId='1'
-                src='FoobarAppl10.exe' Vital='yes' />
-              <Shortcut Id="startmenuFoobar10" Directory="ProgramMenuDir" Name="Foobar10" 
-                LongName="Foobar 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
-                Icon="Foobar10.exe" IconIndex="0" />
-              <Shortcut Id="desktopFoobar10" Directory="DesktopFolder" Name="Foobar10"
-                LongName="Foobar 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
-                Icon="Foobar10.exe" IconIndex="0" />
-            </Component>
+          <Component Id='MainExecutable' Guid='3402feef-83F1-4F22-985B-FDB3C8ABD471'>
+            <File Id='GrafitEXE' Name='Grafit10.exe' LongName='Grafit.exe' DiskId='1'
+              src='Grafit.exe' Vital='yes' />
+            <Shortcut Id="startmenuGrafit10" Directory="ProgramMenuDir" Name="Grafit10" 
+              LongName="Grafit 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
+              Icon="Grafit10.exe" IconIndex="0" />
+            <Shortcut Id="desktopGrafit10" Directory="DesktopFolder" Name="Grafit10"
+              LongName="Grafit 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
+              Icon="Grafit10.exe" IconIndex="0" />
+          </Component>
 
-            <Component Id='HelperLibrary' Guid='3402feef-6BE3-460D-A14F-75658D16550B'>
-              <File Id='HelperDLL' Name='Helper.dll' DiskId='1' src='Helper.dll' Vital='yes' />
-            </Component>
 
-            <Component Id='Manual' Guid='3402feef-574D-4A9A-A266-5B5EC2C022A4'>
-              <File Id='Manual' Name='Manual.pdf' DiskId='1' src='Manual.pdf' />
-              <Shortcut Id="startmenuManual" Directory="ProgramMenuDir" Name="Manual"
-                LongName="Instruction Manual" Target="Documentation" />
-            </Component>
+	  <!-- dlls -->
 
-          </Directory>
+          <Component Id='HelperLibrary' Guid='3402feef-6BE3-460D-A14F-75658D16550B'>
+            <File Id='HelperDLL' Name='Helper.dll' DiskId='1' src='Helper.dll' Vital='yes' />
+          </Component>
+
+
+	  <!-- documentation -->
+
+          <Component Id='Manual' Guid='3402feef-574D-4A9A-A266-5B5EC2C022A4'>
+            <File Id='Manual' Name='Manual.pdf' DiskId='1' src='Manual.pdf' />
+            <Shortcut Id="startmenuManual" Directory="ProgramMenuDir" Name="Manual"
+              LongName="Instruction Manual" Target="Documentation" />
+          </Component>
+
         </Directory>
       </Directory>
 
       <Directory Id="ProgramMenuFolder" Name="PMenu" LongName="Programs">
-        <Directory Id="ProgramMenuDir" Name='Foobar10' LongName="Foobar 1.0" />
+        <Directory Id="ProgramMenuDir" Name='Grafit10' LongName="Grafit 1.0" />
       </Directory>
 
       <Directory Id="DesktopFolder" Name="Desktop" />
     </Directory>
 
-    <Property Id="INSTALLDIR">
-      <RegistrySearch Id='AcmeFoobarRegistry' Type='directory'
-        Root='HKLM' Key='Software\Acme\Foobar 1.0' Name='InstallDir' />
-    </Property>
 
-<!--    <Condition Message='This module can only be installed if Acme Foobar 1.0 has been installed first.'>INSTALLDIR</Condition> -->
+    <!-- features -->
 
-    <Feature Id='Complete' Title='Foobar 1.0' Description='The complete package.'
+    <Feature Id='Complete' Title='Grafit 1.0' Description='The complete package.'
       TypicalDefault='install' Display='expand' Level='1'
       ConfigurableDirectory='INSTALLDIR'>
       <Feature Id='MainProgram' Title='Program' Description='The main executable.'
@@ -68,6 +73,9 @@
         <ComponentRef Id='Manual' />
       </Feature>
     </Feature>
+
+
+    <!-- user interface -->
 
     <UI>
       <Property Id="DefaultUIFont">DlgFont8</Property>
@@ -1205,6 +1213,6 @@
     <Binary Id="info" src="Binary\Info.ico" />
     <Binary Id="bannrbmp" src="Binary\Banner.bmp" />
     <Binary Id="dlgbmp" src="Binary\Dialog.bmp" />
-    <Icon Id="Foobar10.exe" src="FoobarAppl10.exe" />
+    <Icon Id="Grafit10.exe" src="Grafit.exe" />
   </Product>
 </Wix>
