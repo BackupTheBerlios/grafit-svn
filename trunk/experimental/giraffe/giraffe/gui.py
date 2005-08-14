@@ -1,4 +1,6 @@
 # mingui
+# minimalist gui for python
+
 import sys
 import time
 import weakref
@@ -12,62 +14,25 @@ from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionMana
 from wx.lib.colourselect import ColourSelect, EVT_COLOURSELECT
 from wx.lib.scrolledpanel import ScrolledPanel
 
-from signals import HasSignals
+from giraffe.signals import HasSignals
+from giraffe.settings import DATADIR
 
-from settings import DATADIR
 
-
-# this module absolutely needs documentation!
-
-#class Pixmap(object):
-#    def __init__(self, name):
-#        self.name = name
-#        self._bitmap = wx.Image('../data/images/'+name).ConvertToBitmap()
-
-#class _xFrameMixIn(wx.Window): 
-#    def prepareFrame(self, closeEventHandler=None): 
-#        self._closeHandler = closeEventHandler 
-#        wx.EVT_CLOSE(self, self.closeFrame) 
-#
-#    def closeFrame(self, event): 
-#        win = wx.Window_FindFocus() 
-#        if win != None: 
-#            win.Disconnect(-1, -1, wxEVT_KILL_FOCUS) 
-#        if self._closeHandler != None: 
-#            apply(self._closeHandler, [event]) 
-#        else: 
-#            event.Skip() 
+###############################################################################
+# Application                                                                 #
+###############################################################################
 
 class _xSplashScreen(wx.SplashScreen):
     """
     Create a splash screen widget.
     """
     def __init__(self):
-        # This is a recipe to a the screen.
-        # Modify the following variables as necessary.
         aBitmap = wx.Image(name = DATADIR+"data/images/logo.png").ConvertToBitmap()
         splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT #| wx.NO_BORDER
         splashDuration = 1000 # milliseconds
         splashCallback = None
-        # Call the constructor with the above arguments in exactly the
-        # following order.
-        wx.SplashScreen.__init__(self, aBitmap, splashStyle,
-                                 splashDuration, splashCallback)
-#        self.Bind(wx.EVT_CLOSE, self.OnExit)
-
+        wx.SplashScreen.__init__(self, aBitmap, splashStyle, splashDuration, splashCallback)
         wx.Yield()
-#----------------------------------------------------------------------#
-
-#    def OnExit(self, evt):
-#        self.Hide()
-        # MyFrame is the main frame.
-#        MyFrame = MyGUI(None, -1, "Hello from wxPython")
-#        app.SetTopWindow(MyFrame)
-#        MyFrame.Show(True)
-        # The program will freeze without this line.
-#        evt.Skip()  # Make sure the default handler runs too...
-#----------------------------------------------------------------------#
-
 
 class _xApplication(wx.App):
     def __init__(self):
@@ -79,9 +44,7 @@ class _xApplication(wx.App):
         self.mainwin.show(all=True)
 
     def OnExit(self):
-#        print >>sys.stderr, "Exit"
         pass
-
 
 class Singleton(object):
     _state = {}
@@ -109,6 +72,10 @@ class Application(Singleton):
 def run(mainwinclass):
     Application().run(mainwinclass)
 
+
+###############################################################################
+# Widget                                                                      #
+###############################################################################
 
 class Widget(HasSignals):
     def __init__(self, parent, **kwds):
