@@ -246,30 +246,30 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
                 if not self.__done or redo is None:
                     ret = do(selb, *self.args, **self.kwds)
                     if isinstance(ret, tuple) and len(ret) > 1:
-                        self.__state = ret[0]
+                        self.state = ret[0]
                         ret = ret[1:]
                         if isinstance(ret, tuple) and len(ret) == 1:
                             ret = ret[0]
                     else:
-                        self.__state = ret
+                        self.state = ret
                         ret = None
                     self.__done = True
                 else:
-                    return redo(selb, self.__state)
+                    return redo(selb, self.state)
                 return ret
 
             def undo(self):
-                return undo(selb, self.__state)
+                return undo(selb, self.state)
 
             def combine(self, cmd):
                 if combine is not None:
-                    return combine(self, self.__state, cmd.__state)
+                    return combine(self, self.state, cmd.state)
                 else:
                     return False
 
             if cleanup is not None:
                 def __del__(self):
-                    cleanup(selb, self.__state)
+                    cleanup(selb, self.state)
 
         CommandFromMethod.__name__ = name
         com = CommandFromMethod()
@@ -280,6 +280,52 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
 #            print >>sys.stderr, "comand stopped"
             return None
     return replace_init
+
+
+def command_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None):
+    """Create a command from a bunch of methods of another object.
+    
+    If a redo() method is given, it is called instead of do() if
+    the command has been undone before.
+
+    If a cleanup() method is given, it is called when the command
+    object is deleted.
+    """
+    def replace_do(obj, *args, **kwds):
+        class CommandFromMethod(Command):
+            def __init__(self):
+                self.args, self.kwds = args, kwds
+                self.done = False
+                self.state = {}
+
+            def do(self):
+                if not self.done or redo is None:
+                    self.done = True
+                    return do(obj, self.state, *self.args, **self.kwds)
+                else:
+                    return redo(obj, self.state)
+
+            def undo(self):
+                return undo(obj, self.state)
+
+            def combine(self, cmd):
+                if combine is not None:
+                    return combine(self, self.state, cmd.state)
+                else:
+                    return False
+
+            if cleanup is not None:
+                def __del__(self):
+                    cleanup(obj, self.state)
+
+        CommandFromMethod.__name__ = name
+        com = CommandFromMethod()
+        try:
+            ret = com.do_and_register()
+            return ret
+        except StopCommand:
+            return None
+    return replace_do
 
 # global command list
 command_list = CommandList()

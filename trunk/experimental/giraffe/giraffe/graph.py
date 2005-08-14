@@ -1,5 +1,6 @@
 import sys
 import time
+import re
 print >>sys.stderr, "import graph"
 import string
 
@@ -9,7 +10,7 @@ from OpenGL.GLU import *
 
 from giraffe.signals import HasSignals
 from giraffe.project import Item, wrap_attribute, register_class, create_id
-from giraffe.commands import command_from_methods
+from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
 from giraffe.functions import MFunctionSum
 
 from ftgl import FTGLPixmapFont
@@ -321,15 +322,24 @@ class Dataset(DrawWithStyle):
         self.xx = asarray(self.x[ind])
         self.yy = asarray(self.y[ind])
 
-    def set_range(self, range):
+    def set_range(self, _state, range):
+        _state['old'] = self.xfrom, self.xto
         self.xfrom, self.xto = range
+        self.recalculate()
+        self.emit('modified', self)
+
+    def undo_set_range(self, _state):
+        self.xfrom, self.xto = _state['old']
         self.recalculate()
         self.emit('modified', self)
 
     def get_range(self):
         return self.xfrom, self.xto
 
+    set_range = command_from_methods2('dataset-set-range', set_range, undo_set_range)
+
     range = property(get_range, set_range)
+
 
     def paint(self):
         xx, yy = self.graph.proj(self.xx, self.yy)
@@ -450,6 +460,9 @@ from settings import DATADIR
 FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
 AXISFONT = FTGLPixmapFont(FONTFILE)
 
+import matplotlib.mathtext as mathtext
+import numarray.mlab as mlab
+
 class Axis(object):
     def __init__(self, position, plot):
         self.position = position
@@ -471,7 +484,9 @@ class Axis(object):
         return data
 
     def paint(self):
-        glColor3d(0.87, 0.85, 0.83) # background color
+#        glColor3d(0.87, 0.85, 0.83) # background color
+#        glColor3d(*[c/255. for c in (245, 222, 179)])
+        glColor3d(1, 1, 1)
         if self.position == 'bottom':
             glRectd(-self.plot.marginl, -self.plot.marginb, 
                     self.plot.width_mm-self.plot.marginl, 0)
@@ -532,19 +547,83 @@ class Axis(object):
 
         self.paint_text()
 
+    def totex(self, num):
+        st = "%g"%num
+        match = re.match(r'([-?\d\.]+)e([\+\-])(\d+)', st)
+        if match is not None:
+            mant = match.group(1)
+            if mant == '1':
+                mant = ''
+                cdot = ''
+            else:
+                cdot = r' \cdot '
+
+            exp = str(int(match.group(3)))
+
+            sign = match.group(2)
+            if sign == '+':
+                sign = ''
+            return r'$\cal{%s%s10^{%s%s}}$' % (mant, cdot, sign, exp)
+        return r'$\varepsilon_\infty \cal{%s}$' % st
+
     def paint_text(self):
         h = int(2.6*self.plot.res)
         self.font.FaceSize(h)
+        facesize = h
         if self.position == 'bottom':
             for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
-                st = '%g'%x
+                st = self.totex(x)#'%g'%x
+
                 xm, _ = self.plot.proj(x, 0.)
-                w = self.font.Advance(st)
-                glRasterPos2d(xm - (w/2)/self.plot.res, -4)
+ 
                 if self.plot.ps:
-                    gl2psText(st, "Times-Roman", h)
+                    w = self.font.Advance(st)
                 else:
+                    w, t, fts = mathtext.math_parse_s_ft2font(st, 72, facesize)
+
+                rasterx = xm - (w/2)/self.plot.res
+                rastery = -4
+                glRasterPos2d(rasterx, rastery)
+#                psx, psy = self.graph.invproj()
+
+                if self.plot.ps:
+#                    gl2psText(st, "Times-Roman", h)
+                    
+                    width, height, pswriter = mathtext.math_parse_s_ps(st, 72, facesize)
+                    thetext = pswriter.getvalue()
+                    ps = """gsave
+%f %f translate
+%f rotate
+%s
+grestore
+""" % (xm*self.plot.res, 0, 0, thetext)
+                    print >>sys.stderr, ps
+
+                elif 0:
                     self.font.Render(st)
+                else:
+#                    tw, th, fts = mathtext.math_parse_s_ft2font(st, 75, facesize)
+                    w, h, imgstr = fts[0].image_as_str()
+                    N = w*h
+                    Xall = zeros((N,len(fts)), typecode=UInt8)
+
+                    for i, f in enumerate(fts):
+                        w, h, imgstr = f.image_as_str()
+                        Xall[:,i] = fromstring(imgstr, UInt8)
+
+                    Xs = mlab.max(Xall, 1)
+                    Xs.shape = (h, w)
+
+                    pa = zeros(shape=(h,w,4), typecode=UInt8)
+                    rgb = [0., 0., 0.]
+
+                    pa[:,:,0] = int(rgb[0]*255)
+                    pa[:,:,1] = int(rgb[1]*255)
+                    pa[:,:,2] = int(rgb[2]*255)
+                    pa[:,:,3] = Xs[::-1]
+
+                    glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
+
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
                 st = '%g'%y
@@ -571,52 +650,42 @@ class Axis(object):
             return [fr], []
 
         bottom = floor(log10(fr))
-        top = ceil(log10(to))
+        top = ceil(log10(to)) + 1
 
-        major = 10**arange(bottom, top+1)
-        minor = array([])
-        major = array([n for n in major if fr<=n<=to])
+        r = 1
+        l = 100
+        while l>8:
+            major = 10**arange(bottom, top, r)
+            minor = array([])
+            major = array([n for n in major if fr<=n<=to])
+            l = len(major)
+            r += 1
         return major, minor
 
     def lintics(self, fr, to):
         # 3-8 major tics
         if fr == to:
             return [fr], []
+
         exponent = floor(log10(to-fr)) - 1
 
-        for interval in (1,5,2):#,4,6,7,8,9,3):
-            interval = interval * (10**exponent)
-            if fr%interval == 0:
-                first = fr
-            else:
-                first = fr + (interval-fr%interval)
-            first -= interval
-            rng = arange(first, to, interval)
-            if 4 <= len(rng) <= 8:
-                minor = []
-                for n in rng:
-                    minor.extend(arange(n, n+interval, interval/5))
-                rng = array([n for n in rng if fr<=n<=to])
-                minor = array([n for n in minor if fr<=n<=to])
-                return rng, minor
-#
-        exponent += 1
-        for interval in (1,5,2):#,4,6,7,8,9,3):
-            interval = interval * (10**exponent)
-            if fr%interval == 0:
-                first = fr
-            else:
-                first = fr + (interval-fr%interval)
-            first -= interval
-            rng = arange(first, to, interval)
-            if 4 <= len(rng) <= 8:
-#                print 'from %f to %f:'%(fr, to), rng
-                minor = []
-                for n in rng:
-                    minor.extend(arange(n, n+interval, interval/5))
-                rng = array([n for n in rng if fr<=n<=to])
-                minor = array([n for n in minor if fr<=n<=to])
-                return rng, minor
+        for exponent in (exponent, exponent+1):
+            for interval in (1,5,2):#,4,6,7,8,9,3):
+                interval = interval * (10**exponent)
+                if fr%interval == 0:
+                    first = fr
+                else:
+                    first = fr + (interval-fr%interval)
+                first -= interval
+                rng = arange(first, to, interval)
+                if 4 <= len(rng) <= 8:
+                    minor = []
+                    for n in rng:
+                        minor.extend(arange(n, n+interval, interval/5))
+                    rng = array([n for n in rng if fr<=n<=to])
+                    minor = array([n for n in minor if fr<=n<=to])
+                    return rng, minor
+
         print "cannot tick", fr, to, len(rng)
         return []
 
@@ -665,9 +734,9 @@ class Graph(Item, HasSignals):
         self.newf()
 
         if self.xtype == '':
-            self.xtype = 'linear'
+            self._xtype = 'linear'
         if self.ytype == '':
-            self.ytype = 'linear'
+            self._ytype = 'linear'
         self.selected_function = None
 
         self.rubberband = Rubberband(self)
@@ -698,23 +767,45 @@ class Graph(Item, HasSignals):
     ymin = property(get_ymin, set_ymin)
     ymax = property(get_ymax, set_ymax)
 
-    def set_xtype(self, tp):
+
+    # axis scales
+
+    def set_xtype(self, _state, tp):
         if tp == 'log' and (self.xmin <= 0 or self.xmax <= 0):
-            return
+            raise StopCommand
+        _state['old'] = self._xtype
         self._xtype = tp
         self.emit('redraw')
+
+    def undo_set_xtype(self, _state):
+        self._xtype = _state['old']
+        self.emit('redraw')
+
+    set_xtype = command_from_methods2('graph-set-xaxis-scale', set_xtype, undo_set_xtype)
+
     def get_xtype(self):
         return self._xtype
+
     xtype = property(get_xtype, set_xtype)
 
-    def set_ytype(self, tp):
-        if tp == 'log' and (self.ymin <= 0 or self.ymax <= 0):
-            return
+    def set_ytype(self, _state, tp):
+        if tp == 'log' and (self.xmin <= 0 or self.xmax <= 0):
+            raise StopCommand
+        _state['old'] = self._ytype
         self._ytype = tp
         self.emit('redraw')
+
+    def undo_set_ytype(self, _state):
+        self._ytype = _state['old']
+        self.emit('redraw')
+
+    set_ytype = command_from_methods2('graph-set-xaxis-scale', set_ytype, undo_set_ytype)
+
     def get_ytype(self):
         return self._ytype
+
     ytype = property(get_ytype, set_ytype)
+
 
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
@@ -730,7 +821,7 @@ class Graph(Item, HasSignals):
 
     # add and remove datasets
 
-    def add(self, x, y):
+    def add(self, state, x, y):
         ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), 
                                         x=x.name.encode('utf-8'), y=y.name.encode('utf-8'))
 
@@ -745,9 +836,13 @@ class Graph(Item, HasSignals):
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
 
+        state['pos'] = pos
+
         return pos
 
-    def undo_add(self, pos):
+    def undo_add(self, state):
+        pos = state['pos']
+
         d = self.datasets[pos]
         print 'undoing addition of dataset, index %d, position %d' % (d.ind, pos)
         del self.datasets[pos]
@@ -756,7 +851,7 @@ class Graph(Item, HasSignals):
         self.emit('redraw')
         self.data.datasets.delete(d.ind)
 
-    add = command_from_methods('graph_add_dataset', add, undo_add)
+    add = command_from_methods2('graph_add_dataset', add, undo_add)
 
     def remove(self, dataset):
         # we can do this even if `dataset` is a different object
@@ -876,8 +971,8 @@ class Graph(Item, HasSignals):
         glClear(GL_COLOR_BUFFER_BIT)
 
 #        # enable transparency
-#        glEnable (GL_BLEND)
-#        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable (GL_BLEND)
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         glDisable(GL_DEPTH_TEST)
         glShadeModel(GL_FLAT)
@@ -1104,3 +1199,102 @@ for w in string.whitespace:
     desc = desc.replace(w, '')
 
 register_class(Graph, desc)
+
+
+import os
+import binascii
+from matplotlib.mathtext import math_parse_s_ps, bakoma_fonts
+from matplotlib.ft2font import FT2Font
+
+def encodeTTFasPS(fontfile):
+    """
+    Encode a TrueType font file for embedding in a PS file.
+    """
+    font = file(fontfile, 'rb')
+    hexdata, data = [], font.read(65520)
+    b2a_hex = binascii.b2a_hex
+    while data:
+        hexdata.append('<%s>\n' %
+                       '\n'.join([b2a_hex(data[j:j+36]).upper()
+                                  for j in range(0, len(data), 36)]) )
+        data  = font.read(65520)
+
+    hexdata = ''.join(hexdata)[:-2] + '00>'
+    font    = FT2Font(str(fontfile))
+
+    headtab  = font.get_sfnt_table('head')
+    version  = '%d.%d' % headtab['version']
+    revision = '%d.%d' % headtab['fontRevision']
+
+    dictsize = 8
+    fontname = font.postscript_name
+    encoding = 'StandardEncoding'
+    fontbbox = '[%d %d %d %d]' % font.bbox
+
+    posttab  = font.get_sfnt_table('post')
+    minmemory= posttab['minMemType42']
+    maxmemory= posttab['maxMemType42']
+
+    infosize = 7
+    sfnt     = font.get_sfnt()
+    notice   = sfnt[(1,0,0,0)]
+    family   = sfnt[(1,0,0,1)]
+    fullname = sfnt[(1,0,0,4)]
+    iversion = sfnt[(1,0,0,5)]
+    fixpitch = str(bool(posttab['isFixedPitch'])).lower()
+    ulinepos = posttab['underlinePosition']
+    ulinethk = posttab['underlineThickness']
+    italicang= '(%d.%d)' % posttab['italicAngle']
+
+    numglyphs = font.num_glyphs
+    glyphs = []
+    for j in range(numglyphs):
+        glyphs.append('/%s %d def' % (font.get_glyph_name(j), j))
+        if j != 0 and j%4 == 0:
+            glyphs.append('\n')
+        else:
+            glyphs.append(' ')
+    glyphs = ''.join(glyphs)
+    data = ['%%!PS-TrueType-%(version)s-%(revision)s\n' % locals()]
+    if maxmemory:
+        data.append('%%%%VMusage: %(minmemory)d %(maxmemory)d' % locals())
+    data.append("""%(dictsize)d dict begin
+/FontName /%(fontname)s def
+/FontMatrix [1 0 0 1 0 0] def
+/FontType 42 def
+/Encoding %(encoding)s def
+/FontBBox %(fontbbox)s def
+/PaintType 0 def
+/FontInfo %(infosize)d dict dup begin
+/Notice (%(notice)s) def
+/FamilyName (%(family)s) def
+/FullName (%(fullname)s) def
+/version (%(iversion)s) def
+/isFixedPitch %(fixpitch)s def
+/UnderlinePosition %(ulinepos)s def
+/UnderlineThickness %(ulinethk)s def
+end readonly def
+/sfnts [
+%(hexdata)s
+] def
+/CharStrings %(numglyphs)d dict dup begin
+%(glyphs)s
+end readonly def
+FontName currentdict end definefont pop""" % locals())
+    return ''.join(data)
+
+
+#basepath = '/usr/share/matplotlib/'
+#type42 = [os.path.join(basepath, name) + '.ttf' for name in bakoma_fonts]
+#type42.append('/usr/share/matplotlib/cmr10.ttf')
+#type42.append('/usr/share/matplotlib/cmex10.ttf')
+#type42.append('/usr/share/matplotlib/cmmi10.ttf')
+#type42.append('/usr/share/matplotlib/cmsy10.ttf')
+#type42.append('/usr/share/matplotlib/cmtt10.ttf')
+
+
+#for font in type42:
+#    print "%%BeginFont: "+FT2Font(str(font)).postscript_name
+#    print encodeTTFasPS(font)
+#    print "%%EndFont"
+

@@ -1,21 +1,16 @@
 immediate
 ---------
-* stc for editing functions
+* make log axes work nicely
+* rewrite panels using MultiSplitter
+* make console history work with arrows
+- make range a command
+- make axis scale change a command
+* make add/remove functions commands
+
 * context menu on project explorer
 * context menu on graph
-* make console history work with arrows
-
-- make zoom a command
-* make range a command
-* make add/remove functions commands
-- save console history
-* make axis scale change a command
 * fix exit handling and session saving
-
-* command_from_methods: make __state a dictionary
 * make combine work for dataset-change-style command
-
-* rewrite panels using MultiSplitter
 
 planned features
 ----------------
