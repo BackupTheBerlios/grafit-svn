@@ -51,10 +51,21 @@ class ItemDragData(object):
 class Cancel(Exception):
     pass
 
-class ScriptWindow(Shell):
+#import Pyro.core
+#import threading
+
+class ScriptWindow(Shell):#, Pyro.core.ObjBase):
     def __init__(self, parent, **kwds):
         self.locals = {}
         Shell.__init__(self, parent, locals=self.locals, **kwds)
+#        Pyro.core.ObjBase.__init__(self)
+#
+#        Pyro.core.initServer()
+#        daemon = Pyro.core.Daemon()
+#        uri=daemon.connect(self, 'Grafit')
+#        print uri
+#        thread = threading.Thread(None, lambda: daemon.requestLoop())
+#        thread.start()
 
         self.run('from giraffe.arrays import *')
         self.run('from giraffe import *')
@@ -329,6 +340,8 @@ class MainWindow(Window):
                                        self.on_new_graph, 'graph.png'),
             'object-new-folder': Action('New Folder', 'Create a new worksheet', 
                                         self.on_new_folder, 'stock_folder.png'),
+            'functions': Action('Functions...', '', object),
+            'filters': Action('Filters...', '', object),
             None: None
         }
 
@@ -339,7 +352,7 @@ class MainWindow(Window):
                        'file-quit']),
             ('&Edit', ['edit-undo', 'edit-redo', None, 
                        'edit-copy']),
-            ('&Tools', []),
+            ('&Tools', ['functions', 'filters']),
             ('&Help', []),
         ]:
             menu = Menu(self.menubar, title)

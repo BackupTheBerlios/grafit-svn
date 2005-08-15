@@ -1161,10 +1161,9 @@ class _xToolPanel(wx.SashLayoutWindow):
         w, h = dc.GetTextExtent(text)
         wb, hb = bimp.GetSize()
         bmp = wx.EmptyBitmap(w + wb, max([h, hb]))
-        bmp.SetMaskColour(self.GetBackgroundColour())
-        dc.SelectObject(bmp)
 
         # draw bitmap and text
+        dc.SelectObject(bmp)
         dc.BeginDrawing()
         dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
         dc.Clear()
@@ -1172,6 +1171,7 @@ class _xToolPanel(wx.SashLayoutWindow):
         dc.DrawBitmap(bimp, 0, 0, True)
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
+        bmp.SetMaskColour(self.GetBackgroundColour())
 
         # rotate if nescessary
         if self.position in ['left', 'right']:
@@ -1182,8 +1182,8 @@ class _xToolPanel(wx.SashLayoutWindow):
         btn = wx.NewId()
         self.toolbar.AddCheckTool(btn, bmp, bmp)#, "New")
         x, y = self.toolbar.GetToolBitmapSize()
-	xb, yb = bmp.GetSize()
-	self.toolbar.SetToolBitmapSize((max(x, xb), max(y, yb)))
+        xb, yb = bmp.GetSize()
+        self.toolbar.SetToolBitmapSize((max(x, xb), max(y, yb)))
 
         self.contentbox.Add(widget._widget, 1, wx.EXPAND)
         widget.hide()

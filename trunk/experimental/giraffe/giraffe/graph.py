@@ -18,6 +18,29 @@ from gl2ps import *
 
 from giraffe.graph_render import render_symbols, render_lines
 
+def cut(st, delim):
+    pieces = st.split(delim)
+    pieces_fixed = []
+
+    pieces_fixed.append(pieces[0])
+
+    for p, q in (pieces[n:n+2] for n in range(len(pieces)-1)):
+        if (len(p) - len(p.rstrip('\\'))) % 2:
+            # has an odd number of trailing backslashes
+            pieces_fixed[-1] += delim+q
+        else:
+            pieces_fixed.append(q)
+    if pieces_fixed[0] == '':
+        initial = True
+        del pieces_fixed[0]
+    else: 
+        initial = False
+
+    if pieces_fixed[-1] == '':
+        del pieces_fixed[-1]
+
+    return zip(pieces_fixed, [bool(x%2)^initial for x in range(len(pieces_fixed))])
+
 class Style(HasSignals):
     def __init__(self, color=(0,0,0), symbol='square-f', symbol_size=8,line_type='none', line_style='solid', line_width=0):
         self._color = color
@@ -210,7 +233,7 @@ class DrawWithStyle(HasSignals):
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
             render_lines(x, y)
-#            glVertexPointerd(transpose(array([x, y, z])))
+#            glVertexPointerd(transpose(array([x, y, z])).tostring())
 #            glEnable(GL_VERTEX_ARRAY)
 #            glDrawArrays(GL_LINE_STRIP, 0, N)
 #            glDisable(GL_VERTEX_ARRAY)
@@ -547,13 +570,18 @@ class Axis(object):
 
         self.paint_text()
 
+    rexp = re.compile(r'([-?\d\.]+)e([\+\-])(\d+)')
+
     def totex(self, num):
         st = "%g"%num
-        match = re.match(r'([-?\d\.]+)e([\+\-])(\d+)', st)
+        match = self.rexp.match(st)
         if match is not None:
             mant = match.group(1)
             if mant == '1':
                 mant = ''
+                cdot = ''
+            elif mant == '-1':
+                mant = '-'
                 cdot = ''
             else:
                 cdot = r' \cdot '
@@ -563,77 +591,162 @@ class Axis(object):
             sign = match.group(2)
             if sign == '+':
                 sign = ''
-            return r'$\cal{%s%s10^{%s%s}}$' % (mant, cdot, sign, exp)
-        return r'$\varepsilon_\infty \cal{%s}$' % st
+            return r'$%s%s10^{%s%s}$' % (mant, cdot, sign, exp)
+        return r'$%s$' % st
+
+
+    # Text objects are split into chunks, which are fragments
+    # that have the same size and the same type (normal, tex, ...)
+
+    # The render_text_chunk_xxx functions return the size of the
+    # text fragment and a renderer. The renderer must be called
+    # with the position (lower left corner) of the fragment, 
+    # to render the text
+
+    def render_text_chunk_normal(self, text, size):
+        """Render a text chunk using normal text"""
+        self.font.FaceSize(size)
+        w, h = self.font.Advance(text), self.font.LineHeight()
+        def renderer(x, y):
+            self.font.FaceSize(size)
+            glRasterPos2d(x, y)
+            self.font.Render(text)
+        return w, h, renderer
+
+    def render_text_chunk_tex(self, text, size):
+        """Render a text chunk using mathtext"""
+        w, h, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
+        def renderer(x, y):
+            glRasterPos2d(x, y)
+            w, h, imgstr = fonts[0].image_as_str()
+            N = w*h
+            Xall = zeros((N,len(fonts)), typecode=UInt8)
+
+            for i, f in enumerate(fonts):
+                w, h, imgstr = f.image_as_str()
+                Xall[:,i] = fromstring(imgstr, UInt8)
+
+            Xs = mlab.max(Xall, 1)
+            Xs.shape = (h, w)
+
+            pa = zeros(shape=(h,w,4), typecode=UInt8)
+            rgb = (0.2, 0.2, 0.)
+
+            pa[:,:,0] = int(rgb[0]*255)
+            pa[:,:,1] = int(rgb[1]*255)
+            pa[:,:,2] = int(rgb[2]*255)
+            pa[:,:,3] = Xs[::-1]
+
+            glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
+
+        return w, h, renderer
+
+    def render_text(self, text, size, x, y, align_x='center', align_y='center'):
+        if self.plot.ps:
+            return 0, 0
+        else:
+            chunks = cut(text, '$')
+
+            pos = 0
+            for chunk, tex in chunks:
+                if tex:
+                    w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3))
+                else:
+                    w, h, renderer = self.render_text_chunk_normal(chunk, size)
+
+                if align_x == 'left':
+                    pass
+                elif align_x == 'right':
+                    x -= w/self.plot.res
+                elif align_x == 'center':
+                    x -= (w/2)/self.plot.res
+
+                if align_y == 'top':
+                    y -= h/self.plot.res
+                elif align_y == 'bottom':
+                    pass
+                elif align_y == 'center':
+                    y -= (h/2)/self.plot.res
+
+                renderer(x+pos, y)
+                pos += w/self.plot.res
 
     def paint_text(self):
-        h = int(2.6*self.plot.res)
-        self.font.FaceSize(h)
-        facesize = h
+        facesize = int(3.*self.plot.res)
+        
         if self.position == 'bottom':
             for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
-                st = self.totex(x)#'%g'%x
-
+#                if x > 100:
+                st = self.totex(x)
+#                else:
+#                    st = r'%g$\tt{\Delta\epsilon \tt{ab}cde_\infty}$ass'%x
                 xm, _ = self.plot.proj(x, 0.)
- 
-                if self.plot.ps:
-                    w = self.font.Advance(st)
-                else:
-                    w, t, fts = mathtext.math_parse_s_ft2font(st, 72, facesize)
-
-                rasterx = xm - (w/2)/self.plot.res
-                rastery = -4
-                glRasterPos2d(rasterx, rastery)
-#                psx, psy = self.graph.invproj()
-
-                if self.plot.ps:
-#                    gl2psText(st, "Times-Roman", h)
-                    
-                    width, height, pswriter = mathtext.math_parse_s_ps(st, 72, facesize)
-                    thetext = pswriter.getvalue()
-                    ps = """gsave
-%f %f translate
-%f rotate
-%s
-grestore
-""" % (xm*self.plot.res, 0, 0, thetext)
-                    print >>sys.stderr, ps
-
-                elif 0:
-                    self.font.Render(st)
-                else:
-#                    tw, th, fts = mathtext.math_parse_s_ft2font(st, 75, facesize)
-                    w, h, imgstr = fts[0].image_as_str()
-                    N = w*h
-                    Xall = zeros((N,len(fts)), typecode=UInt8)
-
-                    for i, f in enumerate(fts):
-                        w, h, imgstr = f.image_as_str()
-                        Xall[:,i] = fromstring(imgstr, UInt8)
-
-                    Xs = mlab.max(Xall, 1)
-                    Xs.shape = (h, w)
-
-                    pa = zeros(shape=(h,w,4), typecode=UInt8)
-                    rgb = [0., 0., 0.]
-
-                    pa[:,:,0] = int(rgb[0]*255)
-                    pa[:,:,1] = int(rgb[1]*255)
-                    pa[:,:,2] = int(rgb[2]*255)
-                    pa[:,:,3] = Xs[::-1]
-
-                    glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
-
+                self.render_text(st, facesize, xm, -2, 'center', 'top')
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
-                st = '%g'%y
+#                if y > 100:
+                st = self.totex(y)
+#                else:
+#                st = '%g'%y
                 _, ym = self.plot.proj(0., y)
-                w = self.font.Advance(st)
-                glRasterPos2d(-w/self.plot.res - 2, ym - (h/2)/self.plot.res)
-                if self.plot.ps:
-                    gl2psText(st, "TimesRoman", h)
-                else:
-                    self.font.Render(st)
+                self.render_text(st, facesize, -2, ym, 'right', 'center')
+ 
+#                if self.plot.ps:
+#                    w = self.font.Advance(st)
+#                else:
+#                    w, t, fts = mathtext.math_parse_s_ft2font(st, 72, facesize)
+
+#                glRasterPos2d(rasterx, rastery)
+#                psx, psy = self.graph.invproj()
+
+#                if self.plot.ps:
+##                    gl2psText(st, "Times-Roman", h)
+#                    
+#                    width, height, pswriter = mathtext.math_parse_s_ps(st, 72, facesize)
+#                    thetext = pswriter.getvalue()
+#                    ps = """gsave
+#%f %f translate
+#%f rotate
+#%s
+#grestore
+#""" % (xm*self.plot.res, 0, 0, thetext)
+#                    print >>sys.stderr, ps
+#
+#                elif 0:
+#                    self.font.Render(st)
+#                else:
+#                    tw, th, fts = mathtext.math_parse_s_ft2font(st, 75, facesize)
+#                    w, h, imgstr = fts[0].image_as_str()
+#                    N = w*h
+#                    Xall = zeros((N,len(fts)), typecode=UInt8)
+#
+#                    for i, f in enumerate(fts):
+#                        w, h, imgstr = f.image_as_str()
+#                        Xall[:,i] = fromstring(imgstr, UInt8)
+#
+#                    Xs = mlab.max(Xall, 1)
+#                    Xs.shape = (h, w)
+#
+#                    pa = zeros(shape=(h,w,4), typecode=UInt8)
+#                    rgb = [0., 0., 0.]
+#
+#                    pa[:,:,0] = int(rgb[0]*255)
+#                    pa[:,:,1] = int(rgb[1]*255)
+#                    pa[:,:,2] = int(rgb[2]*255)
+#                    pa[:,:,3] = Xs[::-1]
+#
+#                    glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
+#
+#        elif self.position == 'left':
+#            for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
+#                st = '%g'%y
+#                _, ym = self.plot.proj(0., y)
+#                w = self.font.Advance(st)
+#                glRasterPos2d(-w/self.plot.res - 2, ym - (h/2)/self.plot.res)
+#                if self.plot.ps:
+#                    gl2psText(st, "TimesRoman", h)
+#                else:
+#                    self.font.Render(st)
 
     def tics(self, fr, to):
         if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
