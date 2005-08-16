@@ -515,22 +515,6 @@ class Axis(object):
         return data
 
     def paint(self):
-        """
-        glColor3d(1, 1, 1)
-        if self.position == 'bottom':
-            glRectd(-self.plot.marginl, -self.plot.marginb, 
-                    self.plot.width_mm-self.plot.marginl, 0)
-        elif self.position == 'right':
-            glRectd(self.plot.plot_width, -self.plot.marginb,
-                    self.plot.width_mm-self.plot.marginl, self.plot.height_mm-self.plot.marginb)
-        elif self.position == 'top':
-            glRectd(-self.plot.marginl, self.plot.height_mm-self.plot.marginb,
-                    self.plot.width_mm-self.plot.marginl, self.plot.plot_height)
-        elif self.position == 'left':
-            glRectd(-self.plot.marginl, self.plot.height_mm-self.plot.marginb,
-                    0, 0)
-        """
-
         glColor3d(0.0, 0.0, 0.0) # axis color
 
         # Axis lines
@@ -580,13 +564,19 @@ class Axis(object):
         self.paint_title()
 
     def paint_title(self):
+        facesize = int(3.*self.plot.res)
         if self.position == 'bottom':
 #            st = r'$\sum f \varepsilon^3$, frequency with $\angstrom$ in [Hz]'
-            st = 'x axis title'
-            facesize = int(3.*self.plot.res)
+            st = r'frequency $f$ [Hz]'
             x = self.plot.plot_width/2
             y = -9
             self.render_text(st, facesize, x, y, align_x='center', align_y='bottom')
+        elif self.position == 'left':
+            st = r'dielectric loss $\epsilon_2$'
+            x = -7
+            y = self.plot.plot_height/2
+            self.render_text(st, facesize, x, y, align_x='right', align_y='center', orientation='v')
+
 
     rexp = re.compile(r'([-?\d\.]+)e([\+\-])(\d+)')
 
@@ -624,35 +614,40 @@ class Axis(object):
     # with the position (lower left corner) of the fragment, 
     # to render the text
 
-    def render_text_chunk_normal(self, text, size):
-        """Render a text chunk using normal text"""
-        self.font.FaceSize(size)
-        w, h = self.font.Advance(text), self.font.LineHeight()
-        def renderer(x, y):
-            self.font.FaceSize(size)
-            glRasterPos2d(x, y)
-            self.font.Render(text)
-        return w, h, renderer
+#    def render_text_chunk_ftgl(self, text, size, orientation='h'):
+#        """Render a text chunk using normal text"""
+#        self.font.FaceSize(size)
+#        w, h = self.font.Advance(text), self.font.LineHeight()
+#        def renderer(x, y):
+#            self.font.FaceSize(size)
+#            glRasterPos2d(x, y)
+#            self.font.Render(text)
+#        return w, h, renderer
 
-    def render_text_chunk_pil(self, text, size):
+    def render_text_chunk_pil(self, text, size, orientation='h'):
         fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size) 
         w, h = fonte.getsize(text)
         height, origin = fonte.getmetrics()
+        if orientation == 'v': ww, hh = h, w
+        else: ww, hh = w, h
 
         def renderer(x, y):
             image = PIL.Image.new('L', (w, h), 255)
             PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
             image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
-#            image = image.transpose(PIL.Image.ROTATE_270)
+            if orientation == 'v':
+                image = image.transpose(PIL.Image.ROTATE_270)
             glRasterPos2d(x, y-origin/self.plot.res)
             ww, wh = image.size
             glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
 
-        return w, h, renderer
+        return ww, hh, renderer
 
-    def render_text_chunk_tex(self, text, size):
+    def render_text_chunk_tex(self, text, size, orientation='h'):
         """Render a text chunk using mathtext"""
         w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
+        if orientation == 'v': ww, hh = h, w
+        else: ww, hh = w, h
         def renderer(x, y):
             glRasterPos2d(x, y-origin/self.plot.res)
             w, h, imgstr = fonts[0].image_as_str()
@@ -660,6 +655,8 @@ class Axis(object):
             Xall = zeros((N,len(fonts)), typecode=UInt8)
 
             for i, f in enumerate(fonts):
+                if orientation == 'v':
+                    f.horiz_image_to_vert_image()
                 w, h, imgstr = f.image_as_str()
                 Xall[:,i] = fromstring(imgstr, UInt8)
 
@@ -675,9 +672,9 @@ class Axis(object):
 
             glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
 
-        return w, h, renderer
+        return ww, hh, renderer
 
-    def render_text(self, text, size, x, y, align_x='center', align_y='center'):
+    def render_text(self, text, size, x, y, align_x='center', align_y='center', orientation='h'):
         xx, yy = x, y
         if self.plot.ps:
             return 0, 0
@@ -688,34 +685,34 @@ class Axis(object):
             widths = []
             heights = []
             for chunk, tex in chunks:
-#                if tex:
-#                    w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3))
-#                else:
-                w, h, renderer = self.render_text_chunk_pil(chunk, size)
+                if tex:
+                    w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
+                else:
+                    w, h, renderer = self.render_text_chunk_pil(chunk, size, orientation)
 
                 renderers.append(renderer)
                 widths.append(w)
                 heights.append(h)
 
-            totalw = sum(widths)
-            totalh = max(heights)
+            if orientation == 'h':
+                totalw, totalh = sum(widths), max(heights)
+            elif orientation == 'v':
+                totalw, totalh = max(widths), sum(heights)
 
-            if align_x == 'left':
-                pass
-            elif align_x == 'right':
-                x -= totalw/self.plot.res
-            elif align_x == 'center':
-                x -= (totalw/2)/self.plot.res
+            if align_x == 'left': pass
+            elif align_x == 'right': x -= totalw/self.plot.res
+            elif align_x == 'center': x -= (totalw/2)/self.plot.res
 
-#            if align_y == 'top':
-#                ys = [y+(totalh-h)/self.plot.res for h in heights]
-#            elif align_y == 'bottom':
-#                ys = [y for h in heights]
-#            elif align_y == 'center':
-#                ys = [y+(totalh-h/2.)/self.plot.res for h in heights]
-#
-            for rend, pos in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1]):
-                rend(x+pos, y)
+            if align_y == 'bottom': pass
+            elif align_y == 'top': y -= totalh/self.plot.res
+            elif align_y == 'center': y -= (totalh/2)/self.plot.res
+
+            if orientation == 'h':
+                for rend, pos in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1]):
+                    rend(x+pos, y)
+            elif orientation == 'v':
+                for rend, pos in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1]):
+                    rend(x, y+pos)
 
     def paint_text(self):
         facesize = int(3.*self.plot.res)
@@ -1119,10 +1116,31 @@ class Graph(Item, HasSignals):
         if not self.buf:
             t = time.time()
             glClear(GL_COLOR_BUFFER_BIT)
+
+            lt = 0
+            bt = 0
+            tp = self.plot_height
+            rt = self.plot_width
+
+            glClipPlane(GL_CLIP_PLANE0, [  1.,  0.,  0.,  lt ])
+            glClipPlane(GL_CLIP_PLANE1, [ -1.,  0.,  0.,  rt ])
+            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
+            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
+
+            glEnable(GL_CLIP_PLANE0)
+            glEnable(GL_CLIP_PLANE1)
+            glEnable(GL_CLIP_PLANE2)
+            glEnable(GL_CLIP_PLANE3)
+
             for d in self.datasets:
                 d.paint()
             for f in self.functions:
                 f.paint()
+
+            glDisable(GL_CLIP_PLANE0)
+            glDisable(GL_CLIP_PLANE1)
+            glDisable(GL_CLIP_PLANE2)
+            glDisable(GL_CLIP_PLANE3)
 
             self.paint_axes()
             print >>sys.stderr, time.time()-t, "seconds"

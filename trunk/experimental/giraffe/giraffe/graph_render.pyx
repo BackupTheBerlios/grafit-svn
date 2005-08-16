@@ -214,8 +214,8 @@ def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ym
         xnext = xd[n+1]
         ynext = yd[n+1]
 
-        if (not (xmin <= x <= xmax) or not (ymin <= y <= ymax)) \
-           and (not (xmin <= xnext <= xmax) or not (ymin <= ynext <= ymax)):
+        if (x <= xmin and xnext <= xmin) or (y <= ymin and ynext <= ymin) or \
+            (x >= xmax and xnext >= xmax) or (y >= ymax and ynext >= ymax):
             continue
 
         # skip if outside limits
