@@ -89,7 +89,8 @@ cdef extern from "GL/gl.h":
     int GL_BACK, GL_LINE, GL_FRONT, GL_FILL
 
 
-def render_symbols(_numarray sx, _numarray sy,  symbol, int size):
+def render_symbols(_numarray sx, _numarray sy,  symbol, int size, 
+                   double xmin, double xmax, double ymin, double ymax):
     cdef int n, m, l
     cdef double x, y, xnext, ynext
     cdef double *xd, *yd
@@ -150,6 +151,7 @@ def render_symbols(_numarray sx, _numarray sy,  symbol, int size):
 
     l = sx.dimensions[0]
 
+
     # draw symbols
     glBegin(shape)
     for n from 0 <= n < l:
@@ -159,8 +161,8 @@ def render_symbols(_numarray sx, _numarray sy,  symbol, int size):
             continue
 
         # skip if outside limits
-#        if not (xmin <= x <= xmax) or not (ymin <= y <= ymax):
-#            continue
+        if not (xmin-si/2 <= x <= xmax+si/2) or not (ymin-si/2 <= y <= ymax+si/2):
+            continue
 
         # skip if we would land within 1/1000th of the graph from the previous point
 #        xbucket_s = xbucket
@@ -195,9 +197,9 @@ def render_symbols(_numarray sx, _numarray sy,  symbol, int size):
 
     return 1
 
-def render_lines(_numarray sx, _numarray sy):
+def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ymin, double ymax):
     cdef int n, l
-    cdef double x, y
+    cdef double x, y, xnext, ynext
     cdef double *xd, *yd
 
     xd = <double *>NA_OFFSETDATA(sx)
@@ -205,10 +207,16 @@ def render_lines(_numarray sx, _numarray sy):
     l = sx.dimensions[0]
 
     # draw lines
-    glBegin(GL_LINE_STRIP)
-    for n from 0 <= n < l:
+    glBegin(GL_LINES)
+    for n from 0 <= n < l-1:
         x = xd[n]
         y = yd[n]
+        xnext = xd[n+1]
+        ynext = yd[n+1]
+
+        if (not (xmin <= x <= xmax) or not (ymin <= y <= ymax)) \
+           and (not (xmin <= xnext <= xmax) or not (ymin <= ynext <= ymax)):
+            continue
 
         # skip if outside limits
 #        if n < l-1:
@@ -231,6 +239,7 @@ def render_lines(_numarray sx, _numarray sy):
 #        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
 #            continue
         glVertex3d(x, y, 0.1)
+        glVertex3d(xnext, ynext, 0.1)
 
     glEnd()
     return 1

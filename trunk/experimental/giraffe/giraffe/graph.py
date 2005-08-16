@@ -200,7 +200,9 @@ class DrawWithStyle(HasSignals):
             if self.data.size != 0:
                 glPointSize(self.data.size)
 #            x, y = self.graph.proj(x, y)
-            render_symbols(x, y, self.style.symbol, self.style.symbol_size)
+            xmin, ymin = self.graph.proj(self.graph.xmin, self.graph.ymin)
+            xmax, ymax = self.graph.proj(self.graph.xmax, self.graph.ymax)
+            render_symbols(x, y, self.style.symbol, self.style.symbol_size, xmin, xmax, ymin, ymax)
 
     def paint_lines(self, x, y):
         if len(x) == 0:
@@ -232,7 +234,9 @@ class DrawWithStyle(HasSignals):
             gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
-            render_lines(x, y)
+            xmin, ymin = self.graph.proj(self.graph.xmin, self.graph.ymin)
+            xmax, ymax = self.graph.proj(self.graph.xmax, self.graph.ymax)
+            render_lines(x, y, xmin, xmax, ymin, ymax)
 #            glVertexPointerd(transpose(array([x, y, z])).tostring())
 #            glEnable(GL_VERTEX_ARRAY)
 #            glDrawArrays(GL_LINE_STRIP, 0, N)
@@ -511,8 +515,7 @@ class Axis(object):
         return data
 
     def paint(self):
-#        glColor3d(0.87, 0.85, 0.83) # background color
-#        glColor3d(*[c/255. for c in (245, 222, 179)])
+        """
         glColor3d(1, 1, 1)
         if self.position == 'bottom':
             glRectd(-self.plot.marginl, -self.plot.marginb, 
@@ -526,6 +529,7 @@ class Axis(object):
         elif self.position == 'left':
             glRectd(-self.plot.marginl, self.plot.height_mm-self.plot.marginb,
                     0, 0)
+        """
 
         glColor3d(0.0, 0.0, 0.0) # axis color
 
@@ -577,7 +581,8 @@ class Axis(object):
 
     def paint_title(self):
         if self.position == 'bottom':
-            st = r'$\sum f \varepsilon^3$, frequency with $\angstrom$ in [Hz]'
+#            st = r'$\sum f \varepsilon^3$, frequency with $\angstrom$ in [Hz]'
+            st = 'x axis title'
             facesize = int(3.*self.plot.res)
             x = self.plot.plot_width/2
             y = -9
@@ -638,7 +643,7 @@ class Axis(object):
             image = PIL.Image.new('L', (w, h), 255)
             PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
             image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
-#            image = image.transpose(PIL.Image.ROTATE90)
+#            image = image.transpose(PIL.Image.ROTATE_270)
             glRasterPos2d(x, y-origin/self.plot.res)
             ww, wh = image.size
             glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
