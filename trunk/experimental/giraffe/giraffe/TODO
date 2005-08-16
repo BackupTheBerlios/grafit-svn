@@ -1,8 +1,10 @@
 immediate
 ---------
-* determine resolution from diagonal
-* make add/remove functions commands
+* set axis titles from gui
+* set margins according to height of axis titles
+* render text in postscript
 
+* make add/remove functions commands
 * context menu on project explorer
 * context menu on graph
 * fix exit handling and session saving

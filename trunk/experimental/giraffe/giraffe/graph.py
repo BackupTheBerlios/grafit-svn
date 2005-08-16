@@ -817,7 +817,7 @@ class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         Item.__init__(self, project, name, parent, location)
     
-        self.buf =  False
+        self.paint_xor_objects =  False
         self.selected_datasets = []
 
         self.mode = 'arrow'
@@ -1036,7 +1036,7 @@ class Graph(Item, HasSignals):
 
     def mouse_to_ident(self, xm, ym):
         x = (xm / self.res) - self.marginl
-        y = ((self.h-ym) / self.res) - self.marginb
+        y = ((self.height_pixels-ym) / self.res) - self.marginb
         return x, y
 
     def mouse_to_real(self, xm, ym):
@@ -1094,16 +1094,14 @@ class Graph(Item, HasSignals):
         glClearColor(252./256, 252./256, 252./256, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
 
-#        # enable transparency
+        # enable transparency
         glEnable (GL_BLEND)
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         glDisable(GL_DEPTH_TEST)
         glShadeModel(GL_FLAT)
 
-        glMatrixMode (GL_PROJECTION)
-        glLoadIdentity ()
-
+        # we need this to render pil fonts properly
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
 
@@ -1113,34 +1111,27 @@ class Graph(Item, HasSignals):
         else:
             self.last_width, self.last_height = width, height
 
-        if not self.buf:
+        if not self.paint_xor_objects:
             t = time.time()
             glClear(GL_COLOR_BUFFER_BIT)
 
-            lt = 0
-            bt = 0
-            tp = self.plot_height
-            rt = self.plot_width
-
-            glClipPlane(GL_CLIP_PLANE0, [  1.,  0.,  0.,  lt ])
-            glClipPlane(GL_CLIP_PLANE1, [ -1.,  0.,  0.,  rt ])
-            glClipPlane(GL_CLIP_PLANE2, [  0.,  1.,  0.,  bt ])
-            glClipPlane(GL_CLIP_PLANE3, [  0., -1.,  0.,  tp ])
-
-            glEnable(GL_CLIP_PLANE0)
-            glEnable(GL_CLIP_PLANE1)
-            glEnable(GL_CLIP_PLANE2)
-            glEnable(GL_CLIP_PLANE3)
+            # set up clipping
+            glClipPlane(GL_CLIP_PLANE0, [  1,  0,  0,  0 ])
+            glClipPlane(GL_CLIP_PLANE1, [ -1,  0,  0,  self.plot_width ])
+            glClipPlane(GL_CLIP_PLANE2, [  0,  1,  0,  0 ])
+            glClipPlane(GL_CLIP_PLANE3, [  0, -1,  0,  self.plot_height ])
+            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, 
+                          GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
+                glEnable(plane)
 
             for d in self.datasets:
                 d.paint()
             for f in self.functions:
                 f.paint()
 
-            glDisable(GL_CLIP_PLANE0)
-            glDisable(GL_CLIP_PLANE1)
-            glDisable(GL_CLIP_PLANE2)
-            glDisable(GL_CLIP_PLANE3)
+            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, 
+                          GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
+                glDisable(plane)
 
             self.paint_axes()
             print >>sys.stderr, time.time()-t, "seconds"
@@ -1152,28 +1143,14 @@ class Graph(Item, HasSignals):
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width, height):
-        self._shape = (width, height)
-
-#        # aspect ratio to keep 
-#        ratio = 4./3.
-
-        # set width and height (in pixels)
-        self.ww, self.hh = self.w, self.h = width, height
-
         # resolution (in pixels/mm)
-        self.res = self.w/100.
+        # diagonal of the window is 15cm
+        self.res = sqrt(width*width+height*height)/150.
 
-        self.width_mm = self.w / self.res
-        self.height_mm = self.h / self.res
-
-#        if (1.*self.w) / self.h > ratio:
-#            self.ww = ratio*self.h
-#        else:
-#            self.hh = self.w/ratio
-
-#        self.excessh = height - self.hh
-#        self.excessw = width - self.ww
-#        self.w -= self.excessw
+        # set width and height
+        self.width_pixels, self.height_pixels = width, height
+        self.width_mm = width / self.res
+        self.height_mm = height / self.res
 
         # set margins 
         self.marginb = self.height_mm * 0.15
@@ -1185,23 +1162,18 @@ class Graph(Item, HasSignals):
         self.plot_height = self.height_mm - self.margint - self.marginb
 
         # resize the viewport
-        glViewport(0, 0, int(self.w), int(self.h))
+        glViewport(0, 0, int(width), int(height))
         self.viewport = glGetIntegerv(GL_VIEWPORT)
 
-        self.xscale_pixel = 2./self.w
-        self.yscale_pixel = 2./self.h
-
-        self.xscale_mm = self.xscale_pixel * self.res
-        self.yscale_mm = self.yscale_pixel * self.res
-
-        self.reset_matrix()
-
-    def reset_matrix(self):
-        """Reset the matrix at the bottom left corner of the graph with scale in mm"""
+        # set opengl projection matrix with the origin
+        # at the bottom left corner # of the graph 
+        # and scale in mm
+        glMatrixMode (GL_PROJECTION)
         glLoadIdentity()
         glTranslated(-1.+2.*self.marginl/self.width_mm, 
-                     -1.+2.*self.marginb/self.height_mm, 0) # go to corner
-        glScaled(2./self.width_mm, 2./self.height_mm, 1) # scale is mm
+                     -1.+2.*self.marginb/self.height_mm, 0)
+        glScaled(2./self.width_mm, 2./self.height_mm, 1)
+
 
     def export_ascii(self, f):
         gl2psBeginPage("Title", "Producer", 
@@ -1213,7 +1185,6 @@ class Graph(Item, HasSignals):
                        21055000, f,
                        "arxi.eps")
         self.ps = True
-#        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.display()
         self.ps = False
 
@@ -1222,7 +1193,7 @@ class Graph(Item, HasSignals):
     def button_press(self, x, y, button=None):
         if self.mode == 'zoom':
             if button in (1,3):
-                self.buf = True
+                self.paint_xor_objects = True
                 self.pixx, self.pixy = x, y
                 self.ix, self.iy = self.mouse_to_ident(x, y)
                 self.rubberband.show(self.ix, self.iy, self.ix, self.iy)
@@ -1252,11 +1223,11 @@ class Graph(Item, HasSignals):
 #                self.emit('redraw')
                 self._movefunc = DrawFunction(self, self.selected_function)
                 self.objects.append(self._movefunc)
-                self.buf = True
+                self.paint_xor_objects = True
                 self._movefunc.show(*self.mouse_to_real(x, y))
                 self.emit('redraw')
         elif self.mode == 's-reader':
-            self.buf = True
+            self.paint_xor_objects = True
             self.cross.show(*self.mouse_to_ident(x, y))
             self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
@@ -1270,7 +1241,7 @@ class Graph(Item, HasSignals):
             elif button == 1 or button == 3:
                 self.rubberband.hide()
                 self.emit('redraw')
-                self.buf = False
+                self.paint_xor_objects = False
 
                 zix, ziy = self.mouse_to_real(self.pixx, self.pixy)
                 zfx, zfy = self.mouse_to_real(x, y)
@@ -1298,12 +1269,12 @@ class Graph(Item, HasSignals):
                 self.selected_function.set_reg(True)
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 del self.objects[-1]
-                self.buf = False
+                self.paint_xor_objects = False
                 self.emit('redraw')
         elif self.mode == 's-reader':
             self.cross.hide()
             self.emit('redraw')
-            self.buf = False
+            self.paint_xor_objects = False
         
     def button_motion(self, x, y):
         if self.mode == 'zoom':
