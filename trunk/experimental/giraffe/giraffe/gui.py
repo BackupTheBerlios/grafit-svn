@@ -1449,14 +1449,32 @@ class Shell(Widget):
         self._widget.setLocalShell()
         self._widget.zoom(-1)
 
+        self._widget.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+
     def run(self, cmd):
-        return self._widget.push(cmd)
+        return self._widget.interp.push(cmd)
 
     def prompt(self):
         return self._widget.prompt()
 
     def clear(self):
         return self._widget.clear()
+
+    # make history work with up/down arrows
+    # (default is ctrl+up, ctrl+down).
+    # leave everything else alone.
+    def on_key_down(self, evt):
+        if self._widget.AutoCompActive():
+            evt.Skip()
+            return
+
+        key = evt.KeyCode()
+        if key == wx.WXK_UP: 
+            self._widget.OnHistoryReplace(step=+1)
+        elif key == wx.WXK_DOWN:
+            self._widget.OnHistoryReplace(step=-1)
+        else:
+            evt.Skip()
 
 
 class OpenGLWidget(Widget):

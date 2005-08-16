@@ -483,7 +483,7 @@ from settings import DATADIR
 FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
 AXISFONT = FTGLPixmapFont(FONTFILE)
 
-import matplotlib.mathtext as mathtext
+import mathtextg as mathtext
 import numarray.mlab as mlab
 
 class Axis(object):
@@ -569,10 +569,22 @@ class Axis(object):
             glEnd()
 
         self.paint_text()
+        self.paint_title()
+
+    def paint_title(self):
+        if self.position == 'bottom':
+            st = r'frequency [Hz]'
+            facesize = int(3.*self.plot.res)
+            x = self.plot.plot_width/2
+            y = -9
+            self.render_text(st, facesize, x, y, align_x='center', align_y='bottom')
 
     rexp = re.compile(r'([-?\d\.]+)e([\+\-])(\d+)')
 
-    def totex(self, num):
+    def totex(self, num, sci=False):
+#        if sci:
+#            st = "%e"%num
+#        else:
         st = "%g"%num
         match = self.rexp.match(st)
         if match is not None:
@@ -615,9 +627,9 @@ class Axis(object):
 
     def render_text_chunk_tex(self, text, size):
         """Render a text chunk using mathtext"""
-        w, h, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
+        w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
         def renderer(x, y):
-            glRasterPos2d(x, y)
+            glRasterPos2d(x, y-origin/self.plot.res)
             w, h, imgstr = fonts[0].image_as_str()
             N = w*h
             Xall = zeros((N,len(fonts)), typecode=UInt8)
@@ -647,41 +659,51 @@ class Axis(object):
         else:
             chunks = cut(text, '$')
 
-            pos = 0
+            renderers = []
+            widths = []
+            heights = []
             for chunk, tex in chunks:
                 if tex:
                     w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3))
                 else:
                     w, h, renderer = self.render_text_chunk_normal(chunk, size)
 
-                if align_x == 'left':
-                    pass
-                elif align_x == 'right':
-                    x -= w/self.plot.res
-                elif align_x == 'center':
-                    x -= (w/2)/self.plot.res
+                renderers.append(renderer)
+                widths.append(w)
+                heights.append(h)
 
-                if align_y == 'top':
-                    y -= h/self.plot.res
-                elif align_y == 'bottom':
-                    pass
-                elif align_y == 'center':
-                    y -= (h/2)/self.plot.res
+            totalw = sum(widths)
+            totalh = max(heights)
 
-                renderer(x+pos, y)
-                pos += w/self.plot.res
+            if align_x == 'left':
+                pass
+            elif align_x == 'right':
+                x -= totalw/self.plot.res
+            elif align_x == 'center':
+                x -= (totalw/2)/self.plot.res
+
+            if align_y == 'top':
+                ys = [y+(totalh-h)/self.plot.res for h in heights]
+            elif align_y == 'bottom':
+                ys = [y for h in heights]
+            elif align_y == 'center':
+                ys = [y+(totalh-h/2.)/self.plot.res for h in heights]
+
+            for rend, pos, y in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1], ys):
+                rend(x+pos, y)
 
     def paint_text(self):
         facesize = int(3.*self.plot.res)
-        
+
         if self.position == 'bottom':
-            for x in self.tics(self.plot.xmin, self.plot.xmax)[0]:
+            tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
+            for x in tics:
 #                if x > 100:
                 st = self.totex(x)
 #                else:
 #                    st = r'%g$\tt{\Delta\epsilon \tt{ab}cde_\infty}$ass'%x
                 xm, _ = self.plot.proj(x, 0.)
-                self.render_text(st, facesize, xm, -2, 'center', 'top')
+                self.render_text(st, facesize, xm, -5, 'center', 'bottom')
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
 #                if y > 100:
@@ -835,7 +857,7 @@ class Graph(Item, HasSignals):
         self.axis_right = Axis('right', self)
         self.axis_left = Axis('left', self)
 
-        self.axes = [self.axis_bottom, self.axis_top, self.axis_right, self.axis_left]
+        self.axes = [self.axis_top, self.axis_right, self.axis_bottom, self.axis_left]
 
         self.grid_h = Grid('horizontal', self)
         self.grid_v = Grid('vertical', self)
@@ -1141,7 +1163,7 @@ class Graph(Item, HasSignals):
 #        self.w -= self.excessw
 
         # set margins 
-        self.marginb = self.height_mm * 0.1
+        self.marginb = self.height_mm * 0.15
         self.margint = self.height_mm * 0.05
         self.marginl = self.width_mm * 0.15
         self.marginr = self.width_mm * 0.05

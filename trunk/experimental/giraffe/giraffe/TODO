@@ -1,16 +1,12 @@
 immediate
 ---------
-* make log axes work nicely
-* rewrite panels using MultiSplitter
-* make console history work with arrows
-- make range a command
-- make axis scale change a command
 * make add/remove functions commands
 
 * context menu on project explorer
 * context menu on graph
 * fix exit handling and session saving
 * make combine work for dataset-change-style command
+* rewrite panels using MultiSplitter
 
 planned features
 ----------------
