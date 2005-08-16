@@ -1,5 +1,6 @@
 immediate
 ---------
+* determine resolution from diagonal
 * make add/remove functions commands
 
 * context menu on project explorer

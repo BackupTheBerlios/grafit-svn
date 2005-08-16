@@ -485,6 +485,10 @@ AXISFONT = FTGLPixmapFont(FONTFILE)
 
 import mathtextg as mathtext
 import numarray.mlab as mlab
+import PIL.Image
+import PIL.ImageFont
+import PIL.ImageDraw
+
 
 class Axis(object):
     def __init__(self, position, plot):
@@ -573,7 +577,7 @@ class Axis(object):
 
     def paint_title(self):
         if self.position == 'bottom':
-            st = r'frequency [Hz]'
+            st = r'$\sum f \varepsilon^3$, frequency with $\angstrom$ in [Hz]'
             facesize = int(3.*self.plot.res)
             x = self.plot.plot_width/2
             y = -9
@@ -625,6 +629,22 @@ class Axis(object):
             self.font.Render(text)
         return w, h, renderer
 
+    def render_text_chunk_pil(self, text, size):
+        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size) 
+        w, h = fonte.getsize(text)
+        height, origin = fonte.getmetrics()
+
+        def renderer(x, y):
+            image = PIL.Image.new('L', (w, h), 255)
+            PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
+            image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+#            image = image.transpose(PIL.Image.ROTATE90)
+            glRasterPos2d(x, y-origin/self.plot.res)
+            ww, wh = image.size
+            glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
+
+        return w, h, renderer
+
     def render_text_chunk_tex(self, text, size):
         """Render a text chunk using mathtext"""
         w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
@@ -642,8 +662,7 @@ class Axis(object):
             Xs.shape = (h, w)
 
             pa = zeros(shape=(h,w,4), typecode=UInt8)
-            rgb = (0.2, 0.2, 0.)
-
+            rgb = (0., 0., 0.)
             pa[:,:,0] = int(rgb[0]*255)
             pa[:,:,1] = int(rgb[1]*255)
             pa[:,:,2] = int(rgb[2]*255)
@@ -654,6 +673,7 @@ class Axis(object):
         return w, h, renderer
 
     def render_text(self, text, size, x, y, align_x='center', align_y='center'):
+        xx, yy = x, y
         if self.plot.ps:
             return 0, 0
         else:
@@ -663,10 +683,10 @@ class Axis(object):
             widths = []
             heights = []
             for chunk, tex in chunks:
-                if tex:
-                    w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3))
-                else:
-                    w, h, renderer = self.render_text_chunk_normal(chunk, size)
+#                if tex:
+#                    w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3))
+#                else:
+                w, h, renderer = self.render_text_chunk_pil(chunk, size)
 
                 renderers.append(renderer)
                 widths.append(w)
@@ -682,14 +702,14 @@ class Axis(object):
             elif align_x == 'center':
                 x -= (totalw/2)/self.plot.res
 
-            if align_y == 'top':
-                ys = [y+(totalh-h)/self.plot.res for h in heights]
-            elif align_y == 'bottom':
-                ys = [y for h in heights]
-            elif align_y == 'center':
-                ys = [y+(totalh-h/2.)/self.plot.res for h in heights]
-
-            for rend, pos, y in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1], ys):
+#            if align_y == 'top':
+#                ys = [y+(totalh-h)/self.plot.res for h in heights]
+#            elif align_y == 'bottom':
+#                ys = [y for h in heights]
+#            elif align_y == 'center':
+#                ys = [y+(totalh-h/2.)/self.plot.res for h in heights]
+#
+            for rend, pos in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1]):
                 rend(x+pos, y)
 
     def paint_text(self):
@@ -735,39 +755,6 @@ class Axis(object):
 #                    print >>sys.stderr, ps
 #
 #                elif 0:
-#                    self.font.Render(st)
-#                else:
-#                    tw, th, fts = mathtext.math_parse_s_ft2font(st, 75, facesize)
-#                    w, h, imgstr = fts[0].image_as_str()
-#                    N = w*h
-#                    Xall = zeros((N,len(fts)), typecode=UInt8)
-#
-#                    for i, f in enumerate(fts):
-#                        w, h, imgstr = f.image_as_str()
-#                        Xall[:,i] = fromstring(imgstr, UInt8)
-#
-#                    Xs = mlab.max(Xall, 1)
-#                    Xs.shape = (h, w)
-#
-#                    pa = zeros(shape=(h,w,4), typecode=UInt8)
-#                    rgb = [0., 0., 0.]
-#
-#                    pa[:,:,0] = int(rgb[0]*255)
-#                    pa[:,:,1] = int(rgb[1]*255)
-#                    pa[:,:,2] = int(rgb[2]*255)
-#                    pa[:,:,3] = Xs[::-1]
-#
-#                    glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
-#
-#        elif self.position == 'left':
-#            for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
-#                st = '%g'%y
-#                _, ym = self.plot.proj(0., y)
-#                w = self.font.Advance(st)
-#                glRasterPos2d(-w/self.plot.res - 2, ym - (h/2)/self.plot.res)
-#                if self.plot.ps:
-#                    gl2psText(st, "TimesRoman", h)
-#                else:
 #                    self.font.Render(st)
 
     def tics(self, fr, to):
@@ -1114,6 +1101,9 @@ class Graph(Item, HasSignals):
 
         glMatrixMode (GL_PROJECTION)
         glLoadIdentity ()
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+        glPixelStorei(GL_PACK_ALIGNMENT, 1)
 
     def display(self, width=-1, height=-1):
         if width == -1 and height == -1:
