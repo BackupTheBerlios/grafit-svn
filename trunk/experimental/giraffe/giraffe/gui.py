@@ -1171,7 +1171,7 @@ class _xToolPanel(wx.SashLayoutWindow):
         dc.DrawBitmap(bimp, 0, 0, True)
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
-        bmp.SetMaskColour(self.GetBackgroundColour())
+#        bmp.SetMaskColour(self.GetBackgroundColour())
 
         # rotate if nescessary
         if self.position in ['left', 'right']:
