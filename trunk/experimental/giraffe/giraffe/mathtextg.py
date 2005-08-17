@@ -1227,7 +1227,6 @@ def math_parse_s_ft2font(s, dpi, fontsize, angle=0):
     h += 2
 
     origin = h-ymax
-
     handler.expr.set_origin(0, h-ymax)
 
     Element.fonts.set_canvas_size(w,h)
@@ -1304,8 +1303,8 @@ def math_parse_s_ps(s, dpi, fontsize):
     cacheKey = (s, dpi, fontsize)
     s = s[1:-1]  # strip the $ from front and back
     if math_parse_s_ps.cache.has_key(cacheKey):
-        w, h, pswriter = math_parse_s_ps.cache[cacheKey]
-        return w, h, pswriter
+        w, h, origin, pswriter = math_parse_s_ps.cache[cacheKey]
+        return w, h, origin, pswriter
 
     bakomaFonts = BakomaPSFonts()
     Element.fonts = bakomaFonts
@@ -1327,6 +1326,7 @@ def math_parse_s_ps(s, dpi, fontsize):
     w += 2
     h += 2
 
+    origin = h-ymax
     handler.expr.set_origin(0, h-ymax)
 
     pswriter = StringIO()
@@ -1334,8 +1334,8 @@ def math_parse_s_ps(s, dpi, fontsize):
     handler.expr.render()
     handler.clear()
 
-    math_parse_s_ps.cache[cacheKey] = w, h, pswriter
-    return w, h, pswriter
+    math_parse_s_ps.cache[cacheKey] = w, h, origin, pswriter
+    return w, h, origin, pswriter
 
 math_parse_s_ps.cache = {}
 

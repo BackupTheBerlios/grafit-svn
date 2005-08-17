@@ -3,6 +3,7 @@ import time
 import re
 print >>sys.stderr, "import graph"
 import string
+import tempfile
 
 from giraffe.arrays import *
 from OpenGL.GL import *
@@ -13,14 +14,25 @@ from giraffe.project import Item, wrap_attribute, register_class, create_id
 from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
 from giraffe.functions import MFunctionSum
 
-from ftgl import FTGLPixmapFont
 from gl2ps import *
 
 from giraffe.graph_render import render_symbols, render_lines
 
+from settings import DATADIR
+
+FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
+
+import mathtextg as mathtext
+import numarray.mlab as mlab
+import PIL.Image
+import PIL.ImageFont
+import PIL.ImageDraw
+
 def cut(st, delim):
     pieces = st.split(delim)
     pieces_fixed = []
+    if st == '':
+        return []
 
     pieces_fixed.append(pieces[0])
 
@@ -483,22 +495,11 @@ class Grid(object):
                 gl2psDisable(GL2PS_LINE_STIPPLE)
                 gl2psLineWidth(0.1)
 
-from settings import DATADIR
-FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
-AXISFONT = FTGLPixmapFont(FONTFILE)
-
-import mathtextg as mathtext
-import numarray.mlab as mlab
-import PIL.Image
-import PIL.ImageFont
-import PIL.ImageDraw
-
-
 class Axis(object):
     def __init__(self, position, plot):
         self.position = position
         self.plot = plot
-        self.font = AXISFONT
+#        self.font = AXISFONT
 
     def transform(self, data):
         if self.position in ['bottom', 'top'] and self.plot.xtype == 'log':
@@ -567,12 +568,12 @@ class Axis(object):
         facesize = int(3.*self.plot.res)
         if self.position == 'bottom':
 #            st = r'$\sum f \varepsilon^3$, frequency with $\angstrom$ in [Hz]'
-            st = r'frequency $f$ [Hz]'
+            st = self.plot.xtitle
             x = self.plot.plot_width/2
             y = -9
             self.render_text(st, facesize, x, y, align_x='center', align_y='bottom')
         elif self.position == 'left':
-            st = r'dielectric loss $\epsilon_2$'
+            st = self.plot.ytitle
             x = -7
             y = self.plot.plot_height/2
             self.render_text(st, facesize, x, y, align_x='right', align_y='center', orientation='v')
@@ -605,6 +606,9 @@ class Axis(object):
             return r'$%s%s10^{%s%s}$' % (mant, cdot, sign, exp)
         return r'$%s$' % st
 
+    #########################################################################
+    # Rendering text                                                        #
+    #########################################################################
 
     # Text objects are split into chunks, which are fragments
     # that have the same size and the same type (normal, tex, ...)
@@ -614,105 +618,120 @@ class Axis(object):
     # with the position (lower left corner) of the fragment, 
     # to render the text
 
-#    def render_text_chunk_ftgl(self, text, size, orientation='h'):
-#        """Render a text chunk using normal text"""
-#        self.font.FaceSize(size)
-#        w, h = self.font.Advance(text), self.font.LineHeight()
-#        def renderer(x, y):
-#            self.font.FaceSize(size)
-#            glRasterPos2d(x, y)
-#            self.font.Render(text)
-#        return w, h, renderer
-
-    def render_text_chunk_pil(self, text, size, orientation='h'):
+    def render_text_chunk_normal(self, text, size, orientation='h'):
         fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size) 
         w, h = fonte.getsize(text)
         height, origin = fonte.getmetrics()
-        if orientation == 'v': ww, hh = h, w
-        else: ww, hh = w, h
+        if orientation == 'v': ww, hh, angle = h, w, 90.0
+        else: ww, hh, angle = w, h, 0.0
 
         def renderer(x, y):
-            image = PIL.Image.new('L', (w, h), 255)
-            PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
-            image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
-            if orientation == 'v':
-                image = image.transpose(PIL.Image.ROTATE_270)
-            glRasterPos2d(x, y-origin/self.plot.res)
-            ww, wh = image.size
-            glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
+            if self.plot.ps:
+                glRasterPos2d(x, y-origin/self.plot.res)
+                gl2psTextOpt(text, 'Times', size, GL2PS_TEXT_BL, angle)
+            else:
+                image = PIL.Image.new('L', (w, h), 255)
+                PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
+                image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+                if orientation == 'v':
+                    image = image.transpose(PIL.Image.ROTATE_270)
+                glRasterPos2d(x, y-origin/self.plot.res)
+                ww, wh = image.size
+                glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
 
         return ww, hh, renderer
 
     def render_text_chunk_tex(self, text, size, orientation='h'):
         """Render a text chunk using mathtext"""
-        w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
-        if orientation == 'v': ww, hh = h, w
-        else: ww, hh = w, h
+        if self.plot.ps:
+            w, h, origin, pswriter = mathtext.math_parse_s_ps(text, 72, size)
+        else:
+            w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
+        if orientation == 'v': ww, hh, angle = h, w, 90
+        else: ww, hh, angle = w, h, 0
         def renderer(x, y):
-            glRasterPos2d(x, y-origin/self.plot.res)
-            w, h, imgstr = fonts[0].image_as_str()
-            N = w*h
-            Xall = zeros((N,len(fonts)), typecode=UInt8)
+            if self.plot.ps:
+                text = pswriter.getvalue()
+                ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore" % ((self.plot.marginl+x)*self.plot.res, 
+                                        (self.plot.marginb+y-origin/self.plot.res)*self.plot.res, angle, text)
+                self.plot.pstext.append(ps)
+            else:
+                glRasterPos2d(x, y-origin/self.plot.res)
+                w, h, imgstr = fonts[0].image_as_str()
+                N = w*h
+                Xall = zeros((N,len(fonts)), typecode=UInt8)
 
-            for i, f in enumerate(fonts):
-                if orientation == 'v':
-                    f.horiz_image_to_vert_image()
-                w, h, imgstr = f.image_as_str()
-                Xall[:,i] = fromstring(imgstr, UInt8)
+                for i, f in enumerate(fonts):
+                    if orientation == 'v':
+                        f.horiz_image_to_vert_image()
+                    w, h, imgstr = f.image_as_str()
+                    Xall[:,i] = fromstring(imgstr, UInt8)
 
-            Xs = mlab.max(Xall, 1)
-            Xs.shape = (h, w)
+                Xs = mlab.max(Xall, 1)
+                Xs.shape = (h, w)
 
-            pa = zeros(shape=(h,w,4), typecode=UInt8)
-            rgb = (0., 0., 0.)
-            pa[:,:,0] = int(rgb[0]*255)
-            pa[:,:,1] = int(rgb[1]*255)
-            pa[:,:,2] = int(rgb[2]*255)
-            pa[:,:,3] = Xs[::-1]
+                pa = zeros(shape=(h,w,4), typecode=UInt8)
+                rgb = (0., 0., 0.)
+                pa[:,:,0] = int(rgb[0]*255)
+                pa[:,:,1] = int(rgb[1]*255)
+                pa[:,:,2] = int(rgb[2]*255)
+                pa[:,:,3] = Xs[::-1]
 
-            glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
+                glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
 
         return ww, hh, renderer
 
-    def render_text(self, text, size, x, y, align_x='center', align_y='center', orientation='h'):
+    def render_text(self, text, size, x, y, align_x='center', align_y='center', 
+                    orientation='h', measure_only=False):
         xx, yy = x, y
-        if self.plot.ps:
+        if text == '':
             return 0, 0
-        else:
-            chunks = cut(text, '$')
+#        if self.plot.ps:
+#            return 0, 0
+#        else:
 
-            renderers = []
-            widths = []
-            heights = []
-            for chunk, tex in chunks:
-                if tex:
-                    w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
-                else:
-                    w, h, renderer = self.render_text_chunk_pil(chunk, size, orientation)
+        chunks = cut(text, '$')
 
-                renderers.append(renderer)
-                widths.append(w)
-                heights.append(h)
+        renderers = []
+        widths = []
+        heights = []
+        for chunk, tex in chunks:
+            if tex:
+                w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
+            else:
+                w, h, renderer = self.render_text_chunk_normal(chunk, size, orientation)
 
-            if orientation == 'h':
-                totalw, totalh = sum(widths), max(heights)
-            elif orientation == 'v':
-                totalw, totalh = max(widths), sum(heights)
+            renderers.append(renderer)
+            widths.append(w)
+            heights.append(h)
 
-            if align_x == 'left': pass
-            elif align_x == 'right': x -= totalw/self.plot.res
-            elif align_x == 'center': x -= (totalw/2)/self.plot.res
+        if orientation == 'h':
+            totalw, totalh = sum(widths), max(heights)
+        elif orientation == 'v':
+            totalw, totalh = max(widths), sum(heights)
 
-            if align_y == 'bottom': pass
-            elif align_y == 'top': y -= totalh/self.plot.res
-            elif align_y == 'center': y -= (totalh/2)/self.plot.res
+        if align_x == 'left': pass
+        elif align_x == 'right': x -= totalw/self.plot.res
+        elif align_x == 'center': x -= (totalw/2)/self.plot.res
 
-            if orientation == 'h':
-                for rend, pos in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1]):
-                    rend(x+pos, y)
-            elif orientation == 'v':
-                for rend, pos in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1]):
-                    rend(x, y+pos)
+        if align_y == 'bottom': pass
+        elif align_y == 'top': y -= totalh/self.plot.res
+        elif align_y == 'center': y -= (totalh/2)/self.plot.res
+
+        if measure_only:
+            # return width and height of text, in mm
+            return totalw/self.plot.res, totalh/self.plot.res
+
+        if orientation == 'h':
+            for rend, pos in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1]):
+                rend(x+pos, y)
+        elif orientation == 'v':
+            for rend, pos in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1]):
+                rend(x, y+pos)
+
+
+
+
 
     def paint_text(self):
         facesize = int(3.*self.plot.res)
@@ -930,6 +949,18 @@ class Graph(Item, HasSignals):
 
     ytype = property(get_ytype, set_ytype)
 
+
+    def set_xtitle(self, title):
+        self._xtitle = title
+    def get_xtitle(self):
+        return self._xtitle
+    xtitle = property(get_xtitle, set_xtitle)
+
+    def set_ytitle(self, title):
+        self._ytitle = title
+    def get_ytitle(self):
+        return self._ytitle
+    ytitle = property(get_ytitle, set_ytitle)
 
     def __repr__(self):
         return '<Graph %s%s>' % (self.name, '(deleted)'*self.id.startswith('-'))
@@ -1152,10 +1183,25 @@ class Graph(Item, HasSignals):
         self.width_mm = width / self.res
         self.height_mm = height / self.res
 
+        # measure titles
+        if self.xtitle != '':
+            facesize = int(3.*self.res)
+            _, h = self.axis_bottom.render_text(self.xtitle, facesize, 0, 0, 
+                                                measure_only=True)
+        else:
+            h=0
+
+        if self.ytitle != '':
+            facesize = int(3.*self.res)
+            w, _ = self.axis_left.render_text(self.ytitle, facesize, 0, 0, 
+                                              measure_only=True, orientation='v')
+        else:
+            w=0
+
         # set margins 
-        self.marginb = self.height_mm * 0.15
+        self.marginb = self.height_mm * 0.10 + h
         self.margint = self.height_mm * 0.05
-        self.marginl = self.width_mm * 0.15
+        self.marginl = self.width_mm * 0.10 + w
         self.marginr = self.width_mm * 0.05
 
         self.plot_width = self.width_mm - self.marginl - self.marginr
@@ -1175,7 +1221,13 @@ class Graph(Item, HasSignals):
         glScaled(2./self.width_mm, 2./self.height_mm, 1)
 
 
-    def export_ascii(self, f):
+    def export_ascii(self, outfile):
+        self.pstext = []
+        d = tempfile.mkdtemp()
+        filename = self.name + '.eps'
+
+        f = open(d+'/'+filename, 'wb')
+
         gl2psBeginPage("Title", "Producer", 
                        self.viewport,
                        GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE,
@@ -1183,12 +1235,34 @@ class Graph(Item, HasSignals):
                        0,
                        0, 0, 0,
                        21055000, f,
-                       "arxi.eps")
+                       filename)
         self.ps = True
         self.display()
         self.ps = False
-
         gl2psEndPage()
+
+        f.close()
+
+        f = open(d+'/'+filename, 'rb')
+        for line in f:
+            if line == '%%EndProlog\n':
+                type42 = []
+                type42.append('/usr/share/matplotlib/cmr10.ttf')
+                type42.append('/usr/share/matplotlib/cmex10.ttf')
+                type42.append('/usr/share/matplotlib/cmmi10.ttf')
+                type42.append('/usr/share/matplotlib/cmsy10.ttf')
+                type42.append('/usr/share/matplotlib/cmtt10.ttf')
+                for font in type42:
+                    print >>outfile, "%%BeginFont: "+FT2Font(str(font)).postscript_name
+                    print >>outfile, encodeTTFasPS(font)
+                    print >>outfile, "%%EndFont"
+                outfile.write(line)
+            elif line == 'showpage\n':
+                outfile.write(''.join(self.pstext))
+                outfile.write(line)
+            else:
+                outfile.write(line)
+        f.close()
 
     def button_press(self, x, y, button=None):
         if self.mode == 'zoom':
@@ -1283,7 +1357,7 @@ class Graph(Item, HasSignals):
         elif self.mode in ['range', 'd-reader']:
             self.button_press(x, y)
         elif self.mode == 'hand':
-            if self.selected_function is not None:
+            if self.selected_fnction is not None:
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self._movefunc.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
@@ -1296,11 +1370,14 @@ class Graph(Item, HasSignals):
     parent = wrap_attribute('parent')
     _xtype = wrap_attribute('xtype')
     _ytype = wrap_attribute('ytype')
+    _xtitle = wrap_attribute('xtitle')
+    _ytitle = wrap_attribute('ytitle')
     _zoom = wrap_attribute('zoom')
 
 desc="""
 graphs [
-    name:S, id:S, parent:S, zoom:S, xtype:S, ytype:S,
+    name:S, id:S, parent:S, zoom:S, 
+    xtype:S, ytype:S, xtitle:S, ytitle:S,
     datasets [
         id:S, worksheet:S, x:S, y:S,
         symbol:S, color:I, size:I, linetype:S,
@@ -1401,19 +1478,4 @@ end readonly def
 end readonly def
 FontName currentdict end definefont pop""" % locals())
     return ''.join(data)
-
-
-#basepath = '/usr/share/matplotlib/'
-#type42 = [os.path.join(basepath, name) + '.ttf' for name in bakoma_fonts]
-#type42.append('/usr/share/matplotlib/cmr10.ttf')
-#type42.append('/usr/share/matplotlib/cmex10.ttf')
-#type42.append('/usr/share/matplotlib/cmmi10.ttf')
-#type42.append('/usr/share/matplotlib/cmsy10.ttf')
-#type42.append('/usr/share/matplotlib/cmtt10.ttf')
-
-
-#for font in type42:
-#    print "%%BeginFont: "+FT2Font(str(font)).postscript_name
-#    print encodeTTFasPS(font)
-#    print "%%EndFont"
 
