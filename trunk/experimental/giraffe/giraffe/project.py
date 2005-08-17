@@ -48,7 +48,10 @@ def wrap_attribute(name, signal=None):
     def set_data(self, value):
         if hasattr(value, 'id') and value in self.project.items.values():
             value = value.id
-        setattr(self.data, name, value)
+        try:
+            setattr(self.data, name, value)
+        except TypeError:
+            setattr(self.data, name, value.encode('utf-8'))
         if signal:
             self.emit(signal)
     return property(get_data, set_data)

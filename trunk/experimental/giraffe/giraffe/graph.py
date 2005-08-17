@@ -567,16 +567,11 @@ class Axis(object):
     def paint_title(self):
         facesize = int(3.*self.plot.res)
         if self.position == 'bottom':
-#            st = r'$\sum f \varepsilon^3$, frequency with $\angstrom$ in [Hz]'
-            st = self.plot.xtitle
-            x = self.plot.plot_width/2
-            y = -9
-            self.render_text(st, facesize, x, y, align_x='center', align_y='bottom')
+            self.render_text(self.plot.xtitle, facesize, self.plot.plot_width/2, -1*self.plot.res,
+                             align_x='center', align_y='top')
         elif self.position == 'left':
-            st = self.plot.ytitle
-            x = -7
-            y = self.plot.plot_height/2
-            self.render_text(st, facesize, x, y, align_x='right', align_y='center', orientation='v')
+            self.render_text(self.plot.ytitle, facesize, -1.5*self.plot.res, self.plot.plot_height/2, 
+                             align_x='right', align_y='center', orientation='v')
 
 
     rexp = re.compile(r'([-?\d\.]+)e([\+\-])(\d+)')
@@ -628,7 +623,9 @@ class Axis(object):
         def renderer(x, y):
             if self.plot.ps:
                 glRasterPos2d(x, y-origin/self.plot.res)
-                gl2psTextOpt(text, 'Times', size, GL2PS_TEXT_BL, angle)
+                font = FT2Font(str(FONTFILE))
+                fontname = font.postscript_name
+                gl2psTextOpt(text, fontname, size, GL2PS_TEXT_BL, angle)
             else:
                 image = PIL.Image.new('L', (w, h), 255)
                 PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
@@ -652,7 +649,7 @@ class Axis(object):
         def renderer(x, y):
             if self.plot.ps:
                 text = pswriter.getvalue()
-                ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore" % ((self.plot.marginl+x)*self.plot.res, 
+                ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore\n" % ((self.plot.marginl+x)*self.plot.res, 
                                         (self.plot.marginb+y-origin/self.plot.res)*self.plot.res, angle, text)
                 self.plot.pstext.append(ps)
             else:
@@ -1165,7 +1162,7 @@ class Graph(Item, HasSignals):
                 glDisable(plane)
 
             self.paint_axes()
-            print >>sys.stderr, time.time()-t, "seconds"
+#            print >>sys.stderr, time.time()-t, "seconds"
         else:
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
@@ -1173,7 +1170,12 @@ class Graph(Item, HasSignals):
                 o.redraw()
             glDisable(GL_COLOR_LOGIC_OP)
 
-    def reshape(self, width, height):
+    def reshape(self, width=-1, height=-1):
+        if width == -1 and height == -1:
+            width, height = self.last_width, self.last_height
+        else:
+            self.last_width, self.last_height = width, height
+
         # resolution (in pixels/mm)
         # diagonal of the window is 15cm
         self.res = sqrt(width*width+height*height)/150.
@@ -1222,31 +1224,32 @@ class Graph(Item, HasSignals):
 
 
     def export_ascii(self, outfile):
-        self.pstext = []
+
         d = tempfile.mkdtemp()
         filename = self.name + '.eps'
-
         f = open(d+'/'+filename, 'wb')
 
-        gl2psBeginPage("Title", "Producer", 
-                       self.viewport,
+        # mathtext is not rendered directly
+        self.pstext = []
+
+        gl2psBeginPage("Title", "Producer", self.viewport,
                        GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE,
-                       GL_RGBA, -1,
-                       0,
-                       0, 0, 0,
-                       21055000, f,
-                       filename)
+                       GL_RGBA, -1, 0, 0, 0, 0, 21055000, f, filename)
+
         self.ps = True
         self.display()
         self.ps = False
-        gl2psEndPage()
 
+        gl2psEndPage()
         f.close()
 
         f = open(d+'/'+filename, 'rb')
         for line in f:
             if line == '%%EndProlog\n':
+                # insert encoded mathtext fonts
+                # at the end of the prolog
                 type42 = []
+                type42.append(FONTFILE)
                 type42.append('/usr/share/matplotlib/cmr10.ttf')
                 type42.append('/usr/share/matplotlib/cmex10.ttf')
                 type42.append('/usr/share/matplotlib/cmmi10.ttf')
@@ -1258,9 +1261,12 @@ class Graph(Item, HasSignals):
                     print >>outfile, "%%EndFont"
                 outfile.write(line)
             elif line == 'showpage\n':
+                # insert mathtext chunks
+                # at the end of the file
                 outfile.write(''.join(self.pstext))
                 outfile.write(line)
             else:
+                # copy lines
                 outfile.write(line)
         f.close()
 

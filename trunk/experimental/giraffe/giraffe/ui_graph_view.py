@@ -137,7 +137,9 @@ class GraphAxesPanel(gui.Box):
         grid = gui.Grid(xframe, 4, 2, expand=False)
         grid.layout.AddGrowableCol(1)
         gui.Label(grid, 'Title', pos=(0,0))
-        x_title = gui.Text(grid, pos=(0,1))
+        self.x_title = gui.Text(grid, pos=(0,1))
+        self.x_title.text = self.graph.xtitle
+        self.x_title.connect(['enter', 'kill-focus'], self.on_x_title)
         gui.Label(grid, 'From', pos=(1,0))
         x_from = gui.Text(grid, pos=(1,1))
         gui.Label(grid, 'To', pos=(2,0))
@@ -153,7 +155,9 @@ class GraphAxesPanel(gui.Box):
         grid = gui.Grid(yframe, 4, 2, expand=False)
         grid.layout.AddGrowableCol(1)
         gui.Label(grid, 'Title', pos=(0,0))
-        y_title = gui.Text(grid, pos=(0,1))
+        self.y_title = gui.Text(grid, pos=(0,1))
+        self.y_title.text = self.graph.ytitle
+        self.y_title.connect(['enter', 'kill-focus'], self.on_y_title)
         gui.Label(grid, 'From', pos=(1,0))
         y_from = gui.Text(grid, pos=(1,1))
         gui.Label(grid, 'To', pos=(2,0))
@@ -165,8 +169,18 @@ class GraphAxesPanel(gui.Box):
         y_type.value = ['linear', 'log'].index(self.graph.ytype)
         y_type.connect('select', lambda value: self.on_set_ytype(value), True)
 
-        for w in [x_title, x_from, x_to, x_type, y_title, y_from, y_to, y_type]:
+        for w in [self.x_title, x_from, x_to, x_type, self.y_title, y_from, y_to, y_type]:
             w.min_size = (10, w.min_size[1])
+
+    def on_x_title(self):
+        self.graph.xtitle = self.x_title.text
+        self.graph.reshape()
+        self.graph.emit('redraw')
+
+    def on_y_title(self):
+        self.graph.ytitle = self.y_title.text
+        self.graph.reshape()
+        self.graph.emit('redraw')
         
     def on_set_xtype(self, value):
         self.graph.xtype = ['linear', 'log'][value]

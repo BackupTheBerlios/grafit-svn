@@ -132,18 +132,38 @@ from __future__ import division
 import os, sys
 from cStringIO import StringIO
 
-from matplotlib import verbose
-from matplotlib.pyparsing import Literal, Word, OneOrMore, ZeroOrMore, \
+#from matplotlib import verbose
+from pyparsing import Literal, Word, OneOrMore, ZeroOrMore, \
      Combine, Group, Optional, Forward, NotAny, alphas, nums, alphanums, \
      StringStart, StringEnd, ParseException, FollowedBy
 
-from matplotlib.afm import AFM
-from matplotlib.cbook import enumerate, iterable, Bunch
+#from matplotlib.afm import AFM
+#from matplotlib.cbook import enumerate, iterable, Bunch
 from matplotlib.ft2font import FT2Font
-from matplotlib.font_manager import fontManager
-from matplotlib._mathtext_data import latex_to_bakoma, cmkern
-from matplotlib.numerix import absolute
+#from matplotlib.font_manager import fontManager
+from _mathtext_data import latex_to_bakoma, cmkern
+#from matplotlib.numerix import absolute
 from matplotlib import get_data_path
+# start XXX
+
+class Bunch:
+   """
+   Often we want to just collect a bunch of stuff together, naming each
+   item of the bunch; a dictionary's OK for that, but a small do- nothing
+   class is even handier, and prettier to use.  Whenever you want to
+   group a few variables:
+
+     >>> point = Bunch(datum=2, squared=4, coord=12)
+     >>> point.datum
+
+     By: Alex Martelli
+     From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52308
+   """
+   def __init__(self, **kwds):
+      self.__dict__.update(kwds)
+
+
+# end XXX
 
 
 bakoma_fonts = []
