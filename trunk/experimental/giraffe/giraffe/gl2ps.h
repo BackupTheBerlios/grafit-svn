@@ -146,38 +146,38 @@
 #define GL2PS_TEXT_TL 8
 #define GL2PS_TEXT_TR 9
 
-typedef float GL2PSrgba[4];
+typedef GLfloat GL2PSrgba[4];
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-GL2PSDLL_API int gl2psBeginPage(const char *title, const char *producer, 
-                                  int viewport[4], int format, int sort,
-                                  int options, int colormode,
-                                  int colorsize, GL2PSrgba *colormap, 
-                                  int nr, int ng, int nb, int buffersize,
+GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer, 
+                                  GLint viewport[4], GLint format, GLint sort,
+                                  GLint options, GLint colormode,
+                                  GLint colorsize, GL2PSrgba *colormap, 
+                                  GLint nr, GLint ng, GLint nb, GLint buffersize,
                                   FILE *stream, const char *filename);
-GL2PSDLL_API int gl2psEndPage(void);
-GL2PSDLL_API int gl2psSetOptions(int options);
-GL2PSDLL_API int gl2psBeginViewport(int viewport[4]);
-GL2PSDLL_API int gl2psEndViewport(void);
-GL2PSDLL_API int gl2psText(const char *str, const char *fontname, 
-                             short fontsize);
-GL2PSDLL_API int gl2psTextOpt(const char *str, const char *fontname, 
-                                short fontsize, int align, float angle);
-GL2PSDLL_API int gl2psDrawPixels(GLsizei width, GLsizei height,
-                                   int xorig, int yorig,
+GL2PSDLL_API GLint gl2psEndPage(void);
+GL2PSDLL_API GLint gl2psSetOptions(GLint options);
+GL2PSDLL_API GLint gl2psBeginViewport(GLint viewport[4]);
+GL2PSDLL_API GLint gl2psEndViewport(void);
+GL2PSDLL_API GLint gl2psText(const char *str, const char *fontname, 
+                             GLshort fontsize);
+GL2PSDLL_API GLint gl2psTextOpt(const char *str, const char *fontname, 
+                                GLshort fontsize, GLint align, GLfloat angle);
+GL2PSDLL_API GLint gl2psDrawPixels(GLsizei width, GLsizei height,
+                                   GLint xorig, GLint yorig,
                                    GLenum format, GLenum type, const void *pixels);
-GL2PSDLL_API int gl2psEnable(int mode);
-GL2PSDLL_API int gl2psDisable(int mode);
-GL2PSDLL_API int gl2psPointSize(float value);
-GL2PSDLL_API int gl2psLineWidth(float value);
-GL2PSDLL_API int gl2psBlendFunc(GLenum sfactor, GLenum dfactor);
+GL2PSDLL_API GLint gl2psEnable(GLint mode);
+GL2PSDLL_API GLint gl2psDisable(GLint mode);
+GL2PSDLL_API GLint gl2psPointSize(GLfloat value);
+GL2PSDLL_API GLint gl2psLineWidth(GLfloat value);
+GL2PSDLL_API GLint gl2psBlendFunc(GLenum sfactor, GLenum dfactor);
 
 /* undocumented */
-GL2PSDLL_API int gl2psDrawImageMap(GLsizei width, GLsizei height,
-                                     const float position[3],
+GL2PSDLL_API GLint gl2psDrawImageMap(GLsizei width, GLsizei height,
+                                     const GLfloat position[3],
                                      const unsigned char *imagemap);
 
 #if defined(__cplusplus)

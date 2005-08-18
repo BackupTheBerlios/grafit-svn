@@ -75,6 +75,10 @@ cdef extern from "numarray/libnumarray.h":
 
 import_libnumarray()
 
+cdef extern from "stdio.h":
+    cdef struct FILE:
+        pass
+
 cdef extern from "GL/gl.h":
 
     void glVertex3d(double x, double y, double z)
@@ -86,7 +90,51 @@ cdef extern from "GL/gl.h":
     void glPolygonMode(int, int)
     void glTranslated(double x, double y, double z)
     int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES, GL_LINE_STRIP, GL_POINTS, GL_POINT_SMOOTH
-    int GL_BACK, GL_LINE, GL_FRONT, GL_FILL
+    int GL_BACK, GL_LINE, GL_FRONT, GL_FILL, GL_RGBA
+
+cdef extern from "Python.h":
+    FILE* PyFile_AsFile(object)
+
+cdef extern from "gl2ps.h":
+
+    int GL2PS_LINE_STIPPLE, GL2PS_TEXT_BL, GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE
+    void gl2psEndPage()
+    int gl2psPointSize(float value)
+    int gl2psEnable(int mode)
+    int gl2psDisable(int mode)
+    int gl2psLineWidth(float value)
+    int gl2psTextOpt(char *str, char *fontname,
+                     short fontsize, int align, float angle)
+    int gl2psBeginPage(char *title, char *producer,
+                       int viewport[4], int format, int sort,
+                       int options, int colormode,
+                       int colorsize, void *colormap,
+                       int nr, int ng, int nb, int buffersize,
+                       FILE *stream, char *filename)
+
+GL2PS__LINE_STIPPLE = GL2PS_LINE_STIPPLE 
+GL2PS__TEXT_BL = GL2PS_TEXT_BL
+GL2PS__EPS = GL2PS_EPS
+GL2PS__SIMPLE_SORT = GL2PS_SIMPLE_SORT
+GL2PS__NONE = GL2PS_NONE
+
+def gl2ps_BeginPage(title, producer, viewport, file, filename):
+    cdef int vport[4]
+    vport[0] = viewport[0]
+    vport[1] = viewport[1]
+    vport[2] = viewport[2]
+    vport[3] = viewport[3]
+    return gl2psBeginPage(title, producer, vport,
+                          GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE,
+                          GL_RGBA, -1, NULL, 0, 0, 0, 21055000, PyFile_AsFile(file), filename)
+
+def gl2ps_Enable(int mode): return gl2psEnable(mode)
+def gl2ps_Disable(int mode): return gl2psDisable(mode)
+def gl2ps_TextOpt(str, fontname, fontsize, align, angle): return gl2psTextOpt(str, fontname, fontsize, align, angle)
+def gl2ps_PointSize(float value): return gl2psPointSize(value)
+def gl2ps_LineWidth(float value): return gl2psLineWidth(value)
+def gl2ps_EndPage(): gl2psEndPage()
+
 
 
 def render_symbols(_numarray sx, _numarray sy,  symbol, int size, 

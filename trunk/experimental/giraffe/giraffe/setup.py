@@ -10,7 +10,7 @@ elif platform.system() == 'Windows':
 
 
 setup(name="graph_render", 
-      ext_modules=[Extension("graph_render", ["graph_render.c"], 
+      ext_modules=[Extension("graph_render", ["graph_render.c", "gl2ps.c"], 
 		libraries=[opengllib])],
 )
 #      cmdclass={'build_ext': build_ext })

@@ -14,7 +14,8 @@ from giraffe.project import Item, wrap_attribute, register_class, create_id
 from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
 from giraffe.functions import MFunctionSum
 
-from gl2ps import *
+#from gl2ps import *
+from giraffe.graph_render import *
 
 from giraffe.graph_render import render_symbols, render_lines
 
@@ -208,7 +209,7 @@ class DrawWithStyle(HasSignals):
         if self.style.symbol != 'none' and self.style.symbol_size != 0:
             glColor4f(self.style.color[0]/256., self.style.color[1]/256., 
                       self.style.color[2]/256., 1.)
-            gl2psPointSize(self.data.size)
+            gl2ps_PointSize(self.data.size)
             if self.data.size != 0:
                 glPointSize(self.data.size)
 #            x, y = self.graph.proj(x, y)
@@ -463,8 +464,8 @@ class Grid(object):
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
             if self.plot.ps:
-                gl2psEnable(GL2PS_LINE_STIPPLE)
-                gl2psLineWidth(0.01)
+                gl2ps_Enable(GL2PS__LINE_STIPPLE)
+                gl2ps_LineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for x in self.plot.axis_bottom.tics(self.plot.xmin, self.plot.xmax)[0]:
@@ -473,16 +474,16 @@ class Grid(object):
                 glVertex3d(x, self.plot.plot_height, 0.0)
             glEnd()
             if self.plot.ps:
-                gl2psDisable(GL2PS_LINE_STIPPLE)
-                gl2psLineWidth(0.1)
+                gl2ps_Disable(GL2PS__LINE_STIPPLE)
+                gl2ps_LineWidth(0.1)
             glDisable(GL_LINE_STIPPLE)
 
         elif self.orientation == 'vertical':
             glLineStipple (1, 0x4444) # dotted
             glEnable(GL_LINE_STIPPLE)
             if self.plot.ps:
-                gl2psEnable(GL2PS_LINE_STIPPLE)
-                gl2psLineWidth(0.01)
+                gl2ps_Enable(GL2PS__LINE_STIPPLE)
+                gl2ps_LineWidth(0.01)
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for y in self.plot.axis_left.tics(self.plot.ymin, self.plot.ymax)[0]:
@@ -492,8 +493,8 @@ class Grid(object):
             glEnd()
             glDisable(GL_LINE_STIPPLE)
             if self.plot.ps:
-                gl2psDisable(GL2PS_LINE_STIPPLE)
-                gl2psLineWidth(0.1)
+                gl2ps_Disable(GL2PS__LINE_STIPPLE)
+                gl2ps_LineWidth(0.1)
 
 class Axis(object):
     def __init__(self, position, plot):
@@ -697,7 +698,7 @@ class TextPainter(object):
                 glRasterPos2d(x, y)
                 font = FT2Font(str(FONTFILE))
                 fontname = font.postscript_name
-                gl2psTextOpt(text, fontname, size, GL2PS_TEXT_BL, angle)
+                gl2ps_TextOpt(text, fontname, size, GL2PS__TEXT_BL, angle)
             else:
                 image = PIL.Image.new('L', (w, h), 255)
                 PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
@@ -1244,15 +1245,16 @@ class Graph(Item, HasSignals):
         # mathtext is not rendered directly
         self.pstext = []
 
-        gl2psBeginPage("Title", "Producer", self.viewport,
-                       GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE,
-                       GL_RGBA, -1, 0, 0, 0, 0, 21055000, f, filename)
+#        gl2psBeginPage("Title", "Producer", self.viewport,
+#                       GL2PS__EPS, GL2PS__SIMPLE_SORT, GL2PS__NONE,
+#                       GL_RGBA, -1, 0, 0, 0, 0, 21055000, f, filename)
 
+        gl2ps_BeginPage("Title", "Producer", self.viewport, f, filename)
         self.ps = True
         self.display()
         self.ps = False
 
-        gl2psEndPage()
+        gl2ps_EndPage()
         f.close()
 
         f = open(d+'/'+filename, 'rb')
