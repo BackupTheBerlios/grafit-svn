@@ -613,13 +613,15 @@ class Axis(object):
     def render_text_chunk_normal(self, text, size, orientation='h'):
         fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size) 
         w, h = fonte.getsize(text)
-        height, origin = fonte.getmetrics()
-        if orientation == 'v': ww, hh, angle = h, w, 90.0
-        else: ww, hh, angle = w, h, 0.0
+        _, origin = fonte.getmetrics()
+        if orientation == 'v': 
+            ww, hh, angle = h, w, 90.0
+        else: 
+            ww, hh, angle = w, h, 0.0
 
         def renderer(x, y):
             if self.plot.ps:
-                glRasterPos2d(x, y-origin/self.plot.res)
+                glRasterPos2d(x, y)
                 font = FT2Font(str(FONTFILE))
                 fontname = font.postscript_name
                 gl2psTextOpt(text, fontname, size, GL2PS_TEXT_BL, angle)
@@ -629,11 +631,11 @@ class Axis(object):
                 image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
                 if orientation == 'v':
                     image = image.transpose(PIL.Image.ROTATE_270)
-                glRasterPos2d(x, y-origin/self.plot.res)
+                glRasterPos2d(x, y)
                 ww, wh = image.size
                 glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
 
-        return ww, hh, renderer
+        return ww, hh, origin, renderer
 
     def render_text_chunk_tex(self, text, size, orientation='h'):
         """Render a text chunk using mathtext"""
@@ -641,16 +643,18 @@ class Axis(object):
             w, h, origin, pswriter = mathtext.math_parse_s_ps(text, 72, size)
         else:
             w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
-        if orientation == 'v': ww, hh, angle = h, w, 90
-        else: ww, hh, angle = w, h, 0
+        if orientation == 'v': 
+            ww, hh, angle = h, w, 90
+        else: 
+            ww, hh, angle = w, h, 0
         def renderer(x, y):
             if self.plot.ps:
                 text = pswriter.getvalue()
                 ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore\n" % ((self.plot.marginl+x)*self.plot.res, 
-                                        (self.plot.marginb+y-origin/self.plot.res)*self.plot.res, angle, text)
+                                        (self.plot.marginb+y)*self.plot.res, angle, text)
                 self.plot.pstext.append(ps)
             else:
-                glRasterPos2d(x, y-origin/self.plot.res)
+                glRasterPos2d(x, y)
                 w, h, imgstr = fonts[0].image_as_str()
                 N = w*h
                 Xall = zeros((N,len(fonts)), typecode=UInt8)
@@ -673,58 +677,76 @@ class Axis(object):
 
                 glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
 
-        return ww, hh, renderer
+        return ww, hh, origin, renderer
 
     def render_text(self, text, size, x, y, align_x='center', align_y='center', 
                     orientation='h', measure_only=False):
-        xx, yy = x, y
         if text == '':
             return 0, 0
-#        if self.plot.ps:
-#            return 0, 0
-#        else:
 
+        # split text into chunks
         chunks = cut(text, '$')
 
         renderers = []
         widths = []
         heights = []
+        origins = []
         for chunk, tex in chunks:
             if tex:
-                w, h, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
+                w, h, origin, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
             else:
-                w, h, renderer = self.render_text_chunk_normal(chunk, size, orientation)
+                w, h, origin, renderer = self.render_text_chunk_normal(chunk, size, orientation)
 
             renderers.append(renderer)
             widths.append(w)
             heights.append(h)
+            origins.append(origin)
 
+        #####################################################################
+        #                                    ________        _____          #
+        #             ___                   | |      |      |     |         #
+        #     ___    |   |    ^           __|_|___ _o|      |     |         #
+        #    |   |___|   |    |          |    |   |         |_____|         #
+        #    |___|___|___|  totalh     __|____|__o|         |     |   ^     #
+        #    |o__|   |o__|    |       |       |  |          |     | origin  #
+        #        |o__|        v       |_______|_o|          |o____|   v     #
+        #                                                                   #
+        #####################################################################
+
+        # compute offsets for each chunk and total size 
         if orientation == 'h':
-            totalw, totalh = sum(widths), max(heights)
+            hb = max(origins)
+            ht = max(h-o for h, o in zip(heights, origins))
+            offsets = [hb-o for o in origins]
+            totalw, totalh = sum(widths), hb+ht
         elif orientation == 'v':
-            totalw, totalh = max(widths), sum(heights)
-
-        if align_x == 'left': pass
-        elif align_x == 'right': x -= totalw/self.plot.res
-        elif align_x == 'center': x -= (totalw/2)/self.plot.res
-
-        if align_y == 'bottom': pass
-        elif align_y == 'top': y -= totalh/self.plot.res
-        elif align_y == 'center': y -= (totalh/2)/self.plot.res
+            hb = max(origins)
+            ht = max(h-o for h, o in zip(widths, origins))
+            offsets = [ht-v for v in (h-o for h, o in zip(widths, origins))]
+            totalw, totalh = hb+ht, sum(heights)
 
         if measure_only:
             # return width and height of text, in mm
             return totalw/self.plot.res, totalh/self.plot.res
 
+        # alignment (no change = bottom left)
+        if align_x == 'right': 
+            x -= totalw/self.plot.res
+        elif align_x == 'center': 
+            x -= (totalw/2)/self.plot.res
+
+        if align_y == 'top': 
+            y -= totalh/self.plot.res
+        elif align_y == 'center': 
+            y -= (totalh/2)/self.plot.res
+
+        # render chunks
         if orientation == 'h':
-            for rend, pos in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1]):
-                rend(x+pos, y)
+            for rend, pos, off in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1], offsets):
+                rend(x+pos, y+off/self.plot.res)
         elif orientation == 'v':
-            for rend, pos in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1]):
-                rend(x, y+pos)
-
-
-
+            for rend, pos, off in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1], offsets):
+                rend(x+off/self.plot.res, y+pos)
 
 
     def paint_text(self):

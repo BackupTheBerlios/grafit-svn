@@ -1,8 +1,5 @@
 immediate
 ---------
-* set axis titles from gui
-* set margins according to height of axis titles
-
 * make add/remove functions commands
 * context menu on project explorer
 * context menu on graph

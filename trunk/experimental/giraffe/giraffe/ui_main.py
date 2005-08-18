@@ -70,8 +70,9 @@ class ScriptWindow(Shell):#, Pyro.core.ObjBase):
         self.run('from giraffe.arrays import *')
         self.run('from giraffe import *')
 
-#        self.clear()
-#        self.prompt()
+        self.clear()
+        self.run('print "Welcome to Grafit"')
+        self.prompt()
 
     def connect_project(self, project):
         self.project = project
