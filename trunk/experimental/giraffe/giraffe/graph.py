@@ -21,7 +21,8 @@ from giraffe.graph_render import render_symbols, render_lines
 
 from settings import DATADIR
 
-FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
+#FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
+FONTFILE = DATADIR+'/data/fonts/bitstream-vera/Vera.ttf'
 
 import mathtextg as mathtext
 import numarray.mlab as mlab
@@ -289,6 +290,59 @@ class XorDraw(object):
             if self.coords is not None:
                 self.draw(*self.coords)
             self.need_redraw = False
+
+class GraphObject(object):
+    def __init__(self, graph):
+        self.graph = graph
+        self._handles = []
+
+    def draw(self):
+        raise NotImplementedError
+
+    def draw_handles(self):
+        glColor3f(0, 0, 1) # blue
+        for (x, y) in self.handles:
+            glBegin(GL_LINE_LOOP)
+            glVertex3d(x-1, y-1, 0.0)
+            glVertex3d(x+1, y-1, 0.0)
+            glVertex3d(x+1, y+1, 0.0)
+            glVertex3d(x-1, y+1, 0.0)
+            glEnd()
+
+    def hittest(self, x, y):
+        for i, (xh, yh) in enumerate(self.handles):
+            if xh-1<= x<= xh+1 and yh-1<=y<=yh+1:
+                self._active_handle = i
+                return True
+        self._active_handle = -1
+        return False
+
+    handles = property(lambda self: self._handles)
+
+
+class Line(GraphObject):
+    def __init__(self, graph):
+        GraphObject.__init__(self, graph)
+        self.p1 = (0, 0)
+        self.p2 = (40, 40)
+        self._handles = [self.p1, self.p2]
+
+    def draw(self):
+        glColor3f(.3, .5, .7)
+        glBegin(GL_LINES)
+        glVertex3d(self.handles[0][0], self.handles[0][1], 0.0)
+        glVertex3d(self.handles[1][0], self.handles[1][1], 0.0)
+        glEnd()
+
+class Move(XorDraw):
+    def __init__(self, obj):
+        XorDraw.__init__(self, obj.graph)
+        self.obj = obj
+
+    def draw(self, x, y):
+        self.obj.handles[self.obj._active_handle] = (x, y)
+        self.obj.draw()
+        self.obj.draw_handles()
 
 
 class Rubberband(XorDraw):
@@ -886,6 +940,10 @@ class Graph(Item, HasSignals):
         self.objects = [self.rubberband, self.cross]
         self.textpainter = TextPainter(self)
 
+        self.graph_objects = []
+        self.graph_objects.append(Line(self))
+        self.dragobj = None
+
     default_name_prefix = 'graph'
 
     def get_xmin(self): 
@@ -1167,8 +1225,18 @@ class Graph(Item, HasSignals):
                 glDisable(plane)
 
             self.paint_axes()
+            for o in self.graph_objects:
+                o.draw()
+                o.draw_handles()
+
+#            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
+#            print pixels
 #            print >>sys.stderr, time.time()-t, "seconds"
         else:
+#            glClear(GL_COLOR_BUFFER_BIT)
+#            if self.pixels is not None:
+#                glRasterPos2d(-self.marginl, -self.marginb)
+#                glDrawPixels(self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels)
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
             for o in self.objects:
@@ -1325,7 +1393,21 @@ class Graph(Item, HasSignals):
             self.cross.show(*self.mouse_to_ident(x, y))
             self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
-
+        elif self.mode == 'arrow':
+            x, y = self.mouse_to_ident(x, y)
+            for o in self.graph_objects:
+                if o.hittest(x, y):
+                    self.dragobj = o
+                    self.dragobj_xor = Move(self.dragobj)
+                    self.objects.append(self.dragobj_xor)
+                    self.paint_xor_objects = True
+                    self.dragobj_xor.show(x, y)
+                    self.emit('redraw')
+                    self.emit('request-cursor', 'none')
+                    break
+            else:
+                self.emit('request-cursor', 'arrow')
+ 
      
     def button_release(self, x, y, button):
         if self.mode == 'zoom':
@@ -1370,23 +1452,48 @@ class Graph(Item, HasSignals):
             self.cross.hide()
             self.emit('redraw')
             self.paint_xor_objects = False
+
+        elif self.mode == 'arrow':
+            if self.dragobj is not None:
+                self.dragobj = None
+                self.dragobj_xor.hide()
+                self.emit('redraw')
+                self.objects.remove(self.dragobj_xor)
+                self.paint_xor_objects = False
+
         
-    def button_motion(self, x, y):
-        if self.mode == 'zoom':
+    def button_motion(self, x, y, dragging):
+        if self.mode == 'zoom' and dragging:
             self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
             self.emit('redraw')
-        elif self.mode in ['range', 'd-reader']:
+        elif self.mode in ['range', 'd-reader'] and dragging:
             self.button_press(x, y)
-        elif self.mode == 'hand':
+        elif self.mode == 'hand' and dragging:
             if self.selected_fnction is not None:
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self._movefunc.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
-        elif self.mode == 's-reader':
+        elif self.mode == 's-reader' and dragging:
             self.cross.move(*self.mouse_to_ident(x, y))
             self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
- 
+        elif self.mode == 'arrow':
+            if not hasattr(self, 'res'):
+                # not initialized yet, do nothing
+                return
+            x, y = self.mouse_to_ident(x, y)
+            if self.dragobj is not None:
+                self.dragobj_xor.move(x, y)
+                self.emit('redraw')
+                self.emit('request-cursor', 'none')
+            else:
+                for o in self.graph_objects:
+                    if o.hittest(x, y):
+                        self.emit('request-cursor', 'hand')
+                        break
+                else:
+                    self.emit('request-cursor', 'arrow')
+     
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')
     _xtype = wrap_attribute('xtype')

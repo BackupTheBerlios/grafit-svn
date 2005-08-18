@@ -2,85 +2,30 @@
 # with the rest in pure python, we can easily handle a few million points 
 # (lines are even faster)
 
+# math functions
 cdef extern from "math.h":
     double sin(double x)
     double cos(double y)
     int isnan(double x)
 
+# numarray
 cdef extern from "numarray/libnumarray.h":
-    ctypedef int maybelong
-    cdef struct PyArray_Descr:
-        int type_num # PyArray_TYPES
-        int elsize   # bytes for 1 element
-        char type    # One of "cb1silfdFD "  Object array not supported
-        # function pointers omitted
-
     ctypedef class numarray._numarray._numarray [object PyArrayObject]:
-        cdef char *data
-        cdef int nd
-        cdef maybelong *dimensions
-        cdef maybelong *strides
-        cdef object base
-        cdef PyArray_Descr *descr
-        cdef int flags
-
-        # numarray extras
-        cdef maybelong *_dimensions
-        cdef maybelong *_strides
-        cdef object _data         # object must meet buffer API
-        cdef object _shadows      # ill-behaved original array.
-        cdef int    nstrides      # elements in strides array
-        cdef long   byteoffset    # offset into buffer where array data begins
-        cdef long   bytestride    # basic seperation of elements in bytes
-        cdef long   itemsize      # length of 1 element in bytes
-
-        cdef char   byteorder     # NUM_BIG_ENDIAN, NUM_LITTLE_ENDIAN
-
-        cdef char   _aligned      # test override flag
-        cdef char   _contiguous   # test override flag
-
-    ctypedef enum:
-        NUM_UNCONVERTED # 0
-        NUM_CONTIGUOUS  # 1
-        NUM_NOTSWAPPED  # 2
-        NUM_ALIGNED     # 4
-        NUM_WRITABLE    # 8
-        NUM_COPY        # 16
-        NUM_C_ARRAY     #  = (NUM_CONTIGUOUS | NUM_ALIGNED | NUM_NOTSWAPPED)
-
-    ctypedef enum NumarrayType:
-        tAny
-        tBool
-        tInt8
-        tUInt8
-        tInt16
-        tUInt16
-        tInt32
-        tUInt32
-        tInt64
-        tUInt64
-        tFloat32
-        tFloat64
-        tComplex32
-        tComplex64
-        tObject                   # placeholder... does nothing
-        tDefault = tFloat64
-        tLong = tInt32,
-        tMaxType
-
+        cdef int *dimensions
     void import_libnumarray()
- 
-    _numarray NA_InputArray (object, NumarrayType, int)
     void *NA_OFFSETDATA(_numarray)
-
 import_libnumarray()
 
+# convert a python file to a FILE
 cdef extern from "stdio.h":
     cdef struct FILE:
         pass
 
-cdef extern from "GL/gl.h":
+cdef extern from "Python.h":
+    FILE* PyFile_AsFile(object)
 
+# OpenGL
+cdef extern from "GL/gl.h":
     void glVertex3d(double x, double y, double z)
     void glPointSize(double size)
     void glBegin(int mode)
@@ -92,11 +37,8 @@ cdef extern from "GL/gl.h":
     int GL_COMPILE, GL_QUADS, GL_LINES, GL_POLYGON, GL_TRIANGLES, GL_LINE_STRIP, GL_POINTS, GL_POINT_SMOOTH
     int GL_BACK, GL_LINE, GL_FRONT, GL_FILL, GL_RGBA
 
-cdef extern from "Python.h":
-    FILE* PyFile_AsFile(object)
-
+# gl2ps wrapper (only the stuff we need)
 cdef extern from "gl2ps.h":
-
     int GL2PS_LINE_STIPPLE, GL2PS_TEXT_BL, GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE
     void gl2psEndPage()
     int gl2psPointSize(float value)
@@ -118,12 +60,12 @@ GL2PS__EPS = GL2PS_EPS
 GL2PS__SIMPLE_SORT = GL2PS_SIMPLE_SORT
 GL2PS__NONE = GL2PS_NONE
 
-def gl2ps_BeginPage(title, producer, viewport, file, filename):
-    cdef int vport[4]
-    vport[0] = viewport[0]
-    vport[1] = viewport[1]
-    vport[2] = viewport[2]
-    vport[3] = viewport[3]
+def gl2ps_BeginPage(char *title, char *producer, viewport, file, char *filename):
+    cdef int vport[4], n
+
+    for n from 0<=n<4:
+        vport[n] = viewport[n]
+
     return gl2psBeginPage(title, producer, vport,
                           GL2PS_EPS, GL2PS_SIMPLE_SORT, GL2PS_NONE,
                           GL_RGBA, -1, NULL, 0, 0, 0, 21055000, PyFile_AsFile(file), filename)
@@ -137,15 +79,11 @@ def gl2ps_EndPage(): gl2psEndPage()
 
 
 
-def render_symbols(_numarray sx, _numarray sy,  symbol, int size, 
+def render_symbols(_numarray sx, _numarray sy, symbol, int size, 
                    double xmin, double xmax, double ymin, double ymax):
     cdef int n, m, l
-    cdef double x, y, xnext, ynext
     cdef double *xd, *yd
-    cdef int xbucket, ybucket
-    cdef int xbucket_s, ybucket_s
     cdef int i
-    cdef double xinterval, yinterval
     cdef double pi
     cdef int sym
     cdef double si

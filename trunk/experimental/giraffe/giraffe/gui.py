@@ -1539,9 +1539,8 @@ class OpenGLWidget(Widget):
         self.emit('button-released', x, y, btn)
 
     def OnMouseMotion(self, evt):
-        if evt.Dragging():
-            x, y = evt.GetPosition()
-            self.emit('mouse-moved', x, y)
+        x, y = evt.GetPosition()
+        self.emit('mouse-moved', x, y, evt.Dragging())
 
 
 class Notebook(Widget):

@@ -7,6 +7,9 @@ immediate
 * make combine work for dataset-change-style command
 * rewrite panels using MultiSplitter
 
+* editable lines on graph
+* editable text on graph
+
 planned features
 ----------------
 * error bars
