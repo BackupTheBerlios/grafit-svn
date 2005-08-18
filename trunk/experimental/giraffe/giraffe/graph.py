@@ -519,19 +519,14 @@ class Axis(object):
         glColor3d(0.0, 0.0, 0.0) # axis color
 
         # Axis lines
+        w, h = self.plot.plot_width, self.plot.plot_height
+        p1, p2 = {'bottom': ((0, 0, 0), (w, 0, 0)),
+                  'right':  ((w, 0, 0), (w, h, 0)),
+                  'top':    ((0, h, 0), (w, h, 0)),
+                  'left':   ((0, 0, 0), (0, h, 0)) } [self.position]
         glBegin(GL_LINES)
-        if self.position == 'bottom':
-            glVertex3d(0., 0., 0.)
-            glVertex3d(self.plot.plot_width, 0., 0.0)
-        elif self.position == 'right':
-            glVertex3d(self.plot.plot_width, 0., 0.)
-            glVertex3d(self.plot.plot_width, self.plot.plot_height, 0.0)
-        elif self.position == 'top':
-            glVertex3d(0., self.plot.plot_height, 0.)
-            glVertex3d(self.plot.plot_width, self.plot.plot_height, 0.0)
-        elif self.position == 'left':
-            glVertex3d(0., 0., 0.)
-            glVertex3d(0., self.plot.plot_height, 0.0)
+        glVertex3d(*p1)
+        glVertex3d(*p2)
         glEnd()
 
         # Tics
@@ -567,10 +562,12 @@ class Axis(object):
     def paint_title(self):
         facesize = int(3.*self.plot.res)
         if self.position == 'bottom':
-            self.render_text(self.plot.xtitle, facesize, self.plot.plot_width/2, -1*self.plot.res,
+            self.render_text(self.plot.xtitle, facesize, 
+                             self.plot.plot_width/2, -5,
                              align_x='center', align_y='top')
         elif self.position == 'left':
-            self.render_text(self.plot.ytitle, facesize, -1.5*self.plot.res, self.plot.plot_height/2, 
+            self.render_text(self.plot.ytitle, facesize, 
+                             -5-self.plot.ticw, self.plot.plot_height/2, 
                              align_x='right', align_y='center', orientation='v')
 
 
@@ -736,45 +733,15 @@ class Axis(object):
         if self.position == 'bottom':
             tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
             for x in tics:
-#                if x > 100:
                 st = self.totex(x)
-#                else:
-#                    st = r'%g$\tt{\Delta\epsilon \tt{ab}cde_\infty}$ass'%x
                 xm, _ = self.plot.proj(x, 0.)
                 self.render_text(st, facesize, xm, -5, 'center', 'bottom')
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
-#                if y > 100:
                 st = self.totex(y)
-#                else:
-#                st = '%g'%y
                 _, ym = self.plot.proj(0., y)
                 self.render_text(st, facesize, -2, ym, 'right', 'center')
  
-#                if self.plot.ps:
-#                    w = self.font.Advance(st)
-#                else:
-#                    w, t, fts = mathtext.math_parse_s_ft2font(st, 72, facesize)
-
-#                glRasterPos2d(rasterx, rastery)
-#                psx, psy = self.graph.invproj()
-
-#                if self.plot.ps:
-##                    gl2psText(st, "Times-Roman", h)
-#                    
-#                    width, height, pswriter = mathtext.math_parse_s_ps(st, 72, facesize)
-#                    thetext = pswriter.getvalue()
-#                    ps = """gsave
-#%f %f translate
-#%f rotate
-#%s
-#grestore
-#""" % (xm*self.plot.res, 0, 0, thetext)
-#                    print >>sys.stderr, ps
-#
-#                elif 0:
-#                    self.font.Render(st)
-
     def tics(self, fr, to):
         if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
            (self.position in ['bottom', 'top'] and self.plot.xtype == 'log'):
@@ -1093,16 +1060,19 @@ class Graph(Item, HasSignals):
             return
         self.xmin, self.xmax, self.ymin, self.ymax = xmin, xmax, ymin, ymax
         new = (xmin, xmax, ymin, ymax)
+#        self.reshape()
         return [new, old]
 
     def zoom_redo(self, state):
         new, old = state
         self.xmin, self.xmax, self.ymin, self.ymax = new
+        self.reshape()
         self.emit('redraw')
 
     def zoom_undo(self, state):
         new, old = state
         self.xmin, self.xmax, self.ymin, self.ymax = old
+        self.reshape()
         self.emit('redraw')
 
     def zoom_combine(self, state, other):
@@ -1186,25 +1156,33 @@ class Graph(Item, HasSignals):
         self.height_mm = height / self.res
 
         # measure titles
+        facesize = int(3.*self.res)
         if self.xtitle != '':
-            facesize = int(3.*self.res)
-            _, h = self.axis_bottom.render_text(self.xtitle, facesize, 0, 0, 
-                                                measure_only=True)
+            _, tith = self.axis_bottom.render_text(self.xtitle, facesize, 0, 0, 
+                                                   measure_only=True)
         else:
-            h=0
+            tith=0
 
         if self.ytitle != '':
-            facesize = int(3.*self.res)
-            w, _ = self.axis_left.render_text(self.ytitle, facesize, 0, 0, 
-                                              measure_only=True, orientation='v')
+            titw, _ = self.axis_left.render_text(self.ytitle, facesize, 0, 0, 
+                                                 measure_only=True, orientation='v')
         else:
-            w=0
+            titw=0
+
+        # measure tick labels
+        self.ticw = max(self.axis_left.render_text(self.axis_left.totex(y), 
+                                                   facesize, 0, 0, measure_only=True)[0] 
+                        for y in self.axis_left.tics(self.ymin, self.ymax)[0]) # :-)
+        self.tich = max(self.axis_bottom.render_text(self.axis_bottom.totex(x), 
+                                                     facesize, 0, 0, measure_only=True)[1] 
+                        for x in self.axis_bottom.tics(self.xmin, self.xmax)[0])
+
 
         # set margins 
-        self.marginb = self.height_mm * 0.10 + h
-        self.margint = self.height_mm * 0.05
-        self.marginl = self.width_mm * 0.10 + w
-        self.marginr = self.width_mm * 0.05
+        self.marginb = tith + self.tich + 6
+        self.margint = self.height_mm * 0.03
+        self.marginl = titw + self.ticw + 6
+        self.marginr = self.width_mm * 0.03
 
         self.plot_width = self.width_mm - self.marginl - self.marginr
         self.plot_height = self.height_mm - self.margint - self.marginb
@@ -1343,6 +1321,7 @@ class Graph(Item, HasSignals):
                 else:
                     xmin, xmax, ymin, ymax = _xmin, _xmax, _ymin, _ymax
                 self.zoom(xmin, xmax, ymin, ymax)
+                self.reshape()
                 self.emit('redraw')
         elif self.mode == 'hand':
             if self.selected_function is not None:
