@@ -32,7 +32,7 @@
           </Component>
 
 
-	  <!-- dlls -->
+          <!-- dlls -->
 
           <Component Id='HelperLibrary' Guid='3402feef-6BE3-460D-A14F-75658D16550B'>
             <File Id='HelperDLL' Name='Helper.dll' DiskId='1' src='Helper.dll' Vital='yes' />
