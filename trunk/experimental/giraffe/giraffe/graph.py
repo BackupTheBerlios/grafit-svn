@@ -562,13 +562,13 @@ class Axis(object):
     def paint_title(self):
         facesize = int(3.*self.plot.res)
         if self.position == 'bottom':
-            self.render_text(self.plot.xtitle, facesize, 
-                             self.plot.plot_width/2, -5,
-                             align_x='center', align_y='top')
+            self.plot.textpainter.render_text(self.plot.xtitle, facesize, 
+                                              self.plot.plot_width/2, -5,
+                                              align_x='center', align_y='top')
         elif self.position == 'left':
-            self.render_text(self.plot.ytitle, facesize, 
-                             -5-self.plot.ticw, self.plot.plot_height/2, 
-                             align_x='right', align_y='center', orientation='v')
+            self.plot.textpainter.render_text(self.plot.ytitle, facesize, 
+                                              -5-self.plot.ticw, self.plot.plot_height/2, 
+                                              align_x='right', align_y='center', orientation='v')
 
 
     rexp = re.compile(r'([-?\d\.]+)e([\+\-])(\d+)')
@@ -597,6 +597,79 @@ class Axis(object):
                 sign = ''
             return r'$%s%s10^{%s%s}$' % (mant, cdot, sign, exp)
         return r'$%s$' % st
+
+    def paint_text(self):
+        facesize = int(3.*self.plot.res)
+
+        if self.position == 'bottom':
+            tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
+            for x in tics:
+                st = self.totex(x)
+                xm, _ = self.plot.proj(x, 0.)
+                self.plot.textpainter.render_text(st, facesize, xm, -5, 'center', 'bottom')
+        elif self.position == 'left':
+            for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
+                st = self.totex(y)
+                _, ym = self.plot.proj(0., y)
+                self.plot.textpainter.render_text(st, facesize, -2, ym, 'right', 'center')
+ 
+    def tics(self, fr, to):
+        if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
+           (self.position in ['bottom', 'top'] and self.plot.xtype == 'log'):
+            return self.logtics(fr, to)
+        else:
+            return self.lintics(fr, to)
+
+
+    def logtics(self, fr, to):
+        if fr <= 0 or to <= 0:
+            return [], []
+        if fr == to:
+            return [fr], []
+
+        bottom = floor(log10(fr))
+        top = ceil(log10(to)) + 1
+
+        r = 1
+        l = 100
+        while l>8:
+            major = 10**arange(bottom, top, r)
+            minor = array([])
+            major = array([n for n in major if fr<=n<=to])
+            l = len(major)
+            r += 1
+        return major, minor
+
+    def lintics(self, fr, to):
+        # 3-8 major tics
+        if fr == to:
+            return [fr], []
+
+        exponent = floor(log10(to-fr)) - 1
+
+        for exponent in (exponent, exponent+1):
+            for interval in (1,5,2):#,4,6,7,8,9,3):
+                interval = interval * (10**exponent)
+                if fr%interval == 0:
+                    first = fr
+                else:
+                    first = fr + (interval-fr%interval)
+                first -= interval
+                rng = arange(first, to, interval)
+                if 4 <= len(rng) <= 8:
+                    minor = []
+                    for n in rng:
+                        minor.extend(arange(n, n+interval, interval/5))
+                    rng = array([n for n in rng if fr<=n<=to])
+                    minor = array([n for n in minor if fr<=n<=to])
+                    return rng, minor
+
+        print "cannot tick", fr, to, len(rng)
+        return []
+
+class TextPainter(object):
+    def __init__(self, graph):
+        self.plot = graph
 
     #########################################################################
     # Rendering text                                                        #
@@ -632,17 +705,19 @@ class Axis(object):
                 if orientation == 'v':
                     image = image.transpose(PIL.Image.ROTATE_270)
                 glRasterPos2d(x, y)
-                ww, wh = image.size
-                glDrawPixels(ww, wh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
+#                ww, wh = image.size
+                glDrawPixels(ww, hh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
 
         return ww, hh, origin, renderer
 
     def render_text_chunk_tex(self, text, size, orientation='h'):
         """Render a text chunk using mathtext"""
         if self.plot.ps:
-            w, h, origin, pswriter = mathtext.math_parse_s_ps(text, 72, size)
+            w, h, _, pswriter = mathtext.math_parse_s_ps(text, 72, size)
+            _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 72, size) #FIXME
         else:
             w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
+#        print >>sys.stderr, w, h, origin, text, self.plot.res, self.plot.ps
         if orientation == 'v': 
             ww, hh, angle = h, w, 90
         else: 
@@ -650,8 +725,9 @@ class Axis(object):
         def renderer(x, y):
             if self.plot.ps:
                 text = pswriter.getvalue()
-                ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore\n" % ((self.plot.marginl+x)*self.plot.res, 
-                                        (self.plot.marginb+y)*self.plot.res, angle, text)
+                ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore\n" \
+                    % ((self.plot.marginl+x)*self.plot.res, 
+                       (self.plot.marginb+y)*self.plot.res, angle, text)
                 self.plot.pstext.append(ps)
             else:
                 glRasterPos2d(x, y)
@@ -717,13 +793,16 @@ class Axis(object):
         if orientation == 'h':
             hb = max(origins)
             ht = max(h-o for h, o in zip(heights, origins))
-            offsets = [hb-o for o in origins]
             totalw, totalh = sum(widths), hb+ht
+            offsets = [hb-o for o in origins]
         elif orientation == 'v':
             hb = max(origins)
             ht = max(h-o for h, o in zip(widths, origins))
-            offsets = [ht-v for v in (h-o for h, o in zip(widths, origins))]
             totalw, totalh = hb+ht, sum(heights)
+            if self.plot.ps:
+                offsets = [ht-v-totalw for v in (h-o for h, o in zip(widths, origins))]
+            else:
+                offsets = [v-ht for v in (h-o for h, o in zip(widths, origins))]
 
         if measure_only:
             # return width and height of text, in mm
@@ -746,77 +825,9 @@ class Axis(object):
                 rend(x+pos, y+off/self.plot.res)
         elif orientation == 'v':
             for rend, pos, off in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1], offsets):
-                rend(x+off/self.plot.res, y+pos)
+                rend(x-off/self.plot.res, y+pos)
 
 
-    def paint_text(self):
-        facesize = int(3.*self.plot.res)
-
-        if self.position == 'bottom':
-            tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
-            for x in tics:
-                st = self.totex(x)
-                xm, _ = self.plot.proj(x, 0.)
-                self.render_text(st, facesize, xm, -5, 'center', 'bottom')
-        elif self.position == 'left':
-            for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
-                st = self.totex(y)
-                _, ym = self.plot.proj(0., y)
-                self.render_text(st, facesize, -2, ym, 'right', 'center')
- 
-    def tics(self, fr, to):
-        if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\
-           (self.position in ['bottom', 'top'] and self.plot.xtype == 'log'):
-            return self.logtics(fr, to)
-        else:
-            return self.lintics(fr, to)
-
-
-    def logtics(self, fr, to):
-        if fr <= 0 or to <= 0:
-            return [], []
-        if fr == to:
-            return [fr], []
-
-        bottom = floor(log10(fr))
-        top = ceil(log10(to)) + 1
-
-        r = 1
-        l = 100
-        while l>8:
-            major = 10**arange(bottom, top, r)
-            minor = array([])
-            major = array([n for n in major if fr<=n<=to])
-            l = len(major)
-            r += 1
-        return major, minor
-
-    def lintics(self, fr, to):
-        # 3-8 major tics
-        if fr == to:
-            return [fr], []
-
-        exponent = floor(log10(to-fr)) - 1
-
-        for exponent in (exponent, exponent+1):
-            for interval in (1,5,2):#,4,6,7,8,9,3):
-                interval = interval * (10**exponent)
-                if fr%interval == 0:
-                    first = fr
-                else:
-                    first = fr + (interval-fr%interval)
-                first -= interval
-                rng = arange(first, to, interval)
-                if 4 <= len(rng) <= 8:
-                    minor = []
-                    for n in rng:
-                        minor.extend(arange(n, n+interval, interval/5))
-                    rng = array([n for n in rng if fr<=n<=to])
-                    minor = array([n for n in minor if fr<=n<=to])
-                    return rng, minor
-
-        print "cannot tick", fr, to, len(rng)
-        return []
 
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
@@ -872,6 +883,7 @@ class Graph(Item, HasSignals):
         self.cross = Cross(self)
 
         self.objects = [self.rubberband, self.cross]
+        self.textpainter = TextPainter(self)
 
     default_name_prefix = 'graph'
 
@@ -1180,22 +1192,22 @@ class Graph(Item, HasSignals):
         # measure titles
         facesize = int(3.*self.res)
         if self.xtitle != '':
-            _, tith = self.axis_bottom.render_text(self.xtitle, facesize, 0, 0, 
+            _, tith = self.textpainter.render_text(self.xtitle, facesize, 0, 0, 
                                                    measure_only=True)
         else:
             tith=0
 
         if self.ytitle != '':
-            titw, _ = self.axis_left.render_text(self.ytitle, facesize, 0, 0, 
+            titw, _ = self.textpainter.render_text(self.ytitle, facesize, 0, 0, 
                                                  measure_only=True, orientation='v')
         else:
             titw=0
 
         # measure tick labels
-        self.ticw = max(self.axis_left.render_text(self.axis_left.totex(y), 
-                                                   facesize, 0, 0, measure_only=True)[0] 
+        self.ticw = max(self.textpainter.render_text(self.axis_left.totex(y), 
+                                                     facesize, 0, 0, measure_only=True)[0] 
                         for y in self.axis_left.tics(self.ymin, self.ymax)[0]) # :-)
-        self.tich = max(self.axis_bottom.render_text(self.axis_bottom.totex(x), 
+        self.tich = max(self.textpainter.render_text(self.axis_bottom.totex(x), 
                                                      facesize, 0, 0, measure_only=True)[1] 
                         for x in self.axis_bottom.tics(self.xmin, self.xmax)[0])
 
