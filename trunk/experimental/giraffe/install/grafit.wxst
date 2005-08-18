@@ -18,28 +18,180 @@
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
         <Directory Id='INSTALLDIR' Name='Grafit10' LongName='Grafit 1.0'>
           
-	  <!-- main executable -->
 
-          <Component Id='MainExecutable' Guid='3402feef-83F1-4F22-985B-FDB3C8ABD471'>
-            <File Id='GrafitEXE' Name='Grafit10.exe' LongName='Grafit.exe' DiskId='1'
-              src='Grafit.exe' Vital='yes' />
-            <Shortcut Id="startmenuGrafit10" Directory="ProgramMenuDir" Name="Grafit10" 
-              LongName="Grafit 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
-              Icon="Grafit10.exe" IconIndex="0" />
-            <Shortcut Id="desktopGrafit10" Directory="DesktopFolder" Name="Grafit10"
-              LongName="Grafit 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
-              Icon="Grafit10.exe" IconIndex="0" />
-          </Component>
+          <Directory Id='Bin' Name='bin'>
+
+	        <!-- main executable -->
+            <Component Id='MainExecutable' Guid='3402feef-83F1-4F22-985B-FDB3C8ABD471'>
+              <File Id='GrafitEXE' Name='grafit.exe' DiskId='1' src='dist/grafit/grafit.exe' Vital='yes' />
+              <Shortcut Id="startmenuGrafit10" Directory="ProgramMenuDir" Name="Grafit10" 
+                LongName="Grafit 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
+                Icon="Grafit10.exe" IconIndex="0" />
+              <Shortcut Id="desktopGrafit10" Directory="DesktopFolder" Name="Grafit10"
+                LongName="Grafit 1.0" Target="MainProgram" WorkingDirectory='INSTALLDIR'
+                Icon="Grafit10.exe" IconIndex="0" />
+            </Component>
+  
+            <!-- dlls -->
+            <Component Id='HelperLibrary' Guid='3402feef-6BE3-460D-A14F-75658D16550B'>
+              <!-- one such line for each dll from FreezePython -->
+              <File Id='%(fileid)s' Name='%(shortname)s' LongName='%(filename)s' DiskId='1' src='%(filesrc)s' Vital='yes' />
+            </Component>
+
+          </Directory>
 
 
-          <!-- dlls -->
+            <Component Id='Data' Guid='3402feef-6BE3-460D-A24F-75658D16550B'>
+      <Directory Id="directory0" Name="" LongName="data">
+        <Directory Id="directory11" Name="fonts">
+          <Directory Id="directory22" Name="BITSTR_1" LongName="bitstream-vera">
+            <File Id="file8" Name="COPYRI_1.TXT" LongName="COPYRIGHT.TXT" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\COPYRIGHT.TXT" />
+            <File Id="file9" Name="LOCAL_1.CON" LongName="local.conf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\local.conf" />
+            <File Id="file10" Name="README.TXT" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\README.TXT" />
+            <File Id="file11" Name="RELEAS_1.TXT" LongName="RELEASENOTES.TXT" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\RELEASENOTES.TXT" />
+            <File Id="file12" Name="Vera.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\Vera.ttf" />
+            <File Id="file13" Name="VeraBd.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraBd.ttf" />
+            <File Id="file14" Name="VeraBI.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraBI.ttf" />
+            <File Id="file15" Name="VeraIt.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraIt.ttf" />
+            <File Id="file16" Name="VeraMoBd.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraMoBd.ttf" />
+            <File Id="file17" Name="VeraMoBI.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraMoBI.ttf" />
+            <File Id="file18" Name="VeraMoIt.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraMoIt.ttf" />
+            <File Id="file19" Name="VeraMono.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraMono.ttf" />
+            <File Id="file20" Name="VeraSe.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraSe.ttf" />
+            <File Id="file21" Name="VeraSeBd.ttf" src="f:\Documents and Settings\daniel\Desktop\grafit\data\fonts\bitstream-vera\VeraSeBd.ttf" />
+          </Directory>
+        </Directory>
+        <Directory Id="directory33" Name="FUNCTI_1" LongName="functions">
+          <File Id="file68" Name="HAVRIL_1.FUN" LongName="havriliak-negami.function" src="f:\Documents and Settings\daniel\Desktop\grafit\data\functions\havriliak-negami.function" />
+          <File Id="file69" Name="LINEAR_1.FUN" LongName="linear.function" src="f:\Documents and Settings\daniel\Desktop\grafit\data\functions\linear.function" />
+          <File Id="file70" Name="QUADRA_1.FUN" LongName="quadratic.function" src="f:\Documents and Settings\daniel\Desktop\grafit\data\functions\quadratic.function" />
+        </Directory>
+        <Directory Id="directory44" Name="images">
+            <File Id="file86" Name="add.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\add.png" />
+            <File Id="file87" Name="arrow.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\arrow.png" />
+            <File Id="file88" Name="axes.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\axes.png" />
+            <File Id="file89" Name="circle-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\circle-f.png" />
+            <File Id="file90" Name="circle-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\circle-o.png" />
+            <File Id="file91" Name="close.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\close.png" />
+            <File Id="file92" Name="CLOSED_1.PNG" LongName="closed-folder.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\closed-folder.png" />
+            <File Id="file93" Name="colright.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\colright.png" />
+            <File Id="file94" Name="COMMAN_1.PNG" LongName="command-done.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\command-done.png" />
+            <File Id="file95" Name="COMMAN_2.PNG" LongName="command-undone.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\command-undone.png" />
+            <File Id="file96" Name="console.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\console.png" />
+            <File Id="file97" Name="DIAMON_1.PNG" LongName="diamond-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\diamond-f.png" />
+            <File Id="file98" Name="DIAMON_2.PNG" LongName="diamond-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\diamond-o.png" />
+            <File Id="file99" Name="down.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\down.png" />
+            <File Id="file100" Name="DOWNTR_1.PNG" LongName="downtriangle-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\downtriangle-f.png" />
+            <File Id="file101" Name="DOWNTR_2.PNG" LongName="downtriangle-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\downtriangle-o.png" />
+            <File Id="file102" Name="dreader.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\dreader.png" />
+            <File Id="file103" Name="edit.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\edit.png" />
+            <File Id="file104" Name="exec.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\exec.png" />
+            <File Id="file105" Name="FILE-P_1.PNG" LongName="file-properties.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\file-properties.png" />
+            <File Id="file106" Name="FOLDER_1.PNG" LongName="folder_new.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\folder_new.png" />
+            <File Id="file107" Name="function.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\function.png" />
+            <File Id="file108" Name="graph.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\graph.png" />
+            <File Id="file109" Name="hand.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\hand.png" />
+            <File Id="file110" Name="IMPORT_1.PNG" LongName="import_ascii.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\import_ascii.png" />
+            <File Id="file111" Name="LEFTTR_1.PNG" LongName="lefttriangle-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\lefttriangle-f.png" />
+            <File Id="file112" Name="LEFTTR_2.PNG" LongName="lefttriangle-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\lefttriangle-o.png" />
+            <File Id="file113" Name="logo.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\logo.png" />
+            <File Id="file114" Name="manibela.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\manibela.png" />
+            <File Id="file115" Name="NEW-FO_1.PNG" LongName="new-folder.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\new-folder.png" />
+            <File Id="file116" Name="new.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\new.png" />
+            <File Id="file117" Name="newgraph.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\newgraph.png" />
+            <File Id="file118" Name="NEWWSH_1.PNG" LongName="newwsheet.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\newwsheet.png" />
+            <File Id="file119" Name="open.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\open.png" />
+            <File Id="file120" Name="pencil.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\pencil.png" />
+            <File Id="file121" Name="plugin.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\plugin.png" />
+            <File Id="file122" Name="PROPER_1.PNG" LongName="properties.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\properties.png" />
+            <File Id="file123" Name="range.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\range.png" />
+            <File Id="file124" Name="remove.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\remove.png" />
+            <File Id="file125" Name="RIGHTT_1.PNG" LongName="righttriangle-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\righttriangle-f.png" />
+            <File Id="file126" Name="RIGHTT_2.PNG" LongName="righttriangle-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\righttriangle-o.png" />
+            <File Id="file127" Name="save.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\save.png" />
+            <File Id="file128" Name="saveas.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\saveas.png" />
+            <File Id="file129" Name="square-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\square-f.png" />
+            <File Id="file130" Name="square-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\square-o.png" />
+            <File Id="file131" Name="sreader.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\sreader.png" />
+            <File Id="file132" Name="ST7521_1.PNG" LongName="stock_arrowstyle.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_arrowstyle.png" />
+            <File Id="file133" Name="STC8BA_1.PNG" LongName="stock_book_blue.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_book_blue.png" />
+            <File Id="file134" Name="ST9446_1.PNG" LongName="stock_calc-accept.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_calc-accept.png" />
+            <File Id="file135" Name="ST4F85_1.PNG" LongName="stock_chart-toggle-axes.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_chart-toggle-axes.png" />
+            <File Id="file136" Name="STCCAA_1.PNG" LongName="stock_chart-toggle-hgrid.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_chart-toggle-hgrid.png" />
+            <File Id="file137" Name="ST93A5_1.PNG" LongName="stock_chart-toggle-legend.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_chart-toggle-legend.png" />
+            <File Id="file138" Name="STCCA4_1.PNG" LongName="stock_chart-toggle-vgrid.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_chart-toggle-vgrid.png" />
+            <File Id="file139" Name="ST6893_1.PNG" LongName="stock_color.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_color.png" />
+            <File Id="file140" Name="ST2A4B_1.PNG" LongName="stock_compile.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_compile.png" />
+            <File Id="file141" Name="ST9220_1.PNG" LongName="stock_copy.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_copy.png" />
+            <File Id="file142" Name="STFAC1_1.PNG" LongName="stock_cut.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_cut.png" />
+            <File Id="file143" Name="STA8DE_1.PNG" LongName="stock_data-new-table.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_data-new-table.png" />
+            <File Id="file144" Name="STC731_1.PNG" LongName="stock_data-next.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_data-next.png" />
+            <File Id="file145" Name="STD872_1.PNG" LongName="stock_data-previous.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_data-previous.png" />
+            <File Id="file146" Name="STB888_1.PNG" LongName="stock_datapilot.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_datapilot.png" />
+            <File Id="file147" Name="STOCK__2.PNG" LongName="stock_delete-column.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_delete-column.png" />
+            <File Id="file148" Name="STA804_1.PNG" LongName="stock_delete.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_delete.png" />
+            <File Id="file149" Name="ST2E46_1.PNG" LongName="stock_draw-line-45.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_draw-line-45.png" />
+            <File Id="file150" Name="ST4A38_1.PNG" LongName="stock_draw-line.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_draw-line.png" />
+            <File Id="file151" Name="ST6E6C_1.PNG" LongName="stock_draw-text.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_draw-text.png" />
+            <File Id="file152" Name="ST7A0E_1.PNG" LongName="stock_edit.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_edit.png" />
+            <File Id="file153" Name="STEBF7_1.PNG" LongName="stock_equals.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_equals.png" />
+            <File Id="file154" Name="ST9A06_1.PNG" LongName="stock_exit.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_exit.png" />
+            <File Id="file155" Name="ST0A0F_1.PNG" LongName="stock_export.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_export.png" />
+            <File Id="file156" Name="STEEC7_1.PNG" LongName="stock_folder.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_folder.png" />
+            <File Id="file157" Name="ST610B_1.PNG" LongName="stock_font-size.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_font-size.png" />
+            <File Id="file158" Name="ST686E_1.PNG" LongName="stock_format-scientific.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_format-scientific.png" />
+            <File Id="file159" Name="STDC60_1.PNG" LongName="stock_function-autopilot.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_function-autopilot.png" />
+            <File Id="file160" Name="STOCK__4.PNG" LongName="stock_graphic-styles.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_graphic-styles.png" />
+            <File Id="file161" Name="STBF5F_1.PNG" LongName="stock_hyperlink.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_hyperlink.png" />
+            <File Id="file162" Name="ST50D8_1.PNG" LongName="stock_insert-columns.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_insert-columns.png" />
+            <File Id="file163" Name="STAF18_1.PNG" LongName="stock_insert-file.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_insert-file.png" />
+            <File Id="file164" Name="STF290_1.PNG" LongName="stock_insert-table.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_insert-table.png" />
+            <File Id="file165" Name="ST7C08_1.PNG" LongName="stock_left.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_left.png" />
+            <File Id="file166" Name="ST5C24_1.PNG" LongName="stock_link.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_link.png" />
+            <File Id="file167" Name="ST3289_1.PNG" LongName="stock_macro-objects.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_macro-objects.png" />
+            <File Id="file168" Name="ST3327_1.PNG" LongName="stock_mail-import.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_mail-import.png" />
+            <File Id="file169" Name="STOCK__1.PNG" LongName="stock_navigator.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_navigator.png" />
+            <File Id="file170" Name="ST5389_1.PNG" LongName="stock_new-dir.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_new-dir.png" />
+            <File Id="file171" Name="ST3842_1.PNG" LongName="stock_new-formula.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_new-formula.png" />
+            <File Id="file172" Name="STC238_1.PNG" LongName="stock_new-master-document.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_new-master-document.png" />
+            <File Id="file173" Name="STOCK__3.PNG" LongName="stock_new-tab.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_new-tab.png" />
+            <File Id="file174" Name="ST57B7_1.PNG" LongName="stock_notes.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_notes.png" />
+            <File Id="file175" Name="ST6F77_1.PNG" LongName="stock_paste.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_paste.png" />
+            <File Id="file176" Name="STEBEC_1.PNG" LongName="stock_print-preview.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_print-preview.png" />
+            <File Id="file177" Name="STF667_1.PNG" LongName="stock_print-setup.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_print-setup.png" />
+            <File Id="file178" Name="ST67A0_1.PNG" LongName="stock_print.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_print.png" />
+            <File Id="file179" Name="ST601C_1.PNG" LongName="stock_redo.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_redo.png" />
+            <File Id="file180" Name="STBAC3_1.PNG" LongName="stock_reload.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_reload.png" />
+            <File Id="file181" Name="ST55A7_1.PNG" LongName="stock_right.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_right.png" />
+            <File Id="file182" Name="STE312_1.PNG" LongName="stock_script.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_script.png" />
+            <File Id="file183" Name="ST5621_1.PNG" LongName="stock_sort-ascending.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_sort-ascending.png" />
+            <File Id="file184" Name="STBEC0_1.PNG" LongName="stock_sort-column-ascending.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_sort-column-ascending.png" />
+            <File Id="file185" Name="STE117_1.PNG" LongName="stock_sort-descending.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_sort-descending.png" />
+            <File Id="file186" Name="ST8E3E_1.PNG" LongName="stock_stop.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_stop.png" />
+            <File Id="file187" Name="STF5F4_1.PNG" LongName="stock_styles.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_styles.png" />
+            <File Id="file188" Name="STFEC1_1.PNG" LongName="stock_sum.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_sum.png" />
+            <File Id="file189" Name="STFCDD_1.PNG" LongName="stock_top.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_top.png" />
+            <File Id="file190" Name="STA8EA_1.PNG" LongName="stock_undo-history.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_undo-history.png" />
+            <File Id="file191" Name="ST761E_1.PNG" LongName="stock_undo.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_undo.png" />
+            <File Id="file192" Name="ST3107_1.PNG" LongName="stock_unknown.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_unknown.png" />
+            <File Id="file193" Name="STF4EC_1.PNG" LongName="stock_up-one-dir.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_up-one-dir.png" />
+            <File Id="file194" Name="ST50F6_1.PNG" LongName="stock_zoom-shift.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_zoom-shift.png" />
+            <File Id="file195" Name="ST6C40_1.PNG" LongName="stock_zoom.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\stock_zoom.png" />
+            <File Id="file196" Name="style.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\style.png" />
+            <File Id="file197" Name="text.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\text.png" />
+            <File Id="file198" Name="top.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\top.png" />
+            <File Id="file199" Name="up.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\up.png" />
+            <File Id="file200" Name="UPTRIA_1.PNG" LongName="uptriangle-f.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\uptriangle-f.png" />
+            <File Id="file201" Name="UPTRIA_2.PNG" LongName="uptriangle-o.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\uptriangle-o.png" />
+            <File Id="file202" Name="vogel.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\vogel.png" />
+            <File Id="file203" Name="WORKSH_1.PNG" LongName="worksheet.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\worksheet.png" />
+            <File Id="file204" Name="WSHEET_1.PNG" LongName="wsheet_edit.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\wsheet_edit.png" />
+            <File Id="file205" Name="zoom.png" src="f:\Documents and Settings\daniel\Desktop\grafit\data\images\zoom.png" />
+        </Directory>
+      </Directory>
 
-          <Component Id='HelperLibrary' Guid='3402feef-6BE3-460D-A14F-75658D16550B'>
-            <File Id='HelperDLL' Name='Helper.dll' DiskId='1' src='Helper.dll' Vital='yes' />
-          </Component>
-
-
-	  <!-- documentation -->
+            </Component>
+	      <!-- documentation -->
 
           <Component Id='Manual' Guid='3402feef-574D-4A9A-A266-5B5EC2C022A4'>
             <File Id='Manual' Name='Manual.pdf' DiskId='1' src='Manual.pdf' />

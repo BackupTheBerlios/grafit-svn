@@ -1,13 +1,28 @@
 import os
+import sys
 
-os.system(r'cx_Freeze-3.0.1\FreezePython.exe ../giraffe/grafit.pyw --target-dir=dist/grafit')
+def freeze():
+    os.system(r'cx_Freeze-3.0.1\FreezePython.exe ../giraffe/grafit.pyw --target-dir=dist/grafit')
 
-template = open('grafit.wxst', 'rb')
-output = open('grafit.wxs', 'wb')
+def make_wxs():
+    template = open('grafit.wxst', 'rb')
+    output = open('grafit.wxs', 'wb')
+    dll_line = r"<File Id='%(fileid)s' Name='%(shortname)s' LongName='%(filename)s' DiskId='1' src='%(filesrc)s' Vital='yes' />"
 
-for line in template:
-    if line.strip() == r"<File Id='HelperDLL' Name='Helper.dll' DiskId='1' src='Helper.dll' Vital='yes' />":
-        print '!!!'
-    else:
-        output.write(line)
+    for line in template:
+        if line.strip() == dll_line:
+            for n, f in enumerate(os.listdir('dist/grafit')):
+                if not f.endswith('.exe'):
+                    output.write(dll_line % {'fileid': 'dll%d' % n, 
+                                             'shortname' : f[:7],
+                                             'filename' : f,
+                                             'filesrc' : 'dist/grafit/'+f} + '\r\n')
+                    print 'added dll: %s' % f
+        else:
+            output.write(line)
 
+if __name__ == '__main__':
+    if 'freeze' in sys.argv[1:]:
+        freeze()
+    if 'wxs' in sys.argv[1:]:
+        make_wxs()
