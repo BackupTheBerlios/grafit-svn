@@ -1,7 +1,7 @@
 import sys
 import time
 import re
-print >>sys.stderr, "import graph"
+#print >>sys.stderr, "import graph"
 import string
 import tempfile
 
@@ -292,14 +292,16 @@ class XorDraw(object):
             self.need_redraw = False
 
 class Handle(object):
-    def __init__(self, graph, posx, posy):
+    def __init__(self, graph, obj, posx, posy):
         self.graph, self.posx, self.posy = graph, posx, posy
+        self.obj = obj
 #        self.update()
         self.graph.connect('display', self.update)
 
     def update(self):
         self.x, self.y = self.graph.pos2x(self.posx)[0], self.graph.pos2y(self.posy)[0]
         self.p, self.q = self.graph.pos2x(self.posx)[1], self.graph.pos2y(self.posy)[1]
+        self.obj.emit('modified')
 
     def move(self, x, y):
         self.posx, self.posy = self.graph.x2pos(x, self.p), self.graph.y2pos(y, self.q)
@@ -333,7 +335,7 @@ class Handle(object):
         return self.x-1<=x<= self.x+1 and self.y-1<=y<=self.y+1
 
 
-class GraphObject(object):
+class GraphObject(HasSignals):
     def __init__(self, graph):
         self.graph = graph
         self.handles = []
@@ -353,12 +355,11 @@ class GraphObject(object):
         self._active_handle = None
         return False
 
-
 class Line(GraphObject):
     def __init__(self, graph):
         GraphObject.__init__(self, graph)
-        self.handles.append(Handle(graph, '0%', '0%'))
-        self.handles.append(Handle(graph, '40mm', '40mm'))
+        self.handles.append(Handle(graph, self, '0%', '0%'))
+        self.handles.append(Handle(graph, self, '40mm', '40mm'))
 
     def draw(self):
         glColor3f(.3, .5, .7)
@@ -367,17 +368,38 @@ class Line(GraphObject):
         glVertex3d(self.handles[1].x, self.handles[1].y, 0)
         glEnd()
 
+    def get_x1(self): return self.handles[0].posx
+    def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
+    _x1 = property(get_x1, set_x1)
+
+    def get_y1(self): return self.handles[0].posy
+    def set_y1(self, value): self.handles[0].posy = value; self.graph.emit('redraw')
+    _y1 = property(get_y1, set_y1)
+
+    def get_x2(self): return self.handles[1].posx
+    def set_x2(self, value): self.handles[1].posx = value; self.graph.emit('redraw')
+    _x2 = property(get_x2, set_x2)
+
+    def get_y2(self): return self.handles[1].posy
+    def set_y2(self, value): self.handles[1].posy = value; self.graph.emit('redraw')
+    _y2 = property(get_y2, set_y2)
+
 
 class Text(GraphObject):
     def __init__(self, graph):
         GraphObject.__init__(self, graph)
-        self.handles.append(Handle(graph, '50mm', '50mm'))
+        self.handles.append(Handle(graph, self, '50mm', '50mm'))
+        self._text = 'text object'
 
     def draw(self):
         facesize = 12
-        self.graph.textpainter.render_text('text object', facesize, 
+        self.graph.textpainter.render_text(self.text, facesize, 
                                            self.handles[0].x, self.handles[0].y,
                                            align_x='bottom', align_y='left')
+
+    def get_text(self): return self._text
+    def set_text(self, value): self._text = value; self.emit('modified'); self.graph.emit('redraw')
+    text = property(get_text, set_text)
 
 
 class Move(XorDraw):
@@ -1492,6 +1514,13 @@ class Graph(Item, HasSignals):
             else:
                 self.emit('request-cursor', 'arrow')
  
+    def button_doubleclick(self, x, y, button):
+        if self.mode == 'arrow' and button == 1:
+            x, y = self.mouse_to_ident(x, y)
+            for o in self.graph_objects:
+                if o.hittest(x, y):
+                    self.emit('object-doubleclicked', o)
+                    break
      
     def button_release(self, x, y, button):
         if self.mode == 'zoom':

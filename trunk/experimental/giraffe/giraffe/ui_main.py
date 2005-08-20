@@ -1,7 +1,7 @@
 import sys
-print >>sys.stderr, "import worksheet_view"
+#print >>sys.stderr, "import worksheet_view"
 from giraffe.ui_worksheet_view import WorksheetView
-print >>sys.stderr, "import graph_view"
+#print >>sys.stderr, "import graph_view"
 from giraffe.ui_graph_view import GraphView
 from giraffe.import_ascii import import_ascii
 
@@ -288,7 +288,7 @@ class FolderListData(HasSignals):
 # example main window
 class MainWindow(Window):
     def __init__(self):
-        print >>sys.stderr, "creating main window"
+#        print >>sys.stderr, "creating main window"
         Window.__init__(self, statusbar=True, size=(800, 600))
         self.title = 'Grafit'
 

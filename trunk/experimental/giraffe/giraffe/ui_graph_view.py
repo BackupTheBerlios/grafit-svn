@@ -91,9 +91,11 @@ class GraphView(gui.Box):
         self.glwidget.connect('paint-gl', self.graph.display)
         self.glwidget.connect('button-pressed', self.graph.button_press)
         self.glwidget.connect('button-released', self.graph.button_release)
+        self.glwidget.connect('button-doubleclicked', self.graph.button_doubleclick)
         self.glwidget.connect('mouse-moved', self.graph.button_motion)
 
         self.graph.connect('redraw', self.glwidget.redraw)
+        self.graph.connect('object-doubleclicked', self.on_object_doubleclicked)
 
         self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
         self.legend.connect('selection-changed', self.on_legend_select)
@@ -110,6 +112,11 @@ class GraphView(gui.Box):
         self.panel.right_panel._widget.toolbar.Realize()
 
         self.graph.connect('request-cursor', self.on_request_cursor)
+
+    def on_object_doubleclicked(self, obj):
+        from prop import Editor
+        e = Editor(self, 'test.xrc', obj)
+        e._widget.Show()
 
     def on_request_cursor(self, cursor):
         cur = {'arrow': wx.CURSOR_ARROW,

@@ -1492,6 +1492,8 @@ class OpenGLWidget(Widget):
             self._widget.Bind(event, self.OnMouseDown)
         for event in (wx.EVT_LEFT_UP, wx.EVT_MIDDLE_UP, wx.EVT_RIGHT_UP):
             self._widget.Bind(event, self.OnMouseUp)
+        for event in (wx.EVT_LEFT_DCLICK, wx.EVT_MIDDLE_DCLICK, wx.EVT_RIGHT_DCLICK):
+            self._widget.Bind(event, self.OnMouseDoubleClicked)
         self._widget.Bind(wx.EVT_MOTION, self.OnMouseMotion)
         self._lastsize = (-1, -1)
 
@@ -1537,6 +1539,12 @@ class OpenGLWidget(Widget):
         x, y = evt.GetPosition()
         btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
         self.emit('button-released', x, y, btn)
+
+    def OnMouseDoubleClicked(self, evt):
+        x, y = evt.GetPosition()
+        btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
+        self.emit('button-doubleclicked', x, y, btn)
+
 
     def OnMouseMotion(self, evt):
         x, y = evt.GetPosition()
