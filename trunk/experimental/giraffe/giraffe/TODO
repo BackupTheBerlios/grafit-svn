@@ -1,11 +1,12 @@
 immediate
 ---------
+
+* rewrite panels using MultiSplitter and notebooks
 * make add/remove functions commands
 * context menu on project explorer
 * context menu on graph
 * fix exit handling and session saving
 * make combine work for dataset-change-style command
-* rewrite panels using MultiSplitter
 
 * editable lines on graph
 * editable text on graph

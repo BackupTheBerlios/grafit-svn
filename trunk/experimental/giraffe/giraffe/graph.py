@@ -291,48 +291,94 @@ class XorDraw(object):
                 self.draw(*self.coords)
             self.need_redraw = False
 
+class Handle(object):
+    def __init__(self, graph, posx, posy):
+        self.graph, self.posx, self.posy = graph, posx, posy
+#        self.update()
+        self.graph.connect('display', self.update)
+
+    def update(self):
+        self.x, self.y = self.graph.pos2x(self.posx)[0], self.graph.pos2y(self.posy)[0]
+        self.p, self.q = self.graph.pos2x(self.posx)[1], self.graph.pos2y(self.posy)[1]
+
+    def move(self, x, y):
+        self.posx, self.posy = self.graph.x2pos(x, self.p), self.graph.y2pos(y, self.q)
+        self.update()
+
+    def draw(self):
+        glColor3f(0, 0, 1) # blue
+        glBegin(GL_LINE_LOOP)
+        glVertex3d(self.x-1, self.y-1, 0.0)
+        glVertex3d(self.x+1, self.y-1, 0.0)
+        glVertex3d(self.x+1, self.y+1, 0.0)
+        glVertex3d(self.x-1, self.y+1, 0.0)
+        glEnd()
+
+        glColor3f(.7, .2, 0)
+        if self.p == 'x':
+            glBegin(GL_LINES)
+            glVertex3d(self.x, self.y-1, 0)
+            glVertex3d(self.x, self.y+1, 0)
+            glEnd()
+        if self.q == 'y':
+            glBegin(GL_LINES)
+            glVertex3d(self.x-1, self.y, 0)
+            glVertex3d(self.x+1, self.y, 0)
+            glEnd()
+
+
+    def hittest(self, x, y):
+        if not hasattr(self, 'x'):
+            return False
+        return self.x-1<=x<= self.x+1 and self.y-1<=y<=self.y+1
+
+
 class GraphObject(object):
     def __init__(self, graph):
         self.graph = graph
-        self._handles = []
+        self.handles = []
 
     def draw(self):
         raise NotImplementedError
 
     def draw_handles(self):
-        glColor3f(0, 0, 1) # blue
-        for (x, y) in self.handles:
-            glBegin(GL_LINE_LOOP)
-            glVertex3d(x-1, y-1, 0.0)
-            glVertex3d(x+1, y-1, 0.0)
-            glVertex3d(x+1, y+1, 0.0)
-            glVertex3d(x-1, y+1, 0.0)
-            glEnd()
+        for h in self.handles:
+            h.draw()
 
     def hittest(self, x, y):
-        for i, (xh, yh) in enumerate(self.handles):
-            if xh-1<= x<= xh+1 and yh-1<=y<=yh+1:
-                self._active_handle = i
+        for i, h in enumerate(self.handles):
+            if h.hittest(x, y):
+                self._active_handle = h
                 return True
-        self._active_handle = -1
+        self._active_handle = None
         return False
-
-    handles = property(lambda self: self._handles)
 
 
 class Line(GraphObject):
     def __init__(self, graph):
         GraphObject.__init__(self, graph)
-        self.p1 = (0, 0)
-        self.p2 = (40, 40)
-        self._handles = [self.p1, self.p2]
+        self.handles.append(Handle(graph, '0%', '0%'))
+        self.handles.append(Handle(graph, '40mm', '40mm'))
 
     def draw(self):
         glColor3f(.3, .5, .7)
         glBegin(GL_LINES)
-        glVertex3d(self.handles[0][0], self.handles[0][1], 0.0)
-        glVertex3d(self.handles[1][0], self.handles[1][1], 0.0)
+        glVertex3d(self.handles[0].x, self.handles[0].y, 0)
+        glVertex3d(self.handles[1].x, self.handles[1].y, 0)
         glEnd()
+
+
+class Text(GraphObject):
+    def __init__(self, graph):
+        GraphObject.__init__(self, graph)
+        self.handles.append(Handle(graph, '50mm', '50mm'))
+
+    def draw(self):
+        facesize = 12
+        self.graph.textpainter.render_text('text object', facesize, 
+                                           self.handles[0].x, self.handles[0].y,
+                                           align_x='bottom', align_y='left')
+
 
 class Move(XorDraw):
     def __init__(self, obj):
@@ -340,9 +386,9 @@ class Move(XorDraw):
         self.obj = obj
 
     def draw(self, x, y):
-        self.obj.handles[self.obj._active_handle] = (x, y)
-        self.obj.draw()
+        self.obj._active_handle.move(x, y)
         self.obj.draw_handles()
+        self.obj.draw()
 
 
 class Rubberband(XorDraw):
@@ -942,6 +988,7 @@ class Graph(Item, HasSignals):
 
         self.graph_objects = []
         self.graph_objects.append(Line(self))
+        self.graph_objects.append(Text(self))
         self.dragobj = None
 
     default_name_prefix = 'graph'
@@ -1104,6 +1151,42 @@ class Graph(Item, HasSignals):
         self.grid_h.paint()
         self.grid_v.paint()
 
+    def pos2y(self, pos):
+        if pos.endswith('%'):
+            return float(pos[:-1])*self.plot_height/100., '%'
+        elif pos.endswith('y'):
+            return self.proj(self.ymin, float(pos[:-1]))[1], 'y'
+        elif pos.endswith('mm'):
+            return float(pos[:-2]), 'mm'
+        else:
+            return float(pos), 'mm'
+
+    def pos2x(self, pos):
+        if pos.endswith('%'):
+            return float(pos[:-1])*self.plot_width/100., '%'
+        elif pos.endswith('x'):
+            return self.proj(float(pos[:-1]), self.xmin)[0], 'x'
+        elif pos.endswith('mm'):
+            return float(pos[:-2]), 'mm'
+        else:
+            return float(pos), 'mm'
+
+    def x2pos(self, x, typ):
+        if typ=='%':
+            return str(x*100./self.plot_width)+'%'
+        elif typ=='x':
+            return str(self.invproj(x, 0)[0])+'x'
+        elif typ=='mm':
+            return str(x)+'mm'
+
+    def y2pos(self, y, typ):
+        if typ=='%':
+            return str(y*100./self.plot_height)+'%'
+        elif typ=='y':
+            return str(self.invproj(0, y)[1])+'y'
+        elif typ=='mm':
+            return str(y)+'mm'
+
     def proj(self, x, y):
         x, xmin, xmax = map(self.axis_bottom.transform, (x, self.xmin, self.xmax))
         y, ymin, ymax = map(self.axis_left.transform, (y, self.ymin, self.ymax))
@@ -1197,6 +1280,7 @@ class Graph(Item, HasSignals):
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
 
     def display(self, width=-1, height=-1):
+        self.emit('display')
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
@@ -1226,8 +1310,8 @@ class Graph(Item, HasSignals):
 
             self.paint_axes()
             for o in self.graph_objects:
-                o.draw()
                 o.draw_handles()
+                o.draw()
 
 #            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
 #            print pixels
@@ -1469,7 +1553,7 @@ class Graph(Item, HasSignals):
         elif self.mode in ['range', 'd-reader'] and dragging:
             self.button_press(x, y)
         elif self.mode == 'hand' and dragging:
-            if self.selected_fnction is not None:
+            if self.selected_function is not None:
                 self.selected_function.move(*self.mouse_to_real(x, y))
                 self._movefunc.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
