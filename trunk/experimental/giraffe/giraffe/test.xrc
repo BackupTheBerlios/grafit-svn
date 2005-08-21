@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resource>
   <object class="wxDialog" name="edit(Line)">
-    <title></title>
-    <object class="wxPanel" name="PANEL1">
-      <object class="wxBoxSizer">
-        <orient>wxVERTICAL</orient>
-        <object class="sizeritem">
-          <object class="wxStaticBoxSizer">
-            <label>Start</label>
-            <orient>wxVERTICAL</orient>
-            <object class="sizeritem">
-              <object class="wxFlexGridSizer">
-                <cols>2</cols>
-                <rows>2</rows>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
+    <title>Line object</title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <label>Start</label>
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="wxFlexGridSizer">
+              <cols>2</cols>
+              <rows>2</rows>
+              <object class="sizeritem">
+                <object class="wxStaticText">
               
               
                     
@@ -25,7 +24,10 @@
                     
                     
                     
-                    <label>X</label>
+                    
+                    
+                  
+                  <label>X</label>
             </object>
             
             
@@ -38,7 +40,10 @@
                   
                   
                   
-                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  
+                  
+                
+                <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
                   
@@ -46,8 +51,12 @@
                   
                   
           </object>
-                <object class="sizeritem">
-                  <object class="wxTextCtrl" name="auto(_x1)"/>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="auto(_x1)">
+                    
+                  
+                  <style>wxTE_PROCESS_ENTER</style>
+                  </object>
             
             
             
@@ -59,7 +68,10 @@
                   
                   
                   
-                  <flag>wxEXPAND</flag>
+                  
+                  
+                
+                <flag>wxEXPAND</flag>
             
                   
                   
@@ -67,8 +79,8 @@
                   
                   
           </object>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
+              <object class="sizeritem">
+                <object class="wxStaticText">
               
               
                     
@@ -79,7 +91,10 @@
                     
                     
                     
-                    <label>Y</label>
+                    
+                    
+                  
+                  <label>Y</label>
             </object>
             
             
@@ -92,7 +107,10 @@
                   
                   
                   
-                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  
+                  
+                
+                <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
                   
@@ -100,16 +118,23 @@
                   
                   
           </object>
-                <hgap>5</hgap>
-                <growablecols>1</growablecols>
-                <object class="sizeritem">
-                  <object class="wxTextCtrl" name="auto(_y1)"/>
+              <hgap>5</hgap>
+              <growablecols>1</growablecols>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="auto(_y1)">
+                    
+                  
+                  <style>wxTE_PROCESS_ENTER</style>
+                  </object>
                   
                   
                   
-                  <flag>wxEXPAND</flag>
+                  
+                  
+                
+                <flag>wxEXPAND</flag>
                 </object>
-              </object>
+            </object>
         
         
               
@@ -120,9 +145,12 @@
               
               
               
-              <flag>wxEXPAND|wxGROW</flag>
+              
+              
+            
+            <flag>wxEXPAND|wxGROW</flag>
       </object>
-          </object>
+        </object>
           
           
           
@@ -132,18 +160,21 @@
           
           
           
-          <flag>wxEXPAND|wxGROW</flag>
+          
+          
+        
+        <flag>wxEXPAND|wxGROW</flag>
         </object>
-        <object class="sizeritem">
-          <object class="wxStaticBoxSizer">
-            <label>End</label>
-            <orient>wxVERTICAL</orient>
-            <object class="sizeritem">
-              <object class="wxFlexGridSizer">
-                <cols>2</cols>
-                <rows>2</rows>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <label>End</label>
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="wxFlexGridSizer">
+              <cols>2</cols>
+              <rows>2</rows>
+              <object class="sizeritem">
+                <object class="wxStaticText">
               
               
                     
@@ -154,7 +185,10 @@
                     
                     
                     
-                    <label>X</label>
+                    
+                    
+                  
+                  <label>X</label>
             </object>
             
             
@@ -167,7 +201,10 @@
                   
                   
                   
-                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  
+                  
+                
+                <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
                   
@@ -175,8 +212,13 @@
                   
                   
           </object>
-                <object class="sizeritem">
-                  <object class="wxTextCtrl" name="auto(_x2)"/>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="auto(_x2)">
+                    
+                  
+                  <size>120, -1</size>
+                  <style>wxTE_PROCESS_ENTER</style>
+                  </object>
             
             
             
@@ -188,7 +230,10 @@
                   
                   
                   
-                  <flag>wxEXPAND</flag>
+                  
+                  
+                
+                <flag>wxEXPAND</flag>
             
                   
                   
@@ -196,8 +241,8 @@
                   
                   
           </object>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
+              <object class="sizeritem">
+                <object class="wxStaticText">
               
               
                     
@@ -208,7 +253,10 @@
                     
                     
                     
-                    <label>Y</label>
+                    
+                    
+                  
+                  <label>Y</label>
             </object>
             
             
@@ -221,7 +269,10 @@
                   
                   
                   
-                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  
+                  
+                
+                <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
                   
@@ -229,16 +280,23 @@
                   
                   
           </object>
-                <hgap>5</hgap>
-                <growablecols>1</growablecols>
-                <object class="sizeritem">
-                  <object class="wxTextCtrl" name="auto(_y2)"/>
+              <hgap>5</hgap>
+              <growablecols>1</growablecols>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="auto(_y2)">
+                    
+                  
+                  <style>wxTE_PROCESS_ENTER</style>
+                  </object>
                   
                   
                   
-                  <flag>wxEXPAND</flag>
+                  
+                  
+                
+                <flag>wxEXPAND</flag>
                 </object>
-              </object>
+            </object>
         
         
               
@@ -249,45 +307,49 @@
               
               
               
-              <flag>wxEXPAND|wxGROW</flag>
+              
+              
+            
+            <flag>wxEXPAND|wxGROW</flag>
       </object>
+        </object>
+          
+          
+          
+          
+          
+        
+          
+          
+          
+          
+          
+        
+        <flag>wxEXPAND|wxGROW</flag>
+        </object>
+      <object class="spacer">
+        <size>0,10</size>
+      </object>
+      <object class="sizeritem">
+        <object class="wxButton" name="wxID_CLOSE">
+            
+            
+          
+          <label>Close</label>
           </object>
           
           
-          
-          
-          
         
-          
-          
-          
-          <flag>wxEXPAND|wxGROW</flag>
+        <flag>wxEXPAND</flag>
         </object>
-        <object class="sizeritem">
-          <object class="wxButton">
-            <label>Close</label>
-          </object>
-          <flag>wxEXPAND</flag>
-        </object>
-      </object>
     </object>
-    <size>150, 200</size>
+    <style>wxDEFAULT_DIALOG_STYLE|wxTHICK_FRAME</style>
   </object>
   <object class="wxDialog" name="edit(Text)">
-    <title></title>
-    <object class="wxPanel" name="PANEL1">
-      <object class="wxBoxSizer">
-        <orient>wxVERTICAL</orient>
-        <object class="sizeritem">
-          <object class="wxStaticBoxSizer">
-            <label>Start</label>
-            <orient>wxVERTICAL</orient>
-            <object class="sizeritem">
-              <object class="wxFlexGridSizer">
-                <cols>2</cols>
-                <rows>2</rows>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
+    <title>Text object</title>
+    <object class="wxBoxSizer">
+      <object class="sizeritem">
+        <object class="wxStaticText">
               
               
                     
@@ -298,7 +360,10 @@
                     
                     
                     
-                    <label>Text</label>
+                    
+            
+          
+          <label>Text</label>
             </object>
             
             
@@ -311,56 +376,55 @@
                   
                   
                   
-                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  
+          
             
                   
                   
                   
                   
                   
-          </object>
-                <hgap>5</hgap>
-                <growablecols>1</growablecols>
-                <object class="sizeritem">
-                  <object class="wxTextCtrl" name="auto(text)"/>
-                  
-                  
-                  
-                  <flag>wxEXPAND</flag>
-                </object>
-              </object>
+          
         
-        
-              
-              
-              
-              
-              
-              
-              
-              
-              <flag>wxEXPAND|wxGROW</flag>
       </object>
+      <object class="sizeritem">
+        <object class="wxTextCtrl" name="auto(text)">
+            
+          
+          <size>180, 150</size>
+          <style>wxTE_MULTILINE</style>
           </object>
+                  
+                  
+                  
+                  
+                
           
+        
           
+        
+        <option>1</option>
+        <flag>wxEXPAND</flag>
+      </object>
+      <object class="spacer">
+        <size>0,10</size>
+      </object>
+      <object class="sizeritem">
+        <object class="wxButton" name="wxID_CLOSE">
+            
+            
           
-          
+          <label>Close</label>
+          </object>
           
         
           
           
-          
-          <flag>wxEXPAND|wxGROW</flag>
-        </object>
-        <object class="sizeritem">
-          <object class="wxButton">
-            <label>Close</label>
-          </object>
-          <flag>wxEXPAND</flag>
-        </object>
+        
+        <flag>wxEXPAND</flag>
       </object>
+      <orient>wxVERTICAL</orient>
     </object>
-    <size>150, 200</size>
+    <style>wxDEFAULT_DIALOG_STYLE|wxTHICK_FRAME</style>
   </object>
 </resource>

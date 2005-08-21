@@ -379,6 +379,10 @@ class MainWindow(Window):
         self.main.left_panel._widget.toolbar.Realize()
         self.main.right_panel._widget.toolbar.Realize()
 
+        import wx.xrc
+        # preload
+        wx.xrc.XmlResource('test.xrc')
+
     def on_status_message(self, msg, time=0):
         self.status = msg
 

@@ -295,7 +295,6 @@ class Handle(object):
     def __init__(self, graph, obj, posx, posy):
         self.graph, self.posx, self.posy = graph, posx, posy
         self.obj = obj
-#        self.update()
         self.graph.connect('display', self.update)
 
     def update(self):
@@ -347,6 +346,15 @@ class GraphObject(HasSignals):
         for h in self.handles:
             h.draw()
 
+    def begin(self, x, y):
+        print >>sys.stderr, self, 'begin', x, y
+
+    def cont(self, x, y):
+        print >>sys.stderr, self, 'cont', x, y
+
+    def end(self, x, y):
+        print >>sys.stderr, self, 'end', x, y
+
     def hittest(self, x, y):
         for i, h in enumerate(self.handles):
             if h.hittest(x, y):
@@ -359,7 +367,7 @@ class Line(GraphObject):
     def __init__(self, graph):
         GraphObject.__init__(self, graph)
         self.handles.append(Handle(graph, self, '0%', '0%'))
-        self.handles.append(Handle(graph, self, '40mm', '40mm'))
+        self.handles.append(Handle(graph, self, '0%', '0%'))
 
     def draw(self):
         glColor3f(.3, .5, .7)
@@ -367,6 +375,13 @@ class Line(GraphObject):
         glVertex3d(self.handles[0].x, self.handles[0].y, 0)
         glVertex3d(self.handles[1].x, self.handles[1].y, 0)
         glEnd()
+
+    def begin(self, x, y):
+        self.handles[0].update()
+        self.handles[1].update()
+        self.handles[0].move(x, y)
+        self.handles[1].move(x, y)
+        self._active_handle = self.handles[1]
 
     def get_x1(self): return self.handles[0].posx
     def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
@@ -388,8 +403,8 @@ class Line(GraphObject):
 class Text(GraphObject):
     def __init__(self, graph):
         GraphObject.__init__(self, graph)
-        self.handles.append(Handle(graph, self, '50mm', '50mm'))
-        self._text = 'text object'
+        self.handles.append(Handle(graph, self, '0%', '0%'))
+        self._text = 'text object\nwith $new$line'
 
     def draw(self):
         facesize = 12
@@ -401,6 +416,10 @@ class Text(GraphObject):
     def set_text(self, value): self._text = value; self.emit('modified'); self.graph.emit('redraw')
     text = property(get_text, set_text)
 
+    def begin(self, x, y):
+        self.handles[0].update()
+        self.handles[0].move(x, y)
+        self._active_handle = self.handles[0]
 
 class Move(XorDraw):
     def __init__(self, obj):
@@ -411,7 +430,6 @@ class Move(XorDraw):
         self.obj._active_handle.move(x, y)
         self.obj.draw_handles()
         self.obj.draw()
-
 
 class Rubberband(XorDraw):
     def __init__(self, graph):
@@ -806,6 +824,16 @@ class TextPainter(object):
     # with the position (lower left corner) of the fragment, 
     # to render the text
 
+    def render_text_chunk_symbol(self, text, size, orientation='h'):
+        def renderer(x, y):
+            xmin, ymin = self.plot.proj(self.plot.xmin, self.plot.ymin)
+            xmax, ymax = self.plot.proj(self.plot.xmax, self.plot.ymax)
+            render_symbols(array([x]), array([y]),
+                           'square-f', 15, 
+                           xmin, xmax, ymin, ymax)
+
+        return 15, 15, 0, renderer
+
     def render_text_chunk_normal(self, text, size, orientation='h'):
         fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size) 
         w, h = fonte.getsize(text)
@@ -880,6 +908,31 @@ class TextPainter(object):
 
     def render_text(self, text, size, x, y, align_x='center', align_y='center', 
                     orientation='h', measure_only=False):
+        if not '\n' in text:
+            return self.render_text_line(text, size, x, y, align_x, align_y, orientation, measure_only)
+
+        lines = text.splitlines()
+
+        heights = []
+        widths = []
+
+        for line in lines:
+            w, h = self.render_text_line(line, size, x, y, align_x, align_y, orientation, measure_only=True)
+            heights.append(h)
+            widths.append(w)
+
+        if orientation == 'h':
+            totalh = sum(heights)
+            totalw = max(widths)
+        elif orientation=='v':
+            totalh = max(heights)
+            totalw = sum(widths)
+
+        for line, off in zip(lines, [0]+list(cumsum(heights))[:-1]):
+            self.render_text_line(line, size, x, y-off, align_x, align_y, orientation)
+
+    def render_text_line(self, text, size, x, y, align_x='center', align_y='center', 
+                    orientation='h', measure_only=False):
         if text == '':
             return 0, 0
 
@@ -893,13 +946,21 @@ class TextPainter(object):
         for chunk, tex in chunks:
             if tex:
                 w, h, origin, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
+                renderers.append(renderer)
+                widths.append(w)
+                heights.append(h)
+                origins.append(origin)
             else:
-                w, h, origin, renderer = self.render_text_chunk_normal(chunk, size, orientation)
-
-            renderers.append(renderer)
-            widths.append(w)
-            heights.append(h)
-            origins.append(origin)
+                chunks2 = cut(chunk, '@')
+                for chunk2, at in chunks2:
+                    if at:
+                        w, h, origin, renderer = self.render_text_chunk_symbol(chunk2, size, orientation)
+                    else:
+                        w, h, origin, renderer = self.render_text_chunk_normal(chunk2, size, orientation)
+                    renderers.append(renderer)
+                    widths.append(w)
+                    heights.append(h)
+                    origins.append(origin)
 
         #####################################################################
         #                                    ________        _____          #
@@ -1009,7 +1070,6 @@ class Graph(Item, HasSignals):
         self.textpainter = TextPainter(self)
 
         self.graph_objects = []
-        self.graph_objects.append(Line(self))
         self.graph_objects.append(Text(self))
         self.dragobj = None
 
@@ -1513,7 +1573,20 @@ class Graph(Item, HasSignals):
                     break
             else:
                 self.emit('request-cursor', 'arrow')
- 
+        elif self.mode in ('draw-line', 'draw-text'):
+            xi, yi = self.mouse_to_ident(x, y)
+            createobj = {'draw-line': Line, 'draw-text': Text}[self.mode](self)
+            createobj.begin(xi, yi)
+            self.dragobj = createobj
+            self.dragobj_xor = Move(self.dragobj)
+            self.objects.append(self.dragobj_xor)
+            self.paint_xor_objects = True
+            self.dragobj_xor.show(xi, yi)
+            self.graph_objects.append(createobj)
+            self.mode = 'arrow'
+            self.emit('redraw')
+            self.emit('request-cursor', 'arrow')
+      
     def button_doubleclick(self, x, y, button):
         if self.mode == 'arrow' and button == 1:
             x, y = self.mouse_to_ident(x, y)
@@ -1573,7 +1646,6 @@ class Graph(Item, HasSignals):
                 self.emit('redraw')
                 self.objects.remove(self.dragobj_xor)
                 self.paint_xor_objects = False
-
         
     def button_motion(self, x, y, dragging):
         if self.mode == 'zoom' and dragging:
@@ -1595,11 +1667,11 @@ class Graph(Item, HasSignals):
                 # not initialized yet, do nothing
                 return
             x, y = self.mouse_to_ident(x, y)
-            if self.dragobj is not None:
+            if self.dragobj is not None: # drag a handle on an object
                 self.dragobj_xor.move(x, y)
                 self.emit('redraw')
                 self.emit('request-cursor', 'none')
-            else:
+            else: # look for handles
                 for o in self.graph_objects:
                     if o.hittest(x, y):
                         self.emit('request-cursor', 'hand')

@@ -62,6 +62,8 @@ class GraphView(gui.Box):
                        'range': wx.CURSOR_SIZEWE,
                        'd-reader': wx.CURSOR_CROSS,
                        's-reader': wx.CURSOR_CROSS,
+                       'draw-text': wx.CURSOR_IBEAM,
+                       'draw-line': wx.CURSOR_PENCIL,
                        'none': wx.CURSOR_NONE }[mode]
                 self.glwidget._widget.SetCursor(wx.StockCursor(cur))
             return _set
@@ -73,6 +75,9 @@ class GraphView(gui.Box):
         self.toolbar.append(gui.Action('Range', '', set_graph_mode('range'), 'range.png', type='radio'))
         self.toolbar.append(gui.Action('Data reader', '', set_graph_mode('d-reader'), 'dreader.png', type='radio'))
         self.toolbar.append(gui.Action('Screen reader', '', set_graph_mode('s-reader'), 'sreader.png', type='radio'))
+        self.toolbar.append(None)
+        self.toolbar.append(gui.Action('Line', '', set_graph_mode('draw-line'), 'stock_draw-line.png'))
+        self.toolbar.append(gui.Action('Text', '', set_graph_mode('draw-text'), 'stock_draw-text.png'))
 
 
         self.toolbar._widget.Realize()
