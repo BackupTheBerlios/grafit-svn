@@ -55,7 +55,9 @@ class GraphView(gui.Box):
 
         def set_graph_mode(mode):
             def _set(): 
+                self.graph.prev_mode = self.graph.mode
                 self.graph.mode = mode
+
                 cur = {'arrow': wx.CURSOR_ARROW,
                        'hand': wx.CURSOR_HAND,
                        'zoom': wx.CURSOR_MAGNIFIER,
@@ -66,6 +68,7 @@ class GraphView(gui.Box):
                        'draw-line': wx.CURSOR_PENCIL,
                        'none': wx.CURSOR_NONE }[mode]
                 self.glwidget._widget.SetCursor(wx.StockCursor(cur))
+                self.graph.emit('redraw')
             return _set
 
         self.toolbar = gui.Toolbar(tbbox, stretch=1)

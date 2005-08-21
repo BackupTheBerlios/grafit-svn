@@ -1070,7 +1070,6 @@ class Graph(Item, HasSignals):
         self.textpainter = TextPainter(self)
 
         self.graph_objects = []
-        self.graph_objects.append(Text(self))
         self.dragobj = None
 
     default_name_prefix = 'graph'
@@ -1392,7 +1391,8 @@ class Graph(Item, HasSignals):
 
             self.paint_axes()
             for o in self.graph_objects:
-                o.draw_handles()
+                if self.mode == 'arrow':
+                    o.draw_handles()
                 o.draw()
 
 #            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
