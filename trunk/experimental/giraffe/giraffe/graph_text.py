@@ -1,3 +1,45 @@
+import binascii
+
+import numarray.mlab as mlab
+import PIL.Image
+import PIL.ImageFont
+import PIL.ImageDraw
+from matplotlib.ft2font import FT2Font
+
+import giraffe.thirdparty.mathtextg as mathtext
+from giraffe.settings import DATADIR
+from giraffe.arrays import *
+from OpenGL.GL import *
+
+from graph_render import *
+
+FONTFILE = DATADIR+'/data/fonts/bitstream-vera/Vera.ttf'
+
+def cut(st, delim):
+    pieces = st.split(delim)
+    pieces_fixed = []
+    if st == '':
+        return []
+
+    pieces_fixed.append(pieces[0])
+
+    for p, q in (pieces[n:n+2] for n in range(len(pieces)-1)):
+        if (len(p) - len(p.rstrip('\\'))) % 2:
+            # has an odd number of trailing backslashes
+            pieces_fixed[-1] += delim+q
+        else:
+            pieces_fixed.append(q)
+    if pieces_fixed[0] == '':
+        initial = True
+        del pieces_fixed[0]
+    else: 
+        initial = False
+
+    if pieces_fixed[-1] == '':
+        del pieces_fixed[-1]
+
+    return zip(pieces_fixed, [bool(x%2)^initial for x in range(len(pieces_fixed))])
+
 
 class TextPainter(object):
     def __init__(self, graph):
@@ -211,12 +253,6 @@ class TextPainter(object):
             for rend, pos, off in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1], offsets):
                 rend(x-off/self.plot.res, y+pos)
 
-
-
-import os
-import binascii
-from matplotlib.mathtext import math_parse_s_ps, bakoma_fonts
-from matplotlib.ft2font import FT2Font
 
 def encodeTTFasPS(fontfile):
     """

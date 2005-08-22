@@ -1,3 +1,7 @@
+import re
+from giraffe.arrays import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 class Grid(object):
     def __init__(self, orientation, plot):

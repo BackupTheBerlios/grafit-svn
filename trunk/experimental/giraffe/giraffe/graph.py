@@ -12,48 +12,13 @@ from OpenGL.GLU import *
 from giraffe.signals import HasSignals
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
-from giraffe.functions import MFunctionSum
-
-#from gl2ps import *
-from giraffe.graph_render import *
-
-from giraffe.graph_render import render_symbols, render_lines
 
 from settings import DATADIR
 
-#FONTFILE = DATADIR+'/data/fonts/bitstream-vera/VeraSe.ttf'
-FONTFILE = DATADIR+'/data/fonts/bitstream-vera/Vera.ttf'
-
-import mathtextg as mathtext
-import numarray.mlab as mlab
-import PIL.Image
-import PIL.ImageFont
-import PIL.ImageDraw
-
-def cut(st, delim):
-    pieces = st.split(delim)
-    pieces_fixed = []
-    if st == '':
-        return []
-
-    pieces_fixed.append(pieces[0])
-
-    for p, q in (pieces[n:n+2] for n in range(len(pieces)-1)):
-        if (len(p) - len(p.rstrip('\\'))) % 2:
-            # has an odd number of trailing backslashes
-            pieces_fixed[-1] += delim+q
-        else:
-            pieces_fixed.append(q)
-    if pieces_fixed[0] == '':
-        initial = True
-        del pieces_fixed[0]
-    else: 
-        initial = False
-
-    if pieces_fixed[-1] == '':
-        del pieces_fixed[-1]
-
-    return zip(pieces_fixed, [bool(x%2)^initial for x in range(len(pieces_fixed))])
+from giraffe.graph_axis import Axis, Grid
+from giraffe.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction
+from giraffe.graph_dataset import Dataset, Function
+from giraffe.graph_text import FONTFILE, TextPainter
 
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):

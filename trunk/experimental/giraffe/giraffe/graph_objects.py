@@ -1,3 +1,7 @@
+from giraffe.signals import HasSignals
+from giraffe.settings import DATADIR
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 class XorDraw(object):
     def __init__(self, graph):
@@ -161,6 +165,15 @@ class Text(GraphObject):
         self.handles[0].update()
         self.handles[0].move(x, y)
         self._active_handle = self.handles[0]
+
+    def get_x1(self): return self.handles[0].posx
+    def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
+    _x1 = property(get_x1, set_x1)
+
+    def get_y1(self): return self.handles[0].posy
+    def set_y1(self, value): self.handles[0].posy = value; self.graph.emit('redraw')
+    _y1 = property(get_y1, set_y1)
+
 
 class Move(XorDraw):
     def __init__(self, obj):

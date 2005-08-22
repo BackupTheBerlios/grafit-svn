@@ -2,7 +2,7 @@ import sys
 import sets
 
 from giraffe import Worksheet, Folder
-from giraffe.graph import Style
+from giraffe.graph_dataset import Style
 from giraffe.signals import HasSignals
 
 from giraffe import gui
