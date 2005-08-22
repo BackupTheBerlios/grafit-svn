@@ -20,7 +20,7 @@ from giraffe.gui import Window, Button, Box, Application, Shell, List, \
 
 import giraffe.signals
 
-from settings import settings
+from settings import settings, DATADIR
 
 class ItemDragData(object):
     def __init__(self, items):
@@ -381,7 +381,7 @@ class MainWindow(Window):
 
         import wx.xrc
         # preload
-        wx.xrc.XmlResource('test.xrc')
+        wx.xrc.XmlResource(DATADIR+'/giraffe/test.xrc')
 
     def on_status_message(self, msg, time=0):
         self.status = msg

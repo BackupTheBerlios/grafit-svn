@@ -8,6 +8,8 @@ from giraffe.signals import HasSignals
 from giraffe import gui
 from giraffe.arrays import nan
 
+from settings import DATADIR
+
 def intersection (ml):
     """Intersection of lists"""
     tmp = {}
@@ -123,7 +125,7 @@ class GraphView(gui.Box):
 
     def on_object_doubleclicked(self, obj):
         from prop import Editor
-        e = Editor(self, 'test.xrc', obj)
+        e = Editor(self, DATADIR+'/giraffe/test.xrc', obj)
         e._widget.Show()
 
     def on_request_cursor(self, cursor):

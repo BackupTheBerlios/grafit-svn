@@ -1,3 +1,25 @@
+# From: "Raymond Hettinger" <vze4rx4y@verizon.net>
+# Newsgroups: comp.lang.python
+# Subject: Re: Itertools wishlists
+# Date: Mon, 14 Mar 2005 18:52:21 GMT
+
+def flatten(iterable, atomic_iterable_types=(basestring,)):
+    iterstack = [iter(iterable)]
+    while iterstack:
+        for elem in iterstack[-1]:
+            if not isinstance(elem, atomic_iterable_types):
+                try:
+                    it = iter(elem)
+                except TypeError:
+                    pass
+                else:
+                    iterstack.append(it)
+                    break
+            yield elem
+        else:
+            iterstack.pop() # only remove iterator when it is exhausted
+
+
 import dis
 
 _const_codes = map(dis.opmap.__getitem__, [
