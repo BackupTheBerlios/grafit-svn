@@ -38,6 +38,12 @@ class Editor(object):
 
         self.connect_object(obj)
 
+        self.closebtn = xrc.XRCCTRL(self._widget, 'wxID_CLOSE')
+        self.closebtn.Bind(wx.EVT_BUTTON, self.on_clicked)
+
+    def on_clicked(self, evt):
+        self._widget.Close()
+
     def connect_object(self, obj):
         for widget, prop in self.widgets:
             self.connect_changed(widget, self.on_gui_changed)

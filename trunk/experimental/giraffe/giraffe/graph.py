@@ -1,20 +1,14 @@
 import sys
 import time
-import re
-#print >>sys.stderr, "import graph"
 import string
 import tempfile
 
 from giraffe.arrays import *
 from OpenGL.GL import *
-from OpenGL.GLU import *
 
 from giraffe.signals import HasSignals
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
-
-from settings import DATADIR
-
 from giraffe.graph_axis import Axis, Grid
 from giraffe.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction
 from giraffe.graph_dataset import Dataset, Function
@@ -78,6 +72,8 @@ class Graph(Item, HasSignals):
 
         self.graph_objects = []
         self.dragobj = None
+
+        self.selected_object = None
 
     default_name_prefix = 'graph'
 
@@ -398,9 +394,9 @@ class Graph(Item, HasSignals):
 
             self.paint_axes()
             for o in self.graph_objects:
-                if self.mode == 'arrow':
-                    o.draw_handles()
                 o.draw()
+                if self.mode == 'arrow' and self.selected_object == o:
+                    o.draw_handles()
 
 #            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
 #            print pixels
@@ -569,17 +565,25 @@ class Graph(Item, HasSignals):
         elif self.mode == 'arrow':
             x, y = self.mouse_to_ident(x, y)
             for o in self.graph_objects:
-                if o.hittest(x, y):
-                    self.dragobj = o
-                    self.dragobj_xor = Move(self.dragobj)
-                    self.objects.append(self.dragobj_xor)
-                    self.paint_xor_objects = True
-                    self.dragobj_xor.show(x, y)
-                    self.emit('redraw')
-                    self.emit('request-cursor', 'none')
+                if o.testpoint(x, y):
+                    self.selected_object = o
+                    if o.hittest(x, y):
+                        self.dragobj = o
+                        self.dragobj_xor = Move(self.dragobj)
+                        self.objects.append(self.dragobj_xor)
+                        self.paint_xor_objects = True
+                        self.dragobj_xor.show(x, y)
+                        self.dragobj.dragstart = None
+                    else:
+                        self.dragobj = o
+                        self.dragobj_xor = Move(self.dragobj)
+                        self.objects.append(self.dragobj_xor)
+                        self.paint_xor_objects = True
+                        self.dragobj_xor.show(x, y)
                     break
             else:
-                self.emit('request-cursor', 'arrow')
+                self.selected_object = None
+            self.emit('redraw')
         elif self.mode in ('draw-line', 'draw-text'):
             xi, yi = self.mouse_to_ident(x, y)
             createobj = {'draw-line': Line, 'draw-text': Text}[self.mode](self)
@@ -590,6 +594,7 @@ class Graph(Item, HasSignals):
             self.paint_xor_objects = True
             self.dragobj_xor.show(xi, yi)
             self.graph_objects.append(createobj)
+            self.selected_object = createobj
             self.mode = 'arrow'
             self.emit('redraw')
             self.emit('request-cursor', 'arrow')
@@ -680,9 +685,10 @@ class Graph(Item, HasSignals):
                 self.emit('request-cursor', 'none')
             else: # look for handles
                 for o in self.graph_objects:
-                    if o.hittest(x, y):
+                    if o.testpoint(x, y):
                         self.emit('request-cursor', 'hand')
                         break
+#                    if o.hittest(x, y):
                 else:
                     self.emit('request-cursor', 'arrow')
      

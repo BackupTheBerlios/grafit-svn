@@ -1,7 +1,11 @@
 from giraffe.signals import HasSignals
 from giraffe.settings import DATADIR
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
+
+from math import sqrt
+import sys
 
 class XorDraw(object):
     def __init__(self, graph):
@@ -72,7 +76,6 @@ class Handle(object):
             glVertex3d(self.x+1, self.y, 0)
             glEnd()
 
-
     def hittest(self, x, y):
         if not hasattr(self, 'x'):
             return False
@@ -83,6 +86,7 @@ class GraphObject(HasSignals):
     def __init__(self, graph):
         self.graph = graph
         self.handles = []
+        self.dragstart = None
 
     def draw(self):
         raise NotImplementedError
@@ -127,6 +131,20 @@ class Line(GraphObject):
         self.handles[0].move(x, y)
         self.handles[1].move(x, y)
         self._active_handle = self.handles[1]
+
+    def testpoint(self, x3, y3):
+        x1, x2 = self.handles[0].x, self.handles[1].x
+        y1, y2 = self.handles[0].y, self.handles[1].y
+        u = ((x3-x1)*(x2-x1) + (y3-y1)*(y2-y1)) / ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
+        x = x1 + u*(x2-x1)
+        y = y1 + u*(y2-y1)
+        dd = (x3-x)*(x3-x) + (y3-y)*(y3-y)
+        h = dd<=1
+        if h:
+            self.dragstart = x3, y3
+        else:
+            self.dragstart = None
+        return h
 
     def get_x1(self): return self.handles[0].posx
     def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
@@ -174,6 +192,14 @@ class Text(GraphObject):
     def set_y1(self, value): self.handles[0].posy = value; self.graph.emit('redraw')
     _y1 = property(get_y1, set_y1)
 
+    def testpoint(self, x, y):
+        h = self.hittest(x, y)
+        if h:
+            self.dragstart = x, y
+        else:
+            self.dragstart = None
+        return h 
+
 
 class Move(XorDraw):
     def __init__(self, obj):
@@ -181,8 +207,14 @@ class Move(XorDraw):
         self.obj = obj
 
     def draw(self, x, y):
-        self.obj._active_handle.move(x, y)
-        self.obj.draw_handles()
+        if self.obj.dragstart:
+            x0, y0 = self.obj.dragstart
+            for h in self.obj.handles:
+                h.move(h.x+x-x0, h.y+y-y0)
+                self.obj.dragstart = x, y
+        else:
+            self.obj._active_handle.move(x, y)
+#        self.obj.draw_handles()
         self.obj.draw()
 
 class Rubberband(XorDraw):
