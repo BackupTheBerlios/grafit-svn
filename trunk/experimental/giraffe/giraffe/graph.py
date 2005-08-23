@@ -178,6 +178,10 @@ class Graph(Item, HasSignals):
 
         return self.graph_objects[-1]
 
+    def delete_object(self, obj):
+        obj.id = '-'+obj.id
+        self.graph_objects.remove(obj)
+        self.emit('redraw')
 
     # add and remove datasets
     def add(self, state, x, y):
@@ -496,10 +500,6 @@ class Graph(Item, HasSignals):
         # mathtext is not rendered directly
         self.pstext = []
 
-#        gl2psBeginPage("Title", "Producer", self.viewport,
-#                       GL2PS__EPS, GL2PS__SIMPLE_SORT, GL2PS__NONE,
-#                       GL_RGBA, -1, 0, 0, 0, 0, 21055000, f, filename)
-
         gl2ps_BeginPage("Title", "Producer", self.viewport, f, filename)
         self.ps = True
         self.display()
@@ -704,9 +704,13 @@ class Graph(Item, HasSignals):
                     if o.testpoint(x, y):
                         self.emit('request-cursor', 'hand')
                         break
-#                    if o.hittest(x, y):
                 else:
                     self.emit('request-cursor', 'arrow')
+
+    def key_down(self, keycode):
+        import wx
+        if keycode == wx.WXK_DELETE and self.selected_object is not None:
+            self.delete_object(self.selected_object)
      
     name = wrap_attribute('name')
     parent = wrap_attribute('parent')

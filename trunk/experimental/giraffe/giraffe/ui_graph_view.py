@@ -103,6 +103,7 @@ class GraphView(gui.Box):
         self.glwidget.connect('button-released', self.graph.button_release)
         self.glwidget.connect('button-doubleclicked', self.graph.button_doubleclick)
         self.glwidget.connect('mouse-moved', self.graph.button_motion)
+        self.glwidget.connect('key-down', self.graph.key_down)
 
         self.graph.connect('redraw', self.glwidget.redraw)
         self.graph.connect('object-doubleclicked', self.on_object_doubleclicked)

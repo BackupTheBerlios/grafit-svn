@@ -1,5 +1,6 @@
 from giraffe.signals import HasSignals
 from giraffe.settings import DATADIR
+from giraffe.project import wrap_attribute
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -170,6 +171,8 @@ class Line(GraphObject):
     def set_y2(self, value): self.handles[1].posy = value; self.graph.emit('redraw')
     _y2 = property(get_y2, set_y2)
 
+    id = wrap_attribute('id')
+
 
 class Text(GraphObject):
     def __init__(self, graph, pos):
@@ -210,6 +213,8 @@ class Text(GraphObject):
         else:
             self.dragstart = None
         return h 
+
+    id = wrap_attribute('id')
 
 
 class Move(XorDraw):

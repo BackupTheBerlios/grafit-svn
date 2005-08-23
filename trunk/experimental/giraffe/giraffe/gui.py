@@ -1498,7 +1498,13 @@ class OpenGLWidget(Widget):
         self._widget.Bind(wx.EVT_MOTION, self.OnMouseMotion)
         self._lastsize = (-1, -1)
 
+        self._widget.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
+
 #        self.SetCursor(wx.CROSS_CURSOR)
+
+    def OnKeyDown(self, evt):
+        self.emit('key-down', evt.GetKeyCode())
+        evt.Skip()
 
     def redraw(self):
         self._widget.Refresh(False)

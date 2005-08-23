@@ -2,6 +2,7 @@ from giraffe.arrays import *
 from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods2, command_from_methods
 from giraffe.functions import MFunctionSum
+from giraffe.project import wrap_attribute
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -263,9 +264,7 @@ class Dataset(DrawWithStyle):
         self.paint_lines(xx, yy)
         self.paint_symbols(xx, yy)
 
-    def set_id(self, id): self.data.id = id
-    def get_id(self): return self.data.id
-    id = property(get_id, set_id)
+    id = wrap_attribute('id')
 
     # this is nescessary! see graph.remove
     def __eq__(self, other):
