@@ -23,13 +23,23 @@ class Graph(Item, HasSignals):
 
         self.mode = 'arrow'
 
+        self.graph_objects = []
+        self.dragobj = None
+
+        self.selected_object = None
+
         self.datasets = []
         if location is not None:
-            for i in range(len(self.data.datasets)):
-                if not self.data.datasets[i].id.startswith('-'):
-                    d = Dataset(self, i)
-                    self.datasets.append(d)
-                    d.connect('modified', self.on_dataset_modified)
+            for i, l in enumerate(self.data.datasets):
+                if not l.id.startswith('-'):
+                    self.datasets.append(Dataset(self, i))
+                    self.datasets[-1].connect('modified', self.on_dataset_modified)
+            for i, l in enumerate(self.data.lines):
+                if not l.id.startswith('-'):
+                    self.graph_objects.append(Line(self, i))
+            for i, l in enumerate(self.data.text):
+                if not l.id.startswith('-'):
+                    self.graph_objects.append(Text(self, i))
 
         self.functions = []
 #        if location is not None:
@@ -69,11 +79,6 @@ class Graph(Item, HasSignals):
 
         self.objects = [self.rubberband, self.cross]
         self.textpainter = TextPainter(self)
-
-        self.graph_objects = []
-        self.dragobj = None
-
-        self.selected_object = None
 
     default_name_prefix = 'graph'
 
@@ -162,16 +167,25 @@ class Graph(Item, HasSignals):
         self.emit('add-function', f)
         return f
 
-    # add and remove datasets
+    def new_object(self, state, typ):
+        # add a row to the database
+        location = { Line: self.data.lines, Text: self.data.text }[typ]
+        ind = location.append(id=create_id())
 
+        # create object
+        self.graph_objects.append(typ(self, ind))
+        state['pos'] = len(self.graph_objects)-1
+
+        return self.graph_objects[-1]
+
+
+    # add and remove datasets
     def add(self, state, x, y):
         ind = self.data.datasets.append(worksheet=x.worksheet.id, id=create_id(), 
                                         x=x.name.encode('utf-8'), y=y.name.encode('utf-8'))
 
         d = Dataset(self, ind)
         self.datasets.append(d)
-
-
         pos = len(self.datasets)-1
         print 'added dataset, index %d, position %d' % (ind, pos)
 
@@ -586,14 +600,16 @@ class Graph(Item, HasSignals):
             self.emit('redraw')
         elif self.mode in ('draw-line', 'draw-text'):
             xi, yi = self.mouse_to_ident(x, y)
-            createobj = {'draw-line': Line, 'draw-text': Text}[self.mode](self)
+            createobj = self.new_object({}, {'draw-line': Line, 
+                                         'draw-text': Text}[self.mode])
             createobj.begin(xi, yi)
+
             self.dragobj = createobj
             self.dragobj_xor = Move(self.dragobj)
             self.objects.append(self.dragobj_xor)
+
             self.paint_xor_objects = True
             self.dragobj_xor.show(xi, yi)
-            self.graph_objects.append(createobj)
             self.selected_object = createobj
             self.mode = 'arrow'
             self.emit('redraw')
@@ -713,7 +729,9 @@ graphs [
     functions [
         id:S, func:S, name:S,
         params:S, lock:S, use:I
-    ]
+    ],
+    lines [ id:S, x1:S, y1:S, x2:S, y2:S ],
+    text [ id:S, x:S, y:S, text:S ]
 ]
 """
 
@@ -721,5 +739,3 @@ for w in string.whitespace:
     desc = desc.replace(w, '')
 
 register_class(Graph, desc)
-
-

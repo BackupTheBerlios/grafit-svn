@@ -41,14 +41,21 @@ class XorDraw(object):
             self.need_redraw = False
 
 class Handle(object):
-    def __init__(self, graph, obj, posx, posy):
-        self.graph, self.posx, self.posy = graph, posx, posy
-        self.obj = obj
+    def __init__(self, graph, obj, index):
+        self.graph, self.index, self.obj = graph, index, obj
+        self.posx = getattr(self.obj.data, 'x'+self.index)
+        self.posy = getattr(self.obj.data, 'y'+self.index)
+        if self.posx == '':
+            self.posx = '0%'
+        if self.posy == '':
+            self.posy = '0%'
         self.graph.connect('display', self.update)
 
     def update(self):
         self.x, self.y = self.graph.pos2x(self.posx)[0], self.graph.pos2y(self.posy)[0]
         self.p, self.q = self.graph.pos2x(self.posx)[1], self.graph.pos2y(self.posy)[1]
+        setattr(self.obj.data, 'x'+self.index, self.posx.encode('utf-8'))
+        setattr(self.obj.data, 'y'+self.index, self.posy.encode('utf-8'))
         self.obj.emit('modified')
 
     def move(self, x, y):
@@ -113,10 +120,11 @@ class GraphObject(HasSignals):
         return False
 
 class Line(GraphObject):
-    def __init__(self, graph):
+    def __init__(self, graph, pos):
         GraphObject.__init__(self, graph)
-        self.handles.append(Handle(graph, self, '0%', '0%'))
-        self.handles.append(Handle(graph, self, '0%', '0%'))
+        self.data = self.graph.data.lines[pos]
+        self.handles.append(Handle(graph, self, '1'))
+        self.handles.append(Handle(graph, self, '2'))
 
     def draw(self):
         glColor3f(.3, .5, .7)
@@ -164,10 +172,10 @@ class Line(GraphObject):
 
 
 class Text(GraphObject):
-    def __init__(self, graph):
+    def __init__(self, graph, pos):
         GraphObject.__init__(self, graph)
-        self.handles.append(Handle(graph, self, '0%', '0%'))
-        self._text = 'text object\nwith $new$line'
+        self.data = self.graph.data.text[pos]
+        self.handles.append(Handle(graph, self, ''))
 
     def draw(self):
         facesize = 12
@@ -175,8 +183,11 @@ class Text(GraphObject):
                                            self.handles[0].x, self.handles[0].y,
                                            align_x='bottom', align_y='left')
 
-    def get_text(self): return self._text
-    def set_text(self, value): self._text = value; self.emit('modified'); self.graph.emit('redraw')
+    def get_text(self): return self.data.text.decode('utf-8')
+    def set_text(self, value): 
+        self.data.text = value.encode('utf-8')
+        self.emit('modified')
+        self.graph.emit('redraw')
     text = property(get_text, set_text)
 
     def begin(self, x, y):
