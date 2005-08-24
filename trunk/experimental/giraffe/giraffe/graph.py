@@ -173,7 +173,7 @@ class Graph(Item, HasSignals):
         ind = location.append(id=create_id())
 
         # create object
-        self.graph_objects.append(typ(self, ind))
+        self.graph_objects.append(typ(self, location[ind]))
         state['ind'] = ind
         state['pos'] = len(self.graph_objects)-1
 
@@ -436,7 +436,7 @@ class Graph(Item, HasSignals):
 
 #            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
 #            print pixels
-            print >>sys.stderr, time.time()-t, "seconds"
+#            print >>sys.stderr, time.time()-t, "seconds"
         else:
 #            glClear(GL_COLOR_BUFFER_BIT)
 #            if self.pixels is not None:
@@ -597,21 +597,16 @@ class Graph(Item, HasSignals):
         elif self.mode == 'arrow':
             x, y = self.mouse_to_ident(x, y)
             for o in self.graph_objects:
-                if o.testpoint(x, y):
+                if o.hittest(x, y):
                     self.selected_object = o
-                    if o.hittest(x, y):
-                        self.dragobj = o
-                        self.dragobj_xor = Move(self.dragobj)
-                        self.objects.append(self.dragobj_xor)
-                        self.paint_xor_objects = True
-                        self.dragobj_xor.show(x, y)
+                    self.dragobj = o
+                    self.dragobj.rec = False
+                    self.dragobj_xor = Move(self.dragobj)
+                    self.objects.append(self.dragobj_xor)
+                    self.paint_xor_objects = True
+                    self.dragobj_xor.show(x, y)
+                    if o.hittest_handles(x, y):
                         self.dragobj.dragstart = None
-                    else:
-                        self.dragobj = o
-                        self.dragobj_xor = Move(self.dragobj)
-                        self.objects.append(self.dragobj_xor)
-                        self.paint_xor_objects = True
-                        self.dragobj_xor.show(x, y)
                     break
             else:
                 self.selected_object = None
@@ -637,7 +632,7 @@ class Graph(Item, HasSignals):
         if self.mode == 'arrow' and button == 1:
             x, y = self.mouse_to_ident(x, y)
             for o in self.graph_objects:
-                if o.hittest(x, y):
+                if o.hittest_handles(x, y):
                     self.emit('object-doubleclicked', o)
                     break
      
@@ -687,6 +682,7 @@ class Graph(Item, HasSignals):
 
         elif self.mode == 'arrow':
             if self.dragobj is not None:
+                self.dragobj.rec = True
                 self.dragobj = None
                 self.dragobj_xor.hide()
                 self.emit('redraw')
@@ -719,7 +715,7 @@ class Graph(Item, HasSignals):
                 self.emit('request-cursor', 'none')
             else: # look for handles
                 for o in self.graph_objects:
-                    if o.testpoint(x, y):
+                    if o.hittest(x, y):
                         self.emit('request-cursor', 'hand')
                         break
                 else:
@@ -752,8 +748,8 @@ graphs [
         id:S, func:S, name:S,
         params:S, lock:S, use:I
     ],
-    lines [ id:S, x1:S, y1:S, x2:S, y2:S ],
-    text [ id:S, x:S, y:S, text:S ]
+    lines [ id:S, position:S ],
+    text [ id:S, position:S, text:S ]
 ]
 """
 

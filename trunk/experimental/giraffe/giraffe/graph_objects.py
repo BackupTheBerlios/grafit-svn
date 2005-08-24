@@ -1,6 +1,7 @@
 from giraffe.signals import HasSignals
 from giraffe.settings import DATADIR
 from giraffe.project import wrap_attribute
+from giraffe.commands import Command
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -41,29 +42,39 @@ class XorDraw(object):
                 self.draw(*self.coords)
             self.need_redraw = False
 
+
 class Handle(object):
-    def __init__(self, graph, obj, index):
-        self.graph, self.index, self.obj = graph, index, obj
-        self.posx = getattr(self.obj.data, 'x'+self.index)
-        self.posy = getattr(self.obj.data, 'y'+self.index)
-        if self.posx == '':
-            self.posx = '0%'
-        if self.posy == '':
-            self.posy = '0%'
-        self.graph.connect('display', self.update)
+    def __init__(self, graph):
+        self.graph = graph
+        self.posx, self.posy = '0%', '0%'
 
-    def update(self):
-        if self.obj.data == None:
-            return
-        self.x, self.y = self.graph.pos2x(self.posx)[0], self.graph.pos2y(self.posy)[0]
-        self.p, self.q = self.graph.pos2x(self.posx)[1], self.graph.pos2y(self.posy)[1]
-        setattr(self.obj.data, 'x'+self.index, self.posx.encode('utf-8'))
-        setattr(self.obj.data, 'y'+self.index, self.posy.encode('utf-8'))
-        self.obj.emit('modified')
+    def set_posx(self, value):
+        self._posx = value
+        self._x, self.p = self.graph.pos2x(value)
+    def get_posx(self):
+        return self._posx
+    posx = property(get_posx, set_posx)
 
-    def move(self, x, y):
-        self.posx, self.posy = self.graph.x2pos(x, self.p), self.graph.y2pos(y, self.q)
-        self.update()
+    def set_posy(self, value):
+        self._posy = value
+        self._y, self.q = self.graph.pos2y(value)
+    def get_posy(self):
+        return self._posx
+    posy = property(get_posy, set_posy)
+
+    def set_x(self, value):
+        self._x = value
+        self._posx = self.graph.x2pos(value, self.p)
+    def get_x(self):
+        return self._x
+    x = property(get_x, set_x)
+
+    def set_y(self, value):
+        self._y = value
+        self._posy = self.graph.y2pos(value, self.q)
+    def get_y(self):
+        return self._y
+    y = property(get_y, set_y)
 
     def draw(self):
         glColor3f(0, 0, 1) # blue
@@ -87,47 +98,92 @@ class Handle(object):
             glEnd()
 
     def hittest(self, x, y):
-        if not hasattr(self, 'x'):
-            return False
         return self.x-1<=x<= self.x+1 and self.y-1<=y<=self.y+1
 
+    def move(self, x, y):
+        self.x, self.y = x, y
 
-class GraphObject(HasSignals):
-    def __init__(self, graph):
-        self.graph = graph
+class GraphObject(object):
+    """
+    The position of a graph object is completely defined by the 
+    position of one or more handles.
+
+    When the user moves a handle it may be nescessary to move some
+    of the others as well.
+    """
+    def __init__(self, graph, data):
+        self.graph, self.data = graph, data
         self.handles = []
+        self.active_handle = None
         self.dragstart = None
 
+    def read_position(self):
+        if self.data.position == '':
+            self.data.position = '0%;0% 50%;50%'
+        for hpos, handle in zip(self.data.position.split(' '), self.handles):
+            handle.posx, handle.posy = hpos.split(';')
+        print >>sys.stderr, 'read-position', self.data.position
+
+    def record_position(self):
+        self.data.position = ' '.join(h.posx+';'+h.posy for h in self.handles)
+        print >>sys.stderr, 'record-position', self.data.position
+
+    def move_active_handle(self, x, y, record=True):
+        """
+        Move the active handle to (x, y)
+        """
+        if self.active_handle is None:
+            return
+        self.active_handle.move(x, y)
+        if record:
+            self.record_position()
+
+    def nudge(self, x, y, record=True):
+        for h in self.obj.handles:
+            h.move(h.x+x, h.y+y)
+        if record:
+            self.record_position()
+
     def draw(self):
+        """
+        Draw the object, given the position of the handles
+        """
+        raise NotImplementedError
+
+    def hittest_handles(self, x, y):
+        """
+        Tests if a point x, y is on a handle and sets active_handle
+        """
+        for h in self.handles:
+            if h.hittest(x, y):
+                self.active_handle = h
+                return True
+        self.active_handle = None
+        return False
+
+    def hittest(self, x, y):
+        """
+        Tests if a point x, y is on the object
+        """
+        raise NotImplementedError
+
+    def bounding_box(self):
+        """
+        Returns the bounding box (xmin, ymin, xmax, ymax)
+        of the object
+        """
         raise NotImplementedError
 
     def draw_handles(self):
         for h in self.handles:
             h.draw()
 
-    def begin(self, x, y):
-        print >>sys.stderr, self, 'begin', x, y
-
-    def cont(self, x, y):
-        print >>sys.stderr, self, 'cont', x, y
-
-    def end(self, x, y):
-        print >>sys.stderr, self, 'end', x, y
-
-    def hittest(self, x, y):
-        for i, h in enumerate(self.handles):
-            if h.hittest(x, y):
-                self._active_handle = h
-                return True
-        self._active_handle = None
-        return False
-
 class Line(GraphObject):
     def __init__(self, graph, pos):
-        GraphObject.__init__(self, graph)
-        self.data = self.graph.data.lines[pos]
-        self.handles.append(Handle(graph, self, '1'))
-        self.handles.append(Handle(graph, self, '2'))
+        GraphObject.__init__(self, graph, pos)
+        self.handles.append(Handle(graph))
+        self.handles.append(Handle(graph))
+        self.read_position()
 
     def draw(self):
         glColor3f(.3, .5, .7)
@@ -137,41 +193,26 @@ class Line(GraphObject):
         glEnd()
 
     def begin(self, x, y):
-        self.handles[0].update()
-        self.handles[1].update()
         self.handles[0].move(x, y)
         self.handles[1].move(x, y)
-        self._active_handle = self.handles[1]
+        self.active_handle = self.handles[1]
 
-    def testpoint(self, x3, y3):
+    def hittest(self, x3, y3):
         x1, x2 = self.handles[0].x, self.handles[1].x
         y1, y2 = self.handles[0].y, self.handles[1].y
+
+        if (x1, y1) == (x2, y2):
+            return (x1-x3)*(x1-x3) + (y1-y3)*(y1-y3) <= 1
+            
         u = ((x3-x1)*(x2-x1) + (y3-y1)*(y2-y1)) / ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
         x = x1 + u*(x2-x1)
         y = y1 + u*(y2-y1)
-        dd = (x3-x)*(x3-x) + (y3-y)*(y3-y)
-        h = dd<=1
-        if h:
+        if (x3-x)*(x3-x) + (y3-y)*(y3-y) <= 1:
             self.dragstart = x3, y3
+            return True
         else:
             self.dragstart = None
-        return h
-
-    def get_x1(self): return self.handles[0].posx
-    def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
-    _x1 = property(get_x1, set_x1)
-
-    def get_y1(self): return self.handles[0].posy
-    def set_y1(self, value): self.handles[0].posy = value; self.graph.emit('redraw')
-    _y1 = property(get_y1, set_y1)
-
-    def get_x2(self): return self.handles[1].posx
-    def set_x2(self, value): self.handles[1].posx = value; self.graph.emit('redraw')
-    _x2 = property(get_x2, set_x2)
-
-    def get_y2(self): return self.handles[1].posy
-    def set_y2(self, value): self.handles[1].posy = value; self.graph.emit('redraw')
-    _y2 = property(get_y2, set_y2)
+            return False
 
     id = wrap_attribute('id')
 
@@ -198,7 +239,7 @@ class Text(GraphObject):
     def begin(self, x, y):
         self.handles[0].update()
         self.handles[0].move(x, y)
-        self._active_handle = self.handles[0]
+        self.active_handle = self.handles[0]
 
     def get_x1(self): return self.handles[0].posx
     def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
@@ -226,13 +267,13 @@ class Move(XorDraw):
 
     def draw(self, x, y):
         if self.obj.dragstart:
+            # move entire object
             x0, y0 = self.obj.dragstart
-            for h in self.obj.handles:
-                h.move(h.x+x-x0, h.y+y-y0)
-                self.obj.dragstart = x, y
+            self.obj.nudge(x-x0, y-y0, False)
+            self.obj.dragstart = x, y
         else:
-            self.obj._active_handle.move(x, y)
-#        self.obj.draw_handles()
+            # move handle
+            self.obj.move_active_handle(x, y, False)
         self.obj.draw()
 
 class Rubberband(XorDraw):
@@ -276,5 +317,7 @@ class DrawFunction(XorDraw):
     def draw(self, x, y):
         self.f.func.move(x, y)
         self.f.paint()
+
+
 
 
