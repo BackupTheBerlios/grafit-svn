@@ -187,11 +187,11 @@ class Graph(Item, HasSignals):
         self.graph_objects.remove(obj)
 
         # remove object from database
+        obj.data = None
         location = { Line: self.data.lines, Text: self.data.text }[type(obj)]
         print location, len(location)
         print location.delete(ind)
         print location, len(location)
-
         self.emit('redraw')
 
     new_object = command_from_methods2('graph/new-object', new_object, undo_new_object)

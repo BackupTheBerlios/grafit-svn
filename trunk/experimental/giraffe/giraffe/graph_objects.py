@@ -53,6 +53,8 @@ class Handle(object):
         self.graph.connect('display', self.update)
 
     def update(self):
+        if self.obj.data == None:
+            return
         self.x, self.y = self.graph.pos2x(self.posx)[0], self.graph.pos2y(self.posy)[0]
         self.p, self.q = self.graph.pos2x(self.posx)[1], self.graph.pos2y(self.posy)[1]
         setattr(self.obj.data, 'x'+self.index, self.posx.encode('utf-8'))
