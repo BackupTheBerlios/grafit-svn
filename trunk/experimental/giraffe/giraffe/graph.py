@@ -174,9 +174,27 @@ class Graph(Item, HasSignals):
 
         # create object
         self.graph_objects.append(typ(self, ind))
+        state['ind'] = ind
         state['pos'] = len(self.graph_objects)-1
 
         return self.graph_objects[-1]
+
+    def undo_new_object(self, state):
+        pos, ind = state['pos'], state['ind']
+
+        # remove object from graph
+        obj = self.graph_objects[pos]
+        self.graph_objects.remove(obj)
+
+        # remove object from database
+        location = { Line: self.data.lines, Text: self.data.text }[type(obj)]
+        print location, len(location)
+        print location.delete(ind)
+        print location, len(location)
+
+        self.emit('redraw')
+
+    new_object = command_from_methods2('graph/new-object', new_object, undo_new_object)
 
     def delete_object(self, obj):
         obj.id = '-'+obj.id
@@ -600,7 +618,7 @@ class Graph(Item, HasSignals):
             self.emit('redraw')
         elif self.mode in ('draw-line', 'draw-text'):
             xi, yi = self.mouse_to_ident(x, y)
-            createobj = self.new_object({}, {'draw-line': Line, 
+            createobj = self.new_object({'draw-line': Line, 
                                          'draw-text': Text}[self.mode])
             createobj.begin(xi, yi)
 

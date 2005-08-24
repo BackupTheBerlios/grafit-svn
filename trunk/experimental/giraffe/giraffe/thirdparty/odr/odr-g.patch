@@ -44,29 +44,29 @@ diff -ur odr-0.6/odrpack.py odr-0.6p/odrpack.py
  
          if self.rptfile is None and \
             (so_init is not None or
-diff -ur odr-0.6/setup.py odr-0.6p/setup.py
---- odr-0.6/setup.py	2002-11-10 09:28:39.000000000 +0200
-+++ odr-0.6p/setup.py	2005-08-12 13:40:16.661387200 +0300
-@@ -13,7 +13,7 @@
- # separately-compiled LINPACK. Edit the Extension instances
- # below to reflect where your libraries are.
- 
--opt_blas = 1
-+opt_blas = 0
- 
- # We need to compile FORTRAN files, so check if we would be
- # using gcc anyways: then we can use g77 with impunity.
-@@ -22,8 +22,8 @@
- cc = new_compiler()
- sysconfig.customize_compiler(cc)
- 
--if (os.name == 'nt' and find_executable('gcc') is not None) or \
--   (cc.compiler[0] == 'gcc'):
-+if (os.name == 'nt' and find_executable('gcc') is not None): 
-+# or (cc.compiler[0] == 'gcc'):
-     # we would be compiling with gcc; change it to g77
- 
-     old_cust_cc = sysconfig.customize_compiler
+#diff -ur odr-0.6/setup.py odr-0.6p/setup.py
+#--- odr-0.6/setup.py	2002-11-10 09:28:39.000000000 +0200
+#+++ odr-0.6p/setup.py	2005-08-12 13:40:16.661387200 +0300
+#@@ -13,7 +13,7 @@
+# # separately-compiled LINPACK. Edit the Extension instances
+# # below to reflect where your libraries are.
+# 
+#-opt_blas = 1
+#+opt_blas = 0
+# 
+# # We need to compile FORTRAN files, so check if we would be
+# # using gcc anyways: then we can use g77 with impunity.
+#@@ -22,8 +22,8 @@
+# cc = new_compiler()
+# sysconfig.customize_compiler(cc)
+# 
+#-if (os.name == 'nt' and find_executable('gcc') is not None) or \
+#-   (cc.compiler[0] == 'gcc'):
+#+if (os.name == 'nt' and find_executable('gcc') is not None): 
+#+# or (cc.compiler[0] == 'gcc'):
+#     # we would be compiling with gcc; change it to g77
+# 
+#     old_cust_cc = sysconfig.customize_compiler
 diff -ur odr-0.6/src/__odrpack.c odr-0.6p/src/__odrpack.c
 --- odr-0.6/src/__odrpack.c	2002-11-10 05:09:04.000000000 +0200
 +++ odr-0.6p/src/__odrpack.c	2005-08-12 13:28:11.718971200 +0300

@@ -41,12 +41,12 @@ def wrap_attribute(name, signal=None):
     """
     def get_data(self):
         value = getattr(self.data, name)
-        if value in self.project.items:
+        if hasattr(self, 'project') and value in self.project.items:
             value = self.project.items[value]
         return value
 
     def set_data(self, value):
-        if hasattr(value, 'id') and value in self.project.items.values():
+        if hasattr(self, 'project') and hasattr(value, 'id') and value in self.project.items.values():
             value = value.id
         try:
             setattr(self.data, name, value)

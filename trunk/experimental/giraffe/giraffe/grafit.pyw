@@ -14,6 +14,7 @@ import sys
 from settings import DATADIR
 print "Starting grafit, data directory is", DATADIR
 sys.path.append(DATADIR)
+sys.path.append(DATADIR+'/giraffe/thirdparty/')
 
 import gui
 
