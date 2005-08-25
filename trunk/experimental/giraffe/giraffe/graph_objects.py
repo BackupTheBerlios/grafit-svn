@@ -103,7 +103,7 @@ class Handle(object):
     def move(self, x, y):
         self.x, self.y = x, y
 
-class GraphObject(object):
+class GraphObject(HasSignals):
     """
     The position of a graph object is completely defined by the 
     position of one or more handles.
@@ -122,20 +122,22 @@ class GraphObject(object):
             self.data.position = '0%;0% 50%;50%'
         for hpos, handle in zip(self.data.position.split(' '), self.handles):
             handle.posx, handle.posy = hpos.split(';')
-        print >>sys.stderr, 'read-position', self.data.position
 
     def record_position(self, state):
         state['prev'] = self.data.position
-        self.data.position = ' '.join(h.posx+';'+h.posy for h in self.handles)
+        self.data.position = ' '.join(h.posx+';'+h.posy for h in self.handles).encode('utf-8')
         state['pos'] = self.data.position
+        self.emit('modified')
     def undo_record_position(self, state):
         self.data.position = state['prev']
         self.read_position()
         self.graph.emit('redraw')
+        self.emit('modified')
     def redo_record_position(self, state):
         self.data.position = state['pos']
         self.read_position()
         self.graph.emit('redraw')
+        self.emit('modified')
     record_position = command_from_methods2('graph/move-object',
                             record_position, undo_record_position, redo=redo_record_position)
 
@@ -190,8 +192,8 @@ class GraphObject(object):
             h.draw()
 
 class Line(GraphObject):
-    def __init__(self, graph, ind):
-        GraphObject.__init__(self, graph, graph.data.lines[ind])
+    def __init__(self, graph, data):
+        GraphObject.__init__(self, graph, data)
         self.handles.append(Handle(graph))
         self.handles.append(Handle(graph))
         self.read_position()
@@ -227,12 +229,29 @@ class Line(GraphObject):
 
     id = wrap_attribute('id')
 
+    _x1 = property(lambda self: self.handles[0].posx,
+                   lambda self, value: (setattr(self.handles[0], 'posx', value), 
+                                        self.record_position(),
+                                        self.graph.emit('redraw')))
+    _y1 = property(lambda self: self.handles[0].posy,
+                   lambda self, value: (setattr(self.handles[0], 'posy', value), 
+                                        self.record_position(),
+                                        self.graph.emit('redraw')))
+    _x2 = property(lambda self: self.handles[1].posx,
+                   lambda self, value: (setattr(self.handles[1], 'posx', value), 
+                                        self.record_position(),
+                                        self.graph.emit('redraw')))
+    _y2 = property(lambda self: self.handles[1].posy,
+                   lambda self, value: (setattr(self.handles[1], 'posy', value), 
+                                        self.record_position(),
+                                        self.graph.emit('redraw')))
+
 
 class Text(GraphObject):
-    def __init__(self, graph, pos):
-        GraphObject.__init__(self, graph)
-        self.data = self.graph.data.text[pos]
-        self.handles.append(Handle(graph, self, ''))
+    def __init__(self, graph, data):
+        GraphObject.__init__(self, graph, data)
+        self.handles.append(Handle(graph))
+        self.read_position()
 
     def draw(self):
         facesize = 12
@@ -241,27 +260,37 @@ class Text(GraphObject):
                                            align_x='bottom', align_y='left')
 
     def get_text(self): return self.data.text.decode('utf-8')
-    def set_text(self, value): 
+    def set_text(self, state, value): 
+        state['old'] = self.data.text
         self.data.text = value.encode('utf-8')
+        state['new'] = self.data.text
         self.emit('modified')
         self.graph.emit('redraw')
+    def undo_set_text(self, state):
+        self.data.text = state['old']
+        self.emit('modified')
+        self.graph.emit('redraw')
+    def redo_set_text(self, state):
+        self.data.text = state['new']
+        self.emit('modified')
+        self.graph.emit('redraw')
+    set_text = command_from_methods2('graph/text/set-text', set_text, undo_set_text, redo=redo_set_text)
     text = property(get_text, set_text)
 
     def begin(self, x, y):
-        self.handles[0].update()
         self.handles[0].move(x, y)
         self.active_handle = self.handles[0]
 
     def get_x1(self): return self.handles[0].posx
-    def set_x1(self, value): self.handles[0].posx = value; self.graph.emit('redraw')
+    def set_x1(self, value): self.handles[0].posx = value; self.emit('modified'); self.graph.emit('redraw')
     _x1 = property(get_x1, set_x1)
 
     def get_y1(self): return self.handles[0].posy
-    def set_y1(self, value): self.handles[0].posy = value; self.graph.emit('redraw')
+    def set_y1(self, value): self.handles[0].posy = value; self.emit('modified'); self.graph.emit('redraw')
     _y1 = property(get_y1, set_y1)
 
-    def testpoint(self, x, y):
-        h = self.hittest(x, y)
+    def hittest(self, x, y):
+        h = self.handles[0].hittest(x, y)
         if h:
             self.dragstart = x, y
         else:

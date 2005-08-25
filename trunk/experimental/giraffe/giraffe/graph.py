@@ -167,24 +167,20 @@ class Graph(Item, HasSignals):
         self.emit('add-function', f)
         return f
 
+
+    # add and remove graph objects
     def new_object(self, state, typ):
-        # add a row to the database
         location = { Line: self.data.lines, Text: self.data.text }[typ]
         ind = location.append(id=create_id())
-
-        # create object
         obj =  typ(self, location[ind])
         self.graph_objects.append(obj)
-
-        # set command state
         state['obj'] = obj
-
         return obj
 
     def undo_new_object(self, state):
         obj = state['obj']
-        self.graph_objects.remove(obj) # remove object from graph
-        obj.id = '-'+obj.id # mark object as removed in database
+        self.graph_objects.remove(obj)
+        obj.id = '-'+obj.id
         self.emit('redraw')
 
     def redo_new_object(self, state):
@@ -194,12 +190,16 @@ class Graph(Item, HasSignals):
         obj.id = obj.id[1:]
         self.emit('redraw')
 
-    new_object = command_from_methods2('graph/new-object', new_object, undo_new_object, redo=redo_new_object)
-
-    def delete_object(self, obj):
+    new_object = command_from_methods2('graph/new-object', new_object, undo_new_object, 
+                                       redo=redo_new_object)
+    def delete_object(self, state, obj):
         obj.id = '-'+obj.id
         self.graph_objects.remove(obj)
+        state['obj'] = obj
         self.emit('redraw')
+    delete_object = command_from_methods2('graph/delete-object', delete_object, redo_new_object,
+                                          redo=undo_new_object)
+
 
     # add and remove datasets
     def add(self, state, x, y):
@@ -236,6 +236,7 @@ class Graph(Item, HasSignals):
         # we can do this even if `dataset` is a different object
         # than the one in self.datasets, if they have the same id
         # (see Dataset.__eq__)
+        # TODO: why bother? just keep the object itself in the state
         ind = self.datasets.index(dataset)
         print 'removing dataset, index %d, position %d' % (dataset.ind, ind)
         dataset.id = '-'+dataset.id
@@ -634,6 +635,7 @@ class Graph(Item, HasSignals):
             for o in self.graph_objects:
                 if o.hittest_handles(x, y):
                     self.emit('object-doubleclicked', o)
+                    o.emit('modified')
                     break
      
     def button_release(self, x, y, button):

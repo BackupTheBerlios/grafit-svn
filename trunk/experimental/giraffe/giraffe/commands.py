@@ -299,7 +299,6 @@ def command_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None)
                 self.state = {}
 
             def do(self):
-                print >>sys.stderr, self.__done, redo
                 if not self.__done or redo is None:
                     self.__done = True
                     return do(obj, self.state, *self.args, **self.kwds)

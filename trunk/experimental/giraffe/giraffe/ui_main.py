@@ -245,7 +245,7 @@ class ActionList(Box):
     def __init__(self, actionlist, parent, **place):
         Box.__init__(self, parent, 'vertical', **place)
         self.list = List(self, model=ActionListModel(actionlist), stretch=1.)
-        self.list._widget.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.list._widget.SetFont(wx.Font(9, wx.SWISS, wx.NORMAL, wx.NORMAL))
         self.list.connect('item-activated', self.on_list_item_activated)
         self.list.connect('selection-changed', self.on_list_selection_changed)
         self.label = Label(self, 'Action', stretch=0.)
