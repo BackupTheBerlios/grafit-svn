@@ -295,12 +295,13 @@ def command_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None)
         class CommandFromMethod(Command):
             def __init__(self):
                 self.args, self.kwds = args, kwds
-                self.done = False
+                self.__done = False
                 self.state = {}
 
             def do(self):
-                if not self.done or redo is None:
-                    self.done = True
+                print >>sys.stderr, self.__done, redo
+                if not self.__done or redo is None:
+                    self.__done = True
                     return do(obj, self.state, *self.args, **self.kwds)
                 else:
                     return redo(obj, self.state)

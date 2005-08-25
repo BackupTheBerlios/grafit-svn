@@ -173,28 +173,28 @@ class Graph(Item, HasSignals):
         ind = location.append(id=create_id())
 
         # create object
-        self.graph_objects.append(typ(self, location[ind]))
-        state['ind'] = ind
-        state['pos'] = len(self.graph_objects)-1
+        obj =  typ(self, location[ind])
+        self.graph_objects.append(obj)
 
-        return self.graph_objects[-1]
+        # set command state
+        state['obj'] = obj
+
+        return obj
 
     def undo_new_object(self, state):
-        pos, ind = state['pos'], state['ind']
-
-        # remove object from graph
-        obj = self.graph_objects[pos]
-        self.graph_objects.remove(obj)
-
-        # remove object from database
-        obj.data = None
-        location = { Line: self.data.lines, Text: self.data.text }[type(obj)]
-        print location, len(location)
-        print location.delete(ind)
-        print location, len(location)
+        obj = state['obj']
+        self.graph_objects.remove(obj) # remove object from graph
+        obj.id = '-'+obj.id # mark object as removed in database
         self.emit('redraw')
 
-    new_object = command_from_methods2('graph/new-object', new_object, undo_new_object)
+    def redo_new_object(self, state):
+        obj = state['obj']
+        self.graph_objects.append(obj)
+        location =  { Line: self.data.lines, Text: self.data.text }[type(obj)]
+        obj.id = obj.id[1:]
+        self.emit('redraw')
+
+    new_object = command_from_methods2('graph/new-object', new_object, undo_new_object, redo=redo_new_object)
 
     def delete_object(self, obj):
         obj.id = '-'+obj.id
@@ -683,6 +683,7 @@ class Graph(Item, HasSignals):
         elif self.mode == 'arrow':
             if self.dragobj is not None:
                 self.dragobj.rec = True
+                self.dragobj.record_position()
                 self.dragobj = None
                 self.dragobj_xor.hide()
                 self.emit('redraw')

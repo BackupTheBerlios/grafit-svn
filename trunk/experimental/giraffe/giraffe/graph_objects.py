@@ -1,7 +1,7 @@
 from giraffe.signals import HasSignals
 from giraffe.settings import DATADIR
 from giraffe.project import wrap_attribute
-from giraffe.commands import Command
+from giraffe.commands import command_from_methods2, StopCommand
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -59,7 +59,7 @@ class Handle(object):
         self._posy = value
         self._y, self.q = self.graph.pos2y(value)
     def get_posy(self):
-        return self._posx
+        return self._posy
     posy = property(get_posy, set_posy)
 
     def set_x(self, value):
@@ -111,8 +111,8 @@ class GraphObject(object):
     When the user moves a handle it may be nescessary to move some
     of the others as well.
     """
-    def __init__(self, graph, data):
-        self.graph, self.data = graph, data
+    def __init__(self, graph, location):
+        self.graph, self.data = graph, location
         self.handles = []
         self.active_handle = None
         self.dragstart = None
@@ -124,9 +124,20 @@ class GraphObject(object):
             handle.posx, handle.posy = hpos.split(';')
         print >>sys.stderr, 'read-position', self.data.position
 
-    def record_position(self):
+    def record_position(self, state):
+        state['prev'] = self.data.position
         self.data.position = ' '.join(h.posx+';'+h.posy for h in self.handles)
-        print >>sys.stderr, 'record-position', self.data.position
+        state['pos'] = self.data.position
+    def undo_record_position(self, state):
+        self.data.position = state['prev']
+        self.read_position()
+        self.graph.emit('redraw')
+    def redo_record_position(self, state):
+        self.data.position = state['pos']
+        self.read_position()
+        self.graph.emit('redraw')
+    record_position = command_from_methods2('graph/move-object',
+                            record_position, undo_record_position, redo=redo_record_position)
 
     def move_active_handle(self, x, y, record=True):
         """
@@ -139,7 +150,7 @@ class GraphObject(object):
             self.record_position()
 
     def nudge(self, x, y, record=True):
-        for h in self.obj.handles:
+        for h in self.handles:
             h.move(h.x+x, h.y+y)
         if record:
             self.record_position()
@@ -179,8 +190,8 @@ class GraphObject(object):
             h.draw()
 
 class Line(GraphObject):
-    def __init__(self, graph, pos):
-        GraphObject.__init__(self, graph, pos)
+    def __init__(self, graph, ind):
+        GraphObject.__init__(self, graph, graph.data.lines[ind])
         self.handles.append(Handle(graph))
         self.handles.append(Handle(graph))
         self.read_position()
