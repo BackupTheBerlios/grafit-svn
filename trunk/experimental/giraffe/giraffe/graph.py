@@ -209,28 +209,36 @@ class Graph(Item, HasSignals):
         d = Dataset(self, ind)
         self.datasets.append(d)
         pos = len(self.datasets)-1
-        print 'added dataset, index %d, position %d' % (ind, pos)
+#        print 'added dataset, index %d, position %d' % (ind, pos)
 
         d.connect('modified', self.on_dataset_modified)
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
 
-        state['pos'] = pos
+        state['obj'] = d
 
         return pos
 
     def undo_add(self, state):
-        pos = state['pos']
+        d = state['obj']
 
-        d = self.datasets[pos]
-        print 'undoing addition of dataset, index %d, position %d' % (d.ind, pos)
-        del self.datasets[pos]
+#        print 'undoing addition of dataset, index %d, position %d' % (d.ind, pos)
+        self.datasets.remove(d)
         d.disconnect('modified', self.on_dataset_modified)
         self.emit('remove-dataset', d)
         self.emit('redraw')
-        self.data.datasets.delete(d.ind)
+        d.id = '-'+d.id
+#        self.data.datasets.delete(d.ind)
 
-    add = command_from_methods2('graph_add_dataset', add, undo_add)
+    def redo_add(self, state):
+        d = state['obj']
+        d.id = d.id[1:]
+        self.datasets.append(d)
+        d.connect('modified', self.on_dataset_modified)
+        self.emit('add-dataset', d)
+        self.emit('redraw')
+
+    add = command_from_methods2('graph_add_dataset', add, undo_add, redo=redo_add)
 
     def remove(self, dataset):
         # we can do this even if `dataset` is a different object
