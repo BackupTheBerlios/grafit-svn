@@ -5,6 +5,7 @@ import sys
 import time
 import weakref
 import os
+import platform
 
 import wx
 import wx.py
@@ -1171,7 +1172,10 @@ class _xToolPanel(wx.SashLayoutWindow):
         dc.DrawBitmap(bimp, 0, 0, True)
         dc.DrawText(text, wb+5, 0)
         dc.EndDrawing()
-#        bmp.SetMaskColour(self.GetBackgroundColour())
+        if platform.system() == 'Linux':
+            bmp.SetMaskColour(self.GetBackgroundColour())
+   #         setup.py:elif platform.system() == 'Windows':
+
 
         # rotate if nescessary
         if self.position in ['left', 'right']:
@@ -1772,6 +1776,7 @@ class Action(HasSignals):
         self.type = type
 
         self._state = False
+        self._enabled = True
         self.upd = []
 
     def get_state(self):
@@ -1781,6 +1786,16 @@ class Action(HasSignals):
         for w, id in self.upd:
             w.ToggleTool(id, state)
     state = property(get_state, set_state)
+
+    def enabled():
+        def fget(self):
+            return self._enabled
+        def fset(self, state):
+            self._enabled = state
+            for w, id in self.upd:
+                w.EnableTool(id, state)
+        return locals()
+    enabled = property(**enabled())
 
     def __call__(self, *args, **kwds):
         return self.call(*args, **kwds)

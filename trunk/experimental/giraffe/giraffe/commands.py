@@ -128,6 +128,7 @@ class CommandList(signals.HasSignals):
                 pass
             else:
                 self.commands.append(command)
+#            print >>sys.stderr, 'X', command
             self.emit('added', command=command)
 
     def pop(self):
@@ -161,16 +162,18 @@ class CommandList(signals.HasSignals):
             raise NoMoreCommandsError
 
     def can_undo(self):
+        com = False
         for com in self.commands[::-1]:
             if com.done:
-                return True
-        return False
+                break
+        return com and com.done
 
     def can_redo(self):
-        for fom in self.commands:
+        com = False
+        for com in self.commands:
             if not com.done:
-                return True
-        return False
+                break
+        return com and not com.done
 
     def undo(self):
         """Undo the last command that was done."""

@@ -28,6 +28,9 @@ class Graph(Item, HasSignals):
 
         self.selected_object = None
 
+        self.plot_height = 100
+        self.plot_width = 100
+
         self.datasets = []
         if location is not None:
             for i, l in enumerate(self.data.datasets):
@@ -349,11 +352,15 @@ class Graph(Item, HasSignals):
 
     def autoscale(self):
         if len(self.datasets):
-            self.zoom(
-                array(self.datasets[0].x).min(),
-                array(self.datasets[0].y).min(),
-                array(self.datasets[0].x).max(),
-                array(self.datasets[0].y).max())
+            xmin = min(array(d.x).min() for d in self.datasets)
+            xmax = max(array(d.x).max() for d in self.datasets)
+            ymin = min(array(d.y).min() for d in self.datasets)
+            ymax = max(array(d.y).max() for d in self.datasets)
+            self.zoom(xmin, xmax, ymin, ymax)
+#                array(self.datasets[0].x).min(),
+#                array(self.datasets[0].y).min(),
+#                array(self.datasets[0].x).max(),
+#                array(self.datasets[0].y).max())
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
@@ -413,7 +420,6 @@ class Graph(Item, HasSignals):
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
 
     def display(self, width=-1, height=-1):
-        self.emit('display')
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
@@ -491,12 +497,19 @@ class Graph(Item, HasSignals):
             titw=0
 
         # measure tick labels
-        self.ticw = max(self.textpainter.render_text(self.axis_left.totex(y), 
-                                                     facesize, 0, 0, measure_only=True)[0] 
-                        for y in self.axis_left.tics(self.ymin, self.ymax)[0]) # :-)
-        self.tich = max(self.textpainter.render_text(self.axis_bottom.totex(x), 
-                                                     facesize, 0, 0, measure_only=True)[1] 
-                        for x in self.axis_bottom.tics(self.xmin, self.xmax)[0])
+        try:
+            self.ticw = max(self.textpainter.render_text(self.axis_left.totex(y), 
+                                                         facesize, 0, 0, measure_only=True)[0] 
+                            for y in self.axis_left.tics(self.ymin, self.ymax)[0]) # :-)
+        except ValueError:
+            self.ticw = 0
+
+        try:
+            self.tich = max(self.textpainter.render_text(self.axis_bottom.totex(x), 
+                                                         facesize, 0, 0, measure_only=True)[1] 
+                            for x in self.axis_bottom.tics(self.xmin, self.xmax)[0])
+        except ValueError:
+            self.tich = 0
 
 
         # set margins 
@@ -710,7 +723,7 @@ class Graph(Item, HasSignals):
                     self.paint_xor_objects = False
             
     def button_motion(self, x, y, dragging):
-        if self.mode == 'zoom' and dragging:
+        if self.mode == 'zoom' and dragging and hasattr(self, 'ix'):
             self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
             self.emit('redraw')
         elif self.mode in ['range', 'd-reader'] and dragging:

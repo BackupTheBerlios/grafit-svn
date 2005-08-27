@@ -49,6 +49,8 @@ class WorksheetView(gui.Box):
 
         self.table = gui.Table(self, TableData(self.worksheet))
 
+        self.object = self.worksheet
+
     def on_new_column(self):
         self.worksheet[self.worksheet.suggest_column_name()] = [nan]*20
         pass

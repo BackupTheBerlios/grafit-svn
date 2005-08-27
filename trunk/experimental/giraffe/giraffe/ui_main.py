@@ -319,8 +319,11 @@ class MainWindow(Window):
         self.main.left_panel.open(self.explorer)
 
         global_connect('status-message', self.on_status_message)
+        command_list.connect('added', self.on_command)
+        command_list.connect('removed', self.on_command)
+        command_list.connect('modified', self.on_command)
 
-        actions = {
+        self.actions = actions = {
             'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
             'file-open': Action('Open...', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
             'file-save': Action('Save', 'Save the project', 
@@ -382,8 +385,13 @@ class MainWindow(Window):
         import wx.xrc
         # preload
         wx.xrc.XmlResource(DATADIR+'/giraffe/test.xrc')
+        self.on_command()
 
-    def on_status_message(self, msg, time=0):
+    def on_command(self, *args, **kwds):
+        self.actions['edit-undo'].enabled = command_list.can_undo()
+        self.actions['edit-redo'].enabled = command_list.can_redo()
+
+    def on_status_message(self, obj, msg, time=0):
         self.status = msg
 
     def on_import_ascii(self):
@@ -400,7 +408,7 @@ class MainWindow(Window):
         self.project = project
         for panel in (self.shell, self.explorer):
             panel.connect_project(self.project)
-#        self.project.connect('remove-item', self.on_project_remove_item)
+        self.project.connect('remove-item', self.on_project_remove_item)
 #        command_list.clear()
 
     def on_item_activated(self, item):
@@ -435,7 +443,12 @@ class MainWindow(Window):
             panel.disconnect_project()
         for page in list(self.book.pages):
             self.book.delete(page)
-#        self.project.disconnect('remove-item', self.on_project_remove_item)
+        self.project.disconnect('remove-item', self.on_project_remove_item)
+
+    def on_project_remove_item(self, item):
+        for page in self.book.pages:
+            if page.object == item:
+                page.on_close()
 
     def act(self, x, y):
         print 'patataki'

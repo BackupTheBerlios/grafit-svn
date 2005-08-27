@@ -52,6 +52,13 @@ class Slot(object):
         else:
             return self.call(*args, **kwds)
 
+    def __str__(self):
+        if self.method:
+            return "<method '%s' of %r>" % (self.name, self.obj)
+        else:
+            return str(self.call)
+    __repr__ = __str__
+
     def __eq__(self, other):
         # We want slots to compare equal if they reference the same function/method
         if isinstance(other, Slot):
@@ -99,7 +106,6 @@ class HasSignals(object):
         """
         Connect a signal to a slot.  'signal' is a string, `slot` is any callable.
         """
-#        print "CONNECT: ", self, signal, slot
         if not isinstance(signal, basestring) and hasattr(signal, '__len__'):
             return [self.connect(sig, slot, keepref) for sig in signal]
         if not hasattr(self, '_signals'):
@@ -112,7 +118,6 @@ class HasSignals(object):
         """
         Disconnect a slot from a signal.
         """
-#        print "DISCONNECT: ", self, signal, slot
         if not hasattr(self, '_signals'):
             raise NameError, "TODO"
         if signal not in self._signals:
@@ -129,8 +134,9 @@ class HasSignals(object):
         Emit a signal. All slots connected to the signal will be called.
         *args and **kwds are passed to the slot unmodified.
         """
+        if not hasattr(self, '_signals'):
+            self._signals = {}
         results = []
-#        print >>sys.stderr, "SIGNAL:", self, "emitted", signal
         if hasattr(self, '_signals') and signal in self._signals:
             for slot in self._signals[signal]:
                 # Lazy handling of expired slots.
@@ -141,13 +147,28 @@ class HasSignals(object):
                 except (ReferenceError, wx.PyDeadObjectError):
                     # We can't do self._signals[signal].remove(slot) because that calls slot.__eq__
                     # and raises another ReferenceError. So we might as well remove all expired slots.
-#                print >>sys.stderr, "garbage collected slot", slot
                     self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
+                except TypeError, arg:
+                    if '_wxPyDeadObject' in arg:
+                        # sometimes wxpython gives an error such as this:
+                        # TypeError: argument number 2: a 'wxWindow *' is expected, 
+                        # '_wxPyDeadObject(wxPython wrapper for DELETED Panel object! (The C++
+                        # object no longer exists.))' is received
+                        self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
+                    else:
+                        raise
+
         if signal in _global_signals:
             for slot in _global_signals[signal]:
                 try:
-                    results.append(slot(*args, **kwds))
+                    results.append(slot(self, *args, **kwds))
                 except (ReferenceError, wx.PyDeadObjectError):
                     _global_signals[signal] = [s for s in _global_signals[signal] if not s.is_expired()]
+                except TypeError, arg:
+                    if '_wxPyDeadObject' in arg:
+                        # see above
+                        _global_signals[signal] = [s for s in _global_signals[signal] if not s.is_expired()]
+                    else:
+                        raise
      
         return results

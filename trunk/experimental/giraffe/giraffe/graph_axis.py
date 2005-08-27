@@ -216,6 +216,6 @@ class Axis(object):
                     return rng, minor
 
         print "cannot tick", fr, to, len(rng)
-        return []
+        return [], []
 
 

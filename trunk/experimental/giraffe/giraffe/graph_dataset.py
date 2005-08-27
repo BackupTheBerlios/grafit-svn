@@ -33,11 +33,11 @@ class Style(HasSignals):
     line_types = ['none', 'straight', 'bspline']
     line_styles = ['solid', 'dotted', 'dashed']
 
-    def __repr__(self):
-        return "Style(symbol='%s', color=%s, symbol_size=%d, " \
-               "line_type='%s', line_style='%s', line_width=%d)" \
-               % (self.symbol, str(self.color), self.symbol_size, 
-                  self.line_type, self.line_style, self.line_width)
+#    def __repr__(self):
+#        return "Style(symbol='%s', color=%s, symbol_size=%d, " \
+#               "line_type='%s', line_style='%s', line_width=%d)" \
+#               % (self.symbol, str(self.color), self.symbol_size, 
+#                  self.line_type, self.line_style, self.line_width)
 
     def set_line_style(self, val):
         if isinstance(val, int):

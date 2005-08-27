@@ -125,6 +125,8 @@ class GraphView(gui.Box):
 
         self.graph.connect('request-cursor', self.on_request_cursor)
 
+        self.object = self.graph
+
     def on_object_doubleclicked(self, obj):
         from prop import Editor
         e = Editor(self, DATADIR+'/giraffe/test.xrc', obj)
@@ -422,11 +424,11 @@ class WorksheetListModel(HasSignals):
 
 class ColumnListModel(HasSignals):
     def __init__(self):
-        self.worksheets = []
+#        self.worksheets = []
         self.colnames = []
 
     def set_worksheets(self, worksheets):
-        self.worksheets = worksheets
+#        self.worksheets = worksheets
         self.colnames = intersection([w.column_names for w in worksheets])
         self.emit('modified')
 
@@ -482,7 +484,8 @@ class GraphDataPanel(gui.Box):
             worksheet = self.worksheet_list.model[ws]
             for x in self.x_list.selection:
                 for y in self.y_list.selection:
-                    self.graph.add(worksheet[x], worksheet[y])
+                    self.graph.add(worksheet[self.x_list.model[x]], 
+                                   worksheet[self.y_list.model[y]])
 
     def on_remove(self):
         for d in [self.graph.datasets[s] for s in self.view.legend.selection]:

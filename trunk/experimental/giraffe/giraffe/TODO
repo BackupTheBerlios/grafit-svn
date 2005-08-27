@@ -1,6 +1,10 @@
+bugs
+----
+* column names are wrong in data panel
+* auto range throws exception
+
 immediate
 ---------
-* rewrite panels using MultiSplitter and notebooks
 * make add/remove functions commands
 * context menu on project explorer
 * context menu on graph
@@ -12,8 +16,4 @@ planned features
 * error bars
 * fit multiple datasets w/ shared and non-shared parameters
 * filters (like functions, with window)
-* framework for graph tools?
-
-windows
--------
-* see how a cross-platform app handles the main executable
+* framework for new graph tools?
