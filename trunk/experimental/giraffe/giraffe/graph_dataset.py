@@ -106,6 +106,8 @@ class DrawWithStyle(HasSignals):
             self.style.color = default_style.color
             self.data.color = '0'
 
+        if self.data.size == 0:
+            self.data.size = 6
         self.style.symbol_size = self.data.size
 
         if self.data.symbol == '':
@@ -225,8 +227,13 @@ class Dataset(DrawWithStyle):
         self.xfrom, self.xto = -inf, inf
         self.recalculate()
 
+    def connect_signals(self):
         self.x.connect('data-changed', self.on_data_changed)
         self.y.connect('data-changed', self.on_data_changed)
+
+    def disconnect_signals(self):
+        self.x.disconnect('data-changed', self.on_data_changed)
+        self.y.disconnect('data-changed', self.on_data_changed)
 
     def on_data_changed(self):
         self.recalculate()

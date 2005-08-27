@@ -212,6 +212,8 @@ class Graph(Item, HasSignals):
 #        print 'added dataset, index %d, position %d' % (ind, pos)
 
         d.connect('modified', self.on_dataset_modified)
+        d.connect_signals()
+
         self.on_dataset_modified(d)
         self.emit('add-dataset', d)
 
@@ -224,6 +226,7 @@ class Graph(Item, HasSignals):
 
 #        print 'undoing addition of dataset, index %d, position %d' % (d.ind, pos)
         self.datasets.remove(d)
+        d.disconnect_signals()
         d.disconnect('modified', self.on_dataset_modified)
         self.emit('remove-dataset', d)
         self.emit('redraw')
@@ -235,6 +238,7 @@ class Graph(Item, HasSignals):
         d.id = d.id[1:]
         self.datasets.append(d)
         d.connect('modified', self.on_dataset_modified)
+        d.connect_signals()
         self.emit('add-dataset', d)
         self.emit('redraw')
 
@@ -604,22 +608,26 @@ class Graph(Item, HasSignals):
             self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
         elif self.mode == 'arrow':
-            x, y = self.mouse_to_ident(x, y)
-            for o in self.graph_objects:
-                if o.hittest(x, y):
-                    self.selected_object = o
-                    self.dragobj = o
-                    self.dragobj.rec = False
-                    self.dragobj_xor = Move(self.dragobj)
-                    self.objects.append(self.dragobj_xor)
-                    self.paint_xor_objects = True
-                    self.dragobj_xor.show(x, y)
-                    if o.hittest_handles(x, y):
-                        self.dragobj.dragstart = None
-                    break
-            else:
-                self.selected_object = None
-            self.emit('redraw')
+            if button == 1:
+                x, y = self.mouse_to_ident(x, y)
+                for o in self.graph_objects:
+                    if o.hittest(x, y):
+                        self.selected_object = o
+                        self.dragobj = o
+                        self.dragobj.rec = False
+                        self.dragobj_xor = Move(self.dragobj)
+                        self.objects.append(self.dragobj_xor)
+                        self.paint_xor_objects = True
+                        self.dragobj_xor.show(x, y)
+                        if o.hittest_handles(x, y):
+                            self.dragobj.dragstart = None
+                        break
+                else:
+                    self.selected_object = None
+                self.emit('redraw')
+            elif button == 3:
+                self.emit('right-clicked', None)
+                print >>sys.stderr, 'right-clicked', None
         elif self.mode in ('draw-line', 'draw-text'):
             xi, yi = self.mouse_to_ident(x, y)
             createobj = self.new_object({'draw-line': Line, 
@@ -691,15 +699,16 @@ class Graph(Item, HasSignals):
             self.paint_xor_objects = False
 
         elif self.mode == 'arrow':
-            if self.dragobj is not None:
-                self.dragobj.rec = True
-                self.dragobj.record_position()
-                self.dragobj = None
-                self.dragobj_xor.hide()
-                self.emit('redraw')
-                self.objects.remove(self.dragobj_xor)
-                self.paint_xor_objects = False
-        
+            if button == 1:
+                if self.dragobj is not None:
+                    self.dragobj.rec = True
+                    self.dragobj.record_position()
+                    self.dragobj = None
+                    self.dragobj_xor.hide()
+                    self.emit('redraw')
+                    self.objects.remove(self.dragobj_xor)
+                    self.paint_xor_objects = False
+            
     def button_motion(self, x, y, dragging):
         if self.mode == 'zoom' and dragging:
             self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))

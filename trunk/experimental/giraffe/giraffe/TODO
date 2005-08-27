@@ -1,6 +1,5 @@
 immediate
 ---------
-
 * rewrite panels using MultiSplitter and notebooks
 * make add/remove functions commands
 * context menu on project explorer

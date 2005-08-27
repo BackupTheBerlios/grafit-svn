@@ -107,6 +107,7 @@ class GraphView(gui.Box):
 
         self.graph.connect('redraw', self.glwidget.redraw)
         self.graph.connect('object-doubleclicked', self.on_object_doubleclicked)
+        self.graph.connect('right-clicked', self.on_right_clicked)
 
         self.legend = gui.List(self.box, model=LegendModel(self.graph))#, stretch=0)
         self.legend.connect('selection-changed', self.on_legend_select)
@@ -128,6 +129,12 @@ class GraphView(gui.Box):
         from prop import Editor
         e = Editor(self, DATADIR+'/giraffe/test.xrc', obj)
         e._widget.Show()
+
+    def on_right_clicked(self, obj):
+        print >>sys.stderr, obj
+        menu = gui.Menu()
+        menu.append(gui.Action('Delete', 'delete', object, 'open.png'))
+        self.glwidget.parent.parent._widget.PopupMenu(menu._menu)
 
     def on_request_cursor(self, cursor):
         cur = {'arrow': wx.CURSOR_ARROW,

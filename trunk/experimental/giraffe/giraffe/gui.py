@@ -1536,13 +1536,13 @@ class OpenGLWidget(Widget):
         self._widget.SwapBuffers()
 
     def OnMouseDown(self, evt):
-        self._widget.CaptureMouse()
+#        self._widget.CaptureMouse()
         x, y = evt.GetPosition()
         btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
         self.emit('button-pressed', x, y, btn)
 
     def OnMouseUp(self, evt):
-        self._widget.ReleaseMouse()
+#        self._widget.ReleaseMouse()
         x, y = evt.GetPosition()
         btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
         self.emit('button-released', x, y, btn)
@@ -1552,11 +1552,9 @@ class OpenGLWidget(Widget):
         btn = {wx.MOUSE_BTN_LEFT:1, wx.MOUSE_BTN_MIDDLE:2, wx.MOUSE_BTN_RIGHT:3}[evt.GetButton()]
         self.emit('button-doubleclicked', x, y, btn)
 
-
     def OnMouseMotion(self, evt):
         x, y = evt.GetPosition()
         self.emit('mouse-moved', x, y, evt.Dragging())
-
 
 class Notebook(Widget):
     def __init__(self, parent, **place):

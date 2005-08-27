@@ -2,7 +2,7 @@ import sys
 #print >>sys.stderr, "import worksheet"
 
 from giraffe.signals import HasSignals
-from giraffe.commands import command_from_methods
+from giraffe.commands import command_from_methods, command_from_methods2
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 
 from giraffe.arrays import MkArray, transpose, array
@@ -38,6 +38,9 @@ class Column(MkArray, HasSignals):
     def undo_setitem(self, state):
         key, value, prev = state
         self[key] = prev
+
+    def __eq__(self, other):
+        return self.id == other.id
 
     __setitem__ = command_from_methods('column_change_data', __setitem__, undo_setitem)
 
@@ -99,24 +102,29 @@ class Worksheet(Item, HasSignals):
     def column_index(self, name):
         return self.data.columns.select(*[{'name': n.encode('utf-8')} for n in self.column_names]).find(name=name.encode('utf-8'))
 
-    def add_column(self, name):
+    def add_column(self, state, name):
         ind = self.data.columns.append(name=name, id=create_id(), data='')
-#        print >>sys.stderr, 'appended', ind
         self.columns.append(Column(self, ind))
         self.emit('data-changed')
+        state['obj'] = self.columns[-1]
         return name
 
-    def add_column_undo(self, name):
-        ind = self.column_index(name=name)
-#        print >>sys.stderr, 'found', ind
-        self.data.columns.delete(ind)
-        del self.columns[ind]
+    def add_column_undo(self, state):
+        col = state['obj']
+        col.id = '-'+col.id
+        self.columns.remove(col)
         self.emit('data-changed')
 
-    add_column = command_from_methods('worksheet_add_column', add_column, add_column_undo)
+    def add_column_redo(self, state):
+        col = state['obj']
+        col.id = col.id[1:]
+        self.columns.append(col)
+        self.emit('data-changed')
 
+    add_column = command_from_methods2('worksheet/add_column', add_column, add_column_undo,
+                                       redo=add_column_redo)
 
-    def remove_column(self, name):
+    def remove_column(self, state, name):
         ind = self.column_index(name)
         if ind == -1:
             raise NameError, "Worksheet does not have a column named %s" % name
@@ -125,16 +133,17 @@ class Worksheet(Item, HasSignals):
             col.name = '-'+col.name
             del self.columns[ind]
             self.emit('data-changed')
+            state['col'], state['ind'] = col, ind
             return (col, ind), None
 
-    def undo_remove_column(self, c):
-#        print >>sys.stderr, c
-        col, ind = c
+    def undo_remove_column(self, state):
+        col, ind = state['col'], state['ind']
         col.name = col.name[1:]
         self.columns.insert(ind, col)
         self.emit('data-changed')
 
-    remove_column = command_from_methods('worksheet_remove_column', remove_column, undo_remove_column)
+    remove_column = command_from_methods2('worksheet_remove_column', remove_column, 
+                                          undo_remove_column)
 
     def get_ncolumns(self):
         return len(self.columns)
