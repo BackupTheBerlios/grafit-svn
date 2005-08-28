@@ -115,11 +115,11 @@ class Axis(object):
         facesize = self.plot.axis_title_font_size * self.plot.magnification
         if self.position == 'bottom':
             self.plot.textpainter.render_text(self.plot.xtitle, facesize, 
-                                              self.plot.plot_width/2, -5,
+                                              self.plot.plot_width/2, -facesize/2.,
                                               align_x='center', align_y='top')
         elif self.position == 'left':
             self.plot.textpainter.render_text(self.plot.ytitle, facesize, 
-                                              -5-self.plot.ticw, self.plot.plot_height/2, 
+                                              -facesize/2.-self.plot.ticw, self.plot.plot_height/2, 
                                               align_x='right', align_y='center', orientation='v')
 
 

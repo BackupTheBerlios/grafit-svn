@@ -83,6 +83,8 @@ class GraphView(gui.Box):
         self.toolbar.append(None)
         self.toolbar.append(gui.Action('Line', '', set_graph_mode('draw-line'), 'stock_draw-line.png'))
         self.toolbar.append(gui.Action('Text', '', set_graph_mode('draw-text'), 'stock_draw-text.png'))
+        self.toolbar.append(None)
+        self.toolbar.append(gui.Action('Select all datasets', '', self.on_selectall, 'stock_select-all.png'))
 
 
         self.toolbar._widget.Realize()
@@ -126,6 +128,9 @@ class GraphView(gui.Box):
         self.graph.connect('request-cursor', self.on_request_cursor)
 
         self.object = self.graph
+
+    def on_selectall(self):
+        self.legend.setsel(xrange(len(self.graph.datasets)))
 
     def on_object_doubleclicked(self, obj):
         from prop import Editor
@@ -214,13 +219,9 @@ class GraphAxesPanel(gui.Box):
 
     def on_x_title(self):
         self.graph.xtitle = self.x_title.text
-        self.graph.reshape()
-        self.graph.emit('redraw')
 
     def on_y_title(self):
         self.graph.ytitle = self.y_title.text
-        self.graph.reshape()
-        self.graph.emit('redraw')
         
     def on_set_xtype(self, value):
         self.graph.xtype = ['linear', 'log'][value]

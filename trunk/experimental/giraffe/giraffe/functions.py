@@ -291,7 +291,7 @@ class MFunctionSum(FunctionSum):
         for f in self.data:
             if f.func in registry and not f.id.startswith('-'):
                 self.add(f.func, f.name)
-                self.terms[-1]._id = f.id
+                self.terms[-1].data = f
             else:
                 print >>sys.stderr, "function '%s' not found." %f.func
         self.connect('add-term', self.on_add_term)

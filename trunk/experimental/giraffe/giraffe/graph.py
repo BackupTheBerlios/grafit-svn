@@ -39,12 +39,12 @@ class Graph(Item, HasSignals):
                 if not l.id.startswith('-'):
                     self.datasets.append(Dataset(self, i))
                     self.datasets[-1].connect('modified', self.on_dataset_modified)
-            for i, l in enumerate(self.data.lines):
+            for l in self.data.lines:
                 if not l.id.startswith('-'):
-                    self.graph_objects.append(Line(self, i))
-            for i, l in enumerate(self.data.text):
+                    self.graph_objects.append(Line(self, l))
+            for l in self.data.text:
                 if not l.id.startswith('-'):
-                    self.graph_objects.append(Text(self, i))
+                    self.graph_objects.append(Text(self, l))
 
         self.functions = []
 #        if location is not None:
@@ -119,16 +119,12 @@ class Graph(Item, HasSignals):
         _state['old'] = self._xtype
         self._xtype = tp
         self.emit('redraw')
-
     def undo_set_xtype(self, _state):
         self._xtype = _state['old']
         self.emit('redraw')
-
     set_xtype = command_from_methods2('graph-set-xaxis-scale', set_xtype, undo_set_xtype)
-
     def get_xtype(self):
         return self._xtype
-
     xtype = property(get_xtype, set_xtype)
 
     def set_ytype(self, _state, tp):
@@ -137,29 +133,51 @@ class Graph(Item, HasSignals):
         _state['old'] = self._ytype
         self._ytype = tp
         self.emit('redraw')
-
     def undo_set_ytype(self, _state):
         self._ytype = _state['old']
         self.emit('redraw')
-
     set_ytype = command_from_methods2('graph-set-xaxis-scale', set_ytype, undo_set_ytype)
-
     def get_ytype(self):
         return self._ytype
-
     ytype = property(get_ytype, set_ytype)
 
 
-    def set_xtitle(self, title):
+    # titles
+
+    def set_xtitle(self, state, title):
+        state['old'], state['new'] = self._xtitle, title
         self._xtitle = title
+        self.reshape()
+        self.emit('redraw')
+    def undo_set_xtitle(self, state):
+        self._xtitle = state['old']
+        self.reshape()
+        self.emit('redraw')
+    def redo_set_xtitle(self, state):
+        self._xtitle = state['new']
+        self.reshape()
+        self.emit('redraw')
     def get_xtitle(self):
         return self._xtitle
+    set_xtitle = command_from_methods2('graph/set-xtitle', set_xtitle, undo_set_xtitle, redo=redo_set_xtitle)
     xtitle = property(get_xtitle, set_xtitle)
 
-    def set_ytitle(self, title):
+    def set_ytitle(self, state, title):
+        state['old'], state['new'] = self._ytitle, title
         self._ytitle = title
+        self.reshape()
+        self.emit('redraw')
+    def undo_set_ytitle(self, state):
+        self._ytitle = state['old']
+        self.reshape()
+        self.emit('redraw')
+    def redo_set_ytitle(self, state):
+        self._ytitle = state['new']
+        self.reshape()
+        self.emit('redraw')
     def get_ytitle(self):
         return self._ytitle
+    set_ytitle = command_from_methods2('graph/set-ytitle', set_ytitle, undo_set_ytitle, redo=redo_set_ytitle)
     ytitle = property(get_ytitle, set_ytitle)
 
     def __repr__(self):
@@ -174,12 +192,15 @@ class Graph(Item, HasSignals):
         self.emit('add-function', f)
         return f
 
+    def create_legend(self):
+        legend = self.new_object(Text)
+        legend.text = '\n'.join('@%d@'%i + str(d) for i, d in enumerate(self.datasets))
 
     # add and remove graph objects
     def new_object(self, state, typ):
         location = { Line: self.data.lines, Text: self.data.text }[typ]
         ind = location.append(id=create_id())
-        obj =  typ(self, location[ind])
+        obj = typ(self, location[ind])
         self.graph_objects.append(obj)
         state['obj'] = obj
         return obj
@@ -521,9 +542,9 @@ class Graph(Item, HasSignals):
 
 
         # set margins 
-        self.marginb = tith + self.tich + 6
+        self.marginb = tith + self.tich + self.axis_title_font_size*self.magnification/2 + 2 
         self.margint = self.height_mm * 0.03
-        self.marginl = titw + self.ticw + 6
+        self.marginl = titw + self.ticw + self.axis_title_font_size*self.magnification/2 + 2
         self.marginr = self.width_mm * 0.03
 
         self.plot_width = self.width_mm - self.marginl - self.marginr

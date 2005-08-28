@@ -80,7 +80,7 @@ class TextPainter(object):
         return 15, 15, 0, renderer
 
     def render_text_chunk_normal(self, text, size, orientation='h'):
-        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size)
+        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, round(size))
         w, h = fonte.getsize(text)
         _, origin = fonte.getmetrics()
         if orientation == 'v': 
