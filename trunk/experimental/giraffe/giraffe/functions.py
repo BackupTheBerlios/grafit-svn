@@ -6,7 +6,7 @@ import odr
 
 from signals import HasSignals
 from giraffe.arrays import zeros, nan
-from giraffe.commands import command_from_methods, StopCommand
+from giraffe.commands import command_from_methods, StopCommand, command_from_methods2
 
 def gen_flatten(s):
     try:
@@ -289,7 +289,7 @@ class MFunctionSum(FunctionSum):
         FunctionSum.__init__(self)
         self.data = data
         for f in self.data:
-            if f.func in registry:
+            if f.func in registry and not f.id.startswith('-'):
                 self.add(f.func, f.name)
                 self.terms[-1]._id = f.id
             else:
@@ -297,13 +297,32 @@ class MFunctionSum(FunctionSum):
         self.connect('add-term', self.on_add_term)
         self.connect('remove-term', self.on_remove_term)
 
-    def on_add_term(self, term):
-        term._id = create_id()
-        self.data.append(id=term._id, func=term.function.name, name=term.name)
+    def on_add_term(self, state, term):
+        if hasattr(term, 'data') and term.data.id.startswith('-'):
+            raise StopCommand
+        row = self.data.append(id=create_id(), func=term.function.name, name=term.name)
+        term.data = self.data[row]
+        state['term'] = term
+    def undo_add_term(self, state):
+        term = state['term']
+        term.data.id = '-'+term.data.id
+        self.terms.remove(term)
+        self.emit('remove-term', term)
+    def redo_add_term(self, state):
+        term = state['term']
+        self.terms.append(term)
+        self.emit('add-term', term)
+        term.data.id = term.data.id[1:]
+    on_add_term = command_from_methods2('graph/add-function-term', on_add_term, undo_add_term, redo=redo_add_term)
 
-    def on_remove_term(self, term):
-        ind = self.data.find(id=term._id)
-        self.data.delete(ind)
+    def on_remove_term(self, state, term):
+        if hasattr(term, 'data') and term.data.id.startswith('-'):
+            raise StopCommand
+        term.data.id = '-'+term.data.id
+        state['term'] = term
+    undo_remove_term = redo_add_term
+    redo_remove_term = undo_add_term
+    on_remove_term = command_from_methods2('graph/remove-function-term', on_remove_term, undo_remove_term, redo=redo_remove_term)
     
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):

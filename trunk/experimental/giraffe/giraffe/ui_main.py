@@ -329,7 +329,7 @@ class MainWindow(Window):
             'file-save': Action('Save', 'Save the project', 
                                 self.on_project_save, 'save.png', 'Ctrl+S'),
             'file-saveas': Action('Save As...', 'Save the project with a new name', 
-                                  self.on_project_saveas, 'saveas.png', 'Ctrl+A'),
+                                  self.on_project_saveas, 'saveas.png'),
             'file-quit': Action('Quit', 'Quit grafit', self.on_quit, 'stock_exit.png', 'Ctrl+Q'),
 
             'edit-undo': Action('Undo', 'Undo the last action', undo, 'stock_undo.png', 'Ctrl+Z'),
@@ -386,6 +386,7 @@ class MainWindow(Window):
         # preload
         wx.xrc.XmlResource(DATADIR+'/giraffe/test.xrc')
         self.on_command()
+        self.on_project_modified(False)
 
     def on_command(self, *args, **kwds):
         self.actions['edit-undo'].enabled = command_list.can_undo()
@@ -402,13 +403,17 @@ class MainWindow(Window):
             path = dlg.GetPaths()[0]
             ws.array, ws._header = import_ascii(path)
         dlg.Destroy()
- 
+
+    def on_project_modified(self, isit):
+        self.actions['file-save'].enabled = isit
 
     def open_project(self, project):
         self.project = project
         for panel in (self.shell, self.explorer):
             panel.connect_project(self.project)
         self.project.connect('remove-item', self.on_project_remove_item)
+        self.project.connect('modified', lambda: self.on_project_modified(True), True)
+        self.project.connect('not-modified', lambda: self.on_project_modified(False), True)
 #        command_list.clear()
 
     def on_item_activated(self, item):

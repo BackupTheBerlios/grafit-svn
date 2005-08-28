@@ -12,7 +12,9 @@ from giraffe.commands import command_from_methods, command_from_methods2, StopCo
 from giraffe.graph_axis import Axis, Grid
 from giraffe.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction
 from giraffe.graph_dataset import Dataset, Function
-from giraffe.graph_text import FONTFILE, TextPainter
+from giraffe.graph_text import FONTFILE, TextPainter, encodeTTFasPS
+from giraffe.graph_render import *
+from matplotlib.ft2font import FT2Font
 
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
@@ -82,6 +84,8 @@ class Graph(Item, HasSignals):
 
         self.objects = [self.rubberband, self.cross]
         self.textpainter = TextPainter(self)
+
+        self.axis_title_font_size = 12.
 
     default_name_prefix = 'graph'
 
@@ -477,13 +481,17 @@ class Graph(Item, HasSignals):
         # diagonal of the window is 15cm
         self.res = sqrt(width*width+height*height)/150.
 
+        displaydpi = 100.
+        self.displayres = displaydpi / 25.4
+        self.magnification = self.res / self.displayres
+
         # set width and height
         self.width_pixels, self.height_pixels = width, height
         self.width_mm = width / self.res
         self.height_mm = height / self.res
 
         # measure titles
-        facesize = int(3.*self.res)
+        facesize = self.axis_title_font_size*self.magnification
         if self.xtitle != '':
             _, tith = self.textpainter.render_text(self.xtitle, facesize, 0, 0, 
                                                    measure_only=True)

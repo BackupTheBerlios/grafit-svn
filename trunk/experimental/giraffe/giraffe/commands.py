@@ -328,6 +328,7 @@ def command_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None)
             return ret
         except StopCommand:
             return None
+    replace_do.__name__ = do.__name__
     return replace_do
 
 # global command list

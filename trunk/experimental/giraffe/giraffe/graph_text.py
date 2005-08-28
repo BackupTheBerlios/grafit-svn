@@ -15,6 +15,11 @@ from graph_render import *
 
 FONTFILE = DATADIR+'/data/fonts/bitstream-vera/Vera.ttf'
 
+# You have: points
+# You want: mm
+#         * 0.3514598
+#         / 2.8452756
+
 def cut(st, delim):
     pieces = st.split(delim)
     pieces_fixed = []
@@ -75,7 +80,7 @@ class TextPainter(object):
         return 15, 15, 0, renderer
 
     def render_text_chunk_normal(self, text, size, orientation='h'):
-        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size) 
+        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, size)
         w, h = fonte.getsize(text)
         _, origin = fonte.getmetrics()
         if orientation == 'v': 

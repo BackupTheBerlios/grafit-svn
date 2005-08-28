@@ -2,6 +2,7 @@ import re
 from giraffe.arrays import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from giraffe.graph_render import *
 
 class Grid(object):
     def __init__(self, orientation, plot):
@@ -111,7 +112,7 @@ class Axis(object):
         self.paint_title()
 
     def paint_title(self):
-        facesize = int(3.*self.plot.res)
+        facesize = self.plot.axis_title_font_size * self.plot.magnification
         if self.position == 'bottom':
             self.plot.textpainter.render_text(self.plot.xtitle, facesize, 
                                               self.plot.plot_width/2, -5,
@@ -150,7 +151,7 @@ class Axis(object):
         return r'$%s$' % st
 
     def paint_text(self):
-        facesize = int(3.*self.plot.res)
+        facesize = self.plot.axis_title_font_size * self.plot.magnification
 
         if self.position == 'bottom':
             tics = self.tics(self.plot.xmin, self.plot.xmax)[0]

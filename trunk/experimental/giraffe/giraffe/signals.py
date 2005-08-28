@@ -149,7 +149,7 @@ class HasSignals(object):
                     # and raises another ReferenceError. So we might as well remove all expired slots.
                     self._signals[signal] = [s for s in self._signals[signal] if not s.is_expired()]
                 except TypeError, arg:
-                    if '_wxPyDeadObject' in arg:
+                    if '_wxPyDeadObject' in str(arg):
                         # sometimes wxpython gives an error such as this:
                         # TypeError: argument number 2: a 'wxWindow *' is expected, 
                         # '_wxPyDeadObject(wxPython wrapper for DELETED Panel object! (The C++
@@ -165,7 +165,7 @@ class HasSignals(object):
                 except (ReferenceError, wx.PyDeadObjectError):
                     _global_signals[signal] = [s for s in _global_signals[signal] if not s.is_expired()]
                 except TypeError, arg:
-                    if '_wxPyDeadObject' in arg:
+                    if '_wxPyDeadObject' in str(arg):
                         # see above
                         _global_signals[signal] = [s for s in _global_signals[signal] if not s.is_expired()]
                     else:

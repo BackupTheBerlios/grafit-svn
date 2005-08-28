@@ -1,15 +1,7 @@
-bugs
-----
-* column names are wrong in data panel
-* auto range throws exception
-
 immediate
 ---------
-* make add/remove functions commands
 * context menu on project explorer
 * context menu on graph
-* fix exit handling and session saving
-* make combine work for dataset-change-style command
 
 planned features
 ----------------
