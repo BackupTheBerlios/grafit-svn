@@ -50,7 +50,7 @@ import wx
 
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):
-        gui.Box.__init__(self, parent, 'vertical', **place)
+        gui.Box.__init__(self, parent, 'horizontal', **place)
         self.graph = graph
 
         tbbox = gui.Box(self, 'horizontal', stretch=0)
@@ -73,7 +73,7 @@ class GraphView(gui.Box):
                 self.graph.emit('redraw')
             return _set
 
-        self.toolbar = gui.Toolbar(tbbox, stretch=1)
+        self.toolbar = gui.Toolbar(tbbox, orientation='vertical', stretch=1)
         self.toolbar.append(gui.Action('Arrow', '', set_graph_mode('arrow'), 'arrow.png', type='radio'))
         self.toolbar.append(gui.Action('Hand', '', set_graph_mode('hand'), 'hand.png', type='radio'))
         self.toolbar.append(gui.Action('Zoom', '', set_graph_mode('zoom'), 'zoom.png', type='radio'))

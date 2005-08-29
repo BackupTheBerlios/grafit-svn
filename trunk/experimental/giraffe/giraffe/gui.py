@@ -1314,9 +1314,10 @@ class _xMainPanel(wx.Panel):
         wx.LayoutAlgorithm().LayoutWindow(self, self.remainingSpace)
 
 class Toolbar(Widget):
-    def __init__(self, parent, **place):
+    def __init__(self, parent, orientation='horizontal', **place):
+        orient = { 'horizontal': wx.TB_HORIZONTAL, 'vertical': wx.TB_VERTICAL } [orientation]
         self._widget = wx.ToolBar(parent._widget,
-                                  style=wx.SUNKEN_BORDER|wx.TB_FLAT)
+                                  style=wx.SUNKEN_BORDER|wx.TB_FLAT|orient)
         Widget.__init__(self, parent, **place)
         self._widget.Bind(wx.EVT_TOOL, self.on_tool)
         self.tools = {}
@@ -1571,6 +1572,12 @@ class Notebook(Widget):
         self.pixmaps = {}
 
         self.pages = []
+
+        self.closebtn = wx.Button(self.parent._widget, -1, 'X')
+#        self.closebtn.SetPosition((100, 10))
+        self.closebtn.SetSize((20, 20))
+        self.closebtn.Show()
+
 
     def getpixmap(self, filename):
         if filename is None:

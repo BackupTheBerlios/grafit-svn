@@ -13,6 +13,8 @@ from OpenGL.GL import *
 
 from graph_render import *
 
+from __builtin__ import round
+
 FONTFILE = DATADIR+'/data/fonts/bitstream-vera/Vera.ttf'
 
 # You have: points
