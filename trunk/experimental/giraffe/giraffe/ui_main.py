@@ -268,14 +268,11 @@ class FolderListData(HasSignals):
         self.folder = folder
         self.folder.project.connect('add-item', self.on_project_modified)
         self.folder.project.connect('remove-item', self.on_project_modified)
-        self.folder.connect('modified', self.on_folder_modified)
+        self.folder.connect('modified', self.emitter('modified'), True)
 
     def on_project_modified(self, item):
         if item.parent == self.folder:
             self.emit('modified')
-
-    def on_folder_modified(self):
-        self.emit('modified')
 
     def __len__(self): return len(list(self.folder.contents()))
     def __getitem__(self, key): return list(self.folder.contents())[key]
@@ -314,7 +311,7 @@ class MainWindow(Window):
         self.open_project(self.project)
 
         self.book = Notebook(self.main)
-        self.book.connect('page-changed', self.on_page_changed)
+#        self.book.connect('page-changed', self.on_page_changed)
 
         self.main.left_panel.open(self.explorer)
 
@@ -346,6 +343,8 @@ class MainWindow(Window):
                                         self.on_new_folder, 'stock_folder.png'),
             'functions': Action('Functions...', '', object),
             'filters': Action('Filters...', '', object),
+            'close-active-page': Action('Close', 'Close this worksheet',
+                                        lambda: self.book.active_page.on_close(), 'close.png'),
             None: None
         }
 
@@ -368,7 +367,8 @@ class MainWindow(Window):
             'file-new', 'file-open', 'file-save', 'file-saveas', None,
             'object-new-folder', 'object-new-worksheet', 'object-new-graph', None,
             'edit-undo', 'edit-redo', None,
-            'import-ascii'
+            'import-ascii', None,
+            'close-active-page',
         ]:
             self.toolbar.append(actions[item])
         self.toolbar._widget.Realize()
@@ -432,10 +432,10 @@ class MainWindow(Window):
             w = WorksheetView(self.book, item, page_label=item.name, page_pixmap='worksheet.png')
             self.book.select(w)
 
-    def on_page_changed(self, item):
+#    def on_page_changed(self, item):
 #        if isinstance(item, GraphView):
 #            item.graph.emit('redraw')
-        pass
+#        print >>sys.stderr, item
 
 
     def on_quit(self):

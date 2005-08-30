@@ -1592,9 +1592,15 @@ class Notebook(Widget):
             self._widget.SetPageImage(self._widget.GetPageCount()-1, self.getpixmap(page_pixmap))
         self.pages.append(widget)
 
-    def on_page_changed(self, evt):
-        self.emit('page-changed', self.pages[evt.GetSelection()])
-        evt.Skip()
+#    def on_page_changed(self, evt):
+#        self.emit('page-changed', self.pages[evt.GetSelection()])
+#        evt.Skip()
+
+    def active_page():
+        def fget(self): return self.pages[self._widget.GetSelection()]
+        def fset(self, page): self.SetSelection(self.pages.index(page))
+        return locals()
+    active_page = property(**active_page())
 
     def delete(self, widget):
         self._widget.DeletePage(self.pages.index(widget))

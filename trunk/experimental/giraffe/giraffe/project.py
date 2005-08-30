@@ -128,14 +128,27 @@ class Folder(Item, HasSignals):
                 if row.parent == self.id and row.id in self.project.items and row.id != self.id:
                     yield self.project.items[row.id]
 
+    def ancestors(self):
+        if self == self.project.top:
+            return
+        yield self.parent
+        for f in self.parent.ancestors():
+            yield f
+
     name = wrap_attribute('name')
     _parent = wrap_attribute('parent')
 
     def set_parent(self, parent):
         oldparent = self._parent
         self._parent = parent
+        if isinstance(self.parent, Folder) and self in self.parent.ancestors():
+            print >>sys.stderr, "are you kidding?"
+            self._parent = oldparent
+            return
         if oldparent != '':
             oldparent.emit('modified')
+            print >>sys.stderr, 'foo!', oldparent
+        if isinstance(self.parent, Folder):
             self.parent.emit('modified')
     def get_parent(self):
         return self._parent

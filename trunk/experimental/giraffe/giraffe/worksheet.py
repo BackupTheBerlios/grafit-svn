@@ -2,7 +2,7 @@ import sys
 #print >>sys.stderr, "import worksheet"
 
 from giraffe.signals import HasSignals
-from giraffe.commands import command_from_methods, command_from_methods2
+from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 
 from giraffe.arrays import MkArray, transpose, array
@@ -207,12 +207,26 @@ class Worksheet(Item, HasSignals):
         return self._name
     name = property(get_name, set_name)
 
-    def set_parent(self, parent):
+    def set_parent(self, state, parent):
+        state['new'], state['old'] = parent, self._parent
         oldparent = self._parent
         self._parent = parent
+        self.parent.emit('modified')
         if oldparent != '':
             oldparent.emit('modified')
-            self.parent.emit('modified')
+        else:
+            raise StopCommand
+    def undo_set_parent(self, state):
+        self._parent = state['old']
+        if state['old'] != '':
+            state['old'].emit('modified')
+        state['new'].emit('modified')
+    def redo_set_parent(self, state):
+        self._parent = state['new']
+        if state['old'] != '':
+            state['old'].emit('modified')
+        state['new'].emit('modified')
+    set_parent = command_from_methods2('worksheet/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
     def get_parent(self):
         return self._parent
     parent = property(get_parent, set_parent)

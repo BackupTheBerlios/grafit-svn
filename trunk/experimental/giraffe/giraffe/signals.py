@@ -114,6 +114,9 @@ class HasSignals(object):
             self._signals[signal] = []
         self._signals[signal].append(Slot(slot, keepref))
 
+    def emitter(self, signal, *args, **kwds):
+        return lambda: self.emit(signal, *args, **kwds)
+
     def disconnect(self, signal, slot):
         """
         Disconnect a slot from a signal.

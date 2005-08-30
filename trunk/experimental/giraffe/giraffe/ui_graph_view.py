@@ -89,10 +89,10 @@ class GraphView(gui.Box):
 
         self.toolbar._widget.Realize()
 
-        self.closebar = gui.Toolbar(tbbox, stretch=0)
-        self.closebar.append(gui.Action('Close', 'Close this worksheet', 
-                                        self.on_close, 'close.png'))
-        self.closebar._widget.Realize()
+#        self.closebar = gui.Toolbar(tbbox, stretch=0)
+#        self.closebar.append(gui.Action('Close', 'Close this worksheet', 
+#                                        self.on_close, 'close.png'))
+#        self.closebar._widget.Realize()
 
         self.panel = gui.MainPanel(self)
         self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
