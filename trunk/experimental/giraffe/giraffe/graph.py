@@ -87,6 +87,8 @@ class Graph(Item, HasSignals):
 
         self.axis_title_font_size = 12.
 
+        self.cache = False
+
     default_name_prefix = 'graph'
 
     def get_xmin(self): 
@@ -450,8 +452,17 @@ class Graph(Item, HasSignals):
         else:
             self.last_width, self.last_height = width, height
 
+        if self.cache and self.pixels is not None:
+            glClearColor(252./256, 252./256, 252./256, 1.0)
+            glClear(GL_COLOR_BUFFER_BIT)
+            glRasterPos2d(-self.marginl, -self.marginb)
+            glDrawPixels(self.pixw, self.pixh, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels)
+            return
+
+
         if not self.paint_xor_objects:
             t = time.time()
+            glClearColor(252./256, 252./256, 252./256, 1.0)
             glClear(GL_COLOR_BUFFER_BIT)
 
             # set up clipping
@@ -478,10 +489,12 @@ class Graph(Item, HasSignals):
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
 
-#            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
+            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
+            self.pixw, self.pixh = self.width_pixels, self.height_pixels
 #            print pixels
-#            print >>sys.stderr, time.time()-t, "seconds"
+            print >>sys.stderr, time.time()-t, "seconds"
         else:
+#            glClearColor(252./256, 252./256, 252./256, 1.0)
 #            glClear(GL_COLOR_BUFFER_BIT)
 #            if self.pixels is not None:
 #                glRasterPos2d(-self.marginl, -self.marginb)
@@ -493,6 +506,7 @@ class Graph(Item, HasSignals):
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width=-1, height=-1):
+        t = time.time()
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
@@ -562,6 +576,7 @@ class Graph(Item, HasSignals):
         glTranslated(-1.+2.*self.marginl/self.width_mm, 
                      -1.+2.*self.marginb/self.height_mm, 0)
         glScaled(2./self.width_mm, 2./self.height_mm, 1)
+        print >>sys.stderr, 'R: ', time.time()-t, "seconds"
 
 
     def export_ascii(self, outfile):

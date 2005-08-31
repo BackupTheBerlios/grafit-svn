@@ -1418,7 +1418,7 @@ class Window(Widget):
         self._widget.Bind(wx.EVT_CLOSE, self.on_close)
         icon = wx.EmptyIcon()
         icon.LoadFile(DATADIR+'install/grafit.ico', wx.BITMAP_TYPE_ICO)
-        icon.CopyFromBitmap(wx.Image(DATADIR+'install/grafit16x16.png').ConvertToBitmap())
+        icon.CopyFromBitmap(wx.Image(DATADIR+'install/grafit16.png').ConvertToBitmap())
         self._widget.SetIcon(icon)
 
     title = property(lambda self: self._widget.GetTitle(), lambda self, t: self._widget.SetTitle(t))

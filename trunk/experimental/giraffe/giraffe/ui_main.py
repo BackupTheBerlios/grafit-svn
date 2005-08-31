@@ -111,7 +111,10 @@ class FolderTreeNode(HasSignals):
         return self.folder.name
 
     def get_pixmap(self): 
-        return 'stock_folder.png'
+        if self.folder == self.folder.project.top:
+            return 'grafit16.png'
+        else:
+            return 'stock_folder.png'
 
     def on_modified(self, item=None): 
         self.emit('modified')
