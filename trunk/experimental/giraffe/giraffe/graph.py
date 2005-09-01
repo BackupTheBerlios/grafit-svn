@@ -446,21 +446,25 @@ class Graph(Item, HasSignals):
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
 
+        self.listno = glGenLists(1)
+
     def display(self, width=-1, height=-1):
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
             self.last_width, self.last_height = width, height
 
-        if self.cache and self.pixels is not None:
-            glClearColor(252./256, 252./256, 252./256, 1.0)
-            glClear(GL_COLOR_BUFFER_BIT)
-            glRasterPos2d(-self.marginl, -self.marginb)
-            glDrawPixels(self.pixw, self.pixh, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels)
+        if self.cache:
+            glCallList(self.listno)
+#            glClearColor(252./256, 252./256, 252./256, 1.0)
+#            glClear(GL_COLOR_BUFFER_BIT)
+#            glRasterPos2d(-self.marginl, -self.marginb)
+#            glDrawPixels(self.pixw, self.pixh, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels)
             return
 
 
         if not self.paint_xor_objects:
+            glNewList(self.listno, GL_COMPILE)
             t = time.time()
             glClearColor(252./256, 252./256, 252./256, 1.0)
             glClear(GL_COLOR_BUFFER_BIT)
@@ -470,17 +474,18 @@ class Graph(Item, HasSignals):
             glClipPlane(GL_CLIP_PLANE1, [ -1,  0,  0,  self.plot_width ])
             glClipPlane(GL_CLIP_PLANE2, [  0,  1,  0,  0 ])
             glClipPlane(GL_CLIP_PLANE3, [  0, -1,  0,  self.plot_height ])
-            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, 
-                          GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
+            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                 glEnable(plane)
+            print >>sys.stderr, 'start', time.time()-t, "seconds"
 
             for d in self.datasets:
                 d.paint()
+            print >>sys.stderr, 'datasets', time.time()-t, "seconds"
             for f in self.functions:
                 f.paint()
+            print >>sys.stderr, 'functions', time.time()-t, "seconds"
 
-            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, 
-                          GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
+            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                 glDisable(plane)
 
             self.paint_axes()
@@ -488,11 +493,13 @@ class Graph(Item, HasSignals):
                 o.draw()
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
+            print >>sys.stderr, 'objects', time.time()-t, "seconds"
 
-            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
-            self.pixw, self.pixh = self.width_pixels, self.height_pixels
+#            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
+#            self.pixw, self.pixh = self.width_pixels, self.height_pixels
 #            print pixels
             print >>sys.stderr, time.time()-t, "seconds"
+            glEndList()
         else:
 #            glClearColor(252./256, 252./256, 252./256, 1.0)
 #            glClear(GL_COLOR_BUFFER_BIT)
@@ -506,7 +513,7 @@ class Graph(Item, HasSignals):
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width=-1, height=-1):
-        t = time.time()
+#        t = time.time()
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
@@ -576,7 +583,7 @@ class Graph(Item, HasSignals):
         glTranslated(-1.+2.*self.marginl/self.width_mm, 
                      -1.+2.*self.marginb/self.height_mm, 0)
         glScaled(2./self.width_mm, 2./self.height_mm, 1)
-        print >>sys.stderr, 'R: ', time.time()-t, "seconds"
+#        print >>sys.stderr, 'R: ', time.time()-t, "seconds"
 
 
     def export_ascii(self, outfile):

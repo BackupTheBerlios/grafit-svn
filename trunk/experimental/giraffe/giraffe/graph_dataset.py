@@ -4,6 +4,8 @@ from giraffe.commands import command_from_methods2, command_from_methods
 from giraffe.functions import MFunctionSum
 from giraffe.project import wrap_attribute
 
+import time
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -172,7 +174,9 @@ class DrawWithStyle(HasSignals):
 #            x, y = self.graph.proj(x, y)
             xmin, ymin = self.graph.proj(self.graph.xmin, self.graph.ymin)
             xmax, ymax = self.graph.proj(self.graph.xmax, self.graph.ymax)
+            t = time.time()
             render_symbols(x, y, self.style.symbol, self.style.symbol_size, xmin, xmax, ymin, ymax)
+            print >>sys.stderr, 'symbols', time.time() - t
 
     def paint_lines(self, x, y):
         if len(x) == 0:
@@ -183,10 +187,6 @@ class DrawWithStyle(HasSignals):
 #        x = array([xi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
 #        y = array([yi for (xi, yi) in zip(xx, yy) if xi is not nan and yi is not nan])
 #        x, y = self.graph.proj(x, y)
-        z = zeros(len(x))
-
-        N = len(x)
-
         if self.style.line_style == 'dotted':
             glLineStipple (1, 0x4444)
             glEnable(GL_LINE_STIPPLE)
@@ -197,6 +197,8 @@ class DrawWithStyle(HasSignals):
             glDisable(GL_LINE_STIPPLE)
 
         if self.style.line_type == 'bspline':
+            z = zeros(len(x))
+            N = len(x)
             nurb = gluNewNurbsRenderer()
             gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
             gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)

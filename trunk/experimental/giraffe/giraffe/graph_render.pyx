@@ -2,6 +2,8 @@
 # with the rest in pure python, we can easily handle a few million points 
 # (lines are even faster)
 
+import time
+
 # math functions
 cdef extern from "math.h":
     double sin(double x)
@@ -85,8 +87,9 @@ def render_symbols(_numarray sx, _numarray sy, symbol, int size,
     cdef double *xd, *yd
     cdef int i
     cdef double pi
-    cdef int sym
+    cdef int sym, shape
     cdef double si
+    cdef double x, y
 
     si = size/5.
 
@@ -127,7 +130,7 @@ def render_symbols(_numarray sx, _numarray sy, symbol, int size,
 
 #    pi = 3.14159
 
-    xbucket, ybucket = -1, -1
+#    xbucket, ybucket = -1, -1
 
     xd = <double *>NA_OFFSETDATA(sx)
     yd = <double *>NA_OFFSETDATA(sy)
