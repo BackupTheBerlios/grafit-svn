@@ -176,7 +176,7 @@ class DrawWithStyle(HasSignals):
             xmax, ymax = self.graph.proj(self.graph.xmax, self.graph.ymax)
             t = time.time()
             render_symbols(x, y, self.style.symbol, self.style.symbol_size, xmin, xmax, ymin, ymax)
-            print >>sys.stderr, 'symbols', time.time() - t
+#            print >>sys.stderr, 'symbols', time.time() - t
 
     def paint_lines(self, x, y):
         if len(x) == 0:

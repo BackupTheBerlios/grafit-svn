@@ -86,6 +86,8 @@ class Graph(Item, HasSignals):
         self.textpainter = TextPainter(self)
 
         self.axis_title_font_size = 12.
+        self.pwidth = 120.
+        self.pheight = 100.
 
         self.cache = False
 
@@ -446,7 +448,7 @@ class Graph(Item, HasSignals):
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
 
-        self.listno = glGenLists(1)
+#        self.listno = glGenLists(1)
 
     def display(self, width=-1, height=-1):
         if width == -1 and height == -1:
@@ -454,18 +456,20 @@ class Graph(Item, HasSignals):
         else:
             self.last_width, self.last_height = width, height
 
-        if self.cache:
-            glCallList(self.listno)
+        t = time.time()
+#        if self.cache:
+#            glCallList(self.listno)
 #            glClearColor(252./256, 252./256, 252./256, 1.0)
 #            glClear(GL_COLOR_BUFFER_BIT)
 #            glRasterPos2d(-self.marginl, -self.marginb)
-#            glDrawPixels(self.pixw, self.pixh, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels)
-            return
+#            glRasterPos2d(0, 0)
+#            glDrawPixels(self.pixw, self.pixh, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels),
+#            print >>sys.stderr, time.time()-t, "seconds"
+#            return
 
 
         if not self.paint_xor_objects:
-            glNewList(self.listno, GL_COMPILE)
-            t = time.time()
+#            glNewList(self.listno, GL_COMPILE)
             glClearColor(252./256, 252./256, 252./256, 1.0)
             glClear(GL_COLOR_BUFFER_BIT)
 
@@ -476,14 +480,14 @@ class Graph(Item, HasSignals):
             glClipPlane(GL_CLIP_PLANE3, [  0, -1,  0,  self.plot_height ])
             for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                 glEnable(plane)
-            print >>sys.stderr, 'start', time.time()-t, "seconds"
+#            print >>sys.stderr, 'start', time.time()-t, "seconds"
 
             for d in self.datasets:
                 d.paint()
-            print >>sys.stderr, 'datasets', time.time()-t, "seconds"
+#            print >>sys.stderr, 'datasets', time.time()-t, "seconds"
             for f in self.functions:
                 f.paint()
-            print >>sys.stderr, 'functions', time.time()-t, "seconds"
+#            print >>sys.stderr, 'functions', time.time()-t, "seconds"
 
             for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                 glDisable(plane)
@@ -493,13 +497,15 @@ class Graph(Item, HasSignals):
                 o.draw()
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
-            print >>sys.stderr, 'objects', time.time()-t, "seconds"
+#            print >>sys.stderr, 'objects', time.time()-t, "seconds"
 
+#            glRasterPos2d(-self.marginl, -self.marginb)
+#            glRasterPos2d(0, 0)
 #            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
 #            self.pixw, self.pixh = self.width_pixels, self.height_pixels
 #            print pixels
             print >>sys.stderr, time.time()-t, "seconds"
-            glEndList()
+#            glEndList()
         else:
 #            glClearColor(252./256, 252./256, 252./256, 1.0)
 #            glClear(GL_COLOR_BUFFER_BIT)
@@ -519,12 +525,13 @@ class Graph(Item, HasSignals):
         else:
             self.last_width, self.last_height = width, height
 
-        # resolution (in pixels/mm)
-        # diagonal of the window is 15cm
-        self.res = sqrt(width*width+height*height)/150.
+        # aspect ratio (width/height)
+        self.aspect = self.pwidth/self.pheight 
 
+        # resolution (in pixels/mm)
+        self.res = width / self.pwidth
         displaydpi = 100.
-        self.displayres = displaydpi / 25.4
+        self.displayres = displaydpi / 25.4     # 25.4 = mm/inch
         self.magnification = self.res / self.displayres
 
         # set width and height
@@ -561,12 +568,21 @@ class Graph(Item, HasSignals):
         except ValueError:
             self.tich = 0
 
-
         # set margins 
         self.marginb = tith + self.tich + self.axis_title_font_size*self.magnification/2 + 2 
         self.margint = self.height_mm * 0.03
         self.marginl = titw + self.ticw + self.axis_title_font_size*self.magnification/2 + 2
         self.marginr = self.width_mm * 0.03
+
+        self.plot_width = self.width_mm - self.marginl - self.marginr
+        self.plot_height = self.height_mm - self.margint - self.marginb
+
+        if self.plot_width/self.plot_height > self.aspect:
+            self.marginr += (self.plot_width - self.plot_height*self.aspect)/2
+            self.marginl += (self.plot_width - self.plot_height*self.aspect)/2
+        else:
+            self.margint += (self.plot_height - self.plot_width/self.aspect)/2
+            self.marginb += (self.plot_height - self.plot_width/self.aspect)/2
 
         self.plot_width = self.width_mm - self.marginl - self.marginr
         self.plot_height = self.height_mm - self.margint - self.marginb
