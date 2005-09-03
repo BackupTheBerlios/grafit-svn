@@ -8,6 +8,7 @@ from giraffe.import_ascii import import_ascii
 import wx
 import os
 import tempfile
+import subprocess
 
 from giraffe.signals import HasSignals, global_connect
 from giraffe.commands import command_list, undo, redo
@@ -71,7 +72,7 @@ class ScriptWindow(Shell):#, Pyro.core.ObjBase):
         self.run('from giraffe import *')
 
         self.clear()
-        self.run('print "Welcome to Grafit"')
+        self.run('print "# Welcome to Grafit"')
         self.prompt()
 
     def connect_project(self, project):
@@ -161,12 +162,23 @@ class ProjectExplorer(Box):
             return
         item = self.list.model[item]
         menu = Menu()
-        menu.append(Action('Delete', 'delete', object))#, 'open.png'))
+        menu.append(Action('Delete', 'delete', object, 'stock_delete.png'))
+        menu.append(None)
+        menu.append(Action('Preview PostScript', 'Preview PostScript', 
+                    lambda: self.on_preview_ps(item), 'stock_print-preview.png'))
+        menu.append(Action('Export...', 'Export', object, 'stock_export.png'))
         self.list._widget.PopupMenu(menu._menu)
 
 
     def on_tree_drop_ask(self, item):
         return True
+
+    def on_preview_ps(self, item):
+        d = tempfile.mkdtemp()
+        f = open(d+'/preview.eps', 'wb')
+        item.export_ascii(f)
+        f.close()
+        subprocess.call(['gv', d+'/preview.eps'])
 
     def on_tree_dropped(self, item, format, data):
         print >>sys.stderr, "dropped", item, format, item
@@ -339,11 +351,11 @@ class MainWindow(Window):
             'import-ascii': Action('Import ASCII...', 'Import and ASCII file', 
                                    self.on_import_ascii, 'import_ascii.png', 'Ctrl+I'),
             'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
-                                           self.on_new_worksheet, 'worksheet.png'),
+                                           self.on_new_worksheet, 'new-worksheet.png'),
             'object-new-graph': Action('New Graph', 'Create a new worksheet', 
-                                       self.on_new_graph, 'graph.png'),
+                                       self.on_new_graph, 'new-graph.png'),
             'object-new-folder': Action('New Folder', 'Create a new worksheet', 
-                                        self.on_new_folder, 'stock_folder.png'),
+                                        self.on_new_folder, 'new-folder.png'),
             'functions': Action('Functions...', '', object),
             'filters': Action('Filters...', '', object),
             'close-active-page': Action('Close', 'Close this worksheet',
@@ -420,6 +432,10 @@ class MainWindow(Window):
 #        command_list.clear()
 
     def on_item_activated(self, item):
+#        w = Window()
+#        { Graph: GraphView, Worksheet: WorksheetView }[type(item)](w, item)
+#        w.show()
+#        return
         if isinstance(item, Graph):
             for view in [v for v in self.book.pages if hasattr(v, 'graph')]:
                 if item == view.graph:

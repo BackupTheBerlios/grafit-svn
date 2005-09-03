@@ -16,6 +16,10 @@ from giraffe.graph_text import FONTFILE, TextPainter, encodeTTFasPS
 from giraffe.graph_render import *
 from matplotlib.ft2font import FT2Font
 
+import PIL.Image
+import PIL.ImageFont
+import PIL.ImageDraw
+
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         Item.__init__(self, project, name, parent, location)
@@ -457,15 +461,16 @@ class Graph(Item, HasSignals):
             self.last_width, self.last_height = width, height
 
         t = time.time()
-#        if self.cache:
+        if self.cache:
 #            glCallList(self.listno)
-#            glClearColor(252./256, 252./256, 252./256, 1.0)
-#            glClear(GL_COLOR_BUFFER_BIT)
-#            glRasterPos2d(-self.marginl, -self.marginb)
+            glClearColor(252./256, 252./256, 252./256, 1.0)
+            glClear(GL_COLOR_BUFFER_BIT)
+            glRasterPos2d(-self.marginl+1, -self.marginb+1)
 #            glRasterPos2d(0, 0)
-#            glDrawPixels(self.pixw, self.pixh, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels),
+            image = self.image.resize((width, height), PIL.Image.ANTIALIAS)
+            glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, image.tostring()),
 #            print >>sys.stderr, time.time()-t, "seconds"
-#            return
+            return
 
 
         if not self.paint_xor_objects:
@@ -500,9 +505,10 @@ class Graph(Item, HasSignals):
 #            print >>sys.stderr, 'objects', time.time()-t, "seconds"
 
 #            glRasterPos2d(-self.marginl, -self.marginb)
-#            glRasterPos2d(0, 0)
-#            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
-#            self.pixw, self.pixh = self.width_pixels, self.height_pixels
+            glRasterPos2d(0, 0)
+            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
+            self.pixw, self.pixh = self.width_pixels, self.height_pixels
+            self.image = PIL.Image.fromstring('RGBA', (self.pixw, self.pixh), self.pixels)
 #            print pixels
             print >>sys.stderr, time.time()-t, "seconds"
 #            glEndList()
@@ -529,7 +535,7 @@ class Graph(Item, HasSignals):
         self.aspect = self.pwidth/self.pheight 
 
         # resolution (in pixels/mm)
-        self.res = width / self.pwidth
+        self.res = min(width/self.pwidth, height/self.pheight)
         displaydpi = 100.
         self.displayres = displaydpi / 25.4     # 25.4 = mm/inch
         self.magnification = self.res / self.displayres

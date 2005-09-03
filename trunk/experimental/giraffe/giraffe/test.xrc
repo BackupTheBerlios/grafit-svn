@@ -30,6 +30,8 @@
                   
                   
                   
+                  
+                  
                   <label>X</label>
             </object>
             
@@ -49,6 +51,8 @@
                 
                 
                 
+                
+                
                 <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
@@ -60,6 +64,8 @@
               <object class="sizeritem">
                 <object class="wxTextCtrl" name="auto(_x1)">
                     
+                  
+                  
                   
                   
                   
@@ -79,6 +85,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -109,6 +117,8 @@
                   
                   
                   
+                  
+                  
                   <label>Y</label>
             </object>
             
@@ -124,6 +134,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -145,6 +157,8 @@
                   
                   
                   
+                  
+                  
                   <style>wxTE_PROCESS_ENTER</style>
                   </object>
                   
@@ -152,6 +166,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -175,6 +191,8 @@
             
             
             
+            
+            
             <flag>wxEXPAND|wxGROW</flag>
       </object>
         </object>
@@ -189,6 +207,8 @@
           
           
           
+        
+        
         
         
         
@@ -221,6 +241,8 @@
                   
                   
                   
+                  
+                  
                   <label>X</label>
             </object>
             
@@ -240,6 +262,8 @@
                 
                 
                 
+                
+                
                 <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
@@ -255,7 +279,11 @@
                   
                   
                   
+                  
+                  
                   <size>120, -1</size>
+                  
+                  
                   
                   
                   
@@ -274,6 +302,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -304,6 +334,8 @@
                   
                   
                   
+                  
+                  
                   <label>Y</label>
             </object>
             
@@ -319,6 +351,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -340,6 +374,8 @@
                   
                   
                   
+                  
+                  
                   <style>wxTE_PROCESS_ENTER</style>
                   </object>
                   
@@ -347,6 +383,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -370,6 +408,8 @@
             
             
             
+            
+            
             <flag>wxEXPAND|wxGROW</flag>
       </object>
         </object>
@@ -388,9 +428,13 @@
         
         
         
+        
+        
         <flag>wxEXPAND|wxGROW</flag>
         </object>
       <object class="spacer">
+        
+        
         
         
         
@@ -404,10 +448,14 @@
           
           
           
+          
+          
           <label>Close</label>
           </object>
           
           
+        
+        
         
         
         
@@ -431,9 +479,13 @@
           
           
               
+              
+              
               <size>180, 150</size>
           
           
+              
+              
               
               <style>wxTE_MULTILINE</style>
           </object>
@@ -449,13 +501,19 @@
         
         
             
+            
+            
             <option>1</option>
         
         
             
+            
+            
             <flag>wxEXPAND</flag>
       </object>
         </object>
+        
+        
         
         
         <flag>wxEXPAND|wxGROW</flag>
@@ -486,6 +544,8 @@
                   
                   
                   
+                  
+                  
                   <label>X</label>
             </object>
             
@@ -505,6 +565,8 @@
                 
                 
                 
+                
+                
                 <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
@@ -516,6 +578,8 @@
               <object class="sizeritem">
                 <object class="wxTextCtrl" name="auto(_x1)">
                     
+                  
+                  
                   
                   
                   
@@ -535,6 +599,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -565,6 +631,8 @@
                   
                   
                   
+                  
+                  
                   <label>Y</label>
             </object>
             
@@ -580,6 +648,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -601,6 +671,8 @@
                   
                   
                   
+                  
+                  
                   <style>wxTE_PROCESS_ENTER</style>
                   </object>
                   
@@ -608,6 +680,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -631,6 +705,8 @@
             
             
             
+            
+            
             <flag>wxEXPAND|wxGROW</flag>
       </object>
         </object>
@@ -649,9 +725,13 @@
         
         
         
+        
+        
         <flag>wxEXPAND|wxGROW</flag>
         </object>
       <object class="spacer">
+        
+        
         
         
         
@@ -661,6 +741,8 @@
         <object class="wxButton" name="wxID_CLOSE">
             
             
+          
+          
           
           
           
@@ -675,14 +757,16 @@
         
         
         
+        
+        
         <flag>wxEXPAND</flag>
       </object>
       <orient>wxVERTICAL</orient>
     </object>
     <style>wxDEFAULT_DIALOG_STYLE|wxTHICK_FRAME</style>
   </object>
-  <object class="wxDialog" name="edit(fitproperties)">
-    <title></title>
+  <object class="wxDialog" name="edit(fitoptions)">
+    <title>Fit Options</title>
     <object class="wxBoxSizer">
       <object class="sizeritem">
         <object class="wxStaticBoxSizer">
@@ -710,6 +794,8 @@
                   
                   
                   
+                  
+                  
                   <label>Max. iterations</label>
             </object>
             
@@ -729,6 +815,8 @@
                 
                 
                 
+                
+                
                 <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
@@ -740,6 +828,8 @@
               <object class="sizeritem">
                 <object class="wxTextCtrl" name="auto(_x1)">
                     
+                  
+                  
                   
                   
                   
@@ -759,6 +849,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -790,14 +882,20 @@
             
             
             
+            
+            
             <flag>wxEXPAND|wxGROW</flag>
       </object>
         </object>
         
         
+        
+        
         <flag>wxEXPAND|wxGROW</flag>
       </object>
       <object class="spacer">
+        
+        
         
         
         <size>0,5</size>
@@ -828,6 +926,8 @@
                   
                   
                   
+                  
+                  
                   <label>Weighting method</label>
             </object>
             
@@ -847,6 +947,8 @@
                 
                 
                 
+                
+                
                 <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
@@ -858,6 +960,8 @@
               <object class="sizeritem">
                 <object class="wxChoice" name="auto(_x1)">
                     
+                  
+                  
                   
                   
                   
@@ -882,6 +986,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -913,14 +1019,20 @@
             
             
             
+            
+            
             <flag>wxEXPAND|wxGROW</flag>
       </object>
         </object>
         
         
+        
+        
         <flag>wxEXPAND|wxGROW</flag>
       </object>
       <object class="spacer">
+        
+        
         
         
         <size>0,5</size>
@@ -951,6 +1063,8 @@
                   
                   
                   
+                  
+                  
                   <label>Worksheet</label>
             </object>
             
@@ -970,6 +1084,8 @@
                 
                 
                 
+                
+                
                 <flag>wxALIGN_CENTRE_VERTICAL</flag>
             
                   
@@ -981,6 +1097,8 @@
               <object class="sizeritem">
                 <object class="wxTextCtrl" name="auto(_x1)">
                     
+                  
+                  
                   
                   
                   
@@ -1000,6 +1118,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -1030,6 +1150,8 @@
                   
                   
                   
+                  
+                  
                   <label>Extra properties</label>
             </object>
             
@@ -1045,6 +1167,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -1066,6 +1190,8 @@
                   
                   
                   
+                  
+                  
                   <style>wxTE_PROCESS_ENTER</style>
                   </object>
                   
@@ -1073,6 +1199,8 @@
                   
                   
                   
+                
+                
                 
                 
                 
@@ -1096,14 +1224,20 @@
             
             
             
+            
+            
             <flag>wxEXPAND|wxGROW</flag>
       </object>
         </object>
         
         
+        
+        
         <flag>wxEXPAND|wxGROW</flag>
       </object>
       <object class="spacer">
+        
+        
         
         
         
@@ -1117,10 +1251,14 @@
           
           
           
+          
+          
           <label>Close</label>
           </object>
           
           
+        
+        
         
         
         
@@ -1131,8 +1269,8 @@
     </object>
     <style>wxDEFAULT_DIALOG_STYLE|wxTHICK_FRAME</style>
   </object>
-  <object class="wxDialog" name="DIALOG1">
-    <title></title>
+  <object class="wxDialog" name="errordlg">
+    <title>An error has occured</title>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
@@ -1140,11 +1278,15 @@
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
             <object class="wxStaticBitmap">
+              
+              
               <bitmap>../data/images/vogel.png</bitmap>
             </object>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
+              
+              
               <label>This is the text of the error</label>
             </object>
           </object>
@@ -1154,9 +1296,87 @@
         <object class="wxBoxSizer">
           <orient>wxVERTICAL</orient>
           <object class="sizeritem">
-            <object class="wxButton" name="wx.ID_OK">
-              <label>OK</label>
+            <object class="wxButton" name="wxID_OK">
+              
+              
+              <label></label>
             </object>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+  <object class="wxDialog" name="DIALOG1">
+    <title>Options</title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxNotebook">
+          <object class="notebookpage">
+            <label>General</label>
+            <object class="wxPanel"/>
+          </object>
+        </object>
+        
+        <option>1</option>
+        
+        <flag>wxEXPAND|wxGROW</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_CLOSE">
+              
+              <label></label>
+            </object>
+          </object>
+          <orient>wxHORIZONTAL</orient>
+        </object>
+      </object>
+    </object>
+    <style>wxTHICK_FRAME</style>
+  </object>
+  <object class="wxDialog" name="DIALOG1">
+    <title>About Grafit</title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxStaticBitmap">
+              <bitmap>../install/grafit128.png</bitmap>
+            </object>
+          </object>
+        </object>
+        <flag>wxALIGN_CENTRE</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxStaticBitmap">
+              <bitmap>../data/images/PythonPoweredSmall.gif</bitmap>
+            </object>
+            <flag>wxALIGN_CENTRE</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticBitmap">
+              <bitmap>../data/images/osi-certified-72x60.png</bitmap>
+            </object>
+            <flag>wxALIGN_CENTRE</flag>
+          </object>
+        </object>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_CLOSE">
+              <label></label>
+            </object>
+            <option>1</option>
+            <flag></flag>
           </object>
         </object>
       </object>
