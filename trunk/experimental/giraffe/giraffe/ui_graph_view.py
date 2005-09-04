@@ -81,6 +81,7 @@ class GraphView(gui.Box):
         self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
         self.scrolled = gui.Scrolled(self.box)
         self.glwidget = gui.OpenGLWidget(self.scrolled)
+        self.glwidget.min_size = (400, 200)
 
         self.glwidget.connect('initialize-gl', self.graph.init)
         self.glwidget.connect('resize-gl', self.graph.reshape)
