@@ -38,7 +38,7 @@ class LegendModel(HasSignals):
         self.emit('modified')
 
     def get(self, row, column): return str(self[row])
-    def get_image(self, row): return None
+    def get_image(self, row): return 'folder.png'
     def __len__(self): return len(self.graph.datasets) #+ len(self.graph.functions)
     def __getitem__(self, row): 
 #        if row < len(self.graph.datasets):

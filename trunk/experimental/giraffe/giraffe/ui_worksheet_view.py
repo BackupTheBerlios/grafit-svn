@@ -48,13 +48,32 @@ class WorksheetView(gui.Box):
                                        self.on_close, 'close.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
+        self.table.connect('right-clicked', self.on_right_clicked)
 
         self.object = self.worksheet
 
     def on_new_column(self):
         self.worksheet[self.worksheet.suggest_column_name()] = [nan]*20
-        pass
+
+    def on_right_clicked(self, row, col):
+        menu = gui.Menu()
+        menu.append(gui.Action('Delete', 'delete', self.on_set_value, 'stock_delete.png'))
+        self.clickcell = row, col
+        self.table._widget.PopupMenu(menu._menu)
 
     def on_close(self):
         self.parent.delete(self)
-#
+
+    def on_set_value(self):
+        row, col = self.clickcell
+        dlg = gui.Dialog(None)
+        box = gui.Box(dlg, 'vertical', stretch=1)
+        editor = gui.PythonEditor(box)
+        close = gui.Button(box, 'Close', stretch=0)
+        close.connect('clicked', dlg.close)
+        dlg._widget.ShowModal()
+        Worksheet.record = set()
+        self.worksheet[col] = self.worksheet.evaluate(editor.text)
+        print >>sys.stderr, Worksheet.record
+        Worksheet.record = None
+        dlg._widget.Destroy()

@@ -15,12 +15,31 @@ class Column(MkArray, HasSignals):
         self.worksheet = worksheet
         self.ind = ind
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
+        self.dependencies = set()
 
     def set_name(self, name):
         self.data.name = name.encode('utf-8')
     def get_name(self):
         return self.data.name.decode('utf-8')
     name = property(get_name, set_name)
+
+    def set_expr(self, expr):
+        self.data.expr = expr.encode('utf-8')
+        self.worksheet.record = set()
+        self.worksheet.evaluate(expr)
+        for column in self.worksheet.record - self.dependencies:
+            column.connect('data-changed', self.calculate)
+        for column in self.dependencies - self.worksheet.record:
+            column.disconnect('data-changed', self.calculate)
+        self.dependencies = self.worksheet.record
+        self.worksheet.record = None
+        self.calculate()
+    def get_expr(self):
+        return self.data.expr.decode('utf-8')
+    expr = property(get_expr, set_expr)
+
+    def calculate(self):
+        self[:] = self.worksheet.evaluate(self.expr)
 
     def set_id(self, id):
         self.data.id = id
@@ -60,10 +79,26 @@ class Worksheet(Item, HasSignals):
 
         self.__attr = True
 
+    record = None
+
     def evaluate(self, expression):
+        if expression == '':
+            return []
         project = self.project
         worksheet = self
-        namespace = {}
+
+        class funnydict(dict):
+            def __init__(self, recordkeys, *args, **kwds):
+                dict.__init__(self, *args, **kwds)
+                self.recordset = set()
+                self.recordkeys = recordkeys
+
+            def __getitem__(self, key):
+                if key in self.recordkeys:
+                    self.recordset.add(key)
+                return dict.__getitem__(self, key)
+
+        namespace = funnydict((c.name for c in worksheet.columns)) 
 
         namespace.update(arrays.__dict__)
 
@@ -75,8 +110,10 @@ class Worksheet(Item, HasSignals):
         namespace.update(dict([(c.name, c) for c in worksheet.columns]))
         namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
 
-        return eval(expression, namespace)
-
+        result = eval(expression, namespace)
+        for name in namespace.recordset:
+            self[name]
+        return result
 
     def __getattr__(self, name):
         if name in self.column_names:
@@ -173,7 +210,10 @@ class Worksheet(Item, HasSignals):
         if isinstance(key, int):
             return self.columns[key]
         elif isinstance(key, basestring) and key in self.column_names:
-            return self.columns[self.column_names.index(key)]
+            column = self.columns[self.column_names.index(key)]
+            if self.record is not None:
+                self.record.add(column)
+            return column
         else:
             raise IndexError
 

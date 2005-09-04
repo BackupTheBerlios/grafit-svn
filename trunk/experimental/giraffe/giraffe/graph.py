@@ -510,7 +510,7 @@ class Graph(Item, HasSignals):
             self.pixw, self.pixh = self.width_pixels, self.height_pixels
             self.image = PIL.Image.fromstring('RGBA', (self.pixw, self.pixh), self.pixels)
 #            print pixels
-            print >>sys.stderr, time.time()-t, "seconds"
+#            print >>sys.stderr, time.time()-t, "seconds"
 #            glEndList()
         else:
 #            glClearColor(252./256, 252./256, 252./256, 1.0)
@@ -693,6 +693,16 @@ class Graph(Item, HasSignals):
             self.cross.show(*self.mouse_to_ident(x, y))
             self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
+        elif self.mode == 'd-reader':
+            x, y = self.mouse_to_real(x, y)
+            closest = [(d, min((d.x-x)*(d.x-x)+(d.y-y)*(d.y-y))) for d in self.datasets]
+            dataset = closest[[c[1] for c in closest].index(min(c[1] for c in closest))][0]
+            print dataset
+
+            self.paint_xor_objects = True
+            self.cross.show(*self.mouse_to_ident(x, y))
+            self.emit('redraw')
+            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
         elif self.mode == 'arrow':
             if button == 1:
                 x, y = self.mouse_to_ident(x, y)
@@ -783,6 +793,10 @@ class Graph(Item, HasSignals):
             self.cross.hide()
             self.emit('redraw')
             self.paint_xor_objects = False
+        elif self.mode == 'd-reader':
+            self.cross.hide()
+            self.emit('redraw')
+            self.paint_xor_objects = False
 
         elif self.mode == 'arrow':
             if button == 1:
@@ -799,7 +813,7 @@ class Graph(Item, HasSignals):
         if self.mode == 'zoom' and dragging and hasattr(self, 'ix'):
             self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
             self.emit('redraw')
-        elif self.mode in ['range', 'd-reader'] and dragging:
+        elif self.mode == 'range' and dragging:
             self.button_press(x, y)
         elif self.mode == 'hand' and dragging:
             if self.selected_function is not None:
@@ -807,6 +821,10 @@ class Graph(Item, HasSignals):
                 self._movefunc.move(*self.mouse_to_real(x, y))
                 self.emit('redraw')
         elif self.mode == 's-reader' and dragging:
+            self.cross.move(*self.mouse_to_ident(x, y))
+            self.emit('redraw')
+            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
+        elif self.mode == 'd-reader' and dragging:
             self.cross.move(*self.mouse_to_ident(x, y))
             self.emit('redraw')
             self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
