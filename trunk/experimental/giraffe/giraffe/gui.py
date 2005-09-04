@@ -493,8 +493,8 @@ class Checkbox(Widget):
     """ A a labelled box which by default is either on (checkmark is visible) 
         or off (no checkmark). 
     """
-    def __init__(self, parent, **place):
-        self._widget = wx.CheckBox(parent._widget, -1)
+    def __init__(self, parent, label='', **place):
+        self._widget = wx.CheckBox(parent._widget, -1, label)
         Widget.__init__(self, parent, **place)
 
         self._widget.Bind(wx.EVT_CHECKBOX, self.on_event)
@@ -1738,6 +1738,7 @@ class _xGrid(wx.grid.Grid):
         self.SetDefaultRowSize(20, False)
 
         table = _xTableData(data)
+        data.connect('modified', self.set_attrs)
 
         # The second parameter means that the grid is to take ownership of the
         # table and will destroy it when done.  Otherwise you would need to keep
@@ -1745,11 +1746,19 @@ class _xGrid(wx.grid.Grid):
         self.SetTable(table, True)
 
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnRightDown)  
+        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.OnDblClick)  
 #        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)    
         self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.OnRangeSelect)
         self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.OnLabelLeftDClick)
+        self.set_attrs()
+
+    def set_attrs(self):
+        for c in range(self.GetTable().data.get_n_columns()):
+            attr = wx.grid.GridCellAttr()
+            attr.SetBackgroundColour(self.GetTable().data.get_background_color(c))
+            self.SetColAttr(c, attr)
 
     def OnLabelLeftDClick(self, evt):
         evt.Skip()
@@ -1787,6 +1796,10 @@ class _xGrid(wx.grid.Grid):
 
     def OnRightDown(self, event):
         self.table.emit('right-clicked', event.GetRow(), event.GetCol())
+        event.Skip()
+
+    def OnDblClick(self, event):
+        self.table.emit('double-clicked', event.GetRow(), event.GetCol())
         event.Skip()
 
 

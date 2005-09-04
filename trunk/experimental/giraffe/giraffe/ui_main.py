@@ -358,6 +358,7 @@ class MainWindow(Window):
                                         self.on_new_folder, 'new-folder.png'),
             'functions': Action('Functions...', '', object),
             'filters': Action('Filters...', '', object),
+            'run-script': Action('Run script...', '', self.on_run_script),
             'close-active-page': Action('Close', 'Close this worksheet',
                                         lambda: self.book.active_page.on_close(), 'close.png'),
             None: None
@@ -370,7 +371,7 @@ class MainWindow(Window):
                        'file-quit']),
             ('&Edit', ['edit-undo', 'edit-redo', None, 
                        'edit-copy']),
-            ('&Tools', ['functions', 'filters']),
+            ('&Tools', ['functions', 'filters', None, 'run-script']),
             ('&Help', []),
         ]:
             menu = Menu(self.menubar, title)
@@ -481,6 +482,19 @@ class MainWindow(Window):
         ws = self.project.new(Worksheet, None, self.project.here)
         ws.a = [1,2,3]
         ws.other = 2*ws.a
+
+    def on_run_script(self):
+        try:
+            dlg = wx.FileDialog(self._widget, message="Choose a file", defaultDir=os.getcwd(), 
+                                defaultFile="", wildcard="Python source files|*.py|All files|*.*", 
+                                style=wx.OPEN | wx.CHANGE_DIR)
+            if dlg.ShowModal() == wx.ID_OK:
+                path = dlg.GetPaths()[0]
+                self.shell.run('execfile("%s")' % path)
+            dlg.Destroy()
+        except Cancel:
+            return
+
 
     def on_project_open(self):
         try:

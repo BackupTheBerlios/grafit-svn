@@ -10,23 +10,6 @@ from giraffe.arrays import nan
 
 from settings import DATADIR
 
-def intersection (ml):
-    """Intersection of lists"""
-    tmp = {}
-    for l in ml:
-        for x in l:
-            z = tmp.get(x, [])
-            z.append(1)
-            tmp[x] = z
-    rslt = []
-    for k,v in tmp.items():
-        if len(v) == len(ml):
-            rslt.append(k)
-    return rslt
-
-def all_the_same(sequence):
-    return len(sets.Set(sequence)) == 1
-
 class LegendModel(HasSignals):
     def __init__(self, graph):
         self.graph = graph
@@ -96,7 +79,8 @@ class GraphView(gui.Box):
 
         self.panel = gui.MainPanel(self)
         self.box = gui.Splitter(self.panel, 'vertical', proportion=0.8)
-        self.glwidget = gui.OpenGLWidget(self.box)
+        self.scrolled = gui.Scrolled(self.box)
+        self.glwidget = gui.OpenGLWidget(self.scrolled)
 
         self.glwidget.connect('initialize-gl', self.graph.init)
         self.glwidget.connect('resize-gl', self.graph.reshape)
@@ -354,7 +338,8 @@ class GraphStylePanel(gui.Box):
             if self.multi.value == 0: # identical
                 self.show_checks(True)
                 for control in self.settings_widgets:
-                    control.check.state = all_the_same([getattr(d.style, control.prop) for d in datasets])
+                    control.check.state = len(set(getattr(d.style, control.prop) 
+                                              for d in datasets)) == 1
                     control.active = control.label.active = control.check.state
 
             elif self.multi.value == 1: # series
@@ -430,7 +415,7 @@ class ColumnListModel(HasSignals):
 
     def set_worksheets(self, worksheets):
 #        self.worksheets = worksheets
-        self.colnames = intersection([w.column_names for w in worksheets])
+        self.colnames = list(set(w.column_names for w in worksheets))
         self.emit('modified')
 
     def get(self, row, column): return self.colnames[row]
@@ -518,7 +503,16 @@ class GraphFunctionsPanel(gui.Box):
         self.set_function(func)
 
     def do_configure(self):
-        pass
+        from util import Bunch
+        class fitoptions(Bunch, HasSignals):
+            pass
+        b = fitoptions(wsheet='', extra='', weighting=0, maxiter=50, sstol='0', partol='0')
+        from prop import Editor
+        e = Editor(self, 'test.xrc', b)
+        b.emit('modified')
+        e._widget.ShowModal()
+        print b.__dict__
+
 
     def do_fit(self):
         data = self.graph.selected_datasets[0]
