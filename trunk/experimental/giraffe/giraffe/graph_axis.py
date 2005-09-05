@@ -4,6 +4,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from giraffe.graph_render import *
 
+from __builtin__ import round
+
 class Grid(object):
     def __init__(self, orientation, plot):
         assert orientation in ['horizontal', 'vertical']
@@ -112,7 +114,7 @@ class Axis(object):
 #        self.paint_title()
 
     def paint_title(self):
-        facesize = self.plot.axis_title_font_size * self.plot.magnification
+        facesize = round(self.plot.axis_title_font_size * self.plot.magnification)
         if self.position == 'bottom':
             self.plot.textpainter.render_text(self.plot.xtitle, facesize, 
                                               self.plot.plot_width/2, -facesize/2.,
@@ -151,7 +153,7 @@ class Axis(object):
         return r'$%s$' % st
 
     def paint_text(self):
-        facesize = self.plot.axis_title_font_size * self.plot.magnification
+        facesize = round(self.plot.axis_title_font_size * self.plot.magnification)
 
         if self.position == 'bottom':
             tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
@@ -164,6 +166,7 @@ class Axis(object):
                 st = self.totex(y)
                 _, ym = self.plot.proj(0., y)
                 self.plot.textpainter.render_text(st, facesize, -2, ym, 'right', 'center')
+
  
     def tics(self, fr, to):
         if (self.position in ['right', 'left'] and self.plot.ytype == 'log') or\

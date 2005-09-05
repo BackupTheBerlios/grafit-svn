@@ -10,6 +10,7 @@ import giraffe.thirdparty.mathtextg as mathtext
 from giraffe.settings import DATADIR
 from giraffe.arrays import *
 from OpenGL.GL import *
+import time
 
 from graph_render import *
 
@@ -111,10 +112,10 @@ class TextPainter(object):
     def render_text_chunk_tex(self, text, size, orientation='h'):
         """Render a text chunk using mathtext"""
         if self.plot.ps:
-            w, h, _, pswriter = mathtext.math_parse_s_ps(text, 72, size)
-            _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 72, size) #FIXME
+            w, h, _, pswriter = mathtext.math_parse_s_ps(text, 100, size)
+            _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 100, size) #FIXME
         else:
-            w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 72, size)
+            w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 100, size)
 #        print >>sys.stderr, w, h, origin, text, self.plot.res, self.plot.ps
         if orientation == 'v': 
             ww, hh, angle = h, w, 90
@@ -128,7 +129,6 @@ class TextPainter(object):
                        (self.plot.marginb+y)*self.plot.res, angle, text)
                 self.plot.pstext.append(ps)
             else:
-                glRasterPos2d(x, y)
                 w, h, imgstr = fonts[0].image_as_str()
                 N = w*h
                 Xall = zeros((N,len(fonts)), typecode=UInt8)
@@ -149,6 +149,7 @@ class TextPainter(object):
                 pa[:,:,2] = int(rgb[2]*255)
                 pa[:,:,3] = Xs[::-1]
 
+                glRasterPos2d(x, y)
                 glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
 
         return ww, hh, origin, renderer
@@ -183,6 +184,8 @@ class TextPainter(object):
         if text == '':
             return 0, 0
 
+        t = time.time()
+
         # split text into chunks
         chunks = cut(text, '$')
 
@@ -192,7 +195,7 @@ class TextPainter(object):
         origins = []
         for chunk, tex in chunks:
             if tex:
-                w, h, origin, renderer = self.render_text_chunk_tex('$'+chunk+'$', int(size*1.3), orientation)
+                w, h, origin, renderer = self.render_text_chunk_tex('$'+chunk+'$', size, orientation)
                 if w!=0 and h!=0:
                     renderers.append(renderer)
                     widths.append(w)
@@ -252,6 +255,8 @@ class TextPainter(object):
         elif align_y == 'center': 
             y -= (totalh/2)/self.plot.res
 
+#        print >>sys.stderr, "prepare, ", time.time()-t, 
+
         # render chunks
         if orientation == 'h':
             for rend, pos, off in zip(renderers, [0]+list(cumsum(widths)/self.plot.res)[:-1], offsets):
@@ -259,6 +264,7 @@ class TextPainter(object):
         elif orientation == 'v':
             for rend, pos, off in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1], offsets):
                 rend(x-off/self.plot.res, y+pos)
+#        print >>sys.stderr, "render, ", time.time()-t
 
 
 def encodeTTFasPS(fontfile):
