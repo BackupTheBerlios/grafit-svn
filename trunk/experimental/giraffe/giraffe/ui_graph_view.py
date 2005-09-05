@@ -7,8 +7,24 @@ from giraffe.signals import HasSignals
 
 from giraffe import gui
 from giraffe.arrays import nan
+from giraffe.util import flatten
 
 from settings import DATADIR
+
+def intersection (ml):
+    """Intersection of lists"""
+    tmp = {}
+    for l in ml:
+        for x in l:
+            z = tmp.get(x, [])
+            z.append(1)
+            tmp[x] = z
+    rslt = []
+    for k,v in tmp.items():
+        if len(v) == len(ml):
+            rslt.append(k)
+    return rslt
+
 
 class LegendModel(HasSignals):
     def __init__(self, graph):
@@ -21,7 +37,7 @@ class LegendModel(HasSignals):
         self.emit('modified')
 
     def get(self, row, column): return str(self[row])
-    def get_image(self, row): return 'folder.png'
+    def get_image(self, row): return 'stock_folder.png'
     def __len__(self): return len(self.graph.datasets) #+ len(self.graph.functions)
     def __getitem__(self, row): 
 #        if row < len(self.graph.datasets):
@@ -416,7 +432,7 @@ class ColumnListModel(HasSignals):
 
     def set_worksheets(self, worksheets):
 #        self.worksheets = worksheets
-        self.colnames = list(set(w.column_names for w in worksheets))
+        self.colnames = intersection([w.column_names for w in worksheets])
         self.emit('modified')
 
     def get(self, row, column): return self.colnames[row]

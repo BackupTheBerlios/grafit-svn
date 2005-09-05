@@ -67,7 +67,7 @@ class Axis(object):
             return 10**data
         return data
 
-    def paint(self):
+    def paint_frame(self):
         glColor3d(0.0, 0.0, 0.0) # axis color
 
         # Axis lines
@@ -108,8 +108,8 @@ class Axis(object):
                 glVertex3d(1, y, 0)
             glEnd()
 
-        self.paint_text()
-        self.paint_title()
+#        self.paint_text()
+#        self.paint_title()
 
     def paint_title(self):
         facesize = self.plot.axis_title_font_size * self.plot.magnification
@@ -173,11 +173,14 @@ class Axis(object):
             return self.lintics(fr, to)
 
 
-    def logtics(self, fr, to):
+    def logtics(self, fr, to, cache={}):
         if fr <= 0 or to <= 0:
             return [], []
         if fr == to:
             return [fr], []
+
+        if (fr, to) in cache:
+            return cache[fr, to]
 
         bottom = floor(log10(fr))
         top = ceil(log10(to)) + 1
@@ -190,12 +193,16 @@ class Axis(object):
             major = array([n for n in major if fr<=n<=to])
             l = len(major)
             r += 1
+        cache[fr, to] = major, minor
         return major, minor
 
-    def lintics(self, fr, to):
+    def lintics(self, fr, to, cache={}):
         # 3-8 major tics
         if fr == to:
             return [fr], []
+
+        if (fr, to) in cache:
+            return cache[fr, to]
 
         exponent = floor(log10(to-fr)) - 1
 
@@ -214,6 +221,7 @@ class Axis(object):
                         minor.extend(arange(n, n+interval, interval/5))
                     rng = array([n for n in rng if fr<=n<=to])
                     minor = array([n for n in minor if fr<=n<=to])
+                    cache[fr, to] = rng, minor
                     return rng, minor
 
         print "cannot tick", fr, to, len(rng)
