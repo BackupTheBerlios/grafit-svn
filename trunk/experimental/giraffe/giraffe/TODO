@@ -1,4 +1,12 @@
-immediate
+bugs
+----
+* order of columns in graph data panel is strange
+* make setting column.expr a command
+* make caching w/ display lists work
+* show/hide xorobjects correctly
+* text does not align correctly
+
+features
 ---------
 * context menu on project explorer
 * context menu on graph

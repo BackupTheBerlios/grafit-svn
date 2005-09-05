@@ -92,22 +92,21 @@ class Button(Widget, wx.Button):
         wx.Button.__init__(self, place[0], -1, text)
         Widget.__init__(self, place)
 
-        self.Bind(wx.EVT_LEFT_DCLICK, self.OnMouse)
-        self.Bind(wx.EVT_BUTTON, self.on_clicked)
+        self.Bind(wx.EVT_LEFT_DCLICK, self.emitter('double-clicked'), True)
+        self.Bind(wx.EVT_BUTTON, self.emitter('clicked'), True)
 
-    def OnMouse(self, evt):
-        self.emit('double-clicked')
+#    def on_toggled(self, evt):
+#        self.emit('toggled', evt.IsChecked())
 
-    def on_clicked(self, evt):
-        self.emit('clicked')
+    def state():
+        def fget(self): return self.GetValue()
+        def fset(self, state): self.SetValue(state)
+        return locals()
+    state = property(**state())
 
-    def on_toggled(self, evt):
-        self.emit('toggled', evt.IsChecked())
-
-    def get_state(self):
-        return self.GetValue()
-    def set_state(self, state):
-        self.SetValue(state)
-    state = property(get_state, set_state)
-
-    text = property(lambda self: self.GetLabel(), lambda self, t: self.SetLabel(t))
+    def text():
+        doc = "Text to display inside the button"
+        def fget(self): return self.GetLabel()
+        def fset(self, text): self.SetLabel(text)
+        return locals()
+    text = property(**text())
