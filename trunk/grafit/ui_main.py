@@ -1,26 +1,26 @@
 import sys
 print >>sys.stderr, "import worksheet_view"
-from giraffe.ui_worksheet_view import WorksheetView
+from grafit.ui_worksheet_view import WorksheetView
 print >>sys.stderr, "import graph_view"
-from giraffe.ui_graph_view import GraphView
-from giraffe.import_ascii import import_ascii
-from giraffe.arrays import nan
+from grafit.ui_graph_view import GraphView
+from grafit.import_ascii import import_ascii
+from grafit.arrays import nan
 
 import wx
 import os
 import tempfile
 import subprocess
 
-from giraffe.signals import HasSignals, global_connect
-from giraffe.commands import command_list, undo, redo
+from grafit.signals import HasSignals, global_connect
+from grafit.commands import command_list, undo, redo
 
-from giraffe import Graph, Worksheet, Folder, Project
+from grafit import Graph, Worksheet, Folder, Project
 
-from giraffe.gui import Window, Button, Box, Application, Shell, List, \
+from grafit.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                         OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
 
-import giraffe.signals
+import grafit.signals
 
 from settings import settings, DATADIR
 
@@ -69,8 +69,8 @@ class ScriptWindow(Shell):#, Pyro.core.ObjBase):
 #        thread = threading.Thread(None, lambda: daemon.requestLoop())
 #        thread.start()
 
-        self.run('from giraffe.arrays import *')
-        self.run('from giraffe import *')
+        self.run('from grafit.arrays import *')
+        self.run('from grafit import *')
 
         self.clear()
         self.run('print "# Welcome to Grafit"')
@@ -401,7 +401,7 @@ class MainWindow(Window):
 
         import wx.xrc
         # preload
-        wx.xrc.XmlResource(DATADIR+'/giraffe/test.xrc')
+        wx.xrc.XmlResource(DATADIR+'/grafit/test.xrc')
         self.on_command()
         self.on_project_modified(False)
 

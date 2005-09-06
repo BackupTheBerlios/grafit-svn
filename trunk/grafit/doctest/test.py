@@ -5,7 +5,7 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append('../lib')
+sys.path.append('../grafit/thirdparty')
 
 red = '\x1b[1;31m'
 green = '\x1b[1;32m'

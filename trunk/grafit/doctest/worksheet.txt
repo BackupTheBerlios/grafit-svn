@@ -1,4 +1,4 @@
-The ``giraffe.worksheet`` module
+The ``grafit.worksheet`` module
 ================================
 
 Calculated columns
@@ -6,7 +6,7 @@ Calculated columns
 
 When evaluating calculated columns, the namespace used contains the following (in order of precedence):
 
-* math, using ``from giraffe.arrays import *`` (which includes numarray)
+* math, using ``from grafit.arrays import *`` (which includes numarray)
 
 * ``here``, ``top``, ``up`` and ``this`` with their usual meanings
 
@@ -14,11 +14,3 @@ When evaluating calculated columns, the namespace used contains the following (i
 
 * all objects in the current folder
 
-
-Dependencies
-------------
-
-We examine expression and determine the columns it depends on using the feedback mechanism of
-``Worksheet.__getitem__``. These are registered as dependencies as follows::
-
-    project.deps.add( 

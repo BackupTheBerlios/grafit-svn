@@ -15,8 +15,8 @@ from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionMana
 from wx.lib.colourselect import ColourSelect, EVT_COLOURSELECT
 from wx.lib.scrolledpanel import ScrolledPanel
 
-from giraffe.signals import HasSignals
-from giraffe.settings import DATADIR
+from grafit.signals import HasSignals
+from grafit.settings import DATADIR
 
 
 ###############################################################################

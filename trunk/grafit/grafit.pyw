@@ -14,7 +14,7 @@ import sys
 from settings import DATADIR
 print "Starting grafit, data directory is", DATADIR
 sys.path.append(DATADIR)
-sys.path.append(DATADIR+'/giraffe/thirdparty/')
+sys.path.append(DATADIR+'/grafit/thirdparty/')
 
 import gui
 
@@ -22,7 +22,7 @@ def main():
     print >>sys.stderr, "creating application"
     app = gui.Application()
     app.splash()
-    from giraffe.ui_main import MainWindow
+    from grafit.ui_main import MainWindow
     app.run(MainWindow)
 
 if __name__ == '__main__':

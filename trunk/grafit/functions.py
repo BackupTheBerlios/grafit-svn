@@ -2,11 +2,11 @@ import sys
 import os
 import gui
 
-import odr
+from grafit.thirdparty import odr
 
 from signals import HasSignals
-from giraffe.arrays import zeros, nan
-from giraffe.commands import command_from_methods, StopCommand, command_from_methods2
+from grafit.arrays import zeros, nan
+from grafit.commands import command_from_methods, StopCommand, command_from_methods2
 
 def gen_flatten(s):
     try:
@@ -282,7 +282,7 @@ class FunctionSum(HasSignals):
 ]
 """
 
-from giraffe.project import create_id
+from grafit.project import create_id
 
 class MFunctionSum(FunctionSum):
     def __init__(self, data):
@@ -377,8 +377,12 @@ class Function(HasSignals):
         st = '\n------\n'.join(st)
         return st
 
-from settings import DATADIR
-registry = FunctionsRegistry(DATADIR+'data/functions')
+try:
+    from settings import DATADIR
+    registry = FunctionsRegistry(DATADIR+'data/functions')
+except OSError:
+    pass
+
 class FunctionsWindow(gui.Window):
     def __init__(self):
         gui.Window.__init__(self, title='Functions', size=(500, 300))

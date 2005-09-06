@@ -6,9 +6,9 @@ import PIL.ImageFont
 import PIL.ImageDraw
 from matplotlib.ft2font import FT2Font
 
-import giraffe.thirdparty.mathtextg as mathtext
-from giraffe.settings import DATADIR
-from giraffe.arrays import *
+import grafit.thirdparty.mathtextg as mathtext
+from grafit.settings import DATADIR
+from grafit.arrays import *
 from OpenGL.GL import *
 import time
 

@@ -1,13 +1,13 @@
 import sys
 import sets
 
-from giraffe import Worksheet, Folder
-from giraffe.graph_dataset import Style
-from giraffe.signals import HasSignals
+from grafit import Worksheet, Folder
+from grafit.graph_dataset import Style
+from grafit.signals import HasSignals
 
-from giraffe import gui
-from giraffe.arrays import nan
-from giraffe.util import flatten
+from grafit import gui
+from grafit.arrays import nan
+from grafit.util import flatten
 
 from settings import DATADIR
 
@@ -135,7 +135,7 @@ class GraphView(gui.Box):
 
     def on_object_doubleclicked(self, obj):
         from prop import Editor
-        e = Editor(self, DATADIR+'/giraffe/test.xrc', obj)
+        e = Editor(self, DATADIR+'/grafit/test.xrc', obj)
         e._widget.Show()
 
     def on_right_clicked(self, obj):

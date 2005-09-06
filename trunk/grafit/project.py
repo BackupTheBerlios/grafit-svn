@@ -4,8 +4,8 @@ import time, random, socket, md5
 
 import metakit
 
-from giraffe.commands import command_from_methods, command_list
-from giraffe.signals import HasSignals
+from grafit.commands import command_from_methods, command_list
+from grafit.signals import HasSignals
 
 
 
@@ -217,7 +217,7 @@ class Project(HasSignals):
         self.this = None
 
         # create objects
-        for cls, desc in [(i, storage_desc[i]) for i in (Folder, giraffe.worksheet.Worksheet, giraffe.graph.Graph)]:
+        for cls, desc in [(i, storage_desc[i]) for i in (Folder, grafit.worksheet.Worksheet, grafit.graph.Graph)]:
             view = self.db.getas(desc)
             for i, row in enumerate(view):
                 if row.id != self.top.id:
@@ -401,5 +401,5 @@ class Project(HasSignals):
     modified = property(get_modified, set_modified)
 
 # import only in order to register object types
-import giraffe.worksheet
-import giraffe.graph
+import grafit.worksheet
+import grafit.graph

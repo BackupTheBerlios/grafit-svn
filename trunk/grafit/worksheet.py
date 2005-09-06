@@ -1,11 +1,11 @@
 import sys
 print >>sys.stderr, "import worksheet"
 
-from giraffe.signals import HasSignals
-from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
-from giraffe.project import Item, wrap_attribute, register_class, create_id
+from grafit.signals import HasSignals
+from grafit.commands import command_from_methods, command_from_methods2, StopCommand
+from grafit.project import Item, wrap_attribute, register_class, create_id
 
-from giraffe.arrays import MkArray, transpose, array, asarray
+from grafit.arrays import MkArray, transpose, array, asarray
 
 import arrays
 

@@ -3,17 +3,17 @@ import time
 import string
 import tempfile
 
-from giraffe.arrays import *
+from grafit.arrays import *
 from OpenGL.GL import *
 
-from giraffe.signals import HasSignals
-from giraffe.project import Item, wrap_attribute, register_class, create_id
-from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
-from giraffe.graph_axis import Axis, Grid
-from giraffe.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction
-from giraffe.graph_dataset import Dataset, Function
-from giraffe.graph_text import FONTFILE, TextPainter, encodeTTFasPS
-from giraffe.graph_render import *
+from grafit.signals import HasSignals
+from grafit.project import Item, wrap_attribute, register_class, create_id
+from grafit.commands import command_from_methods, command_from_methods2, StopCommand
+from grafit.graph_axis import Axis, Grid
+from grafit.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction
+from grafit.graph_dataset import Dataset, Function
+from grafit.graph_text import FONTFILE, TextPainter, encodeTTFasPS
+from grafit.graph_render import *
 from matplotlib.ft2font import FT2Font
 
 import PIL.Image

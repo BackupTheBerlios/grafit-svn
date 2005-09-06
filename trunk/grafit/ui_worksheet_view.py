@@ -3,11 +3,11 @@ import sys
 #import wx
 #import wx.grid as grid
 
-from giraffe.signals import HasSignals
-from giraffe import gui
+from grafit.signals import HasSignals
+from grafit import gui
 
-from giraffe.arrays import nan
-from giraffe.worksheet import Worksheet
+from grafit.arrays import nan
+from grafit.worksheet import Worksheet
 
 import wx
 

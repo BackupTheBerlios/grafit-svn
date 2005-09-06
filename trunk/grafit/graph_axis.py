@@ -1,8 +1,8 @@
 import re
-from giraffe.arrays import *
+from grafit.arrays import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from giraffe.graph_render import *
+from grafit.graph_render import *
 
 from __builtin__ import round
 

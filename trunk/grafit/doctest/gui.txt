@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('/home/daniel/giraffe/giraffe')
+sys.path.append('/home/daniel/grafit/grafit')
 import gui
 
 class MainWindow(gui.Window):

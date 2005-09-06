@@ -1,4 +1,4 @@
-The ``giraffe.worksheet`` module
+The ``grafit.worksheet`` module
 ================================
 
 Using ``Worksheet``
@@ -7,8 +7,8 @@ Using ``Worksheet``
 This is an example text file in reStructuredText format.  First import
 ``factorial`` from the ``example`` module:
 
-    >>> from giraffe import Project, Worksheet, Folder
-    >>> from giraffe.commands import undo, redo
+    >>> from grafit import Project, Worksheet, Folder
+    >>> from grafit.commands import undo, redo
     >>> p = Project()
 
 Now use it:

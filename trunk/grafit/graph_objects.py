@@ -1,8 +1,8 @@
-from giraffe.signals import HasSignals
-from giraffe.settings import DATADIR
-from giraffe.project import wrap_attribute
-from giraffe.commands import command_from_methods2, StopCommand
-from giraffe.graph_dataset import Function
+from grafit.signals import HasSignals
+from grafit.settings import DATADIR
+from grafit.project import wrap_attribute
+from grafit.commands import command_from_methods2, StopCommand
+from grafit.graph_dataset import Function
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
