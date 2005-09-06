@@ -5,7 +5,7 @@ from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods, command_from_methods2, StopCommand
 from giraffe.project import Item, wrap_attribute, register_class, create_id
 
-from giraffe.arrays import MkArray, transpose, array
+from giraffe.arrays import MkArray, transpose, array, asarray
 
 import arrays
 
@@ -23,19 +23,52 @@ class Column(MkArray, HasSignals):
         return self.data.name.decode('utf-8')
     name = property(get_name, set_name)
 
-    def set_expr(self, expr):
-        self.data.expr = expr.encode('utf-8')
+    def do_set_expr(self, state, expr, setstate=True):
+        # find dependencies and error-check expression
         self.worksheet.record = set()
-        self.worksheet.evaluate(expr)
-        for column in self.worksheet.record - self.dependencies:
-            column.connect('data-changed', self.calculate)
-        for column in self.dependencies - self.worksheet.record:
-            column.disconnect('data-changed', self.calculate)
-        self.dependencies = self.worksheet.record
+        try:
+            data = asarray(self.worksheet.evaluate(expr))
+        except Exception, ar:
+            print >>sys.stderr, '*****************', ar
+            raise StopCommand, False
+        newdep = self.worksheet.record
         self.worksheet.record = None
-        self.calculate()
+
+        # set dependencies
+        for column in newdep - self.dependencies:
+            column.connect('data-changed', self.calculate)
+        for column in self.dependencies - newdep:
+            column.disconnect('data-changed', self.calculate)
+        self.dependencies = newdep
+
+        # command state
+        if setstate:
+            state['old'], state['new'] = self.expr, expr
+            if self.expr == '':
+                state['olddata'] = self[:]
+
+        self.data.expr = expr.encode('utf-8')
+        if expr != '':
+            # set data without triggering a command
+            MkArray.__setitem__(self, slice(None), data)
+        self.worksheet.emit('data-changed')
+        self.emit('data-changed')
+        return True
+
+    def undo_set_expr(self, state):
+        self.do_set_expr(None, state['old'], setstate=False)
+        if 'olddata' in state:
+            MkArray.__setitem__(self, slice(None), state['olddata'])
+
+    def redo_set_expr(self, state):
+        self.do_set_expr(None, state['new'], setstate=False)
+
+    set_expr = command_from_methods2('worksheet/column-expr', 
+                                     do_set_expr, undo_set_expr, redo=redo_set_expr)
+
     def get_expr(self):
         return self.data.expr.decode('utf-8')
+
     expr = property(get_expr, set_expr)
 
     def calculate(self):

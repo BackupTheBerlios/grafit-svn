@@ -83,7 +83,7 @@ class TextPainter(object):
         return 15, 15, 0, renderer
 
     def render_text_chunk_normal(self, text, size, orientation='h'):
-        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, round(size))
+        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, int(round(size)))
         w, h = fonte.getsize(text)
         _, origin = fonte.getmetrics()
         if orientation == 'v': 
@@ -109,24 +109,33 @@ class TextPainter(object):
 
         return ww, hh, origin, renderer
 
-    def render_text_chunk_tex(self, text, size, orientation='h'):
+    def render_text_chunk_tex(self, text, size, orientation='h', cache={}):
         """Render a text chunk using mathtext"""
+        size = int(round(size))
+        if (text, size, orientation) in cache:
+            ww, hh, origin, listno =  cache[text, size, orientation]
+            def renderer(x, y):
+                glRasterPos2d(x, y)
+                glCallList(listno)
+            return ww, hh, origin, renderer
+        
         if self.plot.ps:
             w, h, _, pswriter = mathtext.math_parse_s_ps(text, 100, size)
             _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 100, size) #FIXME
         else:
             w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 100, size)
-#        print >>sys.stderr, w, h, origin, text, self.plot.res, self.plot.ps
+
         if orientation == 'v': 
             ww, hh, angle = h, w, 90
         else: 
             ww, hh, angle = w, h, 0
+
         def renderer(x, y):
             if self.plot.ps:
-                text = pswriter.getvalue()
+                txt = pswriter.getvalue()
                 ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore\n" \
                     % ((self.plot.marginl+x)*self.plot.res, 
-                       (self.plot.marginb+y)*self.plot.res, angle, text)
+                       (self.plot.marginb+y)*self.plot.res, angle, txt)
                 self.plot.pstext.append(ps)
             else:
                 w, h, imgstr = fonts[0].image_as_str()
@@ -149,14 +158,28 @@ class TextPainter(object):
                 pa[:,:,2] = int(rgb[2]*255)
                 pa[:,:,3] = Xs[::-1]
 
+                data = pa.tostring()
+
+                # clear cache
+                if len(cache) >= 20:
+                    for key, value in cache.iteritems():
+                        _, _, _, listno = value
+                        glDeleteLists(listno, 1)
+                    cache.clear()
+
+                listno = glGenLists(1)
                 glRasterPos2d(x, y)
-                glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pa.tostring())
+                glNewList(listno, GL_COMPILE)
+                glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, data)
+                glEndList()
+                glCallList(listno)
+                cache[text, size, orientation] = ww, hh, origin, listno
 
         return ww, hh, origin, renderer
 
     def render_text(self, text, size, x, y, align_x='center', align_y='center', 
                     orientation='h', measure_only=False):
-        if not '\n' in text:
+        if '\n' not in text:
             return self.render_text_line(text, size, x, y, align_x, align_y, orientation, measure_only)
 
         lines = text.splitlines()
@@ -255,7 +278,6 @@ class TextPainter(object):
         elif align_y == 'center': 
             y -= (totalh/2)/self.plot.res
 
-#        print >>sys.stderr, "prepare, ", time.time()-t, 
 
         # render chunks
         if orientation == 'h':
@@ -264,9 +286,8 @@ class TextPainter(object):
         elif orientation == 'v':
             for rend, pos, off in zip(renderers, [0]+list(cumsum(heights)/self.plot.res)[:-1], offsets):
                 rend(x-off/self.plot.res, y+pos)
-#        print >>sys.stderr, "render, ", time.time()-t
 
-
+# from matplotlib
 def encodeTTFasPS(fontfile):
     """
     Encode a TrueType font file for embedding in a PS file.

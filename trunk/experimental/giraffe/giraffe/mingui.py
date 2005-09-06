@@ -33,7 +33,8 @@ class Widget(HasSignals):
     visible = property(**visible())
 
     def enabled():
-        doc = ""
+        doc = """True if the control can be manipulated by the user. Disabled controls are typically
+displayed in a different way, and do not respond to user actions."""
         def fget(self): return self.IsEnabled()
         def fset(self, value): self.Enable(value)
         return locals()
