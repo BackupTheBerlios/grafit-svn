@@ -29,12 +29,27 @@ class _xSplashScreen(wx.SplashScreen):
     """
     def __init__(self):
         aBitmap = wx.Image(name = DATADIR+"data/images/logo.png").ConvertToBitmap()
-        splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT #| wx.NO_BORDER
-        splashDuration = 1000 # milliseconds
-        splashCallback = None
-        wx.SplashScreen.__init__(self, aBitmap, splashStyle, splashDuration, splashCallback)
+        splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT | wx.NO_BORDER
+#        splashDuration = 1000 # milliseconds
+#        splashCallback = None
+#        wx.SplashScreen.__init__(self, aBitmap, splashStyle, splashDuration, splashCallback)
+        wx.SplashScreen.__init__(self, aBitmap, splashStyle, -1, None)
+        self.Bind(wx.EVT_PAINT, self.painty)
         wx.Yield()
+        self.Refresh()
 
+    def painty(self, evt):
+        print >>sys.stderr, 'painty'
+#        evt.Skip()
+        dc = wx.PaintDC(self)
+#        dc.BeginDrawing()
+#        dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
+        dc.Clear()
+        dc.SetFont(self.GetFont())
+#        dc.DrawBitmap(bimp, 0, 0, True)
+        dc.DrawText('text', 20, 20)
+#        dc.EndDrawing()
+ 
 class _xApplication(wx.App):
     def __init__(self):
         wx.App.__init__(self, redirect=False)

@@ -1,9 +1,10 @@
 import sys
-#print >>sys.stderr, "import worksheet_view"
+print >>sys.stderr, "import worksheet_view"
 from giraffe.ui_worksheet_view import WorksheetView
-#print >>sys.stderr, "import graph_view"
+print >>sys.stderr, "import graph_view"
 from giraffe.ui_graph_view import GraphView
 from giraffe.import_ascii import import_ascii
+from giraffe.arrays import nan
 
 import wx
 import os
@@ -480,8 +481,8 @@ class MainWindow(Window):
 
     def on_new_worksheet(self):
         ws = self.project.new(Worksheet, None, self.project.here)
-        ws.a = [1,2,3]
-        ws.other = 2*ws.a
+        ws.a = [nan]*100
+        ws.b = [nan]*100
 
     def on_run_script(self):
         try:

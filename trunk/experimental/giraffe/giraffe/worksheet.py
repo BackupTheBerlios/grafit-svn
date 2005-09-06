@@ -1,5 +1,5 @@
 import sys
-#print >>sys.stderr, "import worksheet"
+print >>sys.stderr, "import worksheet"
 
 from giraffe.signals import HasSignals
 from giraffe.commands import command_from_methods, command_from_methods2, StopCommand

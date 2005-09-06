@@ -480,7 +480,6 @@ class Graph(Item, HasSignals):
 
 
         if not self.paint_xor_objects:
-            print >>sys.stderr, self.recalc,
             if self.recalc:
                 glDeleteLists(self.listno, 1)
                 glNewList(self.listno, GL_COMPILE)
@@ -508,21 +507,21 @@ class Graph(Item, HasSignals):
 
                 glEndList()
                 self.recalc = False
-                print >>sys.stderr, 'prepare list', time.time()-t, "seconds"
+#                print >>sys.stderr, 'prepare list', time.time()-t, "seconds"
 
             glCallList(self.listno)
-            print >>sys.stderr, 'call list', time.time()-t, "seconds"
+#            print >>sys.stderr, 'call list', time.time()-t, "seconds"
 
             for axis in self.axes:
                 axis.paint_text()
                 axis.paint_title()
 
-            print >>sys.stderr, 'axes', time.time()-t, "seconds"
+#            print >>sys.stderr, 'axes', time.time()-t, "seconds"
             for o in self.graph_objects:
                 o.draw()
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
-            print >>sys.stderr, 'objects', time.time()-t, "seconds"
+#            print >>sys.stderr, 'objects', time.time()-t, "seconds"
 
 #            glRasterPos2d(-self.marginl, -self.marginb)
 #            glRasterPos2d(0, 0)
@@ -530,7 +529,7 @@ class Graph(Item, HasSignals):
 #            self.pixw, self.pixh = self.width_pixels, self.height_pixels
 #            self.image = PIL.Image.fromstring('RGBA', (self.pixw, self.pixh), self.pixels)
 #            print pixels
-            print >>sys.stderr, time.time()-t, "seconds"
+#            print >>sys.stderr, time.time()-t, "seconds"
         else:
 #            glClearColor(252./256, 252./256, 252./256, 1.0)
 #            glClear(GL_COLOR_BUFFER_BIT)
@@ -624,7 +623,7 @@ class Graph(Item, HasSignals):
         glTranslated(-1.+2.*self.marginl/self.width_mm, 
                      -1.+2.*self.marginb/self.height_mm, 0)
         glScaled(2./self.width_mm, 2./self.height_mm, 1)
-        print >>sys.stderr, 'R: ', time.time()-t, "seconds"
+#        print >>sys.stderr, 'R: ', time.time()-t, "seconds"
 
 
     def export_ascii(self, outfile):
