@@ -1,10 +1,10 @@
 bugs
 ----
-* order of columns in graph data panel is strange
 * can't navigate folders in graph data panel
 * fix nans in postscript output
 * show/hide xorobjects correctly
 * text does not align correctly
+- order of columns in graph data panel is strange
 - make setting column.expr a command
 - make caching w/ display lists work
 

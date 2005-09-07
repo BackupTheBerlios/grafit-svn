@@ -377,11 +377,8 @@ class Function(HasSignals):
         st = '\n------\n'.join(st)
         return st
 
-try:
-    from settings import DATADIR
-    registry = FunctionsRegistry(DATADIR+'data/functions')
-except OSError:
-    pass
+from settings import DATADIR
+registry = FunctionsRegistry(DATADIR+'data/functions')
 
 class FunctionsWindow(gui.Window):
     def __init__(self):

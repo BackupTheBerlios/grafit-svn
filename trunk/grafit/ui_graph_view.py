@@ -11,21 +11,6 @@ from grafit.util import flatten
 
 from settings import DATADIR
 
-def intersection (ml):
-    """Intersection of lists"""
-    tmp = {}
-    for l in ml:
-        for x in l:
-            z = tmp.get(x, [])
-            z.append(1)
-            tmp[x] = z
-    rslt = []
-    for k,v in tmp.items():
-        if len(v) == len(ml):
-            rslt.append(k)
-    return rslt
-
-
 class LegendModel(HasSignals):
     def __init__(self, graph):
         self.graph = graph
@@ -432,7 +417,10 @@ class ColumnListModel(HasSignals):
 
     def set_worksheets(self, worksheets):
 #        self.worksheets = worksheets
-        self.colnames = intersection([w.column_names for w in worksheets])
+        colnames = list(reduce(set.intersection, (set(w.column_names) for w in worksheets)))
+        if len(worksheets) > 0:
+            colnames.sort(lambda a, b: cmp(worksheets[0].column_names.index(a), worksheets[0].column_names.index(b)))
+        self.colnames = colnames
         self.emit('modified')
 
     def get(self, row, column): return self.colnames[row]
