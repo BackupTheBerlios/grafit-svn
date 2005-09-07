@@ -3,5 +3,5 @@ import os, sys
 DATADIR = os.path.normpath(os.path.abspath(os.path.dirname(sys.argv[0]))+'/../') + '/'
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'/grafit/thirdparty/')
-import grafit.main
-grafit.main.main()
+import main
+main.main()
