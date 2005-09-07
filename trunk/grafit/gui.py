@@ -33,7 +33,7 @@ class _xSplashScreen(wx.SplashScreen):
 #        splashDuration = 1000 # milliseconds
 #        splashCallback = None
 #        wx.SplashScreen.__init__(self, aBitmap, splashStyle, splashDuration, splashCallback)
-        wx.SplashScreen.__init__(self, aBitmap, splashStyle, -1, None)
+        wx.SplashScreen.__init__(self, aBitmap, splashStyle, 1000, None)
         self.Bind(wx.EVT_PAINT, self.painty)
         wx.Yield()
         self.Refresh()
