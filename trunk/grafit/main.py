@@ -17,12 +17,24 @@ sys.path.append(DATADIR)
 sys.path.append(DATADIR+'/grafit/thirdparty/')
 
 import gui
+import mingui
+
+class BirdWindow(mingui.Window):
+    def __init__(self, typ, value, traceback):
+        mingui.Window.__init__(self)
+
+def excepthook(type, value, traceback):
+    bw = BirdWindow(type, value, traceback)
+    bw.show()
+    sys.__excepthook__(type, value, traceback)
+
 
 def main():
+    sys.excepthook = excepthook
     print >>sys.stderr, "creating application"
     app = gui.Application()
     app.splash()
-    from grafit.ui_main import MainWindow
+    from ui_main import MainWindow
     app.run(MainWindow)
 
 if __name__ == '__main__':

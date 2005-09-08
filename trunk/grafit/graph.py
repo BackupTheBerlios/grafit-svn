@@ -395,15 +395,11 @@ class Graph(Item, HasSignals):
 
     def autoscale(self):
         if len(self.datasets):
-            xmin = min(array(d.x).min() for d in self.datasets)
-            xmax = max(array(d.x).max() for d in self.datasets)
-            ymin = min(array(d.y).min() for d in self.datasets)
-            ymax = max(array(d.y).max() for d in self.datasets)
+            xmin = min(d.xx.min() for d in self.datasets)
+            xmax = max(d.xx.max() for d in self.datasets)
+            ymin = min(d.yy.min() for d in self.datasets)
+            ymax = max(d.yy.max() for d in self.datasets)
             self.zoom(xmin, xmax, ymin, ymax)
-#                array(self.datasets[0].x).min(),
-#                array(self.datasets[0].y).min(),
-#                array(self.datasets[0].x).max(),
-#                array(self.datasets[0].y).max())
 
     def set_range(self, fr, to):
         self.fr, self.to  = fr, to
@@ -772,7 +768,7 @@ class Graph(Item, HasSignals):
         if self.mode == 'zoom':
             if button == 2:
                 self.autoscale()
-                self.redraw()
+                self.redraw(True)
             elif button == 1 or button == 3:
                 self.rubberband.hide()
                 self.redraw()

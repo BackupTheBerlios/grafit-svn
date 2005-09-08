@@ -3,6 +3,7 @@ from grafit.signals import HasSignals
 from grafit.commands import command_from_methods2, command_from_methods
 from grafit.functions import MFunctionSum
 from grafit.project import wrap_attribute
+from numarray.ieeespecial import isfinite
 
 import time
 
@@ -245,7 +246,9 @@ class Dataset(DrawWithStyle):
         return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
                                                          self.worksheet.name, self.x.name, self.y.name)
     def recalculate(self):
-        ind = [i for i in range(len(self.x)) if self.x[i]>= self.xfrom and self.x[i]<=self.xto]
+        length = min(len(self.x), len(self.y))
+        ind = isfinite(self.x)[:length] & isfinite(self.y)[:length]
+        ind &= (self.xfrom <= self.x)[:length] & (self.x <= self.xto)[:length]
         self.xx = asarray(self.x[ind])
         self.yy = asarray(self.y[ind])
 
