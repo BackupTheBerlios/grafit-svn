@@ -173,8 +173,8 @@ class DrawWithStyle(HasSignals):
             if self.data.size != 0:
                 glPointSize(self.data.size)
 #            x, y = self.graph.proj(x, y)
-            xmin, ymin = self.graph.proj(self.graph.xmin, self.graph.ymin)
-            xmax, ymax = self.graph.proj(self.graph.xmax, self.graph.ymax)
+            xmin, ymin = self.graph.data_to_phys(self.graph.xmin, self.graph.ymin)
+            xmax, ymax = self.graph.data_to_phys(self.graph.xmax, self.graph.ymax)
             t = time.time()
             render_symbols(x, y, self.style.symbol, self.style.symbol_size, xmin, xmax, ymin, ymax)
 #            print >>sys.stderr, 'symbols', time.time() - t
@@ -207,8 +207,8 @@ class DrawWithStyle(HasSignals):
             gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
-            xmin, ymin = self.graph.proj(self.graph.xmin, self.graph.ymin)
-            xmax, ymax = self.graph.proj(self.graph.xmax, self.graph.ymax)
+            xmin, ymin = self.graph.data_to_phys(self.graph.xmin, self.graph.ymin)
+            xmax, ymax = self.graph.data_to_phys(self.graph.xmax, self.graph.ymax)
             render_lines(x, y, xmin, xmax, ymin, ymax)
 #            glVertexPointerd(transpose(array([x, y, z])).tostring())
 #            glEnable(GL_VERTEX_ARRAY)
@@ -272,7 +272,7 @@ class Dataset(DrawWithStyle):
 
 
     def paint(self):
-        xx, yy = self.graph.proj(self.xx, self.yy)
+        xx, yy = self.graph.data_to_phys(self.xx, self.yy)
         self.paint_lines(xx, yy)
         self.paint_symbols(xx, yy)
 
@@ -327,11 +327,11 @@ class Function(DrawWithStyle):
             for term in self.func.terms:
                 if term.enabled:
                     y = term(x)
-                    self.paint_lines(*self.graph.proj(x, y))
+                    self.paint_lines(*self.graph.data_to_phys(x, y))
 
         self.style._color = self.totalcolor
         y = self.func(x)
-        self.paint_lines(*self.graph.proj(x, y))
+        self.paint_lines(*self.graph.data_to_phys(x, y))
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id

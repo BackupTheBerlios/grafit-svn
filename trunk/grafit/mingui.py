@@ -6,7 +6,7 @@ class Container(HasSignals):
         return self, kwds
 
 class Widget(HasSignals):
-    def __init__(self, place):
+    def __init__(self, place, connect={}):
         if place is None:
             self.parent = None
             placeargs = {}
@@ -14,6 +14,8 @@ class Widget(HasSignals):
             self.parent, placeargs = place
         if hasattr(self.parent, '_add'):
             self.parent._add(self, **placeargs)
+        for signal, slot in connect.iteritems():
+            self.connect(signal, slot)
 
     def destroy(self):
         self.Destroy()
@@ -54,11 +56,29 @@ displayed in a different way, and do not respond to user actions."""
         return locals()
     position = property(**position())
 
-class Window(wx.Frame, Widget, Container):
-    def __init__(self):
-        wx.Frame.__init__(self, None, -1)
-        Widget.__init__(self, None)
+    def close(self):
+        return self.Close()
 
+class Window(wx.Frame, Widget, Container):
+    def __init__(self, parent=None, connect={}):
+        wx.Frame.__init__(self, parent, -1)
+        Widget.__init__(self, None, connect)
+        self.parent = parent
+
+    title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
+
+class Dialog(wx.Dialog, Widget, Container):
+    def __init__(self, parent=None, connect={}):
+        wx.Dialog.__init__(self, parent, -1, style=wx.THICK_FRAME)
+        Widget.__init__(self, None, connect)
+        self.parent = parent
+
+    def show(self, modal=False):
+        if modal:
+            return self.ShowModal()
+        else:
+            return Widget.show(self)
+    title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
 
 class Box(Widget, Container, wx.Panel):
     def __init__(self, place, orientation='vertical'):
@@ -70,8 +90,8 @@ class Box(Widget, Container, wx.Panel):
             self.layout = wx.BoxSizer(wx.VERTICAL)
         else:
             raise NameError
-        self.SetSizer(self.layout)
         self.SetAutoLayout(True)
+        self.SetSizer(self.layout)
 
     def __getitem__(self, key):
         return self.GetChildren()[key]
@@ -85,16 +105,32 @@ class Box(Widget, Container, wx.Panel):
             expand = wx.EXPAND
         else:
             expand = 0
-        self.layout.Add(widget, stretch, wx.EXPAND)
+        self.layout.Add(widget, stretch, expand | wx.ADJUST_MINSIZE)
         self.layout.Layout()
+        self.layout.Fit(self)
 
-class Button(Widget, wx.Button):
-    def __init__(self, place, text, toggle=False):
-        wx.Button.__init__(self, place[0], -1, text)
+class Label(Widget, wx.StaticText):
+    def __init__(self, place, text):
+        wx.StaticText.__init__(self, place[0], -1, text)
         Widget.__init__(self, place)
 
-        self.Bind(wx.EVT_LEFT_DCLICK, self.emitter('double-clicked'), True)
-        self.Bind(wx.EVT_BUTTON, self.emitter('clicked'), True)
+class Image(Widget, wx.StaticBitmap):
+    def __init__(self, place, image):
+        image = image.convert('RGB')
+        wximg = wx.EmptyImage(image.size[0],image.size[1])
+        wximg.SetData(image.tostring())
+        bitmap = wximg.ConvertToBitmap()
+
+        wx.StaticBitmap.__init__(self, place[0], -1, bitmap)
+        Widget.__init__(self, place)
+
+class Button(Widget, wx.Button):
+    def __init__(self, place, text, toggle=False, connect={}):
+        wx.Button.__init__(self, place[0], -1, text)
+        Widget.__init__(self, place, connect)
+
+#        self.Bind(wx.EVT_LEFT_DCLICK, self.emitter('double-clicked'), True)
+        self.Bind(wx.EVT_BUTTON, self.emitter('clicked'))
 
 #    def on_toggled(self, evt):
 #        self.emit('toggled', evt.IsChecked())
@@ -111,3 +147,65 @@ class Button(Widget, wx.Button):
         def fset(self, text): self.SetLabel(text)
         return locals()
     text = property(**text())
+
+class Text(Widget, wx.TextCtrl):
+    def __init__(self, place, multiline=False, connect={}):
+        style = 0
+        if multiline:
+            style |= wx.TE_MULTILINE
+        else:
+            style |= wx.TE_PROCESS_ENTER
+        wx.TextCtrl.__init__(self, place[0], -1, style=style)
+        Widget.__init__(self, place, connect)
+
+    def get_value(self):
+        return self.GetValue()
+    def set_value(self, val):
+        self.SetValue(val)
+    text = property(get_value, set_value)
+
+class Notebook(Widget, Container, wx.Notebook):
+    def __init__(self, place, connect={}):
+        wx.Notebook.__init__(self, place[0], -1)
+        Widget.__init__(self, place, connect)
+
+        # item images
+        self.imagelist = wx.ImageList(16, 16)
+        self.SetImageList(self.imagelist)
+        self.pixmaps = {}
+
+        self.pages = []
+
+
+    def getpixmap(self, filename):
+        if filename is None:
+            return None
+        if filename not in self.pixmaps:
+            self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
+        return self.pixmaps[filename]
+
+    def _add(self, widget, label="", page_pixmap=None):
+        self.AddPage(widget, label)
+        if page_pixmap is not None:
+            self.SetPageImage(self.GetPageCount()-1, self.getpixmap(page_pixmap))
+        self.pages.append(widget)
+
+    def active_page():
+        def fget(self): return self.pages[self.GetSelection()]
+        def fset(self, page): self.SetSelection(self.pages.index(page))
+        return locals()
+    active_page = property(**active_page())
+
+    def delete(self, widget):
+        self.DeletePage(self.pages.index(widget))
+        self.pages.remove(widget)
+
+    def select(self, widget):
+        if widget in range(len(self.pages)):
+            self.SetSelection(widget)
+        elif widget in self.pages:
+            self.SetSelection(self.pages.index(widget))
+        else:
+            raise NameError
+
+

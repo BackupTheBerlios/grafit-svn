@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # we need these lines for cx_Freeze to work on numarray!
 import numarray._bytes,     numarray._ufuncBool,      numarray._ufuncInt32, numarray._ufuncUInt8
@@ -18,14 +19,49 @@ sys.path.append(DATADIR+'/grafit/thirdparty/')
 
 import gui
 import mingui
+import Image
 
-class BirdWindow(mingui.Window):
-    def __init__(self, typ, value, traceback):
-        mingui.Window.__init__(self)
+import traceback
+import random
+
+titles = [
+(u"Den Vogel!", 6),
+(u"Le poulet!", 3),
+(u"L'oiseau!", 2),
+(u"The Bird!", 2),
+(u"El pájaro!", 3),
+(u"L'uccello!", 3),
+(u"Πтица!", 1),
+(u"Τον Πούλο!", 1),
+]
+
+class BirdWindow(mingui.Dialog):
+    def __init__(self, typ, value, tback):
+        mingui.Dialog.__init__(self)
+
+        box = mingui.Box(self.place(), 'vertical')
+        hbox = mingui.Box(box.place(), 'horizontal')
+
+        mingui.Image(hbox.place(stretch=0), 
+                     Image.open(DATADIR+'/data/images/vogel.png'))
+
+        book = mingui.Notebook(hbox.place(stretch=1))
+
+        mingui.Label(book.place(label='Main'), "An error has occured!\nThis should not happen.")
+
+        text = mingui.Text(book.place(label='Details'), multiline=True)
+        text.text = ''.join(traceback.format_exception (typ, value, tback))
+        text.enabled = False
+
+        button = mingui.Button(box.place(stretch=0), "That's OK",
+                               connect={'clicked': self.close})
+
+        self.title = random.choice(reduce(list.__add__, [[t[0]]*t[1] for t in titles]))
 
 def excepthook(type, value, traceback):
     bw = BirdWindow(type, value, traceback)
-    bw.show()
+    bw.show(modal=True)
+    bw.destroy()
     sys.__excepthook__(type, value, traceback)
 
 

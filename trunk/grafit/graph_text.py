@@ -65,15 +65,15 @@ class TextPainter(object):
     # with the position (lower left corner) of the fragment, 
     # to render the text
 
-    def render_text_chunk_symbol(self, text, size, orientation='h'):
+    def render_text_chunk_symbol(self, text, size=None, orientation='h'):
         def renderer(x, y):
             try:
                 d = self.plot.datasets[int(text)]
             except (ValueError, IndexError):
                 print >>sys.stderr, 'error!'
                 return 0, 0, 0, None
-            xmin, ymin = self.plot.proj(self.plot.xmin, self.plot.ymin)
-            xmax, ymax = self.plot.proj(self.plot.xmax, self.plot.ymax)
+            xmin, ymin = self.plot.data_to_phys(self.plot.xmin, self.plot.ymin)
+            xmax, ymax = self.plot.data_to_phys(self.plot.xmax, self.plot.ymax)
             glColor4f(d.style.color[0]/256., d.style.color[1]/256., 
                       d.style.color[2]/256., 1.)
             render_symbols(array([x]), array([y]),
@@ -112,7 +112,7 @@ class TextPainter(object):
     def render_text_chunk_tex(self, text, size, orientation='h', cache={}):
         """Render a text chunk using mathtext"""
         size = int(round(size))
-        if (text, size, orientation) in cache:
+        if (text, size, orientation) in cache and not self.plot.ps:
             ww, hh, origin, listno =  cache[text, size, orientation]
             def renderer(x, y):
                 glRasterPos2d(x, y)

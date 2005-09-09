@@ -16,9 +16,7 @@ from grafit.graph_text import FONTFILE, TextPainter, encodeTTFasPS
 from grafit.graph_render import *
 from matplotlib.ft2font import FT2Font
 
-import PIL.Image
-import PIL.ImageFont
-import PIL.ImageDraw
+import wx
 
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
@@ -334,7 +332,7 @@ class Graph(Item, HasSignals):
         if pos.endswith('%'):
             return float(pos[:-1])*self.plot_height/100., '%'
         elif pos.endswith('y'):
-            return self.proj(self.ymin, float(pos[:-1]))[1], 'y'
+            return self.data_to_phys(self.ymin, float(pos[:-1]))[1], 'y'
         elif pos.endswith('mm'):
             return float(pos[:-2]), 'mm'
         else:
@@ -344,7 +342,7 @@ class Graph(Item, HasSignals):
         if pos.endswith('%'):
             return float(pos[:-1])*self.plot_width/100., '%'
         elif pos.endswith('x'):
-            return self.proj(float(pos[:-1]), self.xmin)[0], 'x'
+            return self.data_to_phys(float(pos[:-1]), self.xmin)[0], 'x'
         elif pos.endswith('mm'):
             return float(pos[:-2]), 'mm'
         else:
@@ -354,7 +352,7 @@ class Graph(Item, HasSignals):
         if typ=='%':
             return str(x*100./self.plot_width)+'%'
         elif typ=='x':
-            return str(self.invproj(x, 0)[0])+'x'
+            return str(self.phys_to_data(x, 0)[0])+'x'
         elif typ=='mm':
             return str(x)+'mm'
 
@@ -362,11 +360,15 @@ class Graph(Item, HasSignals):
         if typ=='%':
             return str(y*100./self.plot_height)+'%'
         elif typ=='y':
-            return str(self.invproj(0, y)[1])+'y'
+            return str(self.phys_to_data(0, y)[1])+'y'
         elif typ=='mm':
             return str(y)+'mm'
 
-    def proj(self, x, y):
+    def data_to_phys(self, x, y):
+        """
+        Takes a point x,y in data coordinates and transforms to
+        physical coordinates
+        """
         x, xmin, xmax = map(self.axis_bottom.transform, (x, self.xmin, self.xmax))
         y, ymin, ymax = map(self.axis_left.transform, (y, self.ymin, self.ymax))
 
@@ -375,7 +377,11 @@ class Graph(Item, HasSignals):
 
         return px, py
 
-    def invproj(self, x, y):
+    def phys_to_data(self, x, y):
+        """
+        Takes a point x,y in physical coordinates and transforms to
+        data coordinates
+        """
         xmin, xmax = map(self.axis_bottom.transform, (self.xmin, self.xmax))
         ymin, ymax = map(self.axis_left.transform, (self.ymin, self.ymax))
 
@@ -384,14 +390,14 @@ class Graph(Item, HasSignals):
 
         return self.axis_bottom.invtransform(px), self.axis_left.invtransform(py)
 
-    def mouse_to_ident(self, xm, ym):
+    def mouse_to_phys(self, xm, ym):
         x = (xm / self.res) - self.marginl
         y = ((self.height_pixels-ym) / self.res) - self.marginb
         return x, y
 
-    def mouse_to_real(self, xm, ym):
-        x, y = self.mouse_to_ident(xm, ym)
-        return self.invproj(x, y)
+    def mouse_to_data(self, xm, ym):
+        x, y = self.mouse_to_phys(xm, ym)
+        return self.phys_to_data(x, y)
 
     def autoscale(self):
         if len(self.datasets):
@@ -469,7 +475,7 @@ class Graph(Item, HasSignals):
 #            glClear(GL_COLOR_BUFFER_BIT)
 #            glRasterPos2d(-self.marginl+1, -self.marginb+1)
 ##            glRasterPos2d(0, 0)
-#            image = self.image.resize((width, height), PIL.Image.ANTIALIAS)
+#            image = self.image.resize((width, height), Image.ANTIALIAS)
 #            glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, image.tostring()),
 ##            print >>sys.stderr, time.time()-t, "seconds"
 #            return
@@ -477,6 +483,19 @@ class Graph(Item, HasSignals):
 
         if not self.paint_xor_objects:
             if self.recalc:
+                for i, d in enumerate(self.datasets):
+                    glClearColor(252./256, 252./256, 252./256, 1.0)
+                    glClear(GL_COLOR_BUFFER_BIT)
+
+                    w, h, _, renderer=self.textpainter.render_text_chunk_symbol(str(i))
+                    if renderer is not None:
+                        renderer((w/2)/self.res, (h/2)/self.res)
+
+                        i = wx.EmptyImage(w, h)
+                        i.SetData(glReadPixels(self.marginl*self.res, self.marginb*self.res, 
+                                               w, h, GL_RGB, GL_UNSIGNED_BYTE))
+                        d._legend_wxbitmap = i.ConvertToBitmap()
+
                 glDeleteLists(self.listno, 1)
                 glNewList(self.listno, GL_COMPILE)
 
@@ -523,7 +542,7 @@ class Graph(Item, HasSignals):
 #            glRasterPos2d(0, 0)
 #            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
 #            self.pixw, self.pixh = self.width_pixels, self.height_pixels
-#            self.image = PIL.Image.fromstring('RGBA', (self.pixw, self.pixh), self.pixels)
+#            self.image = Image.fromstring('RGBA', (self.pixw, self.pixh), self.pixels)
 #            print pixels
 #            print >>sys.stderr, time.time()-t, "seconds"
         else:
@@ -544,6 +563,8 @@ class Graph(Item, HasSignals):
             width, height = self.last_width, self.last_height
         else:
             self.last_width, self.last_height = width, height
+
+        self.pixel_width, self.pixel_height = width, height
 
         # aspect ratio (width/height)
         self.aspect = self.pwidth/self.pheight 
@@ -623,7 +644,6 @@ class Graph(Item, HasSignals):
 
 
     def export_ascii(self, outfile):
-
         d = tempfile.mkdtemp()
         filename = self.name + '.eps'
         f = open(d+'/'+filename, 'wb')
@@ -633,6 +653,7 @@ class Graph(Item, HasSignals):
 
         gl2ps_BeginPage("Title", "Producer", self.viewport, f, filename)
         self.ps = True
+        self.recalc = True
         self.display()
         self.ps = False
 
@@ -671,7 +692,7 @@ class Graph(Item, HasSignals):
             if button in (1,3):
                 self.paint_xor_objects = True
                 self.pixx, self.pixy = x, y
-                self.ix, self.iy = self.mouse_to_ident(x, y)
+                self.ix, self.iy = self.mouse_to_phys(x, y)
                 self.rubberband.show(self.ix, self.iy, self.ix, self.iy)
                 self.redraw()
             if button == 2:
@@ -684,7 +705,7 @@ class Graph(Item, HasSignals):
             else:
                 self.__button = button
 
-            x, y = self.mouse_to_real(x, y)
+            x, y = self.mouse_to_data(x, y)
             for d in self.selected_datasets:
                 if button == 1:
                     d.range = (x, d.range[1])
@@ -695,31 +716,31 @@ class Graph(Item, HasSignals):
         elif self.mode == 'hand':
             if self.selected_function is not None:
                 self.selected_function.set_reg(False)
-                self.selected_function.move(*self.mouse_to_real(x, y))
+                self.selected_function.move(*self.mouse_to_data(x, y))
 #                self.emit('redraw')
                 self._movefunc = DrawFunction(self, self.selected_function)
                 self.objects.append(self._movefunc)
                 self.paint_xor_objects = True
-                self._movefunc.show(*self.mouse_to_real(x, y))
+                self._movefunc.show(*self.mouse_to_data(x, y))
                 self.redraw()
         elif self.mode == 's-reader':
             self.paint_xor_objects = True
-            self.cross.show(*self.mouse_to_ident(x, y))
+            self.cross.show(*self.mouse_to_phys(x, y))
             self.redraw()
-            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
+            self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'd-reader':
-            x, y = self.mouse_to_real(x, y)
+            x, y = self.mouse_to_data(x, y)
             closest = [(d, min((d.x-x)*(d.x-x)+(d.y-y)*(d.y-y))) for d in self.datasets]
             dataset = closest[[c[1] for c in closest].index(min(c[1] for c in closest))][0]
             print dataset
 
             self.paint_xor_objects = True
-            self.cross.show(*self.mouse_to_ident(x, y))
+            self.cross.show(*self.mouse_to_phys(x, y))
             self.redraw()
-            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
+            self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'arrow':
             if button == 1:
-                x, y = self.mouse_to_ident(x, y)
+                x, y = self.mouse_to_phys(x, y)
                 for o in self.graph_objects:
                     if o.hittest(x, y):
                         self.selected_object = o
@@ -739,7 +760,7 @@ class Graph(Item, HasSignals):
                 self.emit('right-clicked', None)
                 print >>sys.stderr, 'right-clicked', None
         elif self.mode in ('draw-line', 'draw-text'):
-            xi, yi = self.mouse_to_ident(x, y)
+            xi, yi = self.mouse_to_phys(x, y)
             createobj = self.new_object({'draw-line': Line, 
                                          'draw-text': Text}[self.mode])
             createobj.begin(xi, yi)
@@ -757,7 +778,7 @@ class Graph(Item, HasSignals):
       
     def button_doubleclick(self, x, y, button):
         if self.mode == 'arrow' and button == 1:
-            x, y = self.mouse_to_ident(x, y)
+            x, y = self.mouse_to_phys(x, y)
             for o in self.graph_objects:
                 if o.hittest_handles(x, y):
                     self.emit('object-doubleclicked', o)
@@ -774,8 +795,8 @@ class Graph(Item, HasSignals):
                 self.redraw()
                 self.paint_xor_objects = False
 
-                zix, ziy = self.mouse_to_real(self.pixx, self.pixy)
-                zfx, zfy = self.mouse_to_real(x, y)
+                zix, ziy = self.mouse_to_data(self.pixx, self.pixy)
+                zfx, zfy = self.mouse_to_data(x, y)
 
                 _xmin, _xmax = min(zix, zfx), max(zix, zfx)
                 _ymin, _ymax = min(zfy, ziy), max(zfy, ziy)
@@ -799,7 +820,7 @@ class Graph(Item, HasSignals):
         elif self.mode == 'hand':
             if self.selected_function is not None:
                 self.selected_function.set_reg(True)
-                self.selected_function.move(*self.mouse_to_real(x, y))
+                self.selected_function.move(*self.mouse_to_data(x, y))
                 del self.objects[-1]
                 self.paint_xor_objects = False
                 self.redraw(True)
@@ -825,28 +846,28 @@ class Graph(Item, HasSignals):
             
     def button_motion(self, x, y, dragging):
         if self.mode == 'zoom' and dragging and hasattr(self, 'ix'):
-            self.rubberband.move(self.ix, self.iy, *self.mouse_to_ident(x, y))
+            self.rubberband.move(self.ix, self.iy, *self.mouse_to_phys(x, y))
             self.redraw()
         elif self.mode == 'range' and dragging:
             self.button_press(x, y)
         elif self.mode == 'hand' and dragging:
             if self.selected_function is not None:
-                self.selected_function.move(*self.mouse_to_real(x, y))
-                self._movefunc.move(*self.mouse_to_real(x, y))
+                self.selected_function.move(*self.mouse_to_data(x, y))
+                self._movefunc.move(*self.mouse_to_data(x, y))
                 self.redraw()
         elif self.mode == 's-reader' and dragging:
-            self.cross.move(*self.mouse_to_ident(x, y))
+            self.cross.move(*self.mouse_to_phys(x, y))
             self.redraw()
-            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
+            self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'd-reader' and dragging:
-            self.cross.move(*self.mouse_to_ident(x, y))
+            self.cross.move(*self.mouse_to_phys(x, y))
             self.redraw()
-            self.emit('status-message', '%f, %f' % self.mouse_to_real(x, y))
+            self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'arrow':
             if not hasattr(self, 'res'):
                 # not initialized yet, do nothing
                 return
-            x, y = self.mouse_to_ident(x, y)
+            x, y = self.mouse_to_phys(x, y)
             if self.dragobj is not None: # drag a handle on an object
                 self.dragobj_xor.move(x, y)
                 self.redraw()

@@ -22,7 +22,7 @@ class Grid(object):
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for x in self.plot.axis_bottom.tics(self.plot.xmin, self.plot.xmax)[0]:
-                x, _ = self.plot.proj(x, 0)
+                x, _ = self.plot.data_to_phys(x, 0)
                 glVertex3d(x, 0.0, 0.0)
                 glVertex3d(x, self.plot.plot_height, 0.0)
             glEnd()
@@ -40,7 +40,7 @@ class Grid(object):
             glColor3f(0.3, 0.3, 0.3)
             glBegin(GL_LINES)
             for y in self.plot.axis_left.tics(self.plot.ymin, self.plot.ymax)[0]:
-                _, y = self.plot.proj(0, y)
+                _, y = self.plot.data_to_phys(0, y)
                 glVertex3d(0, y, 0.0)
                 glVertex3d(self.plot.plot_width, y, 0.0)
             glEnd()
@@ -88,11 +88,11 @@ class Axis(object):
             major, minor = self.tics(self.plot.xmin, self.plot.xmax)
             glBegin(GL_LINES)
             for x in major:
-                x, _ = self.plot.proj(x, 0)
+                x, _ = self.plot.data_to_phys(x, 0)
                 glVertex3d(x, 0, 0)
                 glVertex3d(x, 2, 0)
             for x in minor:
-                x, _ = self.plot.proj(x, 0)
+                x, _ = self.plot.data_to_phys(x, 0)
                 glVertex3d(x, 0, 0)
                 glVertex3d(x, 1, 0)
             glEnd()
@@ -101,11 +101,11 @@ class Axis(object):
             major, minor = self.tics(self.plot.ymin, self.plot.ymax)
             glBegin(GL_LINES)
             for y in major:
-                _, y = self.plot.proj(0, y)
+                _, y = self.plot.data_to_phys(0, y)
                 glVertex3d(0, y, 0)
                 glVertex3d(2, y, 0)
             for y in minor:
-                _, y = self.plot.proj(0, y)
+                _, y = self.plot.data_to_phys(0, y)
                 glVertex3d(0, y, 0)
                 glVertex3d(1, y, 0)
             glEnd()
@@ -159,12 +159,12 @@ class Axis(object):
             tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
             for x in tics:
                 st = self.totex(x)
-                xm, _ = self.plot.proj(x, 0.)
+                xm, _ = self.plot.data_to_phys(x, 0.)
                 self.plot.textpainter.render_text(st, facesize, xm, -5, 'center', 'bottom')
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
                 st = self.totex(y)
-                _, ym = self.plot.proj(0., y)
+                _, ym = self.plot.data_to_phys(0., y)
                 self.plot.textpainter.render_text(st, facesize, -2, ym, 'right', 'center')
 
  

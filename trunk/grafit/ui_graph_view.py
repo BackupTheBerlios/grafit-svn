@@ -22,7 +22,11 @@ class LegendModel(HasSignals):
         self.emit('modified')
 
     def get(self, row, column): return str(self[row])
-    def get_image(self, row): return 'stock_folder.png'
+    def get_image(self, row): 
+        if hasattr(self.graph.datasets[row], "_legend_wxbitmap"):
+            return self.graph.datasets[row]._legend_wxbitmap
+        else:
+            return 'stock_folder.png'
     def __len__(self): return len(self.graph.datasets) #+ len(self.graph.functions)
     def __getitem__(self, row): 
 #        if row < len(self.graph.datasets):

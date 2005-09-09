@@ -115,7 +115,7 @@ class HasSignals(object):
         self._signals[signal].append(Slot(slot, keepref))
 
     def emitter(self, signal, *args, **kwds):
-        return lambda: self.emit(signal, *args, **kwds)
+        return lambda *ar, **kw: self.emit(signal, *args, **kwds)
 
     def disconnect(self, signal, slot):
         """

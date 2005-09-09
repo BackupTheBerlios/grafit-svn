@@ -34,7 +34,7 @@ class _xSplashScreen(wx.SplashScreen):
 #        splashCallback = None
 #        wx.SplashScreen.__init__(self, aBitmap, splashStyle, splashDuration, splashCallback)
         wx.SplashScreen.__init__(self, aBitmap, splashStyle, 1000, None)
-        self.Bind(wx.EVT_PAINT, self.painty)
+#        self.Bind(wx.EVT_PAINT, self.painty)
         wx.Yield()
         self.Refresh()
 
@@ -741,6 +741,10 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
     def getpixmap(self, filename):
         if filename is None:
             return None
+        if isinstance(filename, wx.Bitmap):
+            if id(filename) not in self.pixmaps:
+                self.pixmaps[id(filename)] = self.imagelist.Add(filename)
+            filename = id(filename)
         if filename not in self.pixmaps:
             self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
