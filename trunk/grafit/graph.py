@@ -730,7 +730,7 @@ class Graph(Item, HasSignals):
             self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'd-reader':
             x, y = self.mouse_to_data(x, y)
-            closest = [(d, min((d.x-x)*(d.x-x)+(d.y-y)*(d.y-y))) for d in self.datasets]
+            closest = [(d, min((d.xx-x)*(d.xx-x)+(d.yy-y)*(d.yy-y))) for d in self.datasets]
             dataset = closest[[c[1] for c in closest].index(min(c[1] for c in closest))][0]
             print dataset
 

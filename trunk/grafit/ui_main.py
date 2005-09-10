@@ -179,7 +179,7 @@ class ProjectExplorer(Box):
         f = open(d+'/preview.eps', 'wb')
         item.export_ascii(f)
         f.close()
-        subprocess.call(['gv', d+'/preview.eps'])
+        subprocess.Popen(['gv', d+'/preview.eps'])
 
     def on_tree_dropped(self, item, format, data):
         print >>sys.stderr, "dropped", item, format, item
@@ -347,7 +347,10 @@ class MainWindow(Window):
 
             'edit-undo': Action('Undo', 'Undo the last action', undo, 'stock_undo.png', 'Ctrl+Z'),
             'edit-redo': Action('Redo', 'Redo the last action', redo, 'stock_redo.png', 'Shift+Ctrl+Z'),
-            'edit-copy': Action('Copy', 'Undo the last action', object, None, 'Ctrl+C'),
+            'edit-copy': Action('Copy', 'Undo the last action', object, 'stock_copy.png', 'Ctrl+C'),
+            'edit-cut': Action('Cut', 'Undo the last action', object, 'stock_cut.png', 'Ctrl+X'),
+            'edit-paste': Action('Paste', 'Undo the last action', 'stock_paste.png', None, 'Ctrl+V'),
+            'edit-delete': Action('Delete', 'Undo the last action', 'stock_delete.png', None, 'Delete'),
 
             'import-ascii': Action('Import ASCII...', 'Import and ASCII file', 
                                    self.on_import_ascii, 'import_ascii.png', 'Ctrl+I'),
@@ -371,7 +374,7 @@ class MainWindow(Window):
                        'file-save', 'file-saveas', None, 
                        'file-quit']),
             ('&Edit', ['edit-undo', 'edit-redo', None, 
-                       'edit-copy']),
+                       'edit-cut', 'edit-copy', 'edit-paste', None, 'edit-delete']),
             ('&Tools', ['functions', 'filters', None, 'run-script']),
             ('&Help', []),
         ]:

@@ -255,7 +255,7 @@ class Text(GraphObject):
         self.read_position()
 
     def draw(self):
-        facesize = 12
+        facesize = 12*self.graph.magnification
         self.graph.textpainter.render_text(self.text, facesize, 
                                            self.handles[0].x, self.handles[0].y,
                                            align_x='bottom', align_y='left')

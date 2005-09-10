@@ -17,8 +17,11 @@ print "Starting grafit, data directory is", DATADIR
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'/grafit/thirdparty/')
 
+from thirdparty.ultraTB import VerboseTB
+
 import gui
 import mingui
+import wx
 import Image
 
 import traceback
@@ -37,7 +40,7 @@ titles = [
 
 class BirdWindow(mingui.Dialog):
     def __init__(self, typ, value, tback):
-        mingui.Dialog.__init__(self)
+        mingui.Dialog.__init__(self, title=random.choice(reduce(list.__add__, [[t[0]]*t[1] for t in titles])))
 
         box = mingui.Box(self.place(), 'vertical')
         hbox = mingui.Box(box.place(), 'horizontal')
@@ -49,19 +52,23 @@ class BirdWindow(mingui.Dialog):
 
         mingui.Label(book.place(label='Main'), "An error has occured!\nThis should not happen.")
 
-        text = mingui.Text(book.place(label='Details'), multiline=True)
-        text.text = ''.join(traceback.format_exception (typ, value, tback))
-        text.enabled = False
+        mingui.Text(book.place(label='Traceback'), multiline=True,
+                    text=''.join(traceback.format_exception (typ, value, tback)),
+                    enabled=False)
+        details = mingui.Text(book.place(label='Details'), multiline=True,
+                              text=VerboseTB('NoColor').text(typ, value, tback, context=7),
+                              enabled=False)
+        details.SetFont(wx.Font(8, wx.MODERN, wx.NORMAL, wx.NORMAL))
+
 
         button = mingui.Button(box.place(stretch=0), "That's OK",
                                connect={'clicked': self.close})
-
-        self.title = random.choice(reduce(list.__add__, [[t[0]]*t[1] for t in titles]))
 
 def excepthook(type, value, traceback):
     bw = BirdWindow(type, value, traceback)
     bw.show(modal=True)
     bw.destroy()
+#    VerboseTB('NoColor')(type, value, traceback)
     sys.__excepthook__(type, value, traceback)
 
 

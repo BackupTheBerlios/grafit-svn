@@ -6,7 +6,7 @@ class Container(HasSignals):
         return self, kwds
 
 class Widget(HasSignals):
-    def __init__(self, place, connect={}):
+    def __init__(self, place, connect={}, **kwds):
         if place is None:
             self.parent = None
             placeargs = {}
@@ -16,6 +16,8 @@ class Widget(HasSignals):
             self.parent._add(self, **placeargs)
         for signal, slot in connect.iteritems():
             self.connect(signal, slot)
+        for k, v in kwds.iteritems():
+            setattr(self, k, v)
 
     def destroy(self):
         self.Destroy()
@@ -60,17 +62,17 @@ displayed in a different way, and do not respond to user actions."""
         return self.Close()
 
 class Window(wx.Frame, Widget, Container):
-    def __init__(self, parent=None, connect={}):
+    def __init__(self, parent=None, connect={}, **kwds):
         wx.Frame.__init__(self, parent, -1)
-        Widget.__init__(self, None, connect)
+        Widget.__init__(self, None, connect, **kwds)
         self.parent = parent
 
     title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
 
 class Dialog(wx.Dialog, Widget, Container):
-    def __init__(self, parent=None, connect={}):
+    def __init__(self, parent=None, connect={}, **kwds):
         wx.Dialog.__init__(self, parent, -1, style=wx.THICK_FRAME)
-        Widget.__init__(self, None, connect)
+        Widget.__init__(self, None, connect, **kwds)
         self.parent = parent
 
     def show(self, modal=False):
@@ -81,9 +83,9 @@ class Dialog(wx.Dialog, Widget, Container):
     title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
 
 class Box(Widget, Container, wx.Panel):
-    def __init__(self, place, orientation='vertical'):
+    def __init__(self, place, orientation='vertical', **kwds):
         wx.Panel.__init__(self, place[0], -1)
-        Widget.__init__(self, place)
+        Widget.__init__(self, place, **kwds)
         if orientation == 'horizontal':
             self.layout = wx.BoxSizer(wx.HORIZONTAL)
         elif orientation == 'vertical':
@@ -110,24 +112,24 @@ class Box(Widget, Container, wx.Panel):
         self.layout.Fit(self)
 
 class Label(Widget, wx.StaticText):
-    def __init__(self, place, text):
+    def __init__(self, place, text, **kwds):
         wx.StaticText.__init__(self, place[0], -1, text)
-        Widget.__init__(self, place)
+        Widget.__init__(self, place, **kwds)
 
 class Image(Widget, wx.StaticBitmap):
-    def __init__(self, place, image):
+    def __init__(self, place, image, **kwds):
         image = image.convert('RGB')
         wximg = wx.EmptyImage(image.size[0],image.size[1])
         wximg.SetData(image.tostring())
         bitmap = wximg.ConvertToBitmap()
 
         wx.StaticBitmap.__init__(self, place[0], -1, bitmap)
-        Widget.__init__(self, place)
+        Widget.__init__(self, place, **kwds)
 
 class Button(Widget, wx.Button):
-    def __init__(self, place, text, toggle=False, connect={}):
+    def __init__(self, place, text, toggle=False, connect={}, **kwds):
         wx.Button.__init__(self, place[0], -1, text)
-        Widget.__init__(self, place, connect)
+        Widget.__init__(self, place, connect, **kwds)
 
 #        self.Bind(wx.EVT_LEFT_DCLICK, self.emitter('double-clicked'), True)
         self.Bind(wx.EVT_BUTTON, self.emitter('clicked'))
@@ -149,14 +151,14 @@ class Button(Widget, wx.Button):
     text = property(**text())
 
 class Text(Widget, wx.TextCtrl):
-    def __init__(self, place, multiline=False, connect={}):
+    def __init__(self, place, multiline=False, connect={}, **kwds):
         style = 0
         if multiline:
             style |= wx.TE_MULTILINE
         else:
             style |= wx.TE_PROCESS_ENTER
         wx.TextCtrl.__init__(self, place[0], -1, style=style)
-        Widget.__init__(self, place, connect)
+        Widget.__init__(self, place, connect, **kwds)
 
     def get_value(self):
         return self.GetValue()
@@ -165,9 +167,9 @@ class Text(Widget, wx.TextCtrl):
     text = property(get_value, set_value)
 
 class Notebook(Widget, Container, wx.Notebook):
-    def __init__(self, place, connect={}):
+    def __init__(self, place, connect={}, **kwds):
         wx.Notebook.__init__(self, place[0], -1)
-        Widget.__init__(self, place, connect)
+        Widget.__init__(self, place, connect, **kwds)
 
         # item images
         self.imagelist = wx.ImageList(16, 16)

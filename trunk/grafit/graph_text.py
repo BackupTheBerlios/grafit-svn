@@ -1,9 +1,9 @@
 import binascii
 
 import numarray.mlab as mlab
-import PIL.Image
-import PIL.ImageFont
-import PIL.ImageDraw
+import Image
+import ImageFont
+import ImageDraw
 from matplotlib.ft2font import FT2Font
 
 import grafit.thirdparty.mathtextg as mathtext
@@ -80,12 +80,13 @@ class TextPainter(object):
                            d.style.symbol, d.style.symbol_size, 
                            xmin, xmax, ymin, ymax)
 
-        return 15, 15, 0, renderer
+        return 15, 15, -7.5, renderer
 
     def render_text_chunk_normal(self, text, size, orientation='h'):
-        fonte = PIL.ImageFont.FreeTypeFont(FONTFILE, int(round(size)))
+        fonte = ImageFont.FreeTypeFont(FONTFILE, int(round(size)))
         w, h = fonte.getsize(text)
-        _, origin = fonte.getmetrics()
+        ascent, descent = fonte.getmetrics()
+        origin = h - ascent
         if orientation == 'v': 
             ww, hh, angle = h, w, 90.0
         else: 
@@ -98,11 +99,11 @@ class TextPainter(object):
                 fontname = font.postscript_name
                 gl2ps_TextOpt(text, fontname, size, GL2PS__TEXT_BL, angle)
             else:
-                image = PIL.Image.new('L', (w, h), 255)
-                PIL.ImageDraw.Draw(image).text((0, 0), text, font=fonte)
-                image = image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+                image = Image.new('L', (w, h), 215)
+                ImageDraw.Draw(image).text((0, 0), text, font=fonte)
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)
                 if orientation == 'v':
-                    image = image.transpose(PIL.Image.ROTATE_270)
+                    image = image.transpose(Image.ROTATE_270)
                 glRasterPos2d(x, y)
 #                ww, wh = image.size
                 glDrawPixels(ww, hh, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.tostring())
@@ -120,10 +121,10 @@ class TextPainter(object):
             return ww, hh, origin, renderer
         
         if self.plot.ps:
-            w, h, _, pswriter = mathtext.math_parse_s_ps(text, 100, size)
-            _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 100, size) #FIXME
+            w, h, _, pswriter = mathtext.math_parse_s_ps(text, 75, size)
+            _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 75, size) #FIXME
         else:
-            w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 100, size)
+            w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 75, size)
 
         if orientation == 'v': 
             ww, hh, angle = h, w, 90
