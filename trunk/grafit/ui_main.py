@@ -150,11 +150,13 @@ class ProjectExplorer(Box):
 
         self.list = List(self.splitter)
         self.list.enable_drop(['grafit-object', 'filename', 'text'])
+
         self.list.connect('drop-hover', self.on_drop_hover)
         self.list.connect('dropped', self.on_dropped)
         self.list.connect('drop-ask', self.on_drop_ask)
 
         self.list.connect('drag-begin', self.on_begin_drag)
+
         self.list.connect('item-activated', self.on_list_item_activated)
         self.list.connect('right-click', self.on_list_right_click)
 

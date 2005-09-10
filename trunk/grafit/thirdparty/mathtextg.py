@@ -1347,7 +1347,7 @@ def math_parse_s_ps(s, dpi, fontsize):
     h += 2
 
     origin = h-ymax
-    handler.expr.set_origin(0, h-ymax)
+#    handler.expr.set_origin(0, h-ymax)
 
     pswriter = StringIO()
     Element.fonts.set_canvas_size(w, h, pswriter)

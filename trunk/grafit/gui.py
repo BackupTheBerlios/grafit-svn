@@ -39,7 +39,6 @@ class _xSplashScreen(wx.SplashScreen):
         self.Refresh()
 
     def painty(self, evt):
-        print >>sys.stderr, 'painty'
 #        evt.Skip()
         dc = wx.PaintDC(self)
 #        dc.BeginDrawing()
@@ -618,7 +617,7 @@ class ListModel(HasSignals):
 #http://wiki.wxpython.org/index.cgi/TreeCtrlDnD
 #http://wiki.wxpython.org/index.cgi/LongRunningTasks
 
-class _xDropTarget(wx.DropTarget):
+class _xDropTarget(wx.PyDropTarget):
     def __init__(self, window):
         wx.DropTarget.__init__(self)
         self.window = window
@@ -627,35 +626,72 @@ class _xDropTarget(wx.DropTarget):
         return self.window.OnRequestDrop(x, y)
 
     def OnData(self, x, y, d):
-        if self.GetData():
-            self.window.AddItem(x, y)
+        pikou = self.GetData()
+        obj = self.GetDataObject()
+        for fmtstr, fmt in data_formats.iteritems():
+            if obj.IsSupported(fmt):
+                if 0 < obj.GetDataSize(fmt) < sys.maxint:
+                    data = obj.GetDataHere(fmt)
+                    self.window.AddItem(x, y, fmtstr, data)
         return d
 
     def OnDragOver(self, x, y, d):
         return self.window.OnHover(x, y)
 
+
+data_formats = { 'filename': wx.DataFormat(wx.DF_FILENAME),
+                 'text': wx.DataFormat(wx.DF_UNICODETEXT), }
+
+class WrapDataObject(wx.PyDataObjectSimple):
+    def __init__(self, dataobj, format):
+        if format not in data_formats:
+            data_formats[format] = wx.CustomDataFormat(format)
+        wx.PyDataObjectSimple.__init__(self, data_formats[format])
+        self.SetFormat(data_formats[format])
+        self.format = format
+        self.dataobj = dataobj
+        self.data = None
+
+    def retrieve(self):
+        data = self.dataobj.get_data(self.format)
+        if self.format == 'filename':
+            self.data = '\r\n'.join('file:'+fn.encode('utf-8') for fn in data)+'\x00'
+        elif self.format == 'text':
+            self.data = data.encode('utf-8')+'\x00'
+        else:
+            self.data = data
+
+    def GetDataSize(self):
+        if self.data is None:
+            if self.dataobj is not None:
+                self.retrieve()
+            else:
+                self.data = ''
+        return len(self.data)
+
+    def GetDataHere(self):
+        if self.data is None:
+            if self.dataobj is not None:
+                self.retrieve()
+            else:
+                self.data = ''
+        return self.data
+
+
 def create_wx_data_object(formats, data=None):
     compobj = wx.DataObjectComposite()
-    indivi = []
 
     for format in formats:
-        if format == 'filename':
-            obj = wx.FileDataObject()
-            if data:
-                for filename in data.get_data(format):
-                    obj.AddFile(filename)
-        elif format == 'text':
-            obj = wx.TextDataObject()
-            if data:
-                obj.SetText(data.get_data(format))
-        else:
-            obj = wx.CustomDataObject(wx.CustomDataFormat(format))
-            if data:
-                obj.SetData(data.get_data(format))
-        compobj.Add(obj)
-        indivi.append(obj)
+        if format not in data_formats:
+            data_formats[format] = wx.CustomDataFormat(format)
 
-    return compobj, indivi
+        if data is None:
+            obj = wx.CustomDataObject(data_formats[format])
+        else:
+            obj = WrapDataObject(data, format)
+        compobj.Add(obj)
+
+    return compobj
 
 class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix):
     def __init__(self, lst, *args, **kwds):
@@ -680,7 +716,7 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
             return
 
         dropSource = wx.DropSource(self)
-        data, _ = create_wx_data_object(data[0].supported_formats, data[0])
+        data = create_wx_data_object(data[0].supported_formats, data[0])
         dropSource.SetData(data)
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
 
@@ -714,28 +750,8 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
         else:
             return False
 
-    def AddItem(self, x, y):
+    def AddItem(self, x, y, format, data):
         item, flags = self.HitTest(wx.Point(x, y))
-        print >>sys.stderr, item, flags
-
-        for obj in self.lst.dropobjs:
-            if obj.GetFormat() == wx.DataFormat(wx.DF_UNICODETEXT):
-                format, data = 'text', obj.GetText()
-                if len(data):
-                    obj.SetData('')
-                    break
-            elif obj.GetFormat() == wx.DataFormat(wx.DF_FILENAME):
-                format, data = 'filename', obj.GetFilenames()
-                if len(data):
-                    obj.SetData('')
-                    break
-            else:
-                if obj.GetDataSize() > 0:
-                    format, data = obj.GetFormat().GetId(), obj.GetDataHere()
-                    if data is not None:
-                        obj.SetData('')
-                        break
-
         result = self.lst.emit('dropped', item, format, data)
 
     def getpixmap(self, filename):
@@ -808,13 +824,11 @@ class List(Widget):
     def enable_drop(self, formats):
         self.can_drop = True
         self.formats = formats
-        self.setup_drop()
-
-    def setup_drop(self):
         target = _xDropTarget(self._widget)
-        composite, self.dropobjs = create_wx_data_object(self.formats)
-        target.SetDataObject(composite)
+        self.composite = create_wx_data_object(self.formats)
+        target.SetDataObject(self.composite)
         self._widget.SetDropTarget(target)
+        target.formats = formats
 
     def on_item_activated(self, event):
         self.emit('item-activated', event.m_itemIndex)
@@ -938,7 +952,7 @@ class _xTreeCtrl(wx.TreeCtrl):
         else:
             return False
 
-    def AddItem(self, x, y):
+    def AddItem(self, x, y, format, data):
         item, flags = self.HitTest(wx.Point(x, y))
 
         try:
@@ -946,25 +960,6 @@ class _xTreeCtrl(wx.TreeCtrl):
             item = items[[i._nodeid for i in items].index(item)]
         except ValueError:
             return
-
-
-        for obj in self.tree.dropobjs:
-            if obj.GetFormat() == wx.DataFormat(wx.DF_UNICODETEXT):
-                format, data = 'text', obj.GetText()
-                if len(data):
-                    obj.SetData('')
-                    break
-            elif obj.GetFormat() == wx.DataFormat(wx.DF_FILENAME):
-                format, data = 'filename', obj.GetFilenames()
-                if len(data):
-                    obj.SetData('')
-                    break
-            else:
-                if obj.GetDataSize() > 0:
-                    format, data = obj.GetFormat().GetId(), obj.GetDataHere()
-                    if data is not None:
-                        obj.SetData('')
-                        break
 
         result = self.tree.emit('dropped', item, format, data)
 
@@ -1065,13 +1060,11 @@ class Tree(Widget):
     def enable_drop(self, formats):
         self.can_drop = True
         self.formats = formats
-        self.setup_drop()
-
-    def setup_drop(self):
         target = _xDropTarget(self._widget)
-        composite, self.dropobjs = create_wx_data_object(self.formats)
-        target.SetDataObject(composite)
+        self.composite = create_wx_data_object(self.formats)
+        target.SetDataObject(self.composite)
         self._widget.SetDropTarget(target)
+        target.formats = formats
 
 
 

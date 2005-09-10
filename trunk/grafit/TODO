@@ -1,17 +1,18 @@
 bugs
 ----
-* can't navigate folders in graph data panel
-* fix nans in postscript output
+* navigate folders in graph data panel
 * show/hide xorobjects correctly
-* text does not align correctly
-- order of columns in graph data panel is strange
-- make setting column.expr a command
-- make caching w/ display lists work
+* vertical text does not align correctly
+* text color for text objects
+* text size for text objects
+* minor tics for logarithmic axes
 
 features
 ---------
 * context menu on project explorer
 * context menu on graph
+* duplicate object
+* cut/copy/paste graph objects
 
 planned features
 ----------------

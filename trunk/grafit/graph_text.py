@@ -87,6 +87,8 @@ class TextPainter(object):
         w, h = fonte.getsize(text)
         ascent, descent = fonte.getmetrics()
         origin = h - ascent
+        if self.plot.ps:
+            origin = 0
         if orientation == 'v': 
             ww, hh, angle = h, w, 90.0
         else: 
@@ -99,7 +101,7 @@ class TextPainter(object):
                 fontname = font.postscript_name
                 gl2ps_TextOpt(text, fontname, size, GL2PS__TEXT_BL, angle)
             else:
-                image = Image.new('L', (w, h), 215)
+                image = Image.new('L', (w, h), 255)
                 ImageDraw.Draw(image).text((0, 0), text, font=fonte)
                 image = image.transpose(Image.FLIP_TOP_BOTTOM)
                 if orientation == 'v':
@@ -122,7 +124,7 @@ class TextPainter(object):
         
         if self.plot.ps:
             w, h, _, pswriter = mathtext.math_parse_s_ps(text, 75, size)
-            _, _, origin, _ = mathtext.math_parse_s_ft2font(text, 75, size) #FIXME
+            origin = 0
         else:
             w, h, origin, fonts = mathtext.math_parse_s_ft2font(text, 75, size)
 
@@ -135,8 +137,9 @@ class TextPainter(object):
             if self.plot.ps:
                 txt = pswriter.getvalue()
                 ps = "gsave\n%f %f translate\n%f rotate\n%s\ngrestore\n" \
-                    % ((self.plot.marginl+x)*self.plot.res, 
-                       (self.plot.marginb+y)*self.plot.res, angle, txt)
+                        % ((self.plot.marginl+x)*self.plot.res,
+                           (self.plot.marginb+y)*self.plot.res, 
+                           angle, txt)
                 self.plot.pstext.append(ps)
             else:
                 w, h, imgstr = fonts[0].image_as_str()

@@ -88,10 +88,10 @@ class Graph(Item, HasSignals):
         self.textpainter = TextPainter(self)
 
         self.axis_title_font_size = 12.
+        self.background_color = (1., 1., 1., 1.)
         self.pwidth = 120.
         self.pheight = 100.
 
-#        self.cache = False
         self.recalc = True
 
     default_name_prefix = 'graph'
@@ -446,7 +446,7 @@ class Graph(Item, HasSignals):
         return min(f1, f2), max(f1, f2)
 
     def init(self):
-        glClearColor(252./256, 252./256, 252./256, 1.0)
+        glClearColor(*self.background_color)
         glClear(GL_COLOR_BUFFER_BIT)
 
         # enable transparency
@@ -469,22 +469,10 @@ class Graph(Item, HasSignals):
             self.last_width, self.last_height = width, height
 
         t = time.time()
-#        if self.cache:
-#            glCallList(self.listno)
-#            glClearColor(252./256, 252./256, 252./256, 1.0)
-#            glClear(GL_COLOR_BUFFER_BIT)
-#            glRasterPos2d(-self.marginl+1, -self.marginb+1)
-##            glRasterPos2d(0, 0)
-#            image = self.image.resize((width, height), Image.ANTIALIAS)
-#            glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, image.tostring()),
-##            print >>sys.stderr, time.time()-t, "seconds"
-#            return
-
-
         if not self.paint_xor_objects:
             if self.recalc:
                 for i, d in enumerate(self.datasets):
-                    glClearColor(252./256, 252./256, 252./256, 1.0)
+                    glClearColor(*self.background_color)
                     glClear(GL_COLOR_BUFFER_BIT)
 
                     w, h, _, renderer=self.textpainter.render_text_chunk_symbol(str(i))
@@ -499,7 +487,7 @@ class Graph(Item, HasSignals):
                 glDeleteLists(self.listno, 1)
                 glNewList(self.listno, GL_COMPILE)
 
-                glClearColor(252./256, 252./256, 252./256, 1.0)
+                glClearColor(*self.background_color)
                 glClear(GL_COLOR_BUFFER_BIT)
 
                 # set up clipping
@@ -522,35 +510,20 @@ class Graph(Item, HasSignals):
 
                 glEndList()
                 self.recalc = False
-#                print >>sys.stderr, 'prepare list', time.time()-t, "seconds"
 
             glCallList(self.listno)
-#            print >>sys.stderr, 'call list', time.time()-t, "seconds"
 
             for axis in self.axes:
                 axis.paint_text()
                 axis.paint_title()
 
-#            print >>sys.stderr, 'axes', time.time()-t, "seconds"
             for o in self.graph_objects:
                 o.draw()
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
-#            print >>sys.stderr, 'objects', time.time()-t, "seconds"
 
-#            glRasterPos2d(-self.marginl, -self.marginb)
-#            glRasterPos2d(0, 0)
-#            self.pixels = glReadPixels(0, 0, self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE)
-#            self.pixw, self.pixh = self.width_pixels, self.height_pixels
-#            self.image = Image.fromstring('RGBA', (self.pixw, self.pixh), self.pixels)
-#            print pixels
 #            print >>sys.stderr, time.time()-t, "seconds"
         else:
-#            glClearColor(252./256, 252./256, 252./256, 1.0)
-#            glClear(GL_COLOR_BUFFER_BIT)
-#            if self.pixels is not None:
-#                glRasterPos2d(-self.marginl, -self.marginb)
-#                glDrawPixels(self.width_pixels, self.height_pixels, GL_RGBA, GL_UNSIGNED_BYTE, self.pixels)
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
             for o in self.objects:
@@ -609,7 +582,7 @@ class Graph(Item, HasSignals):
         except ValueError:
             self.tich = 0
 
-        # set margins 
+        # set margins (units are in mm)
         self.marginb = tith + self.tich + self.axis_title_font_size*self.magnification/2 + 2 
         self.margint = self.height_mm * 0.03
         self.marginl = titw + self.ticw + self.axis_title_font_size*self.magnification/2 + 2

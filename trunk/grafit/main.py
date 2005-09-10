@@ -65,11 +65,10 @@ class BirdWindow(mingui.Dialog):
                                connect={'clicked': self.close})
 
 def excepthook(type, value, traceback):
+    sys.__excepthook__(type, value, traceback)
     bw = BirdWindow(type, value, traceback)
     bw.show(modal=True)
     bw.destroy()
-#    VerboseTB('NoColor')(type, value, traceback)
-    sys.__excepthook__(type, value, traceback)
 
 
 def main():
