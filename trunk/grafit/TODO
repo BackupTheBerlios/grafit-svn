@@ -3,9 +3,9 @@ bugs
 * navigate folders in graph data panel
 * show/hide xorobjects correctly
 * vertical text does not align correctly
-* text color for text objects
-* text size for text objects
 * minor tics for logarithmic axes
+* simplify signals.py
+* fix text color in eps output
 
 features
 ---------
@@ -13,6 +13,8 @@ features
 * context menu on graph
 * duplicate object
 * cut/copy/paste graph objects
+* text color for text objects
+* text size for text objects
 
 planned features
 ----------------

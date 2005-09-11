@@ -633,6 +633,7 @@ class _xDropTarget(wx.PyDropTarget):
                 if 0 < obj.GetDataSize(fmt) < sys.maxint:
                     data = obj.GetDataHere(fmt)
                     self.window.AddItem(x, y, fmtstr, data)
+                    break ### FIXME
         return d
 
     def OnDragOver(self, x, y, d):

@@ -3,6 +3,43 @@ minsig
 ------
 Minimalist signal / slot framework for Python
 """
+#import weakref
+#
+#class WeakMethodBound(object):
+#    def __init__(self, f, keepref=False):
+#        self.f = f.im_func
+#        self.c = weakref.ref(f.im_self)
+#        if keepref:
+#            self.ref = f
+#    def is_expired(self):
+#        return self.f() is not None
+#    def __eq__(self, other):
+#        return other == self.f()
+#    def __call__(self, *arg, **kwd):
+#        if self.c() == None:
+#            raise ReferenceError
+#        return self.f()(self.c(), *arg, **kwd)
+#
+#class WeakMethodFree(object):
+#    def __init__(self, f, keepref=False):
+#        self.f = weakref.ref(f)
+#        if keepref:
+#            self.ref = f
+#    def is_expired(self):
+#        return self.f() is not None
+#    def __eq__(self, other):
+#        return other == self.f()
+#    def __call__(self, *arg, **kwd):
+#        if self.f() == None:
+#            raise ReferenceError
+#        return self.f()(*arg, **kwd)
+#
+#def Slot(f, keepref=False):
+#    try:
+#        f.im_func
+#    except AttributeError :
+#        return WeakMethodFree(f, keepref=False)
+#    return WeakMethodBound(f, keepref=False)
 
 import sys
 import weakref
@@ -11,7 +48,7 @@ try:
 except ImportError:
     pass
 
-class Slot(object):
+class Slot3(object):
     """
     A Slot wraps a function or method, using a weak reference.
     We have to work around the fact that:

@@ -27,8 +27,10 @@ from settings import settings, DATADIR
 class ItemDragData(object):
     def __init__(self, items):
         self.items = items
-    
-    supported_formats = ['grafit-object', 'filename']
+        if Folder in [type(item) for item in items]:
+            self.supported_formats = ['grafit-object']
+        else:
+            self.supported_formats = ['grafit-object', 'filename']
 
     def get_data(self, format):
         if format == 'grafit-object':
@@ -39,7 +41,7 @@ class ItemDragData(object):
                 if isinstance(item, Worksheet):
                     filename = item.name + '.txt'
                 elif isinstance(item, Graph):
-                    filename = item.name + '.ps'
+                    filename = item.name + '.eps'
                 elif isinstance(item, Folder):
                     filename = item.name
                 d = tempfile.mkdtemp()
