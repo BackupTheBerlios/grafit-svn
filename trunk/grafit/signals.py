@@ -48,7 +48,7 @@ try:
 except ImportError:
     pass
 
-class Slot3(object):
+class Slot(object):
     """
     A Slot wraps a function or method, using a weak reference.
     We have to work around the fact that:

@@ -228,6 +228,10 @@ class Project(HasSignals):
                     else:
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
 
+        if self.filename is not None:
+            self.db.commit()
+            self.aside = metakit.storage('grafit-storage.mka', 1)
+            self.db.aside(self.aside)
 
     def on_command_added(self, command=None):
         self.modified = True
@@ -378,8 +382,13 @@ class Project(HasSignals):
         else:
             raise NameError, "folder '%s' does not exist" % path
 
-    def commit(self):
+    def icommit(self):
+        print >>sys.stderr, 'icommit'
         self.db.commit()
+        self.aside.commit()
+
+    def commit(self):
+        self.db.commit(1)
         self.modified = False
 
     def saveto(self, filename):
@@ -395,6 +404,7 @@ class Project(HasSignals):
     def set_modified(self, value):
         if value and not self._modified:
             self.emit('modified')
+            self.icommit()
         elif self._modified and not value:
             self.emit('not-modified')
         self._modified = value
