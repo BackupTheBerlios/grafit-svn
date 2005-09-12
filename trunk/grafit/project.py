@@ -184,14 +184,23 @@ class Project(HasSignals):
     def __init__(self, filename=None):
         self.filename = filename
 
+
         if self.filename is None:
             # We initially create an in-memory database.
             # When we save to a file, we will reopen the database from the file.
             self.db = metakit.storage()
+#            self.filename = 'defau.gt'
+#            self.db = metakit.storage(self.filename, 1)
+#            for desc in storage_desc.values():
+#                self.db.getas(desc)
+#            self.db.commit()
         else:
             self.db = metakit.storage(self.filename, 1)
+            self.cleanup()
 
-        self.cleanup()
+#        self.aside = metakit.storage('grafit-storage.mka', 1)
+#        self.db.aside(self.aside)
+#        print >>sys.stderr, "project created"
 
         self._modified = False
 
@@ -228,10 +237,6 @@ class Project(HasSignals):
                     else:
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
 
-        if self.filename is not None:
-            self.db.commit()
-            self.aside = metakit.storage('grafit-storage.mka', 1)
-            self.db.aside(self.aside)
 
     def on_command_added(self, command=None):
         self.modified = True
@@ -382,13 +387,15 @@ class Project(HasSignals):
         else:
             raise NameError, "folder '%s' does not exist" % path
 
-    def icommit(self):
-        print >>sys.stderr, 'icommit'
-        self.db.commit()
-        self.aside.commit()
+#    def icommit(self):
+#        print >>sys.stderr, 'icommit'
+#        self.db.commit()
+#        self.aside.commit()
 
     def commit(self):
-        self.db.commit(1)
+#        self.db.commit(1)
+        self.db.commit()
+#        self.aside.commit()
         self.modified = False
 
     def saveto(self, filename):
@@ -402,9 +409,10 @@ class Project(HasSignals):
     def get_modified(self):
         return self._modified
     def set_modified(self, value):
+#        if value:
+#            self.icommit()
         if value and not self._modified:
             self.emit('modified')
-            self.icommit()
         elif self._modified and not value:
             self.emit('not-modified')
         self._modified = value
