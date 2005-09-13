@@ -118,6 +118,10 @@ class GraphView(gui.Box):
         self.graph.connect('request-cursor', self.on_request_cursor)
 
         self.object = self.graph
+        self.graph.connect('rename', self.on_rename)
+
+    def on_rename(self, name, item=None):
+        self.parent._widget.SetPageText(self.parent.pages.index(self), name)
 
     def on_selectall(self):
         self.legend.setsel(xrange(len(self.graph.datasets)))
@@ -404,27 +408,38 @@ class WorksheetListModel(HasSignals):
         self.folder.project.connect(['add-item', 'remove-item'], self.update)
 
     def update(self, item=None):
-        self.contents = [o for o in self.folder.contents() 
-                           if isinstance(o, (Worksheet))]
+        self.contents = [self.folder.parent]*(self.folder!=self.folder.project.top) + \
+                            [o for o in self.folder.contents() if isinstance(o, (Worksheet, Folder))]
         self.emit('modified')
 
     # ListModel protocol
-    def get(self, row, column): return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
-    def get_image(self, row): return 'worksheet.png'
+    def get(self, row, column): 
+        if self.contents[row] == self.folder.parent:
+            return '../'
+        return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
+    def get_image(self, row): 
+        obj = self.contents[row]
+        if isinstance(obj, Worksheet):
+            return 'worksheet.png'
+        elif isinstance(obj, Folder):
+            if obj == self.folder.parent:
+                return 'up.png'
+            else:
+                return 'stock_folder.png'
     def __len__(self): return len(self.contents)
     def __getitem__(self, row): return self.contents[row]
 
 class ColumnListModel(HasSignals):
     def __init__(self):
-#        self.worksheets = []
         self.colnames = []
 
     def set_worksheets(self, worksheets):
-#        self.worksheets = worksheets
-        colnames = list(reduce(set.intersection, (set(w.column_names) for w in worksheets)))
-        if len(worksheets) > 0:
-            colnames.sort(lambda a, b: cmp(worksheets[0].column_names.index(a), worksheets[0].column_names.index(b)))
-        self.colnames = colnames
+        if Folder in (type(w) for w in worksheets) or len(worksheets) == 0:
+            self.colnames = []
+        else:
+            self.colnames = list(reduce(set.intersection, (set(w.column_names) for w in worksheets)))
+        if len(self.colnames) > 0:
+            self.colnames.sort(lambda a, b: cmp(worksheets[0].column_names.index(a), worksheets[0].column_names.index(b)))
         self.emit('modified')
 
     def get(self, row, column): return self.colnames[row]
@@ -454,6 +469,7 @@ class GraphDataPanel(gui.Box):
                                        model=WorksheetListModel(self.project.top))
 #        self.worksheet_list.connect('item-activated', self.on_wslist_activated)
         self.worksheet_list.connect('selection-changed', self.on_wslist_select)
+        self.worksheet_list.connect('item-activated', self.on_item_activated)
 
         gui.Label(self, 'X column', stretch=0)
         self.x_list = gui.List(self, model=ColumnListModel())
@@ -464,6 +480,11 @@ class GraphDataPanel(gui.Box):
 
 #    def on_wslist_activated(self, ind):
 #        print 'activated:', self.worksheet_list.model[ind]
+
+    def on_item_activated(self, ind):
+        obj = self.worksheet_list.model[ind]
+        if isinstance(obj, Folder):
+            self.worksheet_list.model = WorksheetListModel(obj)
 
     def on_wslist_select(self):
         selection = [self.worksheet_list.model[ind] for ind in self.worksheet_list.selection]

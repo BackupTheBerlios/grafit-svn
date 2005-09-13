@@ -60,6 +60,10 @@ class WorksheetView(gui.Box):
         self.table.connect('double-clicked', self.on_double_clicked)
 
         self.object = self.worksheet
+        self.worksheet.connect('rename', self.on_rename)
+
+    def on_rename(self, name, item=None):
+        self.parent._widget.SetPageText(self.parent.pages.index(self), name)
 
     def on_new_column(self):
         self.worksheet[self.worksheet.suggest_column_name()] = [nan]*20

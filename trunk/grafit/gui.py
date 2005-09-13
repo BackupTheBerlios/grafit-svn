@@ -537,11 +537,12 @@ class Progressbar(Widget):
 
 class Button(Widget):
     def __init__(self, parent, text, toggle=False, **kwds):
+        id = { 'OK':wx.ID_OK, 'Cancel':wx.ID_CANCEL, 'Close':wx.ID_CLOSE}.get(text, -1)
         if toggle:
-            self._widget = wx.ToggleButton(parent._widget, -1, text)
+            self._widget = wx.ToggleButton(parent._widget, id, text)
             self._widget.Bind(wx.EVT_TOGGLEBUTTON, self.on_toggled)
         else:
-            self._widget = wx.Button(parent._widget, -1, text)
+            self._widget = wx.Button(parent._widget, id, text)
             self._widget.Bind(wx.EVT_BUTTON, self.on_clicked)
 
         Widget.__init__(self, parent, **kwds)
@@ -628,12 +629,14 @@ class _xDropTarget(wx.PyDropTarget):
     def OnData(self, x, y, d):
         pikou = self.GetData()
         obj = self.GetDataObject()
-        for fmtstr, fmt in data_formats.iteritems():
-            if obj.IsSupported(fmt):
-                if 0 < obj.GetDataSize(fmt) < sys.maxint:
-                    data = obj.GetDataHere(fmt)
-                    self.window.AddItem(x, y, fmtstr, data)
-                    break ### FIXME
+        self.window.AddItem(x, y, DropData(obj))
+#        for fmtstr, fmt in data_formats.iteritems():
+#            if obj.IsSupported(fmt):
+#                if 0 < obj.GetDataSize(fmt) < sys.maxint:
+#                    data = obj.GetDataHere(fmt)
+#                    self.window.AddItem(x, y, fmtstr, data)
+##                    break ### FIXME
+#        return d
         return d
 
     def OnDragOver(self, x, y, d):
@@ -642,6 +645,16 @@ class _xDropTarget(wx.PyDropTarget):
 
 data_formats = { 'filename': wx.DataFormat(wx.DF_FILENAME),
                  'text': wx.DataFormat(wx.DF_UNICODETEXT), }
+
+class DropData(object):
+    def __init__(self, obj):
+        self.obj = obj
+        self.formats = [st for (st, fmt) in data_formats.iteritems() 
+                               if obj.IsSupported(fmt) and 0 < obj.GetDataSize(fmt) < sys.maxint]
+
+    def get(self, fmt):
+        return self.obj.GetDataHere(data_formats[fmt])
+
 
 class WrapDataObject(wx.PyDataObjectSimple):
     def __init__(self, dataobj, format):
@@ -751,9 +764,9 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
         else:
             return False
 
-    def AddItem(self, x, y, format, data):
+    def AddItem(self, x, y, data):
         item, flags = self.HitTest(wx.Point(x, y))
-        result = self.lst.emit('dropped', item, format, data)
+        result = self.lst.emit('dropped', item, data)
 
     def getpixmap(self, filename):
         if filename is None:
@@ -953,7 +966,7 @@ class _xTreeCtrl(wx.TreeCtrl):
         else:
             return False
 
-    def AddItem(self, x, y, format, data):
+    def AddItem(self, x, y, data):
         item, flags = self.HitTest(wx.Point(x, y))
 
         try:
@@ -962,7 +975,7 @@ class _xTreeCtrl(wx.TreeCtrl):
         except ValueError:
             return
 
-        result = self.tree.emit('dropped', item, format, data)
+        result = self.tree.emit('dropped', item, data)
 
 
 class Tree(Widget):

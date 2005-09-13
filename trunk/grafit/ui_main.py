@@ -142,7 +142,7 @@ class ProjectExplorer(Box):
         self.splitter = Splitter(self, 'horizontal')
 
         self.tree = Tree(self.splitter)
-        self.tree.enable_drop(['grafit-object', 'text'])
+        self.tree.enable_drop(['grafit-object'])
 
         self.tree.connect('drop-hover', self.on_drop_hover)
         self.tree.connect('drop-ask', self.on_tree_drop_ask)
@@ -151,7 +151,7 @@ class ProjectExplorer(Box):
         self.tree.connect('selected', self.on_tree_selected)
 
         self.list = List(self.splitter)
-        self.list.enable_drop(['grafit-object', 'filename', 'text'])
+        self.list.enable_drop(['grafit-object', 'filename'])
 
         self.list.connect('drop-hover', self.on_drop_hover)
         self.list.connect('dropped', self.on_dropped)
@@ -185,13 +185,13 @@ class ProjectExplorer(Box):
         f.close()
         subprocess.Popen(['gv', d+'/preview.eps'])
 
-    def on_tree_dropped(self, item, format, data):
-        print >>sys.stderr, "dropped", item, format, item
-        if format == 'grafit-object':
-            for d in data.split('\n'):
+    def on_tree_dropped(self, item, data):
+        if 'grafit-object' in data.formats:
+            for d in data.get('grafit-object').split('\n'):
                 self.project.items[d].parent = item.folder
+            return True
         else:
-            print 'DROPPED: ', item, format, data
+            return False
 
     def on_drop_hover(self, item):
 #        if item != -1:
@@ -204,17 +204,21 @@ class ProjectExplorer(Box):
             return True
 #            return False
 
-    def on_dropped(self, item, format, data):
-        if format == 'grafit-object':
-            for d in data.split('\n'):
+    def on_dropped(self, item, data):
+        if 'grafit-object' in data.formats:
+            for d in data.get('grafit-object').split('\n'):
                 self.project.items[d].parent = self.list.model[item]
-        elif format == 'filename' and item == -1:
+            return True
+        elif 'filename' in data.formats and item == -1:
             # import ascii
-            for path in data:
+            for path in data.get('filename'):
                 ws = self.project.new(Worksheet, str(os.path.basename(path).split('.')[0]), self.project.here)
                 ws.array, ws._header = import_ascii(path)
+            return False
         else:
-            print 'DROPPED: ', format, data
+            return False
+#        else:
+#            print 'DROPPED: ', format, data
 
     def on_begin_drag(self, item):
         return ItemDragData([self.list.model[i] for i in self.list.selection])
@@ -354,7 +358,7 @@ class MainWindow(Window):
             'edit-copy': Action('Copy', 'Undo the last action', object, 'stock_copy.png', 'Ctrl+C'),
             'edit-cut': Action('Cut', 'Undo the last action', object, 'stock_cut.png', 'Ctrl+X'),
             'edit-paste': Action('Paste', 'Undo the last action', 'stock_paste.png', None, 'Ctrl+V'),
-            'edit-delete': Action('Delete', 'Undo the last action', 'stock_delete.png', None, 'Delete'),
+            'edit-delete': Action('Delete', 'Undo the last action', 'stock_delete.png', None),
 
             'import-ascii': Action('Import ASCII...', 'Import and ASCII file', 
                                    self.on_import_ascii, 'import_ascii.png', 'Ctrl+I'),
@@ -449,6 +453,8 @@ class MainWindow(Window):
             for view in [v for v in self.book.pages if hasattr(v, 'graph')]:
                 if item == view.graph:
                     self.book.select(view)
+                    view.graph.recalc = True
+                    view.graph.emit('redraw')
                     return
             w = GraphView(self.book, item, page_label=item.name, page_pixmap='graph.png')
             self.book.select(w)

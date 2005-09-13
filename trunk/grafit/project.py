@@ -4,7 +4,7 @@ import time, random, socket, md5
 
 import metakit
 
-from grafit.commands import command_from_methods, command_list
+from grafit.commands import command_from_methods, command_list, command_from_methods2, StopCommand
 from grafit.signals import HasSignals
 
 
@@ -110,6 +110,44 @@ class Item(HasSignals):
             if self.check_name(name, parent):
                 return name
 
+    def set_parent(self, state, parent):
+        state['new'], state['old'] = parent, self._parent
+        oldparent = self._parent
+        self._parent = parent
+        self.parent.emit('modified')
+        if oldparent != '':
+            oldparent.emit('modified')
+        else:
+            raise StopCommand
+    def undo_set_parent(self, state):
+        self._parent = state['old']
+        if state['old'] != '':
+            state['old'].emit('modified')
+        state['new'].emit('modified')
+    def redo_set_parent(self, state):
+        self._parent = state['new']
+        if state['old'] != '':
+            state['old'].emit('modified')
+        state['new'].emit('modified')
+    set_parent = command_from_methods2('worksheet/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
+    def get_parent(self):
+        return self._parent
+    parent = property(get_parent, set_parent)
+
+    _parent = wrap_attribute('parent')
+
+    def set_name(self, n):
+        self._name = n
+        self.emit('rename', n, item=self)
+        if self.parent != '':
+            self.parent.emit('modified')
+    def get_name(self):
+        return self._name
+    name = property(get_name, set_name)
+
+    _name = wrap_attribute('name')
+
+
     default_name_prefix = 'item'
 
 
@@ -147,9 +185,9 @@ class Folder(Item, HasSignals):
             return
         if oldparent != '':
             oldparent.emit('modified')
-            print >>sys.stderr, 'foo!', oldparent
         if isinstance(self.parent, Folder):
             self.parent.emit('modified')
+            self.project.top.emit('modified')
     def get_parent(self):
         return self._parent
     parent = property(get_parent, set_parent)

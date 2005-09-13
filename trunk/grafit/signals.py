@@ -174,6 +174,7 @@ class HasSignals(object):
         Emit a signal. All slots connected to the signal will be called.
         *args and **kwds are passed to the slot unmodified.
         """
+#        print >>sys.stderr, "EMIT", self, signal, args, kwds
         if not hasattr(self, '_signals'):
             self._signals = {}
         results = []

@@ -273,40 +273,6 @@ class Worksheet(Item, HasSignals):
         for column in self.columns:
             yield column
 
-    def set_name(self, n):
-        self._name = n
-        self.emit('rename', n, item=self)
-    def get_name(self):
-        return self._name
-    name = property(get_name, set_name)
-
-    def set_parent(self, state, parent):
-        state['new'], state['old'] = parent, self._parent
-        oldparent = self._parent
-        self._parent = parent
-        self.parent.emit('modified')
-        if oldparent != '':
-            oldparent.emit('modified')
-        else:
-            raise StopCommand
-    def undo_set_parent(self, state):
-        self._parent = state['old']
-        if state['old'] != '':
-            state['old'].emit('modified')
-        state['new'].emit('modified')
-    def redo_set_parent(self, state):
-        self._parent = state['new']
-        if state['old'] != '':
-            state['old'].emit('modified')
-        state['new'].emit('modified')
-    set_parent = command_from_methods2('worksheet/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
-    def get_parent(self):
-        return self._parent
-    parent = property(get_parent, set_parent)
-
-    _name = wrap_attribute('name')
-    _parent = wrap_attribute('parent')
-
     def suggest_column_name(self):
         def num_to_alpha(n):
             alphabet = 'abcdefghijklmnopqrstuvwxyz'
