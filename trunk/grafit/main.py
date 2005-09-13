@@ -64,11 +64,16 @@ class BirdWindow(mingui.Dialog):
         button = mingui.Button(box.place(stretch=0), "That's OK",
                                connect={'clicked': self.close})
 
+#import pdb
+
 def excepthook(type, value, traceback):
     sys.__excepthook__(type, value, traceback)
     bw = BirdWindow(type, value, traceback)
     bw.show(modal=True)
     bw.destroy()
+    print sys.stderr, sys.stdout, sys.stdin
+
+#    pdb.pm()
 
 
 def main():

@@ -185,6 +185,11 @@ class Folder(Item, HasSignals):
         for f in self.parent.ancestors():
             yield f
 
+    def subfolders(self):
+        for item in self.contents():
+            if isinstance(item, Folder):
+                yield item
+
     name = wrap_attribute('name')
     _parent = wrap_attribute('parent')
 

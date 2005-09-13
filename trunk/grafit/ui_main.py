@@ -105,6 +105,7 @@ class FolderTreeNode(HasSignals):
         if isroot:
             self.folder.project.connect('add-item', self.on_modified)
             self.folder.project.connect('remove-item', self.on_modified)
+        self.subfolders = list(self.folder.subfolders())
 
     def __iter__(self):
         for item in self.folder.contents():
@@ -121,7 +122,10 @@ class FolderTreeNode(HasSignals):
             return 'stock_folder.png'
 
     def on_modified(self, item=None): 
-        self.emit('modified')
+        subfolders = list(self.folder.subfolders())
+        if subfolders != self.subfolders:
+            self.emit('modified')
+            self.subfolders = subfolders
 
     def rename(self, newname):
         if newname == '':
@@ -206,8 +210,9 @@ class ProjectExplorer(Box):
 
     def on_dropped(self, item, data):
         if 'grafit-object' in data.formats:
+            parent = self.list.model[item]
             for d in data.get('grafit-object').split('\n'):
-                self.project.items[d].parent = self.list.model[item]
+                self.project.items[d].parent = parent
             return True
         elif 'filename' in data.formats and item == -1:
             # import ascii
@@ -292,7 +297,11 @@ class FolderListData(HasSignals):
         self.folder = folder
         self.folder.project.connect('add-item', self.on_project_modified)
         self.folder.project.connect('remove-item', self.on_project_modified)
-        self.folder.connect('modified', self.emitter('modified'), True)
+        self.folder.connect('modified', self.on_modified)
+
+    def on_modified(self):
+        print >>sys.stderr, "on-modified!", self.folder, list(self.folder.contents())
+        self.emit('modified')
 
     def on_project_modified(self, item):
         if item.parent == self.folder:
