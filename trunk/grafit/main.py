@@ -11,6 +11,20 @@ import numarray._sort,      numarray._ufuncInt16,     numarray._ufuncUInt64
 
 import os
 import sys
+import logging
+
+logging.basicConfig(format="%(asctime)s [%(name)s] %(message)s")
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option('-l', '--log', dest='log', help='Log program events')
+#   parser.add_option('-u', '--update', action='store_true', dest='update', help='Update grafit to latest version')
+options, args = parser.parse_args()
+
+if options.log is not None:
+    for l in options.log.split(','):
+        logging.getLogger(l).setLevel(logging.DEBUG)
+
 
 from settings import DATADIR
 print "Starting grafit, data directory is", DATADIR

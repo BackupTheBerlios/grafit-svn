@@ -43,6 +43,10 @@ Minimalist signal / slot framework for Python
 
 import sys
 import weakref
+import logging
+
+log = logging.getLogger('signals')
+
 try:
     import wx
 except ImportError:
@@ -150,6 +154,7 @@ class HasSignals(object):
         if signal not in self._signals:
             self._signals[signal] = []
         self._signals[signal].append(Slot(slot, keepref))
+        log.debug('connected %s %s %s', self, signal, slot)
 
     def emitter(self, signal, *args, **kwds):
         return lambda *ar, **kw: self.emit(signal, *args, **kwds)
@@ -166,6 +171,7 @@ class HasSignals(object):
             if slot not in self._signals[signal]:
                 raise NameError, "TODO"
             self._signals[signal].remove(slot)
+            log.debug('disconnected %s %s %s', self, signal, slot)
         except ReferenceError:
             pass
 
@@ -174,6 +180,7 @@ class HasSignals(object):
         Emit a signal. All slots connected to the signal will be called.
         *args and **kwds are passed to the slot unmodified.
         """
+        log.debug('emitted %s %s %s %s', self, signal, args, kwds)
 #        print >>sys.stderr, "EMIT", self, signal, args, kwds
         if not hasattr(self, '_signals'):
             self._signals = {}

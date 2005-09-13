@@ -1,7 +1,7 @@
 import sys
-print >>sys.stderr, "import worksheet_view"
+#print >>sys.stderr, "import worksheet_view"
 from grafit.ui_worksheet_view import WorksheetView
-print >>sys.stderr, "import graph_view"
+#print >>sys.stderr, "import graph_view"
 from grafit.ui_graph_view import GraphView
 from grafit.import_ascii import import_ascii
 from grafit.arrays import nan
@@ -18,7 +18,7 @@ from grafit import Graph, Worksheet, Folder, Project
 
 from grafit.gui import Window, Button, Box, Application, Shell, List, \
                         Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
-                        OpenGLWidget, Table, Action, Menu, Menubar, Toolbar
+                        OpenGLWidget, Table, Action, Menu, Menubar, Toolbar, Html
 
 import grafit.signals
 
@@ -277,7 +277,8 @@ class ActionList(Box):
         self.list._widget.SetFont(wx.Font(9, wx.SWISS, wx.NORMAL, wx.NORMAL))
         self.list.connect('item-activated', self.on_list_item_activated)
         self.list.connect('selection-changed', self.on_list_selection_changed)
-        self.label = Label(self, 'Action', stretch=0.)
+#        self.label = Label(self, 'Action', stretch=0.)
+        self.label = Html(self, stretch=.5)
 
     def on_list_item_activated(self, idx):
         com = self.list.model.actionlist.commands[idx]
@@ -290,7 +291,10 @@ class ActionList(Box):
 
     def on_list_selection_changed(self):
         com = self.list.model.actionlist.commands[self.list.selection[0]]
-        self.label.text = str(com)
+        text = "<html><body><i>"+str(com)+"</i></body></html>"
+#        self.label.text = str(com)
+        self.label._widget.SetStandardFonts()
+        self.label._widget.SetPage(text)
 
 class FolderListData(HasSignals):
     def __init__(self, folder):
@@ -300,7 +304,6 @@ class FolderListData(HasSignals):
         self.folder.connect('modified', self.on_modified)
 
     def on_modified(self):
-        print >>sys.stderr, "on-modified!", self.folder, list(self.folder.contents())
         self.emit('modified')
 
     def on_project_modified(self, item):
@@ -483,7 +486,6 @@ class MainWindow(Window):
 
     def on_quit(self):
         settings.set('script', 'history', '\n'.join(self.shell._widget.history))
-        print >>sys.stderr, 'quit'
         self._widget.Destroy()
 
     def close_project(self):

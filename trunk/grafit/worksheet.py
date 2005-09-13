@@ -1,5 +1,5 @@
 import sys
-print >>sys.stderr, "import worksheet"
+#print >>sys.stderr, "import worksheet"
 
 from grafit.signals import HasSignals
 from grafit.commands import command_from_methods, command_from_methods2, StopCommand

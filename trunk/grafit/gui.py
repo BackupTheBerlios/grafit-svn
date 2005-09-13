@@ -14,6 +14,8 @@ import wx.grid
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
 from wx.lib.colourselect import ColourSelect, EVT_COLOURSELECT
 from wx.lib.scrolledpanel import ScrolledPanel
+from wx.lib.fancytext import StaticFancyText
+from wx.html import HtmlWindow
 
 from grafit.signals import HasSignals
 from grafit.settings import DATADIR
@@ -2020,6 +2022,13 @@ class PythonSTC(stc.StyledTextCtrl):
             #self.Refresh(True, wxRect(pt.x, pt.y, 5,5))
             #print pt
             #self.Refresh(False)
+
+class Html(Widget):
+    def __init__(self, parent, **place):
+        self._widget = HtmlWindow(parent._widget, -1)
+        Widget.__init__(self, parent, **place)
+
+#    text = property(lambda self: self._widget.GetLabel(), lambda self, t: self._widget.SetLabel(t))
 
 
 class PythonEditor(Widget):
