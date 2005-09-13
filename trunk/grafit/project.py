@@ -7,8 +7,6 @@ import metakit
 from grafit.commands import command_from_methods, command_list, command_from_methods2, StopCommand
 from grafit.signals import HasSignals
 
-
-
 # by (Carl Free Jr. http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761)
 def create_id(*args):
     """Generates a universally unique ID.
@@ -129,18 +127,32 @@ class Item(HasSignals):
         if state['old'] != '':
             state['old'].emit('modified')
         state['new'].emit('modified')
-    set_parent = command_from_methods2('worksheet/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
+    set_parent = command_from_methods2('object/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
     def get_parent(self):
         return self._parent
     parent = property(get_parent, set_parent)
 
     _parent = wrap_attribute('parent')
 
-    def set_name(self, n):
+    def set_name(self, state, n):
+        if n.startswith('0'):
+            print "No!"
+            raise StopCommand
+        state['new'], state['old'] = n, self._name
         self._name = n
-        self.emit('rename', n, item=self)
+        self.set_name_notify()
+    def undo_set_name(self, state):
+        self._name = state['old']
+        self.set_name_notify()
+    def redo_set_name(self, state):
+        self._name = state['new']
+        self.set_name_notify()
+    def set_name_notify(self):
+        self.emit('rename', self._name, item=self)
         if self.parent != '':
             self.parent.emit('modified')
+    set_name = command_from_methods2('object/rename', set_name, undo_set_name, redo=redo_set_name)
+
     def get_name(self):
         return self._name
     name = property(get_name, set_name)
