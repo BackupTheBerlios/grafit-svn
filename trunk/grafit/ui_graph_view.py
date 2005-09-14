@@ -405,7 +405,7 @@ class WorksheetListModel(HasSignals):
     def __init__(self, folder):
         self.folder = folder
         self.update()
-        self.folder.project.connect(['add-item', 'remove-item'], self.update)
+        self.folder.connect("modified", self.update)
 
     def update(self, item=None):
         self.contents = [self.folder.parent]*(self.folder!=self.folder.project.top) + \
@@ -422,10 +422,7 @@ class WorksheetListModel(HasSignals):
         if isinstance(obj, Worksheet):
             return 'worksheet.png'
         elif isinstance(obj, Folder):
-            if obj == self.folder.parent:
-                return 'up.png'
-            else:
-                return 'stock_folder.png'
+            return ['stock_folder.png', 'up.png'][obj == self.folder.parent]
     def __len__(self): return len(self.contents)
     def __getitem__(self, row): return self.contents[row]
 

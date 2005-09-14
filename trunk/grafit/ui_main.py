@@ -1,28 +1,22 @@
-import sys
-#print >>sys.stderr, "import worksheet_view"
-from grafit.ui_worksheet_view import WorksheetView
-#print >>sys.stderr, "import graph_view"
-from grafit.ui_graph_view import GraphView
-from grafit.import_ascii import import_ascii
-from grafit.arrays import nan
-
-import wx
 import os
 import tempfile
 import subprocess
-
-from grafit.signals import HasSignals, global_connect
-from grafit.commands import command_list, undo, redo
+import sys
 
 from grafit import Graph, Worksheet, Folder, Project
-
+from grafit.ui_worksheet_view import WorksheetView
+from grafit.ui_graph_view import GraphView
+from grafit.import_ascii import import_ascii
+from grafit.arrays import nan
+from grafit.signals import HasSignals, global_connect
+from grafit.commands import command_list, undo, redo
+from grafit.settings import settings, DATADIR
 from grafit.gui import Window, Button, Box, Application, Shell, List, \
-                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
-                        OpenGLWidget, Table, Action, Menu, Menubar, Toolbar, Html
-
+                       Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
+                       OpenGLWidget, Table, Action, Menu, Menubar, Toolbar, Html
 import grafit.signals
 
-from settings import settings, DATADIR
+import wx
 
 class ItemDragData(object):
     def __init__(self, items):
@@ -55,21 +49,11 @@ class ItemDragData(object):
 class Cancel(Exception):
     pass
 
-#import Pyro.core
-#import threading
 
 class ScriptWindow(Shell):#, Pyro.core.ObjBase):
     def __init__(self, parent, **kwds):
         self.locals = {}
         Shell.__init__(self, parent, locals=self.locals, **kwds)
-#        Pyro.core.ObjBase.__init__(self)
-#
-#        Pyro.core.initServer()
-#        daemon = Pyro.core.Daemon()
-#        uri=daemon.connect(self, 'Grafit')
-#        print uri
-#        thread = threading.Thread(None, lambda: daemon.requestLoop())
-#        thread.start()
 
         self.run('from grafit.arrays import *')
         self.run('from grafit import *')
@@ -299,24 +283,29 @@ class ActionList(Box):
 class FolderListData(HasSignals):
     def __init__(self, folder):
         self.folder = folder
-        self.folder.project.connect('add-item', self.on_project_modified)
-        self.folder.project.connect('remove-item', self.on_project_modified)
-        self.folder.connect('modified', self.on_modified)
+        self.update()
+        self.folder.connect('modified', self.update)
 
-    def on_modified(self):
+    def update(self):
+        self.contents = [self.folder.parent]*(self.folder!=self.folder.project.top) + \
+                        list(self.folder.contents())
         self.emit('modified')
 
-    def on_project_modified(self, item):
-        if item.parent == self.folder:
-            self.emit('modified')
+    def get(self, row, column):
+        if self.contents[row] == self.folder.parent:
+            return '../'
+        return self.contents[row].name + '/'*isinstance(self.contents[row], Folder)
+    def get_image(self, row):
+        obj = self.contents[row]
+        if isinstance(obj, Worksheet):
+            return 'worksheet.png'
+        elif isinstance(obj, Graph):
+            return 'graph.png'
+        elif isinstance(obj, Folder):
+            return ['stock_folder.png', 'up.png'][obj == self.folder.parent]
+    def __len__(self): return len(self.contents)
+    def __getitem__(self, row): return self.contents[row]
 
-    def __len__(self): return len(list(self.folder.contents()))
-    def __getitem__(self, key): return list(self.folder.contents())[key]
-    def get(self, row, column): return list(self.folder.contents())[row].name
-    def get_image(self, row): 
-        return { Worksheet: 'worksheet.png',
-                 Graph: 'graph.png',
-                 Folder: 'stock_folder.png', }[type(list(self.folder.contents())[row])]
 
 # example main window
 class MainWindow(Window):

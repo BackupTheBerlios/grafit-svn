@@ -79,7 +79,10 @@ class Item(HasSignals):
                 name = self.create_name(parent)
             if not self.check_name(name, parent):
                 raise NameError
- 
+
+            # enter ourselves in the project dictionary
+            self.project.items[self.id] = self
+
             # initialize
             self.name = name
             self.parent = parent.id
@@ -87,8 +90,9 @@ class Item(HasSignals):
             # this is an item already present in the database
             self.view, self.data, self.id = location
 
-        # enter ourselves in the project dictionary
-        self.project.items[self.id] = self
+            # enter ourselves in the project dictionary
+            self.project.items[self.id] = self
+
 
         # We have to emit the signal at the end
         # so the signal handlers can access wrapped attributes.
@@ -196,13 +200,13 @@ class Folder(Item, HasSignals):
     def set_parent(self, parent):
         oldparent = self._parent
         self._parent = parent
-        if isinstance(self.parent, Folder) and self in self.parent.ancestors():
+        if oldparent != '' and isinstance(self.parent, Folder) and self in self.parent.ancestors():
             print >>sys.stderr, "are you kidding?"
             self._parent = oldparent
             return
         if oldparent != '':
             oldparent.emit('modified')
-        if isinstance(self.parent, Folder):
+        if isinstance(self.parent, Folder) and self != self.parent:
             self.parent.emit('modified')
             self.project.top.emit('modified')
     def get_parent(self):
