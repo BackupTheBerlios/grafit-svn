@@ -60,10 +60,12 @@ class Item(HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         self.project = project
 
-        if location is None:
+        command_list.disable()
+
+        if location is None or isinstance(location, dict):
             # this is a new item, not present in the database 
             # create an entry for it
-            self.view, self.data, self.id = project._create(type(self))
+            self.view, self.data, self.id = project._create(type(self), location)
 
             # we have to handle creation of the top folder as a special case
             # we cannot specify its parent when we create it!
@@ -93,6 +95,8 @@ class Item(HasSignals):
             # enter ourselves in the project dictionary
             self.project.items[self.id] = self
 
+        command_list.enable()
+
 
         # We have to emit the signal at the end
         # so the signal handlers can access wrapped attributes.
@@ -117,7 +121,7 @@ class Item(HasSignals):
         oldparent = self._parent
         self._parent = parent
         self.parent.emit('modified')
-        if oldparent != '':
+        if isinstance(oldparent, Folder):
             oldparent.emit('modified')
         else:
             raise StopCommand
@@ -153,7 +157,7 @@ class Item(HasSignals):
         self.set_name_notify()
     def set_name_notify(self):
         self.emit('rename', self._name, item=self)
-        if self.parent != '':
+        if isinstance(self.parent, Folder):
             self.parent.emit('modified')
     set_name = command_from_methods2('object/rename', set_name, undo_set_name, redo=redo_set_name)
 
@@ -162,6 +166,10 @@ class Item(HasSignals):
     name = property(get_name, set_name)
 
     _name = wrap_attribute('name')
+
+    def todict(self):
+        import mk
+        return mk.row_to_dict(self.view, self.data)
 
 
     default_name_prefix = 'item'
@@ -350,7 +358,7 @@ class Project(HasSignals):
                 if row.id.startswith('-'):
                     view.delete(i)
 
-    def _create(self, cls):
+    def _create(self, cls, location):
         """Create a new entry a new item of class `cls` in the database
 
         This method is called from the constructor of all `Item`-derived
@@ -363,7 +371,12 @@ class Project(HasSignals):
             raise TypeError, "project cannot create an item of type '%s'" % cls
 
         id = create_id()
-        row = view.append(id=id)
+        from mk import addrow
+        if location is None:
+            row = view.append(id=id)
+        else:
+            row = addrow(view, location)
+            view[row].id = id
         data = view[row]
 
         return view, data, id

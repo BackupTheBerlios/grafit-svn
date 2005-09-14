@@ -1,10 +1,8 @@
 bugs
 ----
-* make rename a command
 * show/hide xorobjects correctly
 * vertical text does not align correctly
 * minor tics for logarithmic axes
-* simplify signals.py
 * fix text color in eps output
 
 features

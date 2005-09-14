@@ -5,42 +5,38 @@ Minimalist signal / slot framework for Python
 """
 #import weakref
 #
-#class WeakMethodBound(object):
-#    def __init__(self, f, keepref=False):
-#        self.f = f.im_func
-#        self.c = weakref.ref(f.im_self)
-#        if keepref:
-#            self.ref = f
-#    def is_expired(self):
-#        return self.f() is not None
-#    def __eq__(self, other):
-#        return other == self.f()
-#    def __call__(self, *arg, **kwd):
-#        if self.c() == None:
-#            raise ReferenceError
-#        return self.f()(self.c(), *arg, **kwd)
+#class Proxy(object):
+#    def __init__(self, obj, keepobj=None):
+#        if keepobj is None:
+#            self.obj = weakref.ref(obj, self.on_expire)
+#        else:
+#            self.keep = weakref.ref(keepobj, self.on_expire) 
+#            self.obj = obj
+#        self.expired = False
 #
-#class WeakMethodFree(object):
-#    def __init__(self, f, keepref=False):
-#        self.f = weakref.ref(f)
-#        if keepref:
-#            self.ref = f
-#    def is_expired(self):
-#        return self.f() is not None
-#    def __eq__(self, other):
-#        return other == self.f()
-#    def __call__(self, *arg, **kwd):
-#        if self.f() == None:
-#            raise ReferenceError
-#        return self.f()(*arg, **kwd)
+#    def on_expire(self, arg):
+#        print >>sys.stderr, self.obj, 'expired!', arg
+#        del self.obj
+#        self.expired = True
 #
-#def Slot(f, keepref=False):
-#    try:
-#        f.im_func
-#    except AttributeError :
-#        return WeakMethodFree(f, keepref=False)
-#    return WeakMethodBound(f, keepref=False)
-
+#    def __call__(self, *args, **kwds):
+#        return self.obj()(*args, **kwds)
+#
+#    def __eq__(
+#
+#class Slot(Proxy):
+#    def __init__(self, obj, keep):
+#        try:
+#            obj.im_self
+#        except AttributeError:
+#            Proxy.__init__(self, obj, obj.im_self)
+#        else:
+#            Proxy.__init__(self, obj, keep)
+#
+#    def __eq__(self, other):
+#        try:
+#            
+        
 import sys
 import weakref
 import logging
