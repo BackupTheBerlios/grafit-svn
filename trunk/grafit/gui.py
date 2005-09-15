@@ -1386,10 +1386,14 @@ class Menubar(Widget):
         self.frame = parent
         Widget.__init__(self, parent, **place)
         self.frame._widget.Bind(wx.EVT_MENU, self.on_menu)
+        self.menus = {}
         self.items = {}
 
     def on_menu(self, event):
         self.items[event.GetId()]()
+
+    def __getitem__(self, item):
+        return self.menus[item]
 
 class Menu(object):
     def __init__(self, menubar=None, name=None):
@@ -1400,6 +1404,7 @@ class Menu(object):
         self._menu.Bind(wx.EVT_MENU, self.on_menu)
         if menubar is not None:
             menubar._widget.Append(self._menu, name)
+            menubar.menus[name] = self
 
     def append(self, action):
         if action is None:
@@ -1423,6 +1428,13 @@ class Menu(object):
     
             if self.menubar is not None:
                 self.menubar.items[id] = action
+
+    def __getitem__(self, item):
+        return self.items[self._menu.FindItemByPosition(item).GetId()]
+    def __setitem__(self, item, value):
+        pass
+    def __delitem__(self, item, value):
+        pass
 
     def on_menu(self, event):
         self.items[event.GetId()]()

@@ -129,6 +129,8 @@ class DrawWithStyle(HasSignals):
         
         self.style.connect('modified', self.on_style_modified)
 
+        self.xfrom, self.xto = -inf, inf
+
     def change_style_do(self, item, value, old):
         if item == 'color':
             self.data.color = (self.style.color[0] + self.style.color[1]*256 + self.style.color[2]*256*256)
@@ -172,12 +174,13 @@ class DrawWithStyle(HasSignals):
             gl2ps_PointSize(self.data.size)
             if self.data.size != 0:
                 glPointSize(self.data.size)
-#            x, y = self.graph.proj(x, y)
-            xmin, ymin = self.graph.data_to_phys(self.graph.xmin, self.graph.ymin)
-            xmax, ymax = self.graph.data_to_phys(self.graph.xmax, self.graph.ymax)
-            t = time.time()
+
+            xmin = max(self.graph.xmin, self.xfrom)
+            xmax = min(self.graph.xmax, self.xto)
+            xmin, ymin = self.graph.data_to_phys(xmin, self.graph.ymin)
+            xmax, ymax = self.graph.data_to_phys(xmax, self.graph.ymax)
+
             render_symbols(x, y, self.style.symbol, self.style.symbol_size, xmin, xmax, ymin, ymax)
-#            print >>sys.stderr, 'symbols', time.time() - t
 
     def paint_lines(self, x, y):
         if len(x) == 0:
@@ -207,8 +210,10 @@ class DrawWithStyle(HasSignals):
             gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
-            xmin, ymin = self.graph.data_to_phys(self.graph.xmin, self.graph.ymin)
-            xmax, ymax = self.graph.data_to_phys(self.graph.xmax, self.graph.ymax)
+            xmin = max(self.graph.xmin, self.xfrom)
+            xmax = min(self.graph.xmax, self.xto)
+            xmin, ymin = self.graph.data_to_phys(xmin, self.graph.ymin)
+            xmax, ymax = self.graph.data_to_phys(xmax, self.graph.ymax)
             render_lines(x, y, xmin, xmax, ymin, ymax)
 #            glVertexPointerd(transpose(array([x, y, z])).tostring())
 #            glEnable(GL_VERTEX_ARRAY)
@@ -246,24 +251,24 @@ class Dataset(DrawWithStyle):
         return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
                                                          self.worksheet.name, self.x.name, self.y.name)
     def recalculate(self):
-        t = time.time()
-        length = min(len(self.x), len(self.y))
-        x = asarray(self.x)[:length]
-        y = asarray(self.y)[:length]
-        ind = isfinite(x) & isfinite(y) & (self.xfrom <= x) & (x <= self.xto)
-        self.xx = x[ind]
-        self.yy = y[ind]
-        print >>sys.stderr, (time.time()-t) * 1000,
+#        length = min(len(self.x), len(self.y))
+#        x = asarray(self.x)[:length]
+#        y = asarray(self.y)[:length]
+#        ind = isfinite(x) & isfinite(y) & (self.xfrom <= x) & (x <= self.xto)
+#        self.xx = x[ind]
+#        self.yy = y[ind]
+        self.xx = asarray(self.x)
+        self.yy = asarray(self.y)
 
     def set_range(self, _state, range):
         _state['old'] = self.xfrom, self.xto
         self.xfrom, self.xto = range
-        self.recalculate()
+#        self.recalculate()
         self.emit('modified', self)
 
     def undo_set_range(self, _state):
         self.xfrom, self.xto = _state['old']
-        self.recalculate()
+#        self.recalculate()
         self.emit('modified', self)
 
     def get_range(self):
@@ -275,6 +280,7 @@ class Dataset(DrawWithStyle):
 
 
     def paint(self):
+        t = time.time()
         xx, yy = self.graph.data_to_phys(self.xx, self.yy)
         self.paint_lines(xx, yy)
         self.paint_symbols(xx, yy)

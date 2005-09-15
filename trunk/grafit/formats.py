@@ -5,7 +5,7 @@ import bz2
 import StringIO
 import pickle
 
-import ElementTree as xml
+import cElementTree as xml
 
 from grafit import Worksheet, Graph
 

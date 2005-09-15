@@ -472,6 +472,7 @@ class Graph(Item, HasSignals):
 
         t = time.time()
         if not self.paint_xor_objects:
+            self.recalc = 1
             if self.recalc:
                 for i, d in enumerate(self.datasets):
                     glClearColor(*self.background_color)
@@ -524,7 +525,7 @@ class Graph(Item, HasSignals):
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
 
-#            print >>sys.stderr, time.time()-t, "seconds"
+            print >>sys.stderr, time.time()-t, "seconds"
         else:
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)
