@@ -413,7 +413,7 @@ class MainWindow(Window):
 
         import wx.xrc
         # preload
-        wx.xrc.XmlResource(DATADIR+'/grafit/test.xrc')
+        wx.xrc.XmlResource(DATADIR+'/data/resources.xrc')
         self.on_command()
         self.on_project_modified(False)
 

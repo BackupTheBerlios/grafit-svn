@@ -70,6 +70,7 @@ class WorksheetView(gui.Box):
 
     def on_right_clicked(self, row, col):
         menu = gui.Menu()
+        menu.append(gui.Action('Set value', 'setvalue', self.on_set_value, 'stock_edit.png'))
         menu.append(gui.Action('Delete', 'delete', self.on_set_value, 'stock_delete.png'))
         self.clickcell = row, col
         self.table._widget.PopupMenu(menu._menu)

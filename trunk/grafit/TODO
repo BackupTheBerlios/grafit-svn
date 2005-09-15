@@ -1,5 +1,8 @@
 bugs
 ----
+* when setting range, show marker and update on mouse up
+* redraw graph when functions are deleted
+* update total function curve when term is moved
 * show/hide xorobjects correctly
 * vertical text does not align correctly
 * minor tics for logarithmic axes

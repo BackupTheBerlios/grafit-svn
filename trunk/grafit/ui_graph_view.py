@@ -128,7 +128,7 @@ class GraphView(gui.Box):
 
     def on_object_doubleclicked(self, obj):
         from prop import Editor
-        e = Editor(self, DATADIR+'/grafit/test.xrc', obj)
+        e = Editor(self, DATADIR+'/data/resources.xrc', obj)
         e._widget.Show()
 
     def on_right_clicked(self, obj):
@@ -535,7 +535,7 @@ class GraphFunctionsPanel(gui.Box):
             pass
         b = fitoptions(wsheet='', extra='', weighting=0, maxiter=50, sstol='0', partol='0')
         from prop import Editor
-        e = Editor(self, 'test.xrc', b)
+        e = Editor(self, DATADIR+'/data/resources.xrc', b)
         b.emit('modified')
         e._widget.ShowModal()
         print b.__dict__
