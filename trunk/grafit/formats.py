@@ -9,6 +9,9 @@ import ElementTree as xml
 
 from grafit import Worksheet, Graph
 
+def pyget (elem, name):
+    return eval (elem.get (name), {"__builtins__": { 'True': True, 'False':False, 'None':None, 'nan':0.0 }})
+
 def load(project, filename): 
     f = open(filename)
     header = f.read(10)
@@ -34,52 +37,46 @@ def load(project, filename):
         for celem in welem:
             if celem.tag == 'CalcColumn':
                 setattr(wsheet, celem.get("name"), [])
+                wsheet[celem.get("name")]._expr = celem.text
             elif celem.tag == 'Column':
                 safedict = {"__builtins__": { 'True':True, 'False':False, 'None':None}}
                 setattr(wsheet, celem.get("name"), pickle.loads(eval(celem.text, safedict)))
 
+    for w in project.top.contents():
+        for c in w:
+            if hasattr(c, '_expr'):
+                c.expr = c._expr
+                del c._expr
+
     for gelem in root.findall('Graph'):
         graph = project.new(Graph, eval(gelem.get("name")))
 
-    def from_element (self, elem):
-        """starting with an empty graph, reconstruct the graph represented by an XML element"""
-        # root
-        self.freeze()
-        self.name = pyget (elem, "name")
         # axes
-        prog = project.mainwin.progressbar.progress()
-        for aelem in elem.findall ('Axis'):
-            axisid = pyget (aelem, "id")
-            if axisid == QwtPlot.xBottom:
-                axis = self.xaxis
-            elif axisid == QwtPlot.yLeft:
-                axis = self.yaxis
-            else:
-                continue
-            axis.min, axis.max = pyget (aelem, "limits")
-            axis.logscale = pyget (aelem, "logscale")
-            axis.title = pyget (aelem, "title")
+        for aelem in gelem.findall('Axis'):
+            axisid = pyget(aelem, "id")
+            if axisid == 2: # QwtPlot.xBottom
+                xmin, xmax = pyget(aelem, "limits")
+                graph.xtype = ['linear', 'log'][pyget(aelem, 'logscale')]
+                graph.xtitle = pyget(aelem, 'title')
+            elif axisid == 0: # QwtPlot.yLeft
+                ymin, ymax = pyget(aelem, "limits")
+                graph.ytype = ['linear', 'log'][pyget(aelem, 'logscale')]
+                graph.ytitle = pyget(aelem, 'title')
+        graph.zoom(xmin, xmax, ymin, ymax)
+
         # datasets
-        for delem in elem.findall ('Dataset'):
+        for delem in gelem.findall('Dataset'):
             # data
-            wsheet = project.w[pyget (delem, "worksheet")]
-            colx = pyget (delem, "xcolumn")
-            coly = pyget (delem, "ycolumn")
-            rangemin, rangemax = pyget (delem, "range")
-            ds = self.add(wsheet, colx, coly, rangemin, rangemax)
+            wsheet = project.top[pyget(delem, "worksheet")]
+            colx = pyget(delem, "xcolumn")
+            coly = pyget(delem, "ycolumn")
+            rangemin, rangemax = pyget(delem, "range")
+            ds = graph.add(wsheet[colx], wsheet[coly])
             # line and symbol styles
-            for prop in Dataset.props:
-                    ds.set_curve_style(prop, pyget(delem, prop))
-        for delem in elem.findall ('FitWindow'):
-            self.fitwin.from_element(delem)
-        project.mainwin.progressbar.setProgress(prog+len(elem))
-        try:
-            self.notes.setText(pyget(elem, "notes"))
-        except:
-            pass
-        self.unfreeze()
+#            for prop in Dataset.props:
+#                ds.set_curve_style(prop, pyget(delem, prop))
 
-
+"""
     def from_element(self, elem):
         self.destroy_ui()
         self.functions = []
@@ -116,6 +113,7 @@ def load(project, filename):
         self.graph.fitdatasets = [self.graph.datasets[i] for i in pyget(elem, "datasets")]
         self.params_flat_to_func(pyget(elem, "params")[0])
         self.build_ui()
+"""
 
 
 if __name__ == '__main__':

@@ -246,11 +246,14 @@ class Dataset(DrawWithStyle):
         return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
                                                          self.worksheet.name, self.x.name, self.y.name)
     def recalculate(self):
+        t = time.time()
         length = min(len(self.x), len(self.y))
-        ind = isfinite(self.x)[:length] & isfinite(self.y)[:length]
-        ind &= (self.xfrom <= self.x)[:length] & (self.x <= self.xto)[:length]
-        self.xx = asarray(self.x[ind])
-        self.yy = asarray(self.y[ind])
+        x = asarray(self.x)[:length]
+        y = asarray(self.y)[:length]
+        ind = isfinite(x) & isfinite(y) & (self.xfrom <= x) & (x <= self.xto)
+        self.xx = x[ind]
+        self.yy = y[ind]
+        print >>sys.stderr, (time.time()-t) * 1000,
 
     def set_range(self, _state, range):
         _state['old'] = self.xfrom, self.xto

@@ -463,6 +463,8 @@ class Graph(Item, HasSignals):
         self.listno = glGenLists(1)
 
     def display(self, width=-1, height=-1):
+        if not hasattr(self, 'listno'):
+            return
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
@@ -531,13 +533,13 @@ class Graph(Item, HasSignals):
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width=-1, height=-1):
+        if not hasattr(self, 'listno'):
+            return
         t = time.time()
         if width == -1 and height == -1:
             width, height = self.last_width, self.last_height
         else:
             self.last_width, self.last_height = width, height
-
-        self.pixel_width, self.pixel_height = width, height
 
         # aspect ratio (width/height)
         self.aspect = self.pwidth/self.pheight 
@@ -588,15 +590,12 @@ class Graph(Item, HasSignals):
         self.marginl = titw + self.ticw + self.axis_title_font_size*self.magnification/2 + 2
         self.marginr = self.width_mm * 0.03
 
-        self.plot_width = self.width_mm - self.marginl - self.marginr
-        self.plot_height = self.height_mm - self.margint - self.marginb
-
-        if self.plot_width/self.plot_height > self.aspect:
-            self.marginr += (self.plot_width - self.plot_height*self.aspect)/2
-            self.marginl += (self.plot_width - self.plot_height*self.aspect)/2
+        if self.width_mm/self.height_mm > self.aspect:
+            self.marginr += (self.width_mm - self.height_mm*self.aspect)/2
+            self.marginl += (self.width_mm - self.height_mm*self.aspect)/2
         else:
-            self.margint += (self.plot_height - self.plot_width/self.aspect)/2
-            self.marginb += (self.plot_height - self.plot_width/self.aspect)/2
+            self.margint += (self.height_mm - self.width_mm/self.aspect)/2
+            self.marginb += (self.height_mm - self.width_mm/self.aspect)/2
 
         self.plot_width = self.width_mm - self.marginl - self.marginr
         self.plot_height = self.height_mm - self.margint - self.marginb

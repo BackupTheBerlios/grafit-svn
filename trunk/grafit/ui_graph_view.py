@@ -119,6 +119,21 @@ class GraphView(gui.Box):
 
         self.object = self.graph
         self.graph.connect('rename', self.on_rename)
+        self.legend.connect('right-click', self.on_legend_right_click)
+
+    def on_legend_right_click(self, item):
+        if item == -1:
+            return
+        item = self.legend.model[item]
+        menu = gui.Menu()
+        menu.append(gui.Action('Hide', '', object))
+        menu.append(gui.Action('Show', '', object))
+        menu.append(gui.Action('Show Only', '', object))
+        menu.append(None)
+        menu.append(gui.Action('Remove', '', object))
+        menu.append(None)
+        menu.append(gui.Action('Select All', '', object))
+        self.legend._widget.PopupMenu(menu._menu)
 
     def on_rename(self, name, item=None):
         self.parent._widget.SetPageText(self.parent.pages.index(self), name)
