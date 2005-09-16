@@ -76,9 +76,9 @@ class TextPainter(object):
             xmax, ymax = self.plot.data_to_phys(self.plot.xmax, self.plot.ymax)
             glColor4f(d.style.color[0]/256., d.style.color[1]/256., 
                       d.style.color[2]/256., 1.)
-            render_symbols(array([x]), array([y]),
-                           d.style.symbol, d.style.symbol_size, 
-                           xmin, xmax, ymin, ymax)
+#            render_symbols(array([x]), array([y]),
+#                           d.style.symbol, d.style.symbol_size, 
+#                           xmin, xmax, ymin, ymax)
 
         return 15, 15, -7.5, renderer
 

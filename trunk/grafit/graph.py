@@ -375,6 +375,12 @@ class Graph(Item, HasSignals):
         px = self.plot_width * (x-xmin)/(xmax-xmin)
         py = self.plot_height * (y-ymin)/(ymax-ymin)
 
+#        bt = self.axis_bottom.transform
+#        lt = self.axis_left.transform
+#
+#        px = self.plot_width * (bt(x) - bt(self.xmin)) / (bt(self.xmax) - bt(self.xmin))
+#        py = self.plot_height * (bt(y) - bt(self.ymin)) / (bt(self.ymax) - bt(self.ymin)) 
+
         return px, py
 
     def phys_to_data(self, x, y):
@@ -470,7 +476,6 @@ class Graph(Item, HasSignals):
         else:
             self.last_width, self.last_height = width, height
 
-        t = time.time()
         if not self.paint_xor_objects:
             self.recalc = 1
             if self.recalc:
@@ -501,10 +506,14 @@ class Graph(Item, HasSignals):
                 for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                     glEnable(plane)
 
+                t = time.time()
                 for d in self.datasets:
                     d.paint()
+                print >>sys.stderr, 'datasets', time.time()-t, "seconds"
+                t = time.time()
                 for f in self.functions:
                     f.paint()
+                print >>sys.stderr, 'functions', time.time()-t, "seconds"
 
                 for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                     glDisable(plane)
@@ -524,8 +533,6 @@ class Graph(Item, HasSignals):
                 o.draw()
                 if self.mode == 'arrow' and self.selected_object == o:
                     o.draw_handles()
-
-            print >>sys.stderr, time.time()-t, "seconds"
         else:
             glLogicOp(GL_XOR)
             glEnable(GL_COLOR_LOGIC_OP)

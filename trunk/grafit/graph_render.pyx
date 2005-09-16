@@ -9,6 +9,7 @@ cdef extern from "math.h":
     double sin(double x)
     double cos(double y)
     int isnan(double x)
+    double log10(double x)
 
 # numarray
 cdef extern from "numarray/libnumarray.h":
@@ -79,56 +80,55 @@ def gl2ps_PointSize(float value): return gl2psPointSize(value)
 def gl2ps_LineWidth(float value): return gl2psLineWidth(value)
 def gl2ps_EndPage(): gl2psEndPage()
 
+cdef enum:
+    CIRCLE, SQUARE, DIAMOND, UPTRIANGLE, DOWNTRIANGLE, LEFTTRIANGLE, RIGHTTRIANGLE
 
-
-def render_symbols(_numarray sx, _numarray sy, symbol, int size, 
-                   double xmin, double xmax, double ymin, double ymax):
+def render_symbols(_numarray sx, _numarray sy, int sym, int fill, int size, 
+                   double xmin, double xmax, double ymin, double ymax,
+                   double pw, double ph, double pxmin, double pxmax, double pymin, double pymax, int logx, int logy):
     cdef int n, m, l
     cdef double *xd, *yd
     cdef int i
     cdef double pi
-    cdef int sym, shape
+    cdef int shape
     cdef double si
     cdef double x, y
-
-    si = size/5.
-
-    pi = 3.14159265358979
     cdef double circlex[11], circley[11]
 
+
+    si = size/5.
+    pi = 3.14159265358979
+
     for n from 0<=n<11:
-        circlex[n] = cos(n*2*pi/10)*size
-        circley[n] = sin(n*2*pi/10)*size
+        circlex[n] = cos(n*2*pi/10)*si
+        circley[n] = sin(n*2*pi/10)*si
 
-    if symbol == 'square-f' or symbol == 'square-o':
-        sym = 1
+    if sym == SQUARE:
         shape = GL_QUADS
-    elif symbol == 'uptriangle-f' or symbol == 'uptriangle-o':
-        sym = 2
+    elif sym == UPTRIANGLE:
         shape = GL_TRIANGLES
-    elif symbol == 'circle-f':
-        sym = 3
-        shape = GL_POINTS
-#        glPointSize(4)
-        glEnable(GL_POINT_SMOOTH)
-    elif symbol == 'diamond-f' or symbol == 'diamond-o':
-        sym = 4
+    elif sym == DOWNTRIANGLE:
+        shape = GL_TRIANGLES
+    elif sym == LEFTTRIANGLE:
+        shape = GL_TRIANGLES
+    elif sym == RIGHTTRIANGLE:
+        shape = GL_TRIANGLES
+    elif sym == CIRCLE:
+        if fill == 0:
+            shape = GL_LINES
+        else:
+            shape = GL_POINTS
+            glEnable(GL_POINT_SMOOTH)
+    elif sym == DIAMOND:
         shape = GL_QUADS
-    elif symbol == 'circle-o':
-        sym = -100
-        shape = GL_LINES
-    else:
-        print 'unknown symbol', symbol
-        return 0
 
-    if symbol[-1] == 'f':
+
+    if fill == 1:
         glPolygonMode(GL_BACK, GL_FILL)
         glPolygonMode(GL_FRONT, GL_FILL)
-    elif symbol[-1] == 'o':
+    else:
         glPolygonMode(GL_BACK, GL_LINE)
         glPolygonMode(GL_FRONT, GL_LINE)
-
-#    pi = 3.14159
 
 #    xbucket, ybucket = -1, -1
 
@@ -140,6 +140,12 @@ def render_symbols(_numarray sx, _numarray sy, symbol, int size,
 
     l = sx.dimensions[0]
 
+    if logx == 1:
+        pxmin = log10(pxmin)
+        pxmax = log10(pxmax)
+    if logy == 1:
+        pymin = log10(pymin)
+        pymax = log10(pymax)
 
     # draw symbols
     glBegin(shape)
@@ -148,6 +154,13 @@ def render_symbols(_numarray sx, _numarray sy, symbol, int size,
         y = yd[n]
         if isnan(x) or isnan(y):
             continue
+
+        if logx == 1:
+            x = log10(x)
+        if logy == 1:
+            y = log10(y)
+        x = pw * (x-pxmin)/(pxmax-pxmin)
+        y = ph * (y-pymin)/(pymax-pymin)
 
         # skip if outside limits
         if not (xmin-si/2 <= x <= xmax+si/2) or not (ymin-si/2 <= y <= ymax+si/2):
@@ -161,23 +174,23 @@ def render_symbols(_numarray sx, _numarray sy, symbol, int size,
 #        if (xbucket == xbucket_s) and (ybucket == ybucket_s):
 #            continue
 
-        if sym == 1:
+        if sym == SQUARE:
             glVertex3d(x-si/2, y-si/2, 0)
             glVertex3d(x+si/2, y-si/2, 0)
             glVertex3d(x+si/2, y+si/2, 0)
             glVertex3d(x-si/2, y+si/2, 0)
-        elif sym == 2:
+        elif sym == UPTRIANGLE or sym == DOWNTRIANGLE or sym == LEFTTRIANGLE or sym == RIGHTTRIANGLE:
             glVertex3d(x-si/2, y-si/2, 0)
             glVertex3d(x+si/2, y-si/2, 0)
             glVertex3d(x, y+si/2, 0)
-        elif sym == 3:
+        elif sym == CIRCLE and fill == 1:
             glVertex3d(x, y, 0)
-        elif sym == 4:
+        elif sym == DIAMOND:
             glVertex3d(x-si/2, y, 0)
             glVertex3d(x, y-si/2, 0)
             glVertex3d(x+si/2, y, 0)
             glVertex3d(x, y+si/2, 0)
-        elif sym == -100:
+        elif sym == CIRCLE and fill == 0:
             for m from 0<=m<10:
                 glVertex3d(x+circlex[m], y+circley[m], 0)
                 glVertex3d(x+circlex[m+1], y+circley[m+1], 0)
@@ -186,7 +199,8 @@ def render_symbols(_numarray sx, _numarray sy, symbol, int size,
 
     return 1
 
-def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ymin, double ymax):
+def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ymin, double ymax,
+                   double pw, double ph, double pxmin, double pxmax, double pymin, double pymax, int logx, int logy):
     cdef int n, l
     cdef double x, y, xnext, ynext
     cdef double *xd, *yd
@@ -195,13 +209,37 @@ def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ym
     yd = <double *>NA_OFFSETDATA(sy)
     l = sx.dimensions[0]
 
+    if logx == 1:
+        pxmin = log10(pxmin)
+        pxmax = log10(pxmax)
+    if logy == 1:
+        pymin = log10(pymin)
+        pymax = log10(pymax)
+
+
     # draw lines
     glBegin(GL_LINES)
     for n from 0 <= n < l-1:
         x = xd[n]
         y = yd[n]
+
+        if isnan(x) or isnan(y):
+            continue
+
         xnext = xd[n+1]
         ynext = yd[n+1]
+
+        if logx == 1:
+            x = log10(x)
+            xnext = log10(xnext)
+        if logy == 1:
+            y = log10(y)
+            ynext = log10(ynext)
+        x = pw * (x-pxmin)/(pxmax-pxmin)
+        y = ph * (y-pymin)/(pymax-pymin)
+        xnext = pw * (xnext-pxmin)/(pxmax-pxmin)
+        ynext = ph * (ynext-pymin)/(pymax-pymin)
+
 
         if (x <= xmin and xnext <= xmin) or (y <= ymin and ynext <= ymin) or \
             (x >= xmax and xnext >= xmax) or (y >= ymax and ynext >= ymax):

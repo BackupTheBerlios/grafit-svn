@@ -180,7 +180,14 @@ class DrawWithStyle(HasSignals):
             xmin, ymin = self.graph.data_to_phys(xmin, self.graph.ymin)
             xmax, ymax = self.graph.data_to_phys(xmax, self.graph.ymax)
 
-            render_symbols(x, y, self.style.symbol, self.style.symbol_size, xmin, xmax, ymin, ymax)
+            symbols = ['circle', 'square', 'diamond', 'uptriangle', 
+                       'downtriangle', 'lefttriangle', 'righttriangle']
+
+            render_symbols(x, y, symbols.index(self.style.symbol[:-2]), ['o', 'f'].index(self.style.symbol[-1]),
+                           self.style.symbol_size, xmin, xmax, ymin, ymax,
+                           self.graph.plot_width, self.graph.plot_height, 
+                           self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax,
+                           self.graph.xtype == 'log', self.graph.ytype == 'log')
 
     def paint_lines(self, x, y):
         if len(x) == 0:
@@ -207,14 +214,19 @@ class DrawWithStyle(HasSignals):
             gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
             gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
             gluBeginCurve(nurb)
-            gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), GL_MAP1_VERTEX_3)
+            gluNurbsCurve(nurb,arange(3+N), transpose(array([self.graph.data_to_phys(x), self.graph.data_to_phys(y), z])), 
+                          GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
             xmin = max(self.graph.xmin, self.xfrom)
             xmax = min(self.graph.xmax, self.xto)
             xmin, ymin = self.graph.data_to_phys(xmin, self.graph.ymin)
             xmax, ymax = self.graph.data_to_phys(xmax, self.graph.ymax)
-            render_lines(x, y, xmin, xmax, ymin, ymax)
+            render_lines(x, y, xmin, xmax, ymin, ymax,
+                           self.graph.plot_width, self.graph.plot_height, 
+                           self.graph.xmin, self.graph.xmax, self.graph.ymin, self.graph.ymax,
+                           self.graph.xtype == 'log', self.graph.ytype == 'log')
+
 #            glVertexPointerd(transpose(array([x, y, z])).tostring())
 #            glEnable(GL_VERTEX_ARRAY)
 #            glDrawArrays(GL_LINE_STRIP, 0, N)
@@ -280,10 +292,15 @@ class Dataset(DrawWithStyle):
 
 
     def paint(self):
-        t = time.time()
-        xx, yy = self.graph.data_to_phys(self.xx, self.yy)
-        self.paint_lines(xx, yy)
-        self.paint_symbols(xx, yy)
+#        t = time.time()
+#        for i in xrange(10):
+#            xx, yy = self.graph.data_to_phys(self.xx, self.yy)
+#        print >>sys.stderr, 'o', (t - time.time())*1000,
+#        t = time.time()
+#        for i in xrange(10):
+        self.paint_lines(self.xx, self.yy)
+        self.paint_symbols(self.xx, self.yy)
+#        print >>sys.stderr, 'i', (t - time.time())*1000
 
     id = wrap_attribute('id')
 
