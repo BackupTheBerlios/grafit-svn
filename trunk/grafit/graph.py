@@ -477,7 +477,7 @@ class Graph(Item, HasSignals):
             self.last_width, self.last_height = width, height
 
         if not self.paint_xor_objects:
-            self.recalc = 1
+#            self.recalc = 1
             if self.recalc:
                 for i, d in enumerate(self.datasets):
                     glClearColor(*self.background_color)
@@ -489,7 +489,7 @@ class Graph(Item, HasSignals):
 
                         i = wx.EmptyImage(w, h)
                         i.SetData(glReadPixels(self.marginl*self.res, self.marginb*self.res, 
-                                               w, h, GL_RGB, GL_UNSIGNED_BYTE))
+                                               int(w), int(h), GL_RGB, GL_UNSIGNED_BYTE))
                         d._legend_wxbitmap = i.ConvertToBitmap()
 
                 glDeleteLists(self.listno, 1)
@@ -509,11 +509,11 @@ class Graph(Item, HasSignals):
                 t = time.time()
                 for d in self.datasets:
                     d.paint()
-                print >>sys.stderr, 'datasets', time.time()-t, "seconds"
+#                print >>sys.stderr, 'datasets', time.time()-t, "seconds"
                 t = time.time()
                 for f in self.functions:
                     f.paint()
-                print >>sys.stderr, 'functions', time.time()-t, "seconds"
+#                print >>sys.stderr, 'functions', time.time()-t, "seconds"
 
                 for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                     glDisable(plane)

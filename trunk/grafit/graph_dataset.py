@@ -214,7 +214,8 @@ class DrawWithStyle(HasSignals):
             gluNurbsProperty(nurb, GLU_AUTO_LOAD_MATRIX, GL_TRUE)
             gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 5)
             gluBeginCurve(nurb)
-            gluNurbsCurve(nurb,arange(3+N), transpose(array([self.graph.data_to_phys(x), self.graph.data_to_phys(y), z])), 
+            x, y = self.graph.data_to_phys(x, y)
+            gluNurbsCurve(nurb,arange(3+N), transpose(array([x, y, z])), 
                           GL_MAP1_VERTEX_3)
             gluEndCurve(nurb)
         elif self.style.line_type == 'straight':
