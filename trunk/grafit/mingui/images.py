@@ -37,10 +37,3 @@ class ImageCatalog(Singleton):
 
 images = ImageCatalog()
 
-
-def _pil_to_wxbitmap(image):
-    wi = wx.EmptyImage(image.size[0], image.size[1])
-    wi.SetData(image.convert('RGB').tostring())
-    wi.SetAlphaData(image.convert('RGBA').tostring()[3::4])
-    return wi.ConvertToBitmap()
- 

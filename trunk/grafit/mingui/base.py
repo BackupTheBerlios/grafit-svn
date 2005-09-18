@@ -10,6 +10,12 @@ class Container(HasSignals):
     def place(self, **kwds):
         return self, kwds
 
+def _pil_to_wxbitmap(image):
+    wi = wx.EmptyImage(image.size[0], image.size[1])
+    wi.SetData(image.convert('RGB').tostring())
+    wi.SetAlphaData(image.convert('RGBA').tostring()[3::4])
+    return wi.ConvertToBitmap()
+ 
 class Widget(HasSignals):
     def __init__(self, place, connect={}, **kwds):
         if place is None:
@@ -103,22 +109,34 @@ class Image(Widget, wx.StaticBitmap):
         wx.StaticBitmap.__init__(self, place[0], -1, bitmap)
         Widget.__init__(self, place, **kwds)
 
-class Button(Widget, wx.Button):
+class Button(Widget, wx.Button, wx.ToggleButton):
     def __init__(self, place, text, toggle=False, connect={}, **kwds):
-        wx.Button.__init__(self, place[0], -1, text)
+
+        if toggle:
+            wxbase = wx.ToggleButton
+        else:
+            wxbase = wx.Button
+
+#        class _Button(Widget, wxbase):
+#            pass
+#        self.__class__ = _Button
+
+        wxbase.__init__(self, place[0], -1, text)
         Widget.__init__(self, place, connect, **kwds)
 
 #        self.Bind(wx.EVT_LEFT_DCLICK, self.emitter('double-clicked'), True)
         self.Bind(wx.EVT_BUTTON, self.emitter('clicked'))
+        self.Bind(wx.EVT_TOGGLEBUTTON, self.on_toggled)
 
-#    def on_toggled(self, evt):
-#        self.emit('toggled', evt.IsChecked())
+    def on_toggled(self, evt):
+        self.emit('toggled', evt.IsChecked())
 
-    def state():
+    def toggled():
+        doc = "Whether a toggle button is on or not"
         def fget(self): return self.GetValue()
         def fset(self, state): self.SetValue(state)
         return locals()
-    state = property(**state())
+    toggled = property(**toggled())
 
     def text():
         doc = "Text to display inside the button"
@@ -126,6 +144,7 @@ class Button(Widget, wx.Button):
         def fset(self, text): self.SetLabel(text)
         return locals()
     text = property(**text())
+
 class Singleton(object):
     _state = {}
     def __new__(cls, *p, **k):
