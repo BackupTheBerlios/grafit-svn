@@ -371,6 +371,7 @@ class MainWindow(Window):
                                         self.on_new_folder, 'new-folder.png'),
             'functions': Action('Functions...', '', object),
             'filters': Action('Filters...', '', object),
+            'scripts': Action('Scripts...', '', object),
             'run-script': Action('Run script...', '', self.on_run_script),
             'close-active-page': Action('Close', 'Close this worksheet',
                                         lambda: self.book.active_page.on_close(), 'close.png'),
@@ -384,7 +385,7 @@ class MainWindow(Window):
                        'file-quit']),
             ('&Edit', ['edit-undo', 'edit-redo', None, 
                        'edit-cut', 'edit-copy', 'edit-paste', None, 'edit-delete']),
-            ('&Tools', ['functions', 'filters', None, 'run-script']),
+            ('&Tools', ['functions', 'filters', 'scripts', None, 'run-script']),
             ('&Help', []),
         ]:
             menu = Menu(self.menubar, title)

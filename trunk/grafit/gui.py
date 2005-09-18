@@ -1342,7 +1342,7 @@ class Toolbar(Widget):
     def __init__(self, parent, orientation='horizontal', **place):
         orient = { 'horizontal': wx.TB_HORIZONTAL, 'vertical': wx.TB_VERTICAL } [orientation]
         self._widget = wx.ToolBar(parent._widget,
-                                  style=wx.SUNKEN_BORDER|wx.TB_FLAT|orient)
+                                  style=wx.SUNKEN_BORDER|wx.TB_FLAT|wx.TB_TEXT|orient)
         Widget.__init__(self, parent, **place)
         self._widget.Bind(wx.EVT_TOOL, self.on_tool)
         self.tools = {}

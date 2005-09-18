@@ -679,20 +679,6 @@ class Graph(Item, HasSignals):
                 self.haha = True
             else:
                 self.haha = False
-        elif self.mode == 'range':
-            if button is None:
-                button = self.__button
-            else:
-                self.__button = button
-
-            x, y = self.mouse_to_data(x, y)
-            for d in self.selected_datasets:
-                if button == 1:
-                    d.range = (x, d.range[1])
-                elif button == 3:
-                    d.range = (d.range[0], x)
-                elif button == 2:
-                    d.range = (-inf, inf)
         elif self.mode == 'hand':
             if self.selected_function is not None:
                 self.selected_function.set_reg(False)
@@ -708,6 +694,10 @@ class Graph(Item, HasSignals):
             self.cross.show(*self.mouse_to_phys(x, y))
             self.redraw()
             self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
+        elif self.mode == 'range':
+            self.paint_xor_objects = True
+            self.cross.show(*self.mouse_to_phys(x, y))
+            self.redraw()
         elif self.mode == 'd-reader':
             x, y = self.mouse_to_data(x, y)
             closest = [(d, min((d.xx-x)*(d.xx-x)+(d.yy-y)*(d.yy-y))) for d in self.datasets]
@@ -823,13 +813,32 @@ class Graph(Item, HasSignals):
                     self.objects.remove(self.dragobj_xor)
                     self.paint_xor_objects = False
                     self.redraw()
-            
+        elif self.mode == 'range':
+            if button is None:
+                button = self.__button
+            else:
+                self.__button = button
+
+            x, y = self.mouse_to_data(x, y)
+            for d in self.selected_datasets:
+                if button == 1:
+                    d.range = (x, d.range[1])
+                elif button == 3:
+                    d.range = (d.range[0], x)
+                elif button == 2:
+                    d.range = (-inf, inf)
+            self.cross.hide()
+            self.redraw()
+            self.paint_xor_objects = False
+  
     def button_motion(self, x, y, dragging):
         if self.mode == 'zoom' and dragging and hasattr(self, 'ix'):
             self.rubberband.move(self.ix, self.iy, *self.mouse_to_phys(x, y))
             self.redraw()
         elif self.mode == 'range' and dragging:
-            self.button_press(x, y)
+            self.cross.move(*self.mouse_to_phys(x, y))
+            self.redraw()
+#            self.button_press(x, y)
         elif self.mode == 'hand' and dragging:
             if self.selected_function is not None:
                 self.selected_function.move(*self.mouse_to_data(x, y))
