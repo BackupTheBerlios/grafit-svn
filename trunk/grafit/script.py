@@ -1,21 +1,34 @@
-import mingui as gui
 import sys
+import Image
+import mingui as gui
+# to get started with demo:
+# - html widget
+# - python code widget
+# - tree widget
 
 def on_item_activated(item):
     print item
 
 def main():
-    win = gui.Window(title='Scripts')
+    gui.images.register('close', Image.open('../data/images/close.png'))
+    gui.images.register_dir('../data/images/')
+
+    win = gui.Window(title='Mingui doc/demo', size=(640, 480))
     box = gui.Box(win.place(), 'vertical')
-    book = gui.Notebook(box.place())
 
-    text = gui.Text(book.place(label='text'), multiline=True, text='hello!')
+    split = gui.Splitter(box.place(), 'horizontal')
 
-    lst = gui.List(book.place(label='list'), 
-                   columns=['arse', 'butt'], headers=True,
-                   connect={'item-activated': on_item_activated})
-    for d in [1, {'arse': 'hello', 'butt': 'earth'}, 'world']:
-        lst.data.append(d)
+    tree = gui.Tree(split.place(width=160), columns=['Topics'])
+    root = gui.TreeNode()
+    child = gui.TreeNode()
+    root.append(child)
+    tree.append(root)
+    book = gui.Notebook(split.place())
+
+    html = gui.Html(book.place(label='text'))
+    html.LoadFile('html/index.html')
+    code = gui.Text(book.place(label='code'), multiline=True, text='hello!')
+    demo = gui.Box(book.place(label='demo'))
 
     btn = gui.Button(box.place(stretch=0), 'Close', 
                      connect={'clicked': win.close})

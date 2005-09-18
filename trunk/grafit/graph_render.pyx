@@ -229,6 +229,9 @@ def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ym
         xnext = xd[n+1]
         ynext = yd[n+1]
 
+        if isnan(xnext) or isnan(ynext):
+            continue
+
         if logx == 1:
             x = log10(x)
             xnext = log10(xnext)
