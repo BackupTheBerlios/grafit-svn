@@ -2,7 +2,7 @@ import sys
 #print >>sys.stderr, "import worksheet"
 
 from grafit.signals import HasSignals
-from grafit.commands import command_from_methods, command_from_methods2, StopCommand
+from grafit.actions import action_from_methods, action_from_methods2, StopAction
 from grafit.project import Item, wrap_attribute, register_class, create_id
 
 from grafit.arrays import MkArray, transpose, array, asarray
@@ -30,7 +30,7 @@ class Column(MkArray, HasSignals):
             data = asarray(self.worksheet.evaluate(expr))
         except Exception, ar:
             print >>sys.stderr, '*****************', ar
-            raise StopCommand, False
+            raise StopAction, False
         newdep = self.worksheet.record
         self.worksheet.record = None
 
@@ -41,7 +41,7 @@ class Column(MkArray, HasSignals):
             column.disconnect('data-changed', self.calculate)
         self.dependencies = newdep
 
-        # command state
+        # action state
         if setstate:
             state['old'], state['new'] = self.expr, expr
             if self.expr == '':
@@ -49,7 +49,7 @@ class Column(MkArray, HasSignals):
 
         self.data.expr = expr.encode('utf-8')
         if expr != '':
-            # set data without triggering a command
+            # set data without triggering a action
             MkArray.__setitem__(self, slice(None), data)
         self.worksheet.emit('data-changed')
         self.emit('data-changed')
@@ -63,7 +63,7 @@ class Column(MkArray, HasSignals):
     def redo_set_expr(self, state):
         self.do_set_expr(None, state['new'], setstate=False)
 
-    set_expr = command_from_methods2('worksheet/column-expr', 
+    set_expr = action_from_methods2('worksheet/column-expr', 
                                      do_set_expr, undo_set_expr, redo=redo_set_expr)
 
     def get_expr(self):
@@ -94,7 +94,7 @@ class Column(MkArray, HasSignals):
     def __eq__(self, other):
         return self.id == other.id
 
-    __setitem__ = command_from_methods('column_change_data', __setitem__, undo_setitem)
+    __setitem__ = action_from_methods('column_change_data', __setitem__, undo_setitem)
 
 
 class Worksheet(Item, HasSignals):
@@ -191,7 +191,7 @@ class Worksheet(Item, HasSignals):
         self.columns.append(col)
         self.emit('data-changed')
 
-    add_column = command_from_methods2('worksheet/add_column', add_column, add_column_undo,
+    add_column = action_from_methods2('worksheet/add_column', add_column, add_column_undo,
                                        redo=add_column_redo)
 
     def remove_column(self, state, name):
@@ -212,7 +212,7 @@ class Worksheet(Item, HasSignals):
         self.columns.insert(ind, col)
         self.emit('data-changed')
 
-    remove_column = command_from_methods2('worksheet_remove_column', remove_column, 
+    remove_column = action_from_methods2('worksheet_remove_column', remove_column, 
                                           undo_remove_column)
 
     def get_ncolumns(self):

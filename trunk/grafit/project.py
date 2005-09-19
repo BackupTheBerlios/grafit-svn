@@ -4,7 +4,7 @@ import time, random, socket, md5
 
 import metakit
 
-from grafit.commands import command_from_methods, command_list, command_from_methods2, StopCommand
+from grafit.actions import action_from_methods, action_list, action_from_methods2, StopAction
 from grafit.signals import HasSignals
 
 # by (Carl Free Jr. http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761)
@@ -60,7 +60,7 @@ class Item(HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         self.project = project
 
-        command_list.disable()
+        action_list.disable()
 
         if location is None or isinstance(location, dict):
             # this is a new item, not present in the database 
@@ -95,7 +95,7 @@ class Item(HasSignals):
             # enter ourselves in the project dictionary
             self.project.items[self.id] = self
 
-        command_list.enable()
+        action_list.enable()
 
 
         # We have to emit the signal at the end
@@ -124,7 +124,7 @@ class Item(HasSignals):
         if isinstance(oldparent, Folder):
             oldparent.emit('modified')
         else:
-            raise StopCommand
+            raise StopAction
     def undo_set_parent(self, state):
         self._parent = state['old']
         if state['old'] != '':
@@ -135,7 +135,7 @@ class Item(HasSignals):
         if state['old'] != '':
             state['old'].emit('modified')
         state['new'].emit('modified')
-    set_parent = command_from_methods2('object/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
+    set_parent = action_from_methods2('object/set-parent', set_parent, undo_set_parent, redo=redo_set_parent)
     def get_parent(self):
         return self._parent
     parent = property(get_parent, set_parent)
@@ -145,7 +145,7 @@ class Item(HasSignals):
     def set_name(self, state, n):
         if n.startswith('0'):
             print "No!"
-            raise StopCommand
+            raise StopAction
         state['new'], state['old'] = n, self._name
         self._name = n
         self.set_name_notify()
@@ -159,7 +159,7 @@ class Item(HasSignals):
         self.emit('rename', self._name, item=self)
         if isinstance(self.parent, Folder):
             self.parent.emit('modified')
-    set_name = command_from_methods2('object/rename', set_name, undo_set_name, redo=redo_set_name)
+    set_name = action_from_methods2('object/rename', set_name, undo_set_name, redo=redo_set_name)
 
     def get_name(self):
         return self._name
@@ -271,7 +271,7 @@ class Project(HasSignals):
 
         self._modified = False
 
-        command_list.connect('added', self.on_command_added)
+        action_list.connect('added', self.on_action_added)
 
         self.items = {}
         self.deleted = {}
@@ -305,7 +305,7 @@ class Project(HasSignals):
                         self.deleted[row.id] = cls(self, location=(view, row, row.id))
 
 
-    def on_command_added(self, command=None):
+    def on_action_added(self, action=None):
         self.modified = True
 
     def cd(self, folder):
@@ -412,7 +412,7 @@ class Project(HasSignals):
             del self.deleted[obj.id]
         obj.view.remove(obj.view.select(id=obj.id))
 
-    new = command_from_methods('project_new', new, new_undo, new_redo, new_cleanup)
+    new = action_from_methods('project_new', new, new_undo, new_redo, new_cleanup)
 
     # remove ###############################
 
@@ -445,7 +445,7 @@ class Project(HasSignals):
             self._dict[obj.name] = obj
         self.emit('add-item', obj)
 
-    remove = command_from_methods('project_remove', remove, remove_undo)
+    remove = action_from_methods('project_remove', remove, remove_undo)
 
 
     # Shortcuts for creating and removing folders

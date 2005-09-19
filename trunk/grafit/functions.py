@@ -6,7 +6,7 @@ from grafit.thirdparty import odr
 
 from signals import HasSignals
 from grafit.arrays import zeros, nan
-from grafit.commands import command_from_methods, StopCommand, command_from_methods2
+from grafit.actions import action_from_methods, StopAction, action_from_methods2
 
 def gen_flatten(s):
     try:
@@ -176,10 +176,10 @@ class FunctionInstance(HasSignals):
             old = self._parameters
         self._parameters = p
         if not self.reg:
-            raise StopCommand
+            raise StopAction
         if old == p:
             # if the values haven't changed, don't bother
-            raise StopCommand
+            raise StopAction
         return [old, p]
     def get_parameters(self):
         return self._parameters
@@ -199,7 +199,7 @@ class FunctionInstance(HasSignals):
 #        print 'attempt to combine', state, other
         return False
 
-    set_parameters = command_from_methods('function-change-parameters', set_parameters, 
+    set_parameters = action_from_methods('function-change-parameters', set_parameters, 
                                         undo_set_parameters, redo_set_parameters, combine=combine_set_parameters)
     parameters = property(get_parameters, set_parameters)
 
@@ -299,7 +299,7 @@ class MFunctionSum(FunctionSum):
 
     def on_add_term(self, state, term):
         if hasattr(term, 'data') and term.data.id.startswith('-'):
-            raise StopCommand
+            raise StopAction
         row = self.data.append(id=create_id(), func=term.function.name, name=term.name)
         term.data = self.data[row]
         state['term'] = term
@@ -313,16 +313,16 @@ class MFunctionSum(FunctionSum):
         self.terms.append(term)
         self.emit('add-term', term)
         term.data.id = term.data.id[1:]
-    on_add_term = command_from_methods2('graph/add-function-term', on_add_term, undo_add_term, redo=redo_add_term)
+    on_add_term = action_from_methods2('graph/add-function-term', on_add_term, undo_add_term, redo=redo_add_term)
 
     def on_remove_term(self, state, term):
         if hasattr(term, 'data') and term.data.id.startswith('-'):
-            raise StopCommand
+            raise StopAction
         term.data.id = '-'+term.data.id
         state['term'] = term
     undo_remove_term = redo_add_term
     redo_remove_term = undo_add_term
-    on_remove_term = command_from_methods2('graph/remove-function-term', on_remove_term, undo_remove_term, redo=redo_remove_term)
+    on_remove_term = action_from_methods2('graph/remove-function-term', on_remove_term, undo_remove_term, redo=redo_remove_term)
     
 class Function(HasSignals):
     def __init__(self, name='', parameters=[], text='', extra=''):

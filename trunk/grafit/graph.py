@@ -8,7 +8,7 @@ from OpenGL.GL import *
 
 from grafit.signals import HasSignals
 from grafit.project import Item, wrap_attribute, register_class, create_id
-from grafit.commands import command_from_methods, command_from_methods2, StopCommand
+from grafit.actions import action_from_methods, action_from_methods2, StopAction
 from grafit.graph_axis import Axis, Grid
 from grafit.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction, Rangehandle
 from grafit.graph_dataset import Dataset, Function
@@ -132,28 +132,28 @@ class Graph(Item, HasSignals):
 
     def set_xtype(self, _state, tp):
         if tp == 'log' and (self.xmin <= 0 or self.xmax <= 0):
-            raise StopCommand
+            raise StopAction
         _state['old'] = self._xtype
         self._xtype = tp
         self.redraw(True)
     def undo_set_xtype(self, _state):
         self._xtype = _state['old']
         self.redraw(True)
-    set_xtype = command_from_methods2('graph-set-xaxis-scale', set_xtype, undo_set_xtype)
+    set_xtype = action_from_methods2('graph-set-xaxis-scale', set_xtype, undo_set_xtype)
     def get_xtype(self):
         return self._xtype
     xtype = property(get_xtype, set_xtype)
 
     def set_ytype(self, _state, tp):
         if tp == 'log' and (self.xmin <= 0 or self.xmax <= 0):
-            raise StopCommand
+            raise StopAction
         _state['old'] = self._ytype
         self._ytype = tp
         self.redraw(True)
     def undo_set_ytype(self, _state):
         self._ytype = _state['old']
         self.redraw(True)
-    set_ytype = command_from_methods2('graph-set-xaxis-scale', set_ytype, undo_set_ytype)
+    set_ytype = action_from_methods2('graph-set-xaxis-scale', set_ytype, undo_set_ytype)
     def get_ytype(self):
         return self._ytype
     ytype = property(get_ytype, set_ytype)
@@ -176,7 +176,7 @@ class Graph(Item, HasSignals):
         self.redraw()
     def get_xtitle(self):
         return self._xtitle
-    set_xtitle = command_from_methods2('graph/set-xtitle', set_xtitle, undo_set_xtitle, redo=redo_set_xtitle)
+    set_xtitle = action_from_methods2('graph/set-xtitle', set_xtitle, undo_set_xtitle, redo=redo_set_xtitle)
     xtitle = property(get_xtitle, set_xtitle)
 
     def set_ytitle(self, state, title):
@@ -194,7 +194,7 @@ class Graph(Item, HasSignals):
         self.redraw()
     def get_ytitle(self):
         return self._ytitle
-    set_ytitle = command_from_methods2('graph/set-ytitle', set_ytitle, undo_set_ytitle, redo=redo_set_ytitle)
+    set_ytitle = action_from_methods2('graph/set-ytitle', set_ytitle, undo_set_ytitle, redo=redo_set_ytitle)
     ytitle = property(get_ytitle, set_ytitle)
 
     def __repr__(self):
@@ -235,14 +235,14 @@ class Graph(Item, HasSignals):
         obj.id = obj.id[1:]
         self.redraw()
 
-    new_object = command_from_methods2('graph/new-object', new_object, undo_new_object, 
+    new_object = action_from_methods2('graph/new-object', new_object, undo_new_object, 
                                        redo=redo_new_object)
     def delete_object(self, state, obj):
         obj.id = '-'+obj.id
         self.graph_objects.remove(obj)
         state['obj'] = obj
         self.redraw()
-    delete_object = command_from_methods2('graph/delete-object', delete_object, redo_new_object,
+    delete_object = action_from_methods2('graph/delete-object', delete_object, redo_new_object,
                                           redo=undo_new_object)
 
 
@@ -287,7 +287,7 @@ class Graph(Item, HasSignals):
         self.emit('add-dataset', d)
         self.redraw(True)
 
-    add = command_from_methods2('graph_add_dataset', add, undo_add, redo=redo_add)
+    add = action_from_methods2('graph_add_dataset', add, undo_add, redo=redo_add)
 
     def remove(self, dataset):
         # we can do this even if `dataset` is a different object
@@ -317,7 +317,7 @@ class Graph(Item, HasSignals):
         self.emit('add-dataset', dataset)
         self.redraw(True)
 
-    remove = command_from_methods('graph_remove_dataset', remove, undo_remove)
+    remove = action_from_methods('graph_remove_dataset', remove, undo_remove)
 
     def on_dataset_modified(self, d=None):
         self.redraw(True)
@@ -418,7 +418,7 @@ class Graph(Item, HasSignals):
         self.fr, self.to  = fr, to
 
     #####################
-    # zoom command      #
+    # zoom action      #
     #####################
 
     def zoom_do(self, state, xmin, xmax, ymin, ymax):
@@ -442,7 +442,7 @@ class Graph(Item, HasSignals):
     def zoom_combine(self, state, other):
         return False
 
-    zoom = command_from_methods2('graph-zoom', zoom_do, zoom_undo, redo=zoom_redo, combine=zoom_combine)
+    zoom = action_from_methods2('graph-zoom', zoom_do, zoom_undo, redo=zoom_redo, combine=zoom_combine)
 
  
     def zoomout(self,x1, x2,x3, x4):

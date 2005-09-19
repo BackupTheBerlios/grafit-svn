@@ -1,23 +1,23 @@
 """
-Command / Undo framework
+Action / Undo framework
 """
 
 import signals
 import sys
 
-class NoMoreCommandsError(Exception):
+class NoMoreActionsError(Exception):
     pass
 
-class Command(signals.HasSignals):
+class Action(signals.HasSignals):
     """
-    Abstract base class for commands.
+    Abstract base class for actions.
     
     Derived classes must override do() and undo(), and optionally combine().
 
     do() and undo() are replaced with wrappers that emit the appropriate signal.
-    One can use commands in a one-liner like:
+    One can use actions in a one-liner like:
 
-    FooCommand(param1, param2).do_and_register()
+    FooAction(param1, param2).do_and_register()
     """
 
     def __init__(self):
@@ -25,34 +25,34 @@ class Command(signals.HasSignals):
     
     def do(self):
         """
-        Do whatever the command does.
+        Do whatever the action does.
         This automatically emits 'done'.
         """
         raise NotImplementedError
 
     def undo(self):
         """
-        Undo whatever the command does.
+        Undo whatever the action does.
         This automatically emits 'undone'.
         """
         raise NotImplementedError
 
     def do_and_register(self):
-        """Shorthand for command.do(); command_register()."""
+        """Shorthand for action.do(); action_register()."""
         ret = self.do()
         self.register()
         return ret
 
-    def combine(self, command):
+    def combine(self, action):
         """
-        Merge `command` into self. 
+        Merge `action` into self. 
         Returns True if succesful, False if a combination is not possible
         """
         return False
 
     def register(self):
-        """Add the command to the global command list."""
-        command_list.add(self)
+        """Add the action to the global action list."""
+        action_list.add(self)
 
     def _do_wrapper(self):
         """Wraps the `do` method emitting `done`"""
@@ -78,75 +78,75 @@ class Command(signals.HasSignals):
         return self.__class__.__name__
 
 
-class CompositeCommand(Command):
-    """A series of commands treated as a single command."""
+class CompositeAction(Action):
+    """A series of actions treated as a single action."""
     def __init__(self):
-        Command.__init__(self)
-        self.commandlist = []
+        Action.__init__(self)
+        self.actionlist = []
 
-    def add(self, command):
-        """Add a command to the list."""
-        if len(self.commandlist) == 0:
-            self.commandlist.append(command)
+    def add(self, action):
+        """Add a action to the list."""
+        if len(self.actionlist) == 0:
+            self.actionlist.append(action)
             return
-        elif self.commandlist[-1].combine(command):
+        elif self.actionlist[-1].combine(action):
             pass
         else:
-            self.commandlist.append(command)
+            self.actionlist.append(action)
 
     def do(self):
-        for com in self.commandlist:
+        for com in self.actionlist:
             com.real_do()
 
     def undo(self):
-        for com in self.commandlist[::-1]:
+        for com in self.actionlist[::-1]:
             com.real_undo()
 
 
-class CommandList(signals.HasSignals):
-    """A command list, implementing undo/redo."""
+class ActionList(signals.HasSignals):
+    """A action list, implementing undo/redo."""
 
     def __init__(self):
-        self.commands = []
+        self.actions = []
         self.composite =  None
         self.enabled = True
 
-    def add(self, command):
-        """Add a command to the list."""
+    def add(self, action):
+        """Add a action to the list."""
         if not self.enabled:
             return 
 
-        while len(self.commands) > 0 and not self.commands[-1].done:
+        while len(self.actions) > 0 and not self.actions[-1].done:
             self.pop()
 
         if self.composite is not None:
-            self.composite.add(command)
+            self.composite.add(action)
         else:
-            if len(self.commands) == 0:
-                self.commands.append(command)
-            elif self.commands[-1].combine(command):
+            if len(self.actions) == 0:
+                self.actions.append(action)
+            elif self.actions[-1].combine(action):
                 pass
             else:
-                self.commands.append(command)
-#            print >>sys.stderr, 'X', command
-            self.emit('added', command=command)
+                self.actions.append(action)
+#            print >>sys.stderr, 'X', action
+            self.emit('added', action=action)
 
     def pop(self):
-        """Remove the last command from the list."""
+        """Remove the last action from the list."""
         if not self.enabled:
             return
-        com = self.commands.pop()
-        self.emit('removed', command=com)
+        com = self.actions.pop()
+        self.emit('removed', action=com)
 
     def clear(self):
         """Empty the list."""
-        while self.commands != []:
+        while self.actions != []:
             self.pop()
 
     def redo(self):
-        """Redo the last command that was undone."""
+        """Redo the last action that was undone."""
         com = False
-        for com in self.commands:
+        for com in self.actions:
             if not com.done:
                 break
         if com and not com.done:
@@ -159,26 +159,26 @@ class CommandList(signals.HasSignals):
                     self.enable()
             self.emit('modified')
         else:
-            raise NoMoreCommandsError
+            raise NoMoreActionsError
 
     def can_undo(self):
         com = False
-        for com in self.commands[::-1]:
+        for com in self.actions[::-1]:
             if com.done:
                 break
         return com and com.done
 
     def can_redo(self):
         com = False
-        for com in self.commands:
+        for com in self.actions:
             if not com.done:
                 break
         return com and not com.done
 
     def undo(self):
-        """Undo the last command that was done."""
+        """Undo the last action that was done."""
         com = False
-        for com in self.commands[::-1]:
+        for com in self.actions[::-1]:
             if com.done:
                 break
         if com and com.done:
@@ -191,22 +191,22 @@ class CommandList(signals.HasSignals):
                     self.enable()
             self.emit('modified')
         else:
-            raise NoMoreCommandsError
+            raise NoMoreActionsError
 
     def begin_composite(self, composite):
-        """Begin a composite command.
+        """Begin a composite action.
 
-        Commands added to the list until end_composite is called
-        will be added to the composite command instead of the list.
+        Actions added to the list until end_composite is called
+        will be added to the composite action instead of the list.
         """
         if not self.enabled:
             return 
         self.composite = composite 
 
     def end_composite(self):
-        """End a composite command.
+        """End a composite action.
 
-        Returns the completed command."""
+        Returns the completed action."""
         if not self.enabled:
             return 
         ret = self.composite
@@ -223,24 +223,24 @@ class CommandList(signals.HasSignals):
         self.enabled = True
         self.emit('enabled')
 
-class StopCommand(Exception):
+class StopAction(Exception):
     pass
 
 
-def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
-    """Create a command from a bunch of methods of another object.
+def action_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
+    """Create a action from a bunch of methods of another object.
     
     If a redo() method is given, it is called instead of do() if
-    the command has been undone before.
+    the action has been undone before.
 
-    If a cleanup() method is given, it is called when the command
+    If a cleanup() method is given, it is called when the action
     object is deleted.
 
     The undo(), redo() and cleanup() methods are called with a single
     argument: the first return value of the do() method.
     """
     def replace_init(selb, *args, **kwds):
-        class CommandFromMethod(Command):
+        class ActionFromMethod(Action):
             def __init__(self):
                 self.args, self.kwds = args, kwds
                 self.__done = False
@@ -274,28 +274,28 @@ def command_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
                 def __del__(self):
                     cleanup(selb, self.state)
 
-        CommandFromMethod.__name__ = name
-        com = CommandFromMethod()
+        ActionFromMethod.__name__ = name
+        com = ActionFromMethod()
         try:
             ret = com.do_and_register()
             return ret
-        except StopCommand:
+        except StopAction:
 #            print >>sys.stderr, "comand stopped"
             return None
     return replace_init
 
 
-def command_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None):
-    """Create a command from a bunch of methods of another object.
+def action_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None):
+    """Create a action from a bunch of methods of another object.
     
     If a redo() method is given, it is called instead of do() if
-    the command has been undone before.
+    the action has been undone before.
 
-    If a cleanup() method is given, it is called when the command
+    If a cleanup() method is given, it is called when the action
     object is deleted.
     """
     def replace_do(obj, *args, **kwds):
-        class CommandFromMethod(Command):
+        class ActionFromMethod(Action):
             def __init__(self):
                 self.args, self.kwds = args, kwds
                 self.__done = False
@@ -321,17 +321,17 @@ def command_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None)
                 def __del__(self):
                     cleanup(obj, self.state)
 
-        CommandFromMethod.__name__ = name
-        com = CommandFromMethod()
+        ActionFromMethod.__name__ = name
+        com = ActionFromMethod()
         try:
             ret = com.do_and_register()
             return ret
-        except StopCommand:
+        except StopAction:
             return None
     replace_do.__name__ = do.__name__
     return replace_do
 
-# global command list
-command_list = CommandList()
-undo = command_list.undo
-redo = command_list.redo
+# global action list
+action_list = ActionList()
+undo = action_list.undo
+redo = action_list.redo

@@ -1,6 +1,6 @@
 from grafit.arrays import *
 from grafit.signals import HasSignals
-from grafit.commands import command_from_methods2, command_from_methods
+from grafit.actions import action_from_methods2, action_from_methods
 from grafit.functions import MFunctionSum
 from grafit.project import wrap_attribute
 from numarray.ieeespecial import isfinite
@@ -159,7 +159,7 @@ class DrawWithStyle(HasSignals):
 #        print state, other
         return False
 
-    change_style = command_from_methods('dataset-change-style', change_style_do, 
+    change_style = action_from_methods('dataset-change-style', change_style_do, 
                                         change_style_undo, change_style_redo,
                                         combine=change_style_combine)
 
@@ -287,7 +287,7 @@ class Dataset(DrawWithStyle):
     def get_range(self):
         return self.xfrom, self.xto
 
-    set_range = command_from_methods2('dataset-set-range', set_range, undo_set_range)
+    set_range = action_from_methods2('dataset-set-range', set_range, undo_set_range)
 
     range = property(get_range, set_range)
 

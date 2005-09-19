@@ -9,7 +9,7 @@ from grafit.ui_graph_view import GraphView
 from grafit.import_ascii import import_ascii
 from grafit.arrays import nan
 from grafit.signals import HasSignals, global_connect
-from grafit.commands import command_list, undo, redo
+from grafit.actions import action_list, undo, redo
 from grafit.settings import settings, DATADIR
 from grafit.gui import Window, Button, Box, Application, Shell, List, \
                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
@@ -236,23 +236,23 @@ class ActionListModel(HasSignals):
         self.actionlist.connect('removed', self.on_modified)
         self.actionlist.connect('modified', self.on_modified)
 
-    def on_modified(self, command=None):
+    def on_modified(self, action=None):
         self.emit('modified')
         
     # list model interface
     def get(self, row, column): 
-        com = self.actionlist.commands[row]
+        com = self.actionlist.actions[row]
         if com.done:
             return str(com)
         else:
             return '('+str(com)+')'
     def get_image(self, row): 
-        com = self.actionlist.commands[row]
+        com = self.actionlist.actions[row]
         if com.done:
-            return 'command-done.png'
+            return 'action-done.png'
         else:
-            return 'command-undone.png'
-    def __len__(self): return len(self.actionlist.commands)
+            return 'action-undone.png'
+    def __len__(self): return len(self.actionlist.actions)
 
 class ActionList(Box):
     def __init__(self, actionlist, parent, **place):
@@ -265,7 +265,7 @@ class ActionList(Box):
         self.label = Html(self, stretch=.5)
 
     def on_list_item_activated(self, idx):
-        com = self.list.model.actionlist.commands[idx]
+        com = self.list.model.actionlist.actions[idx]
         if com.done:
             while com.done:
                 undo()
@@ -274,7 +274,7 @@ class ActionList(Box):
                 redo()
 
     def on_list_selection_changed(self):
-        com = self.list.model.actionlist.commands[self.list.selection[0]]
+        com = self.list.model.actionlist.actions[self.list.selection[0]]
         text = "<html><body><i>"+str(com)+"</i></body></html>"
 #        self.label.text = str(com)
         self.label._widget.SetStandardFonts()
@@ -328,7 +328,7 @@ class MainWindow(Window):
             pass
         self.explorer = ProjectExplorer(self.main.left_panel,
                                         page_label='project', page_pixmap='stock_navigator.png')
-        self.actionlist = ActionList(command_list, self.main.left_panel,
+        self.actionlist = ActionList(action_list, self.main.left_panel,
                                         page_label='actions', page_pixmap='stock_undo.png')
         self.explorer.connect('item-activated', self.on_item_activated)
 
@@ -341,9 +341,9 @@ class MainWindow(Window):
         self.main.left_panel.open(self.explorer)
 
         global_connect('status-message', self.on_status_message)
-        command_list.connect('added', self.on_command)
-        command_list.connect('removed', self.on_command)
-        command_list.connect('modified', self.on_command)
+        action_list.connect('added', self.on_action)
+        action_list.connect('removed', self.on_action)
+        action_list.connect('modified', self.on_action)
 
         self.actions = actions = {
             'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
@@ -415,12 +415,12 @@ class MainWindow(Window):
         import wx.xrc
         # preload
         wx.xrc.XmlResource(DATADIR+'/data/resources.xrc')
-        self.on_command()
+        self.on_action()
         self.on_project_modified(False)
 
-    def on_command(self, *args, **kwds):
-        self.actions['edit-undo'].enabled = command_list.can_undo()
-        self.actions['edit-redo'].enabled = command_list.can_redo()
+    def on_action(self, *args, **kwds):
+        self.actions['edit-undo'].enabled = action_list.can_undo()
+        self.actions['edit-redo'].enabled = action_list.can_redo()
 
     def on_status_message(self, obj, msg, time=0):
         self.status = msg
@@ -444,7 +444,7 @@ class MainWindow(Window):
         self.project.connect('remove-item', self.on_project_remove_item)
         self.project.connect('modified', lambda: self.on_project_modified(True), True)
         self.project.connect('not-modified', lambda: self.on_project_modified(False), True)
-#        command_list.clear()
+#        action_list.clear()
 
     def on_item_activated(self, item):
 #        w = Window()
@@ -522,7 +522,7 @@ class MainWindow(Window):
                 path = dlg.GetPaths()[0]
                 self.close_project()
                 self.open_project(Project(str(path)))
-                command_list.clear()
+                action_list.clear()
             dlg.Destroy()
         except Cancel:
             return
@@ -547,7 +547,7 @@ class MainWindow(Window):
                 path = dlg.GetPaths()[0]
                 self.project.saveto(path)
                 self.open_project(Project(str(path)))
-                command_list.clear()
+                action_list.clear()
             dlg.Destroy()
         except Cancel:
             return
@@ -567,7 +567,7 @@ class MainWindow(Window):
                 self.on_project_save()
             self.close_project()
             self.open_project(Project())
-            command_list.clear()
+            action_list.clear()
         except Cancel:
             return
             

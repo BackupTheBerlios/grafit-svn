@@ -1,7 +1,7 @@
 from grafit.signals import HasSignals
 from grafit.settings import DATADIR
 from grafit.project import wrap_attribute
-from grafit.commands import command_from_methods2, StopCommand
+from grafit.actions import action_from_methods2, StopAction
 from grafit.graph_dataset import Function
 
 from OpenGL.GL import *
@@ -139,7 +139,7 @@ class GraphObject(HasSignals):
         self.read_position()
         self.graph.emit('redraw')
         self.emit('modified')
-    record_position = command_from_methods2('graph/move-object',
+    record_position = action_from_methods2('graph/move-object',
                             record_position, undo_record_position, redo=redo_record_position)
 
     def move_active_handle(self, x, y, record=True):
@@ -275,7 +275,7 @@ class Text(GraphObject):
         self.data.text = state['new']
         self.emit('modified')
         self.graph.emit('redraw')
-    set_text = command_from_methods2('graph/text/set-text', set_text, undo_set_text, redo=redo_set_text)
+    set_text = action_from_methods2('graph/text/set-text', set_text, undo_set_text, redo=redo_set_text)
     text = property(get_text, set_text)
 
     def begin(self, x, y):
