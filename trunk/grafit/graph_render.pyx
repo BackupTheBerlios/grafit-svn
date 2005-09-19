@@ -152,8 +152,6 @@ def render_symbols(_numarray sx, _numarray sy, int sym, int fill, int size,
     for n from 0 <= n < l:
         x = xd[n]
         y = yd[n]
-        if isnan(x) or isnan(y):
-            continue
 
         if logx == 1:
             x = log10(x)
@@ -161,6 +159,9 @@ def render_symbols(_numarray sx, _numarray sy, int sym, int fill, int size,
             y = log10(y)
         x = pw * (x-pxmin)/(pxmax-pxmin)
         y = ph * (y-pymin)/(pymax-pymin)
+
+        if isnan(x) or isnan(y):
+            continue
 
         # skip if outside limits
         if not (xmin-si/2 <= x <= xmax+si/2) or not (ymin-si/2 <= y <= ymax+si/2):
@@ -222,15 +223,8 @@ def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ym
     for n from 0 <= n < l-1:
         x = xd[n]
         y = yd[n]
-
-        if isnan(x) or isnan(y):
-            continue
-
         xnext = xd[n+1]
         ynext = yd[n+1]
-
-        if isnan(xnext) or isnan(ynext):
-            continue
 
         if logx == 1:
             x = log10(x)
@@ -243,6 +237,11 @@ def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ym
         xnext = pw * (xnext-pxmin)/(pxmax-pxmin)
         ynext = ph * (ynext-pymin)/(pymax-pymin)
 
+        if isnan(x) or isnan(y):
+            continue
+
+        if isnan(xnext) or isnan(ynext):
+            continue
 
         if (x <= xmin and xnext <= xmin) or (y <= ymin and ynext <= ymin) or \
             (x >= xmax and xnext >= xmax) or (y >= ymax and ynext >= ymax):

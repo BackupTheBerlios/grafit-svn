@@ -318,8 +318,8 @@ class Move(XorDraw):
         self.obj.draw()
 
 class Rubberband(XorDraw):
-    def __init__(self, graph):
-        XorDraw.__init__(self, graph)
+#    def __init__(self, graph):
+#        XorDraw.__init__(self, graph)
 
     def draw(self, ix, iy, sx, sy):
         glColor3f(1.0,1.0,0.0) # blue
@@ -335,9 +335,17 @@ class Rubberband(XorDraw):
 
         glDisable(GL_LINE_STIPPLE)
 
+class Rangehandle(XorDraw):
+    def draw(self, x, y):
+        glColor3f(1.0,0.5,1.0)
+        glBegin(GL_LINES)
+        glVertex3d(x, 0, 0)
+        glVertex3d(x, self.graph.plot_height, 0)
+        glEnd()
+
 class Cross(XorDraw):
-    def __init__(self, graph):
-        XorDraw.__init__(self, graph)
+#    def __init__(self, graph):
+#        XorDraw.__init__(self, graph)
 
     def draw(self, x, y):
         glColor3f(1.0,0.5,1.0)

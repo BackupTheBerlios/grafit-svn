@@ -10,7 +10,7 @@ from grafit.signals import HasSignals
 from grafit.project import Item, wrap_attribute, register_class, create_id
 from grafit.commands import command_from_methods, command_from_methods2, StopCommand
 from grafit.graph_axis import Axis, Grid
-from grafit.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction
+from grafit.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFunction, Rangehandle
 from grafit.graph_dataset import Dataset, Function
 from grafit.graph_text import FONTFILE, TextPainter, encodeTTFasPS
 from grafit.graph_render import *
@@ -83,8 +83,9 @@ class Graph(Item, HasSignals):
 
         self.rubberband = Rubberband(self)
         self.cross = Cross(self)
+        self.rangehandle = Rangehandle(self)
 
-        self.objects = [self.rubberband, self.cross]
+        self.objects = [self.rubberband, self.cross, self.rangehandle]
         self.textpainter = TextPainter(self)
 
         self.axis_title_font_size = 12.
@@ -696,7 +697,7 @@ class Graph(Item, HasSignals):
             self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'range':
             self.paint_xor_objects = True
-            self.cross.show(*self.mouse_to_phys(x, y))
+            self.rangehandle.show(*self.mouse_to_phys(x, y))
             self.redraw()
         elif self.mode == 'd-reader':
             x, y = self.mouse_to_data(x, y)
@@ -827,7 +828,7 @@ class Graph(Item, HasSignals):
                     d.range = (d.range[0], x)
                 elif button == 2:
                     d.range = (-inf, inf)
-            self.cross.hide()
+            self.rangehandle.hide()
             self.redraw()
             self.paint_xor_objects = False
   
@@ -836,7 +837,7 @@ class Graph(Item, HasSignals):
             self.rubberband.move(self.ix, self.iy, *self.mouse_to_phys(x, y))
             self.redraw()
         elif self.mode == 'range' and dragging:
-            self.cross.move(*self.mouse_to_phys(x, y))
+            self.rangehandle.move(*self.mouse_to_phys(x, y))
             self.redraw()
 #            self.button_press(x, y)
         elif self.mode == 'hand' and dragging:

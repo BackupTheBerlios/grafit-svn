@@ -115,12 +115,12 @@ class TextPainter(object):
     def render_text_chunk_tex(self, text, size, orientation='h', cache={}):
         """Render a text chunk using mathtext"""
         size = int(round(size))
-        if (text, size, orientation) in cache and not self.plot.ps:
-            ww, hh, origin, listno =  cache[text, size, orientation]
-            def renderer(x, y):
-                glRasterPos2d(x, y)
-                glCallList(listno)
-            return ww, hh, origin, renderer
+#        if (text, size, orientation) in cache and not self.plot.ps:
+#            ww, hh, origin, listno =  cache[text, size, orientation]
+#            def renderer(x, y):
+#                glRasterPos2d(x, y)
+#                glCallList(listno)
+#            return ww, hh, origin, renderer
         
         if self.plot.ps:
             w, h, _, pswriter = mathtext.math_parse_s_ps(text, 75, size)
@@ -171,13 +171,13 @@ class TextPainter(object):
                         glDeleteLists(listno, 1)
                     cache.clear()
 
-                listno = glGenLists(1)
+#                listno = glGenLists(1)
                 glRasterPos2d(x, y)
-                glNewList(listno, GL_COMPILE)
+#                glNewList(listno, GL_COMPILE)
                 glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, data)
-                glEndList()
-                glCallList(listno)
-                cache[text, size, orientation] = ww, hh, origin, listno
+#                glEndList()
+#                glCallList(listno)
+#                cache[text, size, orientation] = ww, hh, origin, listno
 
         return ww, hh, origin, renderer
 
