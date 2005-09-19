@@ -62,23 +62,23 @@ class GraphView(gui.Box):
             return _set
 
         self.toolbar = gui.Toolbar(tbbox, orientation='vertical', stretch=1)
-        self.toolbar.append(gui.Action('Arrow', '', set_graph_mode('arrow'), 'arrow.png', type='radio'))
-        self.toolbar.append(gui.Action('Hand', '', set_graph_mode('hand'), 'hand.png', type='radio'))
-        self.toolbar.append(gui.Action('Zoom', '', set_graph_mode('zoom'), 'zoom.png', type='radio'))
-        self.toolbar.append(gui.Action('Range', '', set_graph_mode('range'), 'range.png', type='radio'))
-        self.toolbar.append(gui.Action('Data reader', '', set_graph_mode('d-reader'), 'dreader.png', type='radio'))
-        self.toolbar.append(gui.Action('Screen reader', '', set_graph_mode('s-reader'), 'sreader.png', type='radio'))
+        self.toolbar.append(gui.Command('Arrow', '', set_graph_mode('arrow'), 'arrow.png', type='radio'))
+        self.toolbar.append(gui.Command('Hand', '', set_graph_mode('hand'), 'hand.png', type='radio'))
+        self.toolbar.append(gui.Command('Zoom', '', set_graph_mode('zoom'), 'zoom.png', type='radio'))
+        self.toolbar.append(gui.Command('Range', '', set_graph_mode('range'), 'range.png', type='radio'))
+        self.toolbar.append(gui.Command('Data reader', '', set_graph_mode('d-reader'), 'dreader.png', type='radio'))
+        self.toolbar.append(gui.Command('Screen reader', '', set_graph_mode('s-reader'), 'sreader.png', type='radio'))
         self.toolbar.append(None)
-        self.toolbar.append(gui.Action('Line', '', set_graph_mode('draw-line'), 'stock_draw-line.png'))
-        self.toolbar.append(gui.Action('Text', '', set_graph_mode('draw-text'), 'stock_draw-text.png'))
+        self.toolbar.append(gui.Command('Line', '', set_graph_mode('draw-line'), 'stock_draw-line.png'))
+        self.toolbar.append(gui.Command('Text', '', set_graph_mode('draw-text'), 'stock_draw-text.png'))
         self.toolbar.append(None)
-        self.toolbar.append(gui.Action('Select all datasets', '', self.on_selectall, 'stock_select-all.png'))
+        self.toolbar.append(gui.Command('Select all datasets', '', self.on_selectall, 'stock_select-all.png'))
 
 
         self.toolbar._widget.Realize()
 
 #        self.closebar = gui.Toolbar(tbbox, stretch=0)
-#        self.closebar.append(gui.Action('Close', 'Close this worksheet', 
+#        self.closebar.append(gui.Command('Close', 'Close this worksheet', 
 #                                        self.on_close, 'close.png'))
 #        self.closebar._widget.Realize()
 
@@ -126,13 +126,13 @@ class GraphView(gui.Box):
             return
         item = self.legend.model[item]
         menu = gui.Menu()
-        menu.append(gui.Action('Hide', '', object))
-        menu.append(gui.Action('Show', '', object))
-        menu.append(gui.Action('Show Only', '', object))
+        menu.append(gui.Command('Hide', '', object))
+        menu.append(gui.Command('Show', '', object))
+        menu.append(gui.Command('Show Only', '', object))
         menu.append(None)
-        menu.append(gui.Action('Remove', '', object))
+        menu.append(gui.Command('Remove', '', object))
         menu.append(None)
-        menu.append(gui.Action('Select All', '', object))
+        menu.append(gui.Command('Select All', '', object))
         self.legend._widget.PopupMenu(menu._menu)
 
     def on_rename(self, name, item=None):
@@ -149,7 +149,7 @@ class GraphView(gui.Box):
     def on_right_clicked(self, obj):
         print >>sys.stderr, obj
         menu = gui.Menu()
-        menu.append(gui.Action('Delete', 'delete', object, 'open.png'))
+        menu.append(gui.Command('Delete', 'delete', object, 'open.png'))
         self.glwidget.parent.parent._widget.PopupMenu(menu._menu)
 
     def on_request_cursor(self, cursor):
@@ -471,9 +471,9 @@ class GraphDataPanel(gui.Box):
 
         self.toolbar = gui.Toolbar(self, stretch=0)
         gui.Label(self, 'Worksheet', stretch=0)
-        self.toolbar.append(gui.Action('Add', 'Add datasets to the graph', 
+        self.toolbar.append(gui.Command('Add', 'Add datasets to the graph', 
                                        self.on_add, 'add.png'))
-        self.toolbar.append(gui.Action('Remove', 'Remove datasets from the graph', 
+        self.toolbar.append(gui.Command('Remove', 'Remove datasets from the graph', 
                                        self.on_remove, 'remove.png'))
         self.toolbar._widget.Realize()
         
@@ -535,10 +535,10 @@ class GraphFunctionsPanel(gui.Box):
 
         self.scroll = gui.Scrolled(self)
         self.box = gui.Box(self.scroll, 'vertical')
-        self.toolbar.append(gui.Action('Add term', '', self.do_add, 'function.png'))
-        self.toolbar.append(gui.Action('Fit properties', '', self.do_configure, 'properties.png'))
-        self.toolbar.append(gui.Action('Fit', '', self.do_fit, 'manibela.png'))
-        self.toolbar.append(gui.Action('Save parameters', '', 
+        self.toolbar.append(gui.Command('Add term', '', self.do_add, 'function.png'))
+        self.toolbar.append(gui.Command('Fit properties', '', self.do_configure, 'properties.png'))
+        self.toolbar.append(gui.Command('Fit', '', self.do_fit, 'manibela.png'))
+        self.toolbar.append(gui.Command('Save parameters', '', 
                             self.do_fit, 'pencil.png'))
         self.toolbar._widget.Realize()
 
@@ -598,9 +598,9 @@ class GraphFunctionsPanel(gui.Box):
         term._butt.connect('toggled', lambda on: self.on_toggled(term, on), True)
         term._butt.connect('double-clicked', lambda: self.on_btn_doubleclicked(term), True)
         t = gui.Toolbar(bpx, expand=False, stretch=0)
-        term._act = gui.Action('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check')
+        term._act = gui.Command('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check')
         t.append(term._act)
-        t.append(gui.Action('x', '', lambda: self.on_close(term), 'close.png'))
+        t.append(gui.Command('x', '', lambda: self.on_close(term), 'close.png'))
         t._widget.Realize()
         term._box = box
         term._tx = None

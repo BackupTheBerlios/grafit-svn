@@ -394,9 +394,9 @@ class FunctionsWindow(gui.Window):
         rbox = gui.Box(box, 'vertical', stretch=2)
 
         toolbar = gui.Toolbar(rbox, stretch=0)
-        toolbar.append(gui.Action('New', '', self.on_new, 'new.png'))
-        toolbar.append(gui.Action('Delete', '', self.on_remove, 'remove.png'))
-        toolbar.append(gui.Action('Save', '', self.on_save, 'save.png'))
+        toolbar.append(gui.Command('New', '', self.on_new, 'new.png'))
+        toolbar.append(gui.Command('Delete', '', self.on_remove, 'remove.png'))
+        toolbar.append(gui.Command('Save', '', self.on_save, 'save.png'))
         toolbar._widget.Realize()
 
         book = gui.Notebook(rbox)

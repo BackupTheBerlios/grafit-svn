@@ -46,13 +46,13 @@ class WorksheetView(gui.Box):
         self.worksheet = worksheet
         self.toolbar = gui.Toolbar(self, orientation='vertical', stretch=0)
 
-        self.toolbar.append(gui.Action('New column', 'Create a new column', 
+        self.toolbar.append(gui.Command('New column', 'Create a new column', 
                                        self.on_new_column, 'stock_insert-columns.png'))
-        self.toolbar.append(gui.Action('Delete column', 'Delete a column', 
+        self.toolbar.append(gui.Command('Delete column', 'Delete a column', 
                                        self.on_new_column, 'stock_delete-column.png'))
-        self.toolbar.append(gui.Action('Move left', 'Move columns to the left', 
+        self.toolbar.append(gui.Command('Move left', 'Move columns to the left', 
                                        self.on_new_column, 'stock_left.png'))
-        self.toolbar.append(gui.Action('Move right', 'Move columns to the right', 
+        self.toolbar.append(gui.Command('Move right', 'Move columns to the right', 
                                        self.on_new_column, 'stock_right.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
@@ -70,8 +70,8 @@ class WorksheetView(gui.Box):
 
     def on_right_clicked(self, row, col):
         menu = gui.Menu()
-        menu.append(gui.Action('Set value', 'setvalue', self.on_set_value, 'stock_edit.png'))
-        menu.append(gui.Action('Delete', 'delete', self.on_set_value, 'stock_delete.png'))
+        menu.append(gui.Command('Set value', 'setvalue', self.on_set_value, 'stock_edit.png'))
+        menu.append(gui.Command('Delete', 'delete', self.on_set_value, 'stock_delete.png'))
         self.clickcell = row, col
         self.table._widget.PopupMenu(menu._menu)
 

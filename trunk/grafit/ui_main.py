@@ -13,7 +13,7 @@ from grafit.actions import action_list, undo, redo
 from grafit.settings import settings, DATADIR
 from grafit.gui import Window, Button, Box, Application, Shell, List, \
                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
-                       OpenGLWidget, Table, Action, Menu, Menubar, Toolbar, Html
+                       OpenGLWidget, Table, Command, Menu, Menubar, Toolbar, Html
 import grafit.signals
 
 import wx
@@ -155,11 +155,11 @@ class ProjectExplorer(Box):
             return
         item = self.list.model[item]
         menu = Menu()
-        menu.append(Action('Delete', 'delete', object, 'stock_delete.png'))
+        menu.append(Command('Delete', 'delete', object, 'stock_delete.png'))
         menu.append(None)
-        menu.append(Action('Preview PostScript', 'Preview PostScript', 
+        menu.append(Command('Preview PostScript', 'Preview PostScript', 
                     lambda: self.on_preview_ps(item), 'stock_print-preview.png'))
-        menu.append(Action('Export...', 'Export', object, 'stock_export.png'))
+        menu.append(Command('Export...', 'Export', object, 'stock_export.png'))
         self.list._widget.PopupMenu(menu._menu)
 
 
@@ -249,9 +249,9 @@ class ActionListModel(HasSignals):
     def get_image(self, row): 
         com = self.actionlist.actions[row]
         if com.done:
-            return 'action-done.png'
+            return 'command-done.png'
         else:
-            return 'action-undone.png'
+            return 'command-undone.png'
     def __len__(self): return len(self.actionlist.actions)
 
 class ActionList(Box):
@@ -346,34 +346,34 @@ class MainWindow(Window):
         action_list.connect('modified', self.on_action)
 
         self.actions = actions = {
-            'file-new': Action('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
-            'file-open': Action('Open...', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
-            'file-save': Action('Save', 'Save the project', 
+            'file-new': Command('New', 'Create a new project', self.on_project_new, 'new.png', 'Ctrl+N'),
+            'file-open': Command('Open...', 'Open a project', self.on_project_open, 'open.png', 'Ctrl+O'),
+            'file-save': Command('Save', 'Save the project', 
                                 self.on_project_save, 'save.png', 'Ctrl+S'),
-            'file-saveas': Action('Save As...', 'Save the project with a new name', 
+            'file-saveas': Command('Save As...', 'Save the project with a new name', 
                                   self.on_project_saveas, 'saveas.png'),
-            'file-quit': Action('Quit', 'Quit grafit', self.on_quit, 'stock_exit.png', 'Ctrl+Q'),
+            'file-quit': Command('Quit', 'Quit grafit', self.on_quit, 'stock_exit.png', 'Ctrl+Q'),
 
-            'edit-undo': Action('Undo', 'Undo the last action', undo, 'stock_undo.png', 'Ctrl+Z'),
-            'edit-redo': Action('Redo', 'Redo the last action', redo, 'stock_redo.png', 'Shift+Ctrl+Z'),
-            'edit-copy': Action('Copy', 'Undo the last action', object, 'stock_copy.png', 'Ctrl+C'),
-            'edit-cut': Action('Cut', 'Undo the last action', object, 'stock_cut.png', 'Ctrl+X'),
-            'edit-paste': Action('Paste', 'Undo the last action', 'stock_paste.png', None, 'Ctrl+V'),
-            'edit-delete': Action('Delete', 'Undo the last action', 'stock_delete.png', None),
+            'edit-undo': Command('Undo', 'Undo the last action', undo, 'stock_undo.png', 'Ctrl+Z'),
+            'edit-redo': Command('Redo', 'Redo the last action', redo, 'stock_redo.png', 'Shift+Ctrl+Z'),
+            'edit-copy': Command('Copy', 'Undo the last action', object, 'stock_copy.png', 'Ctrl+C'),
+            'edit-cut': Command('Cut', 'Undo the last action', object, 'stock_cut.png', 'Ctrl+X'),
+            'edit-paste': Command('Paste', 'Undo the last action', 'stock_paste.png', None, 'Ctrl+V'),
+            'edit-delete': Command('Delete', 'Undo the last action', 'stock_delete.png', None),
 
-            'import-ascii': Action('Import ASCII...', 'Import and ASCII file', 
+            'import-ascii': Command('Import ASCII...', 'Import and ASCII file', 
                                    self.on_import_ascii, 'import_ascii.png', 'Ctrl+I'),
-            'object-new-worksheet': Action('New Worksheet', 'Create a new worksheet', 
+            'object-new-worksheet': Command('New Worksheet', 'Create a new worksheet', 
                                            self.on_new_worksheet, 'new-worksheet.png'),
-            'object-new-graph': Action('New Graph', 'Create a new worksheet', 
+            'object-new-graph': Command('New Graph', 'Create a new worksheet', 
                                        self.on_new_graph, 'new-graph.png'),
-            'object-new-folder': Action('New Folder', 'Create a new worksheet', 
+            'object-new-folder': Command('New Folder', 'Create a new worksheet', 
                                         self.on_new_folder, 'new-folder.png'),
-            'functions': Action('Functions...', '', object),
-            'filters': Action('Filters...', '', object),
-            'scripts': Action('Scripts...', '', object),
-            'run-script': Action('Run script...', '', self.on_run_script),
-            'close-active-page': Action('Close', 'Close this worksheet',
+            'functions': Command('Functions...', '', object),
+            'filters': Command('Filters...', '', object),
+            'scripts': Command('Scripts...', '', object),
+            'run-script': Command('Run script...', '', self.on_run_script),
+            'close-active-page': Command('Close', 'Close this worksheet',
                                         lambda: self.book.active_page.on_close(), 'close.png'),
             None: None
         }

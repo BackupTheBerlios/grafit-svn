@@ -1843,7 +1843,7 @@ class _xGrid(wx.grid.Grid):
         event.Skip()
 
 
-class Action(HasSignals):
+class Command(HasSignals):
     def __init__(self, name, desc, call, pixmap=None, accel=None, type='simple'):
         self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
         self.type = type
