@@ -292,8 +292,8 @@ class MFunctionSum(FunctionSum):
             if f.func in registry and not f.id.startswith('-'):
                 self.add(f.func, f.name)
                 self.terms[-1].data = f
-            else:
-                print >>sys.stderr, "function '%s' not found." %f.func
+            elif not f.id.startswith('-'):
+                print >>sys.stderr, "function '%s' not found." %f.func, registry
         self.connect('add-term', self.on_add_term)
         self.connect('remove-term', self.on_remove_term)
 
@@ -424,7 +424,7 @@ class FunctionsWindow(gui.Window):
         while 'function%d.function'%num in (f.filename.split('/')[-1] for f in registry):
             num += 1
         self.function = Function('function%d'%num, [], 'y=f(x)', '')
-        open('functions/function%d.function'%num, 'wb').write(self.function.tostring())
+        open(DATADIR+'data/functions/function%d.function'%num, 'wb').write(self.function.tostring())
 #        self.scan('functions')
         registry.rescan()
         self.update_gui()

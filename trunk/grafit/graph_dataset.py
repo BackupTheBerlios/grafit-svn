@@ -354,11 +354,13 @@ class Function(DrawWithStyle):
             for term in self.func.terms:
                 if term.enabled:
                     y = term(x)
-                    self.paint_lines(*self.graph.data_to_phys(x, y))
+#                    self.paint_lines(*self.graph.data_to_phys(x, y))
+                    self.paint_lines(x, y)
 
         self.style._color = self.totalcolor
         y = self.func(x)
-        self.paint_lines(*self.graph.data_to_phys(x, y))
+#        self.paint_lines(*self.graph.data_to_phys(x, y))
+        self.paint_lines(x, y)
 
     def set_id(self, id): self.data.id = id
     def get_id(self): return self.data.id
