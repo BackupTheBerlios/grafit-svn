@@ -25,9 +25,7 @@ if options.log is not None:
     for l in options.log.split(','):
         logging.getLogger(l).setLevel(logging.DEBUG)
 
-
 from settings import DATADIR
-print "Starting grafit, data directory is", DATADIR
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'/grafit/thirdparty/')
 
@@ -94,7 +92,6 @@ def excepthook(type, value, traceback):
 
 def main():
     sys.excepthook = excepthook
-    print >>sys.stderr, "creating application"
     app = gui.Application()
     app.splash()
     from ui_main import MainWindow

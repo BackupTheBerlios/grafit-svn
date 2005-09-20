@@ -4,9 +4,10 @@ import gui
 
 from grafit.thirdparty import odr
 
-from signals import HasSignals
+from grafit.signals import HasSignals
 from grafit.arrays import zeros, nan
 from grafit.actions import action_from_methods, StopAction, action_from_methods2
+from grafit.settings import DATADIR, USERDATADIR
 
 def gen_flatten(s):
     try:
@@ -30,33 +31,33 @@ def splitlist(seq, sizes):
 
 
 class FunctionsRegistry(HasSignals):
-    def __init__(self, dir):
+    def __init__(self, dirs):
         """Create a new function registry from a directory"""
         self.functions = []
-        self.dir = dir
+        self.dirs = dirs
         self.scan()
 
     def rescan(self):
         """Rescan the directory and check for changed functions"""
-        dir = self.dir
         names = []
-        for f in os.listdir(dir):
-            try:
-                func = Function()
-                func.fromstring(open(dir+'/'+f).read())
-                func.filename = dir + '/' + f
-                names.append(func.name)
-            except IOError, s:
-                continue
+        for dir in self.dirs:
+            for f in os.listdir(dir):
+                try:
+                    func = Function()
+                    func.fromstring(open(dir+'/'+f).read())
+                    func.filename = dir + '/' + f
+                    names.append(func.name)
+                except IOError, s:
+                    continue
 
-            if func.name not in [f.name for f in self.functions]:
-                self.functions.append(func)
-                self.emit('added', func)
-            else:
-                for i, f in enumerate(self.functions):
-                    if f.name == func.name:
-                        self.functions[i] = func
-                        self.emit('modified', func)
+                if func.name not in [f.name for f in self.functions]:
+                    self.functions.append(func)
+                    self.emit('added', func)
+                else:
+                    for i, f in enumerate(self.functions):
+                        if f.name == func.name:
+                            self.functions[i] = func
+                            self.emit('modified', func)
 
         for f in self:
             if f.name not in names:
@@ -65,20 +66,22 @@ class FunctionsRegistry(HasSignals):
 
 #            self.functions.sort()
 
-    def scan(self, dir=None):
-        if dir == None:
-            dir = self.dir
+    def scan(self, dirs=None):
+        if dirs == None:
+            dirs = self.dirs
         self.functions = []
 
-        for f in os.listdir(dir):
-            try:
-                func = Function()
-                func.fromstring(open(dir+'/'+f).read())
-                func.filename = dir + '/' + f
-            except IOError, s:
-                continue
+        for dir in dirs:
 
-            self.functions.append(func)
+            for f in os.listdir(dir):
+                try:
+                    func = Function()
+                    func.fromstring(open(dir+'/'+f).read())
+                    func.filename = dir + '/' + f
+                except IOError, s:
+                    continue
+
+                self.functions.append(func)
 #        self.functions.sort()
 
     def __getitem__(self, name):
@@ -377,8 +380,8 @@ class Function(HasSignals):
         st = '\n------\n'.join(st)
         return st
 
-from settings import DATADIR
-registry = FunctionsRegistry(DATADIR+'data/functions')
+registry = FunctionsRegistry([os.path.join(DATADIR, 'data', 'functions'), 
+                              os.path.join(USERDATADIR, 'functions')])
 
 class FunctionsWindow(gui.Window):
     def __init__(self):
