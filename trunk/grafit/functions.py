@@ -427,7 +427,7 @@ class FunctionsWindow(gui.Window):
         while 'function%d.function'%num in (f.filename.split('/')[-1] for f in registry):
             num += 1
         self.function = Function('function%d'%num, [], 'y=f(x)', '')
-        open(DATADIR+'data/functions/function%d.function'%num, 'wb').write(self.function.tostring())
+        open(USERDATADIR+'/functions/function%d.function'%num, 'wb').write(self.function.tostring())
 #        self.scan('functions')
         registry.rescan()
         self.update_gui()

@@ -446,6 +446,8 @@ class Graph(Item, HasSignals):
 
  
     def zoomout(self,x1, x2,x3, x4):
+        if x3 == x4:
+            return x1, x2
         a = (x2-x1)/(x4-x3)
         c = x1 - a*x3
         f1 = a*x1 + c
@@ -667,6 +669,11 @@ class Graph(Item, HasSignals):
                 # copy lines
                 outfile.write(line)
         f.close()
+
+    def show(self):
+        for d in self.datasets:
+            if not hasattr(d, 'xx'):
+                d.recalculate()
 
     def button_press(self, x, y, button=None):
         if self.mode == 'zoom':

@@ -246,7 +246,7 @@ class Dataset(DrawWithStyle):
         self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
 
         self.xfrom, self.xto = -inf, inf
-        self.recalculate()
+#        self.recalculate()
 
     def connect_signals(self):
         self.x.connect('data-changed', self.on_data_changed)

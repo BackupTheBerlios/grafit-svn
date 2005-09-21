@@ -61,6 +61,8 @@ class GraphView(gui.Box):
                 self.graph.emit('redraw')
             return _set
 
+        graph.show()
+
         self.toolbar = gui.Toolbar(tbbox, orientation='vertical', stretch=1)
         self.toolbar.append(gui.Command('Arrow', '', set_graph_mode('arrow'), 'arrow.png', type='radio'))
         self.toolbar.append(gui.Command('Hand', '', set_graph_mode('hand'), 'hand.png', type='radio'))

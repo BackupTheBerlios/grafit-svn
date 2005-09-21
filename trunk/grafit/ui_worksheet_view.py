@@ -1,15 +1,12 @@
 import sys
 
-#import wx
-#import wx.grid as grid
-
 from grafit.signals import HasSignals
-from grafit import gui
-
 from grafit.arrays import nan
 from grafit.worksheet import Worksheet
+from grafit import gui
 
-import wx
+NORMAL_COL_BGCOLOR = (255, 255, 255)
+AUTO_COL_BGCOLOR = (220, 220, 255)
 
 class TableData(HasSignals):
     def __init__(self, worksheet):
@@ -24,19 +21,17 @@ class TableData(HasSignals):
     def get_row_name(self, row): return str(row)
     def get_data(self, col, row): return str(self.worksheet[col][row]).replace('nan', '')
     def get_background_color(self, col): 
-        if self.worksheet[col].expr != '':
-            return (220, 220, 255)
-        else:
-            return (255, 255, 255)
+        return (AUTO_COL_BGCOLOR, NORMAL_COL_BGCOLOR)[self.worksheet[col].expr == '']
     def set_data(self, col, row, value): 
         try:
             f = float(value)
-            self.worksheet[col][row] = f
         except ValueError:
             try:
                 self.worksheet[col] = self.worksheet.evaluate(value)
             except:
                 raise
+        else:
+            self.worksheet[col][row] = f
 
 
 class WorksheetView(gui.Box):
@@ -54,10 +49,14 @@ class WorksheetView(gui.Box):
                                        self.on_new_column, 'stock_left.png'))
         self.toolbar.append(gui.Command('Move right', 'Move columns to the right', 
                                        self.on_new_column, 'stock_right.png'))
+        self.toolbar.append(gui.Command('Insert row', 'Insert row', 
+                                       self.on_insert, 'table-insert-row.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
         self.table.connect('right-clicked', self.on_right_clicked)
         self.table.connect('double-clicked', self.on_double_clicked)
+
+        self.table._widget.DisableDragRowSize()
 
         self.object = self.worksheet
         self.worksheet.connect('rename', self.on_rename)
@@ -71,6 +70,7 @@ class WorksheetView(gui.Box):
     def on_right_clicked(self, row, col):
         menu = gui.Menu()
         menu.append(gui.Command('Set value', 'setvalue', self.on_set_value, 'stock_edit.png'))
+        menu.append(gui.Command('Insert row', 'insert', self.on_insert, 'table-insert-row.png'))
         menu.append(gui.Command('Delete', 'delete', self.on_set_value, 'stock_delete.png'))
         self.clickcell = row, col
         self.table._widget.PopupMenu(menu._menu)
@@ -81,6 +81,15 @@ class WorksheetView(gui.Box):
 
     def on_close(self):
         self.parent.delete(self)
+
+
+    def on_insert(self):
+        self.insert(self.table._widget.GetGridCursorRow())
+
+    def insert(self, n):
+        for col in self.worksheet:
+            col[n+1:] = col[n:]
+            col[n] = nan
 
     def on_set_value(self):
         row, col = self.clickcell
