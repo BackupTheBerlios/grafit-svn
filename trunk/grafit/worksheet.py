@@ -13,7 +13,7 @@ class Column(MkArray, HasSignals):
     def __init__(self, worksheet, ind):
         self.data = worksheet.data.columns[ind]
         self.worksheet = worksheet
-        self.ind = ind
+#        self.ind = ind
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
         self.dependencies = set()
 
@@ -113,6 +113,16 @@ class Worksheet(Item, HasSignals):
         self.__attr = True
 
     record = None
+
+    def swap_columns(self, i, j):
+        print 1, self.column_names
+        tmp = self.data.columns.append()
+        for a, b in [(tmp, i), (i, j), (j, tmp)]:
+            self.data.columns[a] = self.data.columns[b]
+        del self.data.columns[tmp]
+        print 2, self.column_names
+#        self.columns.sort(lambda c, d: cmp(self.column_index(c.name), self.column_index(d.name)))
+#        print self.column_names
 
     def evaluate(self, expression):
         if expression == '':
