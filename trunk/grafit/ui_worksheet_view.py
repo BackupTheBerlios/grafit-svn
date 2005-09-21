@@ -43,14 +43,21 @@ class WorksheetView(gui.Box):
 
         self.toolbar.append(gui.Command('New column', 'Create a new column', 
                                        self.on_new_column, 'stock_insert-columns.png'))
-        self.toolbar.append(gui.Command('Delete column', 'Delete a column', 
-                                       self.on_new_column, 'stock_delete-column.png'))
-        self.toolbar.append(gui.Command('Move left', 'Move columns to the left', 
-                                       self.on_new_column, 'stock_left.png'))
-        self.toolbar.append(gui.Command('Move right', 'Move columns to the right', 
-                                       self.on_new_column, 'stock_right.png'))
         self.toolbar.append(gui.Command('Insert row', 'Insert row', 
                                        self.on_insert, 'table-insert-row.png'))
+        self.toolbar.append(gui.Command('Delete column', 'Delete a column', 
+                                       self.on_new_column, 'stock_delete-column.png'))
+
+        self.toolbar.append(None)
+
+        self.toolbar.append(gui.Command('Move left', 'Move columns to the left', 
+                                       self.on_new_column, '16/left.png'))
+        self.toolbar.append(gui.Command('Move right', 'Move columns to the right', 
+                                       self.on_new_column, '16/right.png'))
+        self.toolbar.append(gui.Command('Move to first', '', 
+                                       self.on_new_column, '16/first.png'))
+        self.toolbar.append(gui.Command('Move to last', '', 
+                                       self.on_new_column, '16/last.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
         self.table.connect('right-clicked', self.on_right_clicked)

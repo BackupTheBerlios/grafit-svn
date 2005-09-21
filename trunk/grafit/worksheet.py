@@ -13,9 +13,12 @@ class Column(MkArray, HasSignals):
     def __init__(self, worksheet, ind):
         self.data = worksheet.data.columns[ind]
         self.worksheet = worksheet
-#        self.ind = ind
         MkArray.__init__(self, worksheet.data.columns, worksheet.data.columns.data, ind)
         self.dependencies = set()
+
+    def reload(self, ind):
+        MkArray.__init__(self, self.worksheet.data.columns, self.worksheet.data.columns.data, ind)
+        self.data = self.worksheet.data.columns[ind]
 
     def set_name(self, name):
         self.data.name = name.encode('utf-8')
@@ -114,15 +117,29 @@ class Worksheet(Item, HasSignals):
 
     record = None
 
-    def swap_columns(self, i, j):
-        print 1, self.column_names
+    def swap_columns(self, state, i=None, j=None):
+        if i is None and j is None:
+            i, j = state['columns']
+        else:
+            state['columns'] = (i, j)
+        
+        # swap rows in database
+        # columns[i], columns[j] = columns[j], columns[i] will not work
+        # (at least with metakit 2.4.9.3), so we have to do this explicitly
         tmp = self.data.columns.append()
-        for a, b in [(tmp, i), (i, j), (j, tmp)]:
-            self.data.columns[a] = self.data.columns[b]
+        self.data.columns[tmp] = self.data.columns[i]
+        self.data.columns[i] = self.data.columns[j]
+        self.data.columns[j] = self.data.columns[tmp]
         del self.data.columns[tmp]
-        print 2, self.column_names
-#        self.columns.sort(lambda c, d: cmp(self.column_index(c.name), self.column_index(d.name)))
-#        print self.column_names
+        
+        # swap column objects
+        self.columns[i], self.columns[j] = self.columns[j], self.columns[i]
+        self.columns[i].reload(i)
+        self.columns[j].reload(j)
+
+        self.emit('data-changed')
+
+    swap_columns = action_from_methods2('worksheet/swap-columns', swap_columns, swap_columns)
 
     def evaluate(self, expression):
         if expression == '':
