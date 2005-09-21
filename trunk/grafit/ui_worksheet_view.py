@@ -1,7 +1,7 @@
 import sys
 
 from grafit.signals import HasSignals
-from grafit.arrays import nan
+from grafit.arrays import nan, array
 from grafit.worksheet import Worksheet
 from grafit import gui
 
@@ -67,6 +67,17 @@ class WorksheetView(gui.Box):
 
         self.object = self.worksheet
         self.worksheet.connect('rename', self.on_rename)
+
+    def selection(self):
+        blocks = []
+        for (t,l), (b,r) in zip(self.table._widget.GetSelectionBlockTopLeft(), 
+                                self.table._widget.GetSelectionBlockBottomRight()):
+            blocks.append(array([self.worksheet.columns[col][t:b+1] for col in range(l, r+1)]))
+
+        for (r,c) in self.table._widget.GetSelectedCells():
+            blocks.append(array([[self.worksheet.columns[c][r]]]))
+
+        return blocks
 
     def on_rename(self, name, item=None):
         self.parent._widget.SetPageText(self.parent.pages.index(self), name)
