@@ -30,7 +30,7 @@ class _xSplashScreen(wx.SplashScreen):
     Create a splash screen widget.
     """
     def __init__(self):
-        aBitmap = wx.Image(name = DATADIR+"data/images/logo.png").ConvertToBitmap()
+        aBitmap = wx.Image(name = DATADIR+"data/images/logos/grafit.png").ConvertToBitmap()
         splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT | wx.NO_BORDER
 #        splashDuration = 1000 # milliseconds
 #        splashCallback = None
