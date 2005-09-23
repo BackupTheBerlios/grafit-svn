@@ -915,7 +915,7 @@ class TreeNode(HasSignals):
         return 'TreeNode'
 
     def get_pixmap(self):
-        return 'stock_folder.png'
+        return '16/folder.png'
 
     def append(self, child):
         self.children.append(child)

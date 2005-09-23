@@ -103,7 +103,7 @@ class FolderTreeNode(HasSignals):
         if self.folder == self.folder.project.top:
             return 'grafit16.png'
         else:
-            return 'stock_folder.png'
+            return '16/folder.png'
 
     def on_modified(self, item=None): 
         subfolders = list(self.folder.subfolders())
@@ -217,7 +217,12 @@ class ProjectExplorer(Box):
         self.project.cd(item.folder)
 
     def on_list_item_activated(self, item):
-        self.emit('item-activated', self.list.model[item])
+        obj = self.list.model[item]
+        if isinstance(obj, Folder):
+            self.list.model = FolderListData(obj)
+            self.project.cd(obj)
+        else:
+            self.emit('item-activated', obj)
 
     def connect_project(self, project):
         self.project = project
@@ -302,7 +307,7 @@ class FolderListData(HasSignals):
         elif isinstance(obj, Graph):
             return 'graph.png'
         elif isinstance(obj, Folder):
-            return ['stock_folder.png', 'up.png'][obj == self.folder.parent]
+            return ['16/folder.png', '16/up.png'][obj == self.folder.parent]
     def __len__(self): return len(self.contents)
     def __getitem__(self, row): return self.contents[row]
 

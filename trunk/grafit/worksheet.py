@@ -118,12 +118,12 @@ class Worksheet(Item, HasSignals):
     record = None
 
     def move_column(self, state, src=None, dest=None):
-        if src==dest or dest<0 or src<0 or dest>=len(self.columns) or src>=len(self.columns):
-            raise StopAction, False
 
         if src is None and dest is None:
             src, dest = state['columns']
         else:
+            if src==dest or dest<0 or src<0 or dest>=len(self.columns) or src>=len(self.columns):
+                raise StopAction, False
             state['columns'] = (src, dest)
 
         for i in range(src, dest, cmp(dest,src)):
@@ -141,12 +141,11 @@ class Worksheet(Item, HasSignals):
 
 
     def swap_columns(self, state, i=None, j=None, nocomm=False):
-        if i==j or i<0 or j<0 or i>=len(self.columns) or j>=len(self.columns):
-            raise StopAction, False
-        
         if i is None and j is None:
             i, j = state['columns']
         else:
+            if i==j or i<0 or j<0 or i>=len(self.columns) or j>=len(self.columns):
+                raise StopAction, False
             state['columns'] = (i, j)
         
         # swap rows in database

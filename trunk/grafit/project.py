@@ -398,6 +398,7 @@ class Project(HasSignals):
         if obj.parent is self.top and obj.name in self._dict:
             del self._dict[obj.name] 
         self.emit('remove-item', obj)
+        obj.parent.emit('modified')
 
     def new_redo(self, obj):
         del self.deleted[obj.id]
@@ -406,6 +407,7 @@ class Project(HasSignals):
         if obj.parent is self.top:
             self._dict[obj.name] = obj
         self.emit('add-item', obj)
+        obj.parent.emit('modified')
 
     def new_cleanup(self, obj):
         if obj.id in self.deleted:

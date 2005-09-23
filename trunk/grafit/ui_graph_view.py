@@ -26,7 +26,7 @@ class LegendModel(HasSignals):
         if hasattr(self.graph.datasets[row], "_legend_wxbitmap"):
             return self.graph.datasets[row]._legend_wxbitmap
         else:
-            return 'stock_folder.png'
+            return '16/folder.png'
     def __len__(self): return len(self.graph.datasets) #+ len(self.graph.functions)
     def __getitem__(self, row): 
 #        if row < len(self.graph.datasets):
@@ -439,7 +439,7 @@ class WorksheetListModel(HasSignals):
         if isinstance(obj, Worksheet):
             return 'worksheet.png'
         elif isinstance(obj, Folder):
-            return ['stock_folder.png', 'up.png'][obj == self.folder.parent]
+            return ['16/folder.png', '16/up.png'][obj == self.folder.parent]
     def __len__(self): return len(self.contents)
     def __getitem__(self, row): return self.contents[row]
 
