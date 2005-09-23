@@ -1,5 +1,6 @@
 from base import Widget, Container
-from wx.lib.splitter import MultiSplitterWindow
+from grafit.thirdparty.splitter import MultiSplitterWindow
+
 import wx
 
 class Box(Widget, Container, wx.Panel):
