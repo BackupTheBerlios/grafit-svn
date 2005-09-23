@@ -7,7 +7,7 @@ from grafit.project import Item, wrap_attribute, register_class, create_id
 
 from grafit.arrays import MkArray, transpose, array, asarray
 
-import arrays
+import grafit.arrays as arrays
 
 class Column(MkArray, HasSignals):
     def __init__(self, worksheet, ind):

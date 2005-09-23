@@ -29,7 +29,7 @@ from settings import DATADIR
 sys.path.append(DATADIR)
 sys.path.append(DATADIR+'/grafit/thirdparty/')
 
-from thirdparty.ultraTB import VerboseTB
+from grafit.thirdparty.ultraTB import VerboseTB
 
 import gui
 import mingui

@@ -9,7 +9,7 @@ from grafit import gui
 from grafit.arrays import nan
 from grafit.util import flatten
 
-from settings import DATADIR
+from grafit.settings import DATADIR
 
 class LegendModel(HasSignals):
     def __init__(self, graph):
