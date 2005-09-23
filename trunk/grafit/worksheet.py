@@ -117,7 +117,33 @@ class Worksheet(Item, HasSignals):
 
     record = None
 
-    def swap_columns(self, state, i=None, j=None):
+    def move_column(self, state, src=None, dest=None):
+        if src==dest or dest<0 or src<0 or dest>=len(self.columns) or src>=len(self.columns):
+            raise StopAction, False
+
+        if src is None and dest is None:
+            src, dest = state['columns']
+        else:
+            state['columns'] = (src, dest)
+
+        for i in range(src, dest, cmp(dest,src)):
+            self.swap_columns(i, i+cmp(dest, src), nocomm=True)
+
+        self.emit('data-changed')
+
+    def undo_move_column(self, state):
+        dest, src = state['columns']
+        for i in range(src, dest, cmp(dest,src)):
+            self.swap_columns(i, i+cmp(dest, src), nocomm=True)
+        self.emit('data-changed')
+
+    move_column = action_from_methods2('move column', move_column, undo_move_column)
+
+
+    def swap_columns(self, state, i=None, j=None, nocomm=False):
+        if i==j or i<0 or j<0 or i>=len(self.columns) or j>=len(self.columns):
+            raise StopAction, False
+        
         if i is None and j is None:
             i, j = state['columns']
         else:
@@ -137,7 +163,12 @@ class Worksheet(Item, HasSignals):
         self.columns[i].reload(i)
         self.columns[j].reload(j)
 
+        if nocomm:
+            raise StopAction, True
+
         self.emit('data-changed')
+
+        return True
 
     swap_columns = action_from_methods2('worksheet/swap-columns', swap_columns, swap_columns)
 

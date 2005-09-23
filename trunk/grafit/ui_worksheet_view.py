@@ -51,13 +51,13 @@ class WorksheetView(gui.Box):
         self.toolbar.append(None)
 
         self.toolbar.append(gui.Command('Move left', 'Move columns to the left', 
-                                       self.on_new_column, '16/left.png'))
+                                       self.on_move_left, '16/left.png'))
         self.toolbar.append(gui.Command('Move right', 'Move columns to the right', 
-                                       self.on_new_column, '16/right.png'))
+                                       self.on_move_right, '16/right.png'))
         self.toolbar.append(gui.Command('Move to first', '', 
-                                       self.on_new_column, '16/first.png'))
+                                       self.on_move_first, '16/first.png'))
         self.toolbar.append(gui.Command('Move to last', '', 
-                                       self.on_new_column, '16/last.png'))
+                                       self.on_move_last, '16/last.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
         self.table.connect('right-clicked', self.on_right_clicked)
@@ -81,6 +81,34 @@ class WorksheetView(gui.Box):
 
     def on_rename(self, name, item=None):
         self.parent._widget.SetPageText(self.parent.pages.index(self), name)
+
+    def on_move_left(self):
+        sel = self.table.selected_columns
+        for c in sorted(sel):
+            self.worksheet.swap_columns(c, c-1)
+
+        self.table.selected_columns = [c-1 for c in sel]
+
+    def on_move_right(self):
+        sel = self.table.selected_columns
+        for c in sorted(sel, reverse=True):
+            self.worksheet.swap_columns(c, c+1)
+
+        self.table.selected_columns = [c+1 for c in sel]
+
+    def on_move_first(self):
+        sel = self.table.selected_columns
+        for n, c in enumerate(sorted(sel)):
+            self.worksheet.move_column(c, n)
+
+        self.table.selected_columns = range(len(sel))
+
+    def on_move_last(self):
+        sel = self.table.selected_columns
+        for n, c in enumerate(sorted(sel, reverse=True)):
+            self.worksheet.move_column(c, len(self.worksheet.columns)-1-n)
+
+        self.table.selected_columns = [len(self.worksheet.columns)-c-1 for c in range(len(sel))]
 
     def on_new_column(self):
         self.worksheet[self.worksheet.suggest_column_name()] = [nan]*20

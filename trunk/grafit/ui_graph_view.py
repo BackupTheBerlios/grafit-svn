@@ -600,7 +600,7 @@ class GraphFunctionsPanel(gui.Box):
         term._butt.connect('toggled', lambda on: self.on_toggled(term, on), True)
         term._butt.connect('double-clicked', lambda: self.on_btn_doubleclicked(term), True)
         t = gui.Toolbar(bpx, expand=False, stretch=0)
-        term._act = gui.Command('x', '', lambda checked: self.on_use(term, checked), 'down.png', type='check')
+        term._act = gui.Command('x', '', lambda checked: self.on_use(term, checked), '16/down.png', type='check')
         t.append(term._act)
         t.append(gui.Command('x', '', lambda: self.on_close(term), 'close.png'))
         t._widget.Realize()

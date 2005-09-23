@@ -1741,6 +1741,16 @@ class Table(Widget):
         self._widget = _xGrid(parent._widget, data, self)
         Widget.__init__(self, parent, **place)
 
+    def selected_columns():
+        def fget(self):
+            return self._widget.GetSelectedCols()
+        def fset(self, cols):
+            self._widget.ClearSelection()
+            for c in cols:
+                self._widget.SelectCol(c, True)
+        return locals()
+    selected_columns = property(**selected_columns())
+
 class _xLabelEditor(wx.TextCtrl, HasSignals):
     def __init__(self, parent, column):
         wx.TextCtrl.__init__(self, parent, -1, parent.GetTable().data.get_column_name(column), 

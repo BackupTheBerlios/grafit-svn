@@ -279,9 +279,9 @@ def action_from_methods(name, do, undo, redo=None, cleanup=None, combine=None):
         try:
             ret = com.do_and_register()
             return ret
-        except StopAction:
+        except StopAction, retval:
 #            print >>sys.stderr, "comand stopped"
-            return None
+            return retval
     return replace_init
 
 
@@ -326,8 +326,8 @@ def action_from_methods2(name, do, undo, redo=None, cleanup=None, combine=None):
         try:
             ret = com.do_and_register()
             return ret
-        except StopAction:
-            return None
+        except StopAction, retval:
+            return retval
     replace_do.__name__ = do.__name__
     return replace_do
 
