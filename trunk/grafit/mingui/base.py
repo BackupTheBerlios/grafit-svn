@@ -1,4 +1,5 @@
 import os.path
+import platform
 
 import wx
 
@@ -14,7 +15,35 @@ def _pil_to_wxbitmap(image):
     wi.SetData(image.convert('RGB').tostring())
     wi.SetAlphaData(image.convert('RGBA').tostring()[3::4])
     return wi.ConvertToBitmap()
- 
+
+
+def _text_img_wxbitmap(text, image, rotate=False):
+    bimp = _pil_to_wxbitmap(image)
+
+    # create an empty bitmap
+    dc = wx.MemoryDC()
+    w, h = dc.GetTextExtent(text)
+    wb, hb = bimp.GetSize()
+    bmp = wx.EmptyBitmap(w + wb, max([h, hb]))
+
+    # draw bitmap and text
+    dc.SelectObject(bmp)
+    dc.BeginDrawing()
+    dc.SetBackground(wx.Brush(app.mainwin.GetBackgroundColour()))
+    dc.Clear()
+    dc.SetFont(app.mainwin.GetFont())
+    dc.DrawBitmap(bimp, 0, 0, True)
+    dc.DrawText(text, wb+5, 0)
+    dc.EndDrawing()
+    if platform.system() == 'Linux':
+        bmp.SetMaskColour(app.mainwin.GetBackgroundColour())
+
+    # rotate if nescessary
+    if rotate:
+        bmp = bmp.ConvertToImage().Rotate90(False).ConvertToBitmap()
+
+    return bmp
+
 class Widget(HasSignals):
     def __init__(self, place, connect={}, **kwds):
         if place is None:
@@ -70,27 +99,6 @@ displayed in a different way, and do not respond to user actions."""
 
     def close(self):
         return self.Close()
-
-class Window(wx.Frame, Widget, Container):
-    def __init__(self, parent=None, connect={}, **kwds):
-        wx.Frame.__init__(self, parent, -1)
-        Widget.__init__(self, None, connect, **kwds)
-        self.parent = parent
-
-    title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
-
-class Dialog(wx.Dialog, Widget, Container):
-    def __init__(self, parent=None, connect={}, **kwds):
-        wx.Dialog.__init__(self, parent, -1, style=wx.THICK_FRAME)
-        Widget.__init__(self, None, connect, **kwds)
-        self.parent = parent
-
-    def show(self, modal=False):
-        if modal:
-            return self.ShowModal()
-        else:
-            return Widget.show(self)
-    title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
 
 class Label(Widget, wx.StaticText):
     def __init__(self, place, text, **kwds):
@@ -158,6 +166,7 @@ class Application(Singleton):
 
     def run(self, mainwin):
         self.mainwin = mainwin
+        print mainwin
         self._app.SetTopWindow(self.mainwin)
         self.mainwin.show()
         return self._app.MainLoop()

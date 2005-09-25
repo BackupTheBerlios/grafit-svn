@@ -2,6 +2,7 @@ from base import Widget, Container, _pil_to_wxbitmap
 from signals import HasSignals
 from images import images
 
+import Image
 import wx
 
 class Toolbar(Widget, Container, wx.ToolBar):
@@ -24,9 +25,14 @@ class Toolbar(Widget, Container, wx.ToolBar):
         if action is None:
             self.AddSeparator()
         else:
-            if action.pixmap is not None:
+            if action.pixmap is None:
+                bitmap = None
+            elif isinstance(action.pixmap, Image.Image):
+                bitmap = _pil_to_wxbitmap(action.pixmap)
+            elif isinstance(action.pixmap, wx.Bitmap):
+                bitmap = action.pixmap
+            elif isinstance(action.pixmap, basestring):
                 bitmap = _pil_to_wxbitmap(images[action.pixmap][16,16])
-                print action.pixmap, bitmap
             else:
                 bitmap = None
             id = wx.NewId()
@@ -48,10 +54,10 @@ class Toolbar(Widget, Container, wx.ToolBar):
  
 
 class Menubar(Widget, wx.MenuBar):
-    def __init__(self, parent, **place):
-        self = wx.MenuBar()
-        self.frame = parent
-        Widget.__init__(self, parent, **place)
+    def __init__(self, place, **kwds):
+        wx.MenuBar.__init__(self)
+        self.frame = place[0]
+        Widget.__init__(self, place, **kwds)
         self.frame.Bind(wx.EVT_MENU, self.on_menu)
         self.menus = {}
         self.items = {}
@@ -90,7 +96,7 @@ class Menu(object):
 #            self._menu.Append(id, name, help)
             item = wx.MenuItem(self._menu, id, name, help)
             if action.pixmap is not None:
-                item.SetBitmap(wx.Image(DATADIR+'data/images/'+action.pixmap).ConvertToBitmap())
+                item.SetBitmap(_pil_to_wxbitmap(images[action.pixmap][16,16]))
             self._menu.AppendItem(item)
     
             if self.menubar is not None:
