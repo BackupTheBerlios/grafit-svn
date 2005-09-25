@@ -1,5 +1,6 @@
 from base import Widget, Container
-from grafit.thirdparty.splitter import MultiSplitterWindow
+#from grafit.thirdparty.splitter import MultiSplitterWindow
+from wx.lib.splitter import MultiSplitterWindow
 
 import wx
 
@@ -23,12 +24,15 @@ class Box(Widget, Container, wx.Panel):
         for item in self.GetChildren():
             yield item
 
-    def _add(self, widget, expand=True, stretch=1.0):
+    def _add(self, widget, expand=True, stretch=1.0, prepend=False):
         if expand:
             expand = wx.EXPAND
         else:
             expand = 0
-        self.layout.Add(widget, stretch, expand | wx.ADJUST_MINSIZE)
+        if prepend:
+            self.layout.Prepend(widget, stretch, expand | wx.ADJUST_MINSIZE)
+        else:
+            self.layout.Add(widget, stretch, expand | wx.ADJUST_MINSIZE)
         self.layout.Layout()
         self.layout.Fit(self)
 
@@ -49,6 +53,20 @@ class Splitter(Widget, Container, MultiSplitterWindow):
     def _OnMouse(self, evt):
         evt.ShiftDown = lambda: True
         return MultiSplitterWindow._OnMouse(self, evt)
+
+    def resize_child(self, widget, size):
+        idx = self._windows.index(widget)
+        if self.orientation == 'horizontal':
+            sash = size-widget.size[0]
+            widget.size = (size, widget.size[1])
+        else:
+            sash = size-widget.size[1]
+            widget.size = (widget.size[0], size)
+        self._sashes[idx] += sash
+        self.SizeWindows()
+
+    def child_size(self, widget):
+        return self._sashes[self._windows.index(widget)]
 
     def _SizeSizeWindows(self):
         total_window_w = self.GetClientSize()[self.orientation == 'vertical'] \

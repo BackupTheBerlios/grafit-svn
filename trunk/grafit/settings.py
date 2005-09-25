@@ -35,17 +35,21 @@ class Settings(object):
         self.filename = filename
         self.config = ConfigParser.ConfigParser()
         self.config.read(self.filename)
+        log.info('Reading settings file %s', self.filename)
 
     def write(self):
         self.config.write(open(self.filename, 'w'))
+        log.info('Writing settings file %s', self.filename)
 
     def set(self, section, key, value):
         if section not in self.config.sections():
             self.config.add_section(section)
         self.config.set(section, key, value)
+        log.info('Setting option %s/%s', section, key)
         self.write()
 
     def get(self, section, key):
+        log.info('Getting option %s/%s', section, key)
         return self.config.get(section, key)
 
 settings = Settings(os.path.join(USERDATADIR,'grafit.cfg'))

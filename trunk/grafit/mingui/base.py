@@ -1,9 +1,8 @@
 import os.path
 
-import PIL.Image
-
 import wx
 
+import PIL.Image
 from signals import HasSignals
 
 class Container(HasSignals):

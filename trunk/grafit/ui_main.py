@@ -97,7 +97,7 @@ class FolderTreeNode(HasSignals):
                 yield FolderTreeNode(item)
     
     def __str__(self): 
-        return self.folder.name
+        return self.folder.name.decode('utf-8')
 
     def get_pixmap(self): 
         if self.folder == self.folder.project.top:
@@ -115,7 +115,7 @@ class FolderTreeNode(HasSignals):
         if newname == '':
             return False
         else:
-            self.folder.name = str(newname)
+            self.folder.name = newname.encode('utf-8')
             self.folder.project.top.emit('modified')
             return True
 
