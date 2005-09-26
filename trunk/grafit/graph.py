@@ -494,6 +494,7 @@ class Graph(Item, HasSignals):
                         i.SetData(glReadPixels(self.marginl*self.res, self.marginb*self.res, 
                                                int(w), int(h), GL_RGB, GL_UNSIGNED_BYTE))
                         d._legend_wxbitmap = i.ConvertToBitmap()
+                self.emit('shape-changed')
 
                 glDeleteLists(self.listno, 1)
                 glNewList(self.listno, GL_COMPILE)

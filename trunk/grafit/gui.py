@@ -774,10 +774,13 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
         if filename is None:
             return None
         if isinstance(filename, wx.Bitmap):
-            if id(filename) not in self.pixmaps:
-                self.pixmaps[id(filename)] = self.imagelist.Add(filename)
-            filename = id(filename)
-        if filename not in self.pixmaps:
+            if filename not in self.pixmaps:
+                self.pixmaps[filename] = self.imagelist.Add(filename)
+#            if id(filename) not in self.pixmaps:
+#                self.pixmaps[id(filename)] = self.imagelist.Add(filename)
+#            filename = id(filename)
+            
+        elif filename not in self.pixmaps:
             self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
 

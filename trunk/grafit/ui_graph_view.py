@@ -11,30 +11,28 @@ from grafit.util import flatten
 
 from grafit.settings import DATADIR
 
+import wx
+
 class LegendModel(HasSignals):
     def __init__(self, graph):
         self.graph = graph
         self.graph.connect('add-dataset', self.on_modified)
         self.graph.connect('add-function', self.on_modified)
         self.graph.connect('remove-dataset', self.on_modified)
+        self.graph.connect('shape-changed', self.on_modified)
 
-    def on_modified(self, dataset):
+    def on_modified(self, dataset=None):
         self.emit('modified')
 
     def get(self, row, column): return str(self[row])
     def get_image(self, row): 
-        if hasattr(self.graph.datasets[row], "_legend_wxbitmap"):
-            return self.graph.datasets[row]._legend_wxbitmap
+        if hasattr(self[row], "_legend_wxbitmap"):
+            return self[row]._legend_wxbitmap
         else:
             return '16/folder.png'
-    def __len__(self): return len(self.graph.datasets) #+ len(self.graph.functions)
-    def __getitem__(self, row): 
-#        if row < len(self.graph.datasets):
-            return self.graph.datasets[row]
-#        else:
-#            return self.graph.functions[row-len(self.graph.datasets)]
+    def __len__(self): return len(self.graph.datasets)
+    def __getitem__(self, row): return self.graph.datasets[row]
 
-import wx
 
 class GraphView(gui.Box):
     def __init__(self, parent, graph, **place):

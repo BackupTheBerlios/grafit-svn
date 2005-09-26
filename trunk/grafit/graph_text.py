@@ -74,11 +74,18 @@ class TextPainter(object):
                 return 0, 0, 0, None
             xmin, ymin = self.plot.data_to_phys(self.plot.xmin, self.plot.ymin)
             xmax, ymax = self.plot.data_to_phys(self.plot.xmax, self.plot.ymax)
+            x, y = self.plot.phys_to_data(x, y)
             glColor4f(d.style.color[0]/256., d.style.color[1]/256., 
                       d.style.color[2]/256., 1.)
-#            render_symbols(array([x]), array([y]),
-#                           d.style.symbol, d.style.symbol_size, 
-#                           xmin, xmax, ymin, ymax)
+            symbols = ['circle', 'square', 'diamond', 'uptriangle',
+                       'downtriangle', 'lefttriangle', 'righttriangle']
+
+            render_symbols(array([x]), array([y]),
+                           symbols.index(d.style.symbol[:-2]), ['o', 'f'].index(d.style.symbol[-1]),
+                           d.style.symbol_size, xmin, xmax, ymin, ymax,
+                           self.plot.plot_width, self.plot.plot_height,
+                           self.plot.xmin, self.plot.xmax, self.plot.ymin, self.plot.ymax,
+                           self.plot.xtype == 'log', self.plot.ytype == 'log')
 
         return 15, 15, -7.5, renderer
 

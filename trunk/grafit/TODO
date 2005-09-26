@@ -6,19 +6,5 @@ bugs
 * vertical text does not align correctly
 * minor tics for logarithmic axes
 * fix text color in eps output
-
-features
----------
-* context menu on project explorer
-* context menu on graph
-* duplicate object
-* cut/copy/paste graph objects
-* text color for text objects
-* text size for text objects
-
-planned features
-----------------
-* error bars
-* fit multiple datasets w/ shared and non-shared parameters
-* filters (like functions, with window)
-* framework for new graph tools?
+* aspect ratio in eps output
+* make data reader work
