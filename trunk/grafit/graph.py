@@ -628,21 +628,26 @@ class Graph(Item, HasSignals):
 
 
     def export_ascii(self, outfile):
+        # mathtext is not rendered directly
+        self.pstext = []
+
+        save = self.width_pixels, self.height_pixels
+        self.reshape(self.pwidth*self.displayres, self.pheight*self.displayres)
+
         d = tempfile.mkdtemp()
         filename = self.name + '.eps'
         f = open(d+'/'+filename, 'wb')
-
-        # mathtext is not rendered directly
-        self.pstext = []
 
         gl2ps_BeginPage("Title", "Producer", self.viewport, f, filename)
         self.ps = True
         self.recalc = True
         self.display()
         self.ps = False
-
         gl2ps_EndPage()
+        
         f.close()
+
+        self.reshape(*save)
 
         f = open(d+'/'+filename, 'rb')
         for line in f:

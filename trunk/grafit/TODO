@@ -6,5 +6,5 @@ bugs
 * vertical text does not align correctly
 * minor tics for logarithmic axes
 * fix text color in eps output
-* aspect ratio in eps output
+- aspect ratio in eps output
 * make data reader work
