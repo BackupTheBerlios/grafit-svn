@@ -4,7 +4,7 @@ import numarray.mlab as mlab
 import Image
 import ImageFont
 import ImageDraw
-from matplotlib.ft2font import FT2Font
+from thirdparty.ft2font import FT2Font
 
 import grafit.thirdparty.mathtextg as mathtext
 from grafit.settings import DATADIR
@@ -103,6 +103,7 @@ class TextPainter(object):
 
         def renderer(x, y):
             if self.plot.ps:
+                glColor4f(0, 0, 0, 1)
                 glRasterPos2d(x, y)
                 font = FT2Font(str(FONTFILE))
                 fontname = font.postscript_name

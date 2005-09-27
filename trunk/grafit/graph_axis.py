@@ -53,6 +53,7 @@ class Axis(object):
     def __init__(self, position, plot):
         self.position = position
         self.plot = plot
+        self.fmt = "%g"
 #        self.font = AXISFONT
 
     def transform(self, data):
@@ -127,21 +128,19 @@ class Axis(object):
 
     rexp = re.compile(r'([-?\d\.]+)e([\+\-])(\d+)')
 
-    def totex(self, num, sci=False):
-#        if sci:
-#            st = "%e"%num
-#        else:
-        st = "%g"%num
+    def totex(self, num):
+        st = self.fmt%num
         match = self.rexp.match(st)
         if match is not None:
             mant = match.group(1)
-            if mant == '1':
+            if float(mant) == 1.:
                 mant = ''
                 cdot = ''
-            elif mant == '-1':
+            elif float(mant) == -1.:
                 mant = '-'
                 cdot = ''
             else:
+                mant = str(float(mant))
                 cdot = r' \cdot '
 
             exp = str(int(match.group(3)))

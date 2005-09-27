@@ -14,7 +14,8 @@ from grafit.graph_objects import Rubberband, Cross, Line, Text, Move, DrawFuncti
 from grafit.graph_dataset import Dataset, Function
 from grafit.graph_text import FONTFILE, TextPainter, encodeTTFasPS
 from grafit.graph_render import *
-from matplotlib.ft2font import FT2Font
+from grafit.settings import DATADIR
+from grafit.thirdparty.ft2font import FT2Font
 
 import wx
 
@@ -656,11 +657,14 @@ class Graph(Item, HasSignals):
                 # at the end of the prolog
                 type42 = []
                 type42.append(FONTFILE)
-                type42.append('/usr/share/matplotlib/cmr10.ttf')
-                type42.append('/usr/share/matplotlib/cmex10.ttf')
-                type42.append('/usr/share/matplotlib/cmmi10.ttf')
-                type42.append('/usr/share/matplotlib/cmsy10.ttf')
-                type42.append('/usr/share/matplotlib/cmtt10.ttf')
+                for fn in ['r', 'ex', 'mi', 'sy', 'tt']:
+                    type42.append(os.path.join(DATADIR, 'data', 'fonts', 
+                                               'bakoma-cm', 'cm%s10.ttf'%fn))
+#                type42.append('/usr/share/matplotlib/cmr10.ttf')
+#                type42.append('/usr/share/matplotlib/cmex10.ttf')
+#                type42.append('/usr/share/matplotlib/cmmi10.ttf')
+#                type42.append('/usr/share/matplotlib/cmsy10.ttf')
+#                type42.append('/usr/share/matplotlib/cmtt10.ttf')
                 for font in type42:
                     print >>outfile, "%%BeginFont: "+FT2Font(str(font)).postscript_name
                     print >>outfile, encodeTTFasPS(font)
