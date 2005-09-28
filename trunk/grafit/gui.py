@@ -30,7 +30,7 @@ class _xSplashScreen(wx.SplashScreen):
     Create a splash screen widget.
     """
     def __init__(self):
-        aBitmap = wx.Image(name = os.path.join(DATADIR, "data/images/logos/grafit.png")).ConvertToBitmap()
+        aBitmap = wx.Image(name = os.path.join(DATADIR, "data/images/logos/grapefruit.png")).ConvertToBitmap()
         splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT | wx.NO_BORDER
 #        splashDuration = 1000 # milliseconds
 #        splashCallback = None
@@ -1566,7 +1566,6 @@ class OpenGLWidget(Widget):
         pass # Do nothing, to avoid flashing on MSW.
 
     def InitGL(self):
-        print >>sys.stderr, 'InitGL'
         self.emit('initialize-gl')
         self._widget.SwapBuffers()
 
@@ -1575,17 +1574,11 @@ class OpenGLWidget(Widget):
         pass
 
     def OnPaint(self, event):
-        print >>sys.stderr, 'OnPaint'
 #        dc = wx.PaintDC(self._widget)
-        print >>sys.stderr, 'OnPaint2'
-        if not self.init:
-            print >>sys.stderr, 'OnPaint3'
-            self.InitGL()
-            print >>sys.stderr, 'OnPaint4'
-            self.init = True
-        print >>sys.stderr, 'OnPaint5'
         self._widget.SetCurrent()
-        print >>sys.stderr, 'OnPaint6'
+        if not self.init:
+            self.InitGL()
+            self.init = True
         size = self._widget.GetSize()
         if size[0] <= 0 or size[1] <= 0:
             return
@@ -1837,7 +1830,6 @@ class _xGrid(wx.grid.Grid):
     def OnRangeSelect(self, evt):
 #        print evt, type(evt)
 #        if evt.Selecting():
-#            print >>sys.stderr, (evt.GetTopLeftCoords(), evt.GetBottomRightCoords())
         evt.Skip()
 
     def OnKeyDown(self, evt):

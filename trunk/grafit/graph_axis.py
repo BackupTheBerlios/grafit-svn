@@ -199,7 +199,6 @@ class Axis(object):
         return major, minor
 
     def lintics(self, fr, to, cache={}):
-        # 3-8 major tics
         if fr == to:
             return [fr], []
 

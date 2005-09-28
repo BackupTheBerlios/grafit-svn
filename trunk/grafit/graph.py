@@ -19,20 +19,21 @@ from grafit.thirdparty.ft2font import FT2Font
 
 import wx
 
-def wrap_func(func):
-    def r(*args, **kwds):
-        print func.__name__, args, kwds
-        return func(*args, **kwds)
-    return r
+log = False
 
-g = {}
-for name, func in dict(globals()).iteritems():
-    if name.startswith('gl') and hasattr(func, '__call__'):
-        g[name] = wrap_func(func)
+if log:
+    def wrap_func(func):
+        def r(*args, **kwds):
+            print func.__name__, args, kwds
+            return func(*args, **kwds)
+        return r
 
-globals().update(g)
+    g = {}
+    for name, func in dict(globals()).iteritems():
+        if name.startswith('gl') and hasattr(func, '__call__'):
+            g[name] = wrap_func(func)
 
-print glColor3f
+    globals().update(g)
 
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
@@ -471,7 +472,6 @@ class Graph(Item, HasSignals):
         return min(f1, f2), max(f1, f2)
 
     def init(self):
-        print >>sys.stderr, 'init'
         glClearColor(*self.background_color)
         glClear(GL_COLOR_BUFFER_BIT)
 
@@ -489,7 +489,6 @@ class Graph(Item, HasSignals):
         self.listno = glGenLists(1)
 
     def display(self, width=-1, height=-1):
-        print >>sys.stderr, 'display', width, height
         if not hasattr(self, 'listno'):
             return
         if width == -1 and height == -1:
@@ -498,21 +497,22 @@ class Graph(Item, HasSignals):
             self.last_width, self.last_height = width, height
 
         if not self.paint_xor_objects:
-#            self.recalc = 1
             if self.recalc:
-                for i, d in enumerate(self.datasets):
-                    glClearColor(*self.background_color)
-                    glClear(GL_COLOR_BUFFER_BIT)
+                if not self.ps:
+                    for i, d in enumerate(self.datasets):
+                        glClearColor(*self.background_color)
+                        glClear(GL_COLOR_BUFFER_BIT)
 
-                    w, h, _, renderer=self.textpainter.render_text_chunk_symbol(str(i))
-                    if renderer is not None:
-                        renderer((w/2)/self.res, (h/2)/self.res)
+                        w, h, _, renderer=self.textpainter.render_text_chunk_symbol(str(i))
+                        if renderer is not None:
+                            renderer((w/2)/self.res, (h/2)/self.res)
 
-                        i = wx.EmptyImage(w, h)
-                        i.SetData(glReadPixels(self.marginl*self.res, self.marginb*self.res, 
-                                               int(w), int(h), GL_RGB, GL_UNSIGNED_BYTE))
-                        d._legend_wxbitmap = i.ConvertToBitmap()
-                self.emit('shape-changed')
+                            i = wx.EmptyImage(w, h)
+                            data = glReadPixels(int(self.marginl*self.res), int(self.marginb*self.res), 
+                                                   int(w), int(h), GL_RGB, GL_UNSIGNED_BYTE)
+                            i.SetData(data)
+                            d._legend_wxbitmap = i.ConvertToBitmap()
+                    self.emit('shape-changed')
 
                 glDeleteLists(self.listno, 1)
                 glNewList(self.listno, GL_COMPILE)
@@ -525,17 +525,14 @@ class Graph(Item, HasSignals):
                 glClipPlane(GL_CLIP_PLANE1, [ -1,  0,  0,  self.plot_width ])
                 glClipPlane(GL_CLIP_PLANE2, [  0,  1,  0,  0 ])
                 glClipPlane(GL_CLIP_PLANE3, [  0, -1,  0,  self.plot_height ])
+
                 for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                     glEnable(plane)
 
-                t = time.time()
                 for d in self.datasets:
                     d.paint()
-#                print >>sys.stderr, 'datasets', time.time()-t, "seconds"
-                t = time.time()
                 for f in self.functions:
                     f.paint()
-#                print >>sys.stderr, 'functions', time.time()-t, "seconds"
 
                 for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
                     glDisable(plane)
@@ -563,7 +560,6 @@ class Graph(Item, HasSignals):
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width=-1, height=-1):
-        print >>sys.stderr, 'reshape', width, height
         if not hasattr(self, 'listno'):
             return
         t = time.time()
@@ -655,7 +651,7 @@ class Graph(Item, HasSignals):
 
         d = tempfile.mkdtemp()
         filename = self.name + '.eps'
-        f = open(d+'/'+filename, 'wb')
+        f = open(os.path.join(d, filename), 'wb')
 
         gl2ps_BeginPage("Title", "Producer", self.viewport, f, filename)
         self.ps = True
@@ -678,11 +674,6 @@ class Graph(Item, HasSignals):
                 for fn in ['r', 'ex', 'mi', 'sy', 'tt']:
                     type42.append(os.path.join(DATADIR, 'data', 'fonts', 
                                                'bakoma-cm', 'cm%s10.ttf'%fn))
-#                type42.append('/usr/share/matplotlib/cmr10.ttf')
-#                type42.append('/usr/share/matplotlib/cmex10.ttf')
-#                type42.append('/usr/share/matplotlib/cmmi10.ttf')
-#                type42.append('/usr/share/matplotlib/cmsy10.ttf')
-#                type42.append('/usr/share/matplotlib/cmtt10.ttf')
                 for font in type42:
                     print >>outfile, "%%BeginFont: "+FT2Font(str(font)).postscript_name
                     print >>outfile, encodeTTFasPS(font)
