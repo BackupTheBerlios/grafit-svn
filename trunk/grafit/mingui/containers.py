@@ -1,6 +1,6 @@
 from base import Widget, Container
-#from grafit.thirdparty.splitter import MultiSplitterWindow
-from wx.lib.splitter import MultiSplitterWindow
+from grafit.thirdparty.splitter import MultiSplitterWindow
+#from wx.lib.splitter import MultiSplitterWindow
 
 import wx
 

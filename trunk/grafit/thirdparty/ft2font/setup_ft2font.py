@@ -7,7 +7,8 @@ import distutils.sysconfig
 
 def add_ft2font_flags(module):
     'Add the module flags to build extensions which use gd'
-    module.libraries.extend(['freetype', 'z' ])
+    module.libraries.extend(['freetype'])
+#, 'z' ])
 #    add_base_flags(module)
 
     basedirs = module.include_dirs[:]  # copy the list to avoid inf loop!
@@ -24,11 +25,16 @@ def add_ft2font_flags(module):
         if os.path.exists(p): module.library_dirs.append(p)
             
     if sys.platform == 'win32':
-        module.libraries.append('gw32c')
+        module.include_dirs.append(r'..\win32\include')
+        module.include_dirs.append(r'..\win32\include\freetype2')
+        module.library_dirs.append(r'..\win32\lib')
+#        module.libraries.append('gw32c')
 
     # put this last for library link order     
     module.libraries.extend(['stdc++', 'm'])
 
+    module.include_dirs.append('/usr/include/freetype2/')
+    module.include_dirs.append('.')
 
 deps = ['src/ft2font.cpp', 'src/mplutils.cpp']
 deps.extend(glob.glob('CXX/*.cxx'))

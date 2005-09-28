@@ -1,4 +1,5 @@
 import sys
+sys.path.append('..')
 import Image
 import mingui as gui
 # to get started with demo:
@@ -77,10 +78,12 @@ def main():
     child = gui.TreeNode()
     root.append(child)
     tree.append(root)
+    panel.toolbar.Realize()
 
     split2 = gui.Splitter(split.place(), 'horizontal')
     panel2 = Panel(split2.place(width=100), 'left')
     btn = gui.Button(panel2.place(image='close'), 'arse')
+    panel2.toolbar.Realize()
 
     book = gui.Notebook(split2.place())
     html = gui.Html(book.place(label='text'))
