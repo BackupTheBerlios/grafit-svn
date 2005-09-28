@@ -30,7 +30,7 @@ class _xSplashScreen(wx.SplashScreen):
     Create a splash screen widget.
     """
     def __init__(self):
-        aBitmap = wx.Image(name = os.path.join(DATADIR, "data/images/logos/grapefruit.png")).ConvertToBitmap()
+        aBitmap = wx.Image(name = os.path.join(DATADIR, "data/images/logos/grafit.png")).ConvertToBitmap()
         splashStyle = wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT | wx.NO_BORDER
 #        splashDuration = 1000 # milliseconds
 #        splashCallback = None
@@ -828,10 +828,27 @@ class List(Widget):
         for event in (wx.EVT_LIST_ITEM_SELECTED, wx.EVT_LIST_ITEM_DESELECTED, wx.EVT_LIST_ITEM_FOCUSED):
             self._widget.Bind(event, self.on_update_selection)
 
+        self._widget.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT, self.on_begin_edit)
+        self._widget.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.on_end_edit)
+
         self.can_drop = False
         self.drop_formats = []
 
         self._widget.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
+
+    def on_begin_edit(self, evt):
+        res = self.emit('begin-edit', evt.GetIndex())
+        if False in res:
+            evt.Veto()
+        else:
+            evt.Allow()
+
+    def on_end_edit(self, evt):
+        res = self.emit('end-edit', evt.GetIndex(), evt.GetLabel())
+        if False in res:
+            evt.Veto()
+        else:
+            evt.Allow()
 
     def on_right_click(self, evt):
         item, flags = self._widget.HitTest(evt.GetPosition())

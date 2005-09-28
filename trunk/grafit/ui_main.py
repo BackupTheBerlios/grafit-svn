@@ -138,7 +138,7 @@ class ProjectExplorer(Box):
 
         self.tree.connect('selected', self.on_tree_selected)
 
-        self.list = List(self.splitter)
+        self.list = List(self.splitter, editable=True)
         self.list.enable_drop(['grafit-object', 'filename'])
 
         self.list.connect('drop-hover', self.on_drop_hover)
@@ -149,6 +149,13 @@ class ProjectExplorer(Box):
 
         self.list.connect('item-activated', self.on_list_item_activated)
         self.list.connect('right-click', self.on_list_right_click)
+
+        self.list.connect('end-edit', self.on_item_edited)
+
+    def on_item_edited(self, item, str):
+        item = self.list.model[item]
+        item.name = str
+        return True
 
     def on_list_right_click(self, item):
         if item == -1:
