@@ -19,6 +19,21 @@ from grafit.thirdparty.ft2font import FT2Font
 
 import wx
 
+def wrap_func(func):
+    def r(*args, **kwds):
+        print func.__name__, args, kwds
+        return func(*args, **kwds)
+    return r
+
+g = {}
+for name, func in dict(globals()).iteritems():
+    if name.startswith('gl') and hasattr(func, '__call__'):
+        g[name] = wrap_func(func)
+
+globals().update(g)
+
+print glColor3f
+
 class Graph(Item, HasSignals):
     def __init__(self, project, name=None, parent=None, location=None):
         Item.__init__(self, project, name, parent, location)
@@ -456,6 +471,7 @@ class Graph(Item, HasSignals):
         return min(f1, f2), max(f1, f2)
 
     def init(self):
+        print >>sys.stderr, 'init'
         glClearColor(*self.background_color)
         glClear(GL_COLOR_BUFFER_BIT)
 
@@ -473,6 +489,7 @@ class Graph(Item, HasSignals):
         self.listno = glGenLists(1)
 
     def display(self, width=-1, height=-1):
+        print >>sys.stderr, 'display', width, height
         if not hasattr(self, 'listno'):
             return
         if width == -1 and height == -1:
@@ -546,6 +563,7 @@ class Graph(Item, HasSignals):
             glDisable(GL_COLOR_LOGIC_OP)
 
     def reshape(self, width=-1, height=-1):
+        print >>sys.stderr, 'reshape', width, height
         if not hasattr(self, 'listno'):
             return
         t = time.time()

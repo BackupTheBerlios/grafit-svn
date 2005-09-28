@@ -2,7 +2,10 @@ import sys
 import re
 import time, random, socket, md5
 
-import metakit
+try:
+    import metakit
+except ImportError:
+    import grafit.thirdparty.metakit as metakit
 
 from grafit.actions import action_from_methods, action_list, action_from_methods2, StopAction
 from grafit.signals import HasSignals

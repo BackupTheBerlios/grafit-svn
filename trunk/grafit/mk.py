@@ -1,5 +1,9 @@
 import sys
-import metakit
+try:
+    import metakit
+except ImportError:
+    import grafit.thirdparty.metakit as metakit
+
 import cPickle as pickle
 
 def wrap(value, type):
