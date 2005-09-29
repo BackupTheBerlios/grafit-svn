@@ -2,9 +2,9 @@ import os
 import sys
 
 def freeze():
-    os.system(r'cx_Freeze-3.0.1\FreezePython.exe ../giraffe/grafit.pyw '
+    os.system(r'cx_Freeze-3.0.1\FreezePython.exe ../grafit/main.py '
 	      r'--target-dir=dist/grafit '
-	      r'--include-modules=giraffe '
+	      r'--include-modules=grafit '
 	      r'--include-path=.. ')
 
 def data():

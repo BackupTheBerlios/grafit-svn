@@ -7,10 +7,11 @@ import logging
 log = logging.getLogger('settings')
 
 if platform.system() == 'Windows':
-    from win32com.shell import shell, shellcon
+#    from win32com.shell import shell, shellcon
     # 1. we should use CSIDL_LOCAL_APPDATA instead if we have large files
     # 2. does this work?  os.environ['APPDATA']
-    appdata = shell.SHGetPathFromIDList(shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA))
+#    appdata = shell.SHGetPathFromIDList(shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA))
+    appdata = os.environ['APPDATA']
     USERDATADIR = os.path.join(appdata, 'grafit')
 if platform.system() == 'Linux':
     USERDATADIR = os.path.expanduser('~/.grafit')

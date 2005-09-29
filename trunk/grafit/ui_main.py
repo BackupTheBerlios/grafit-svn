@@ -426,7 +426,7 @@ class MainWindow(Window):
 
         import wx.xrc
         # preload
-        wx.xrc.XmlResource(DATADIR+'/data/resources.xrc')
+        wx.xrc.XmlResource(os.path.join(DATADIR, 'data', 'resources.xrc'))
         self.on_action()
         self.on_project_modified(False)
 

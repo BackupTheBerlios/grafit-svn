@@ -164,4 +164,4 @@ class MkArray(with_new_opers):
         return value
 
     def __repr__(self):
-        return repr(self[:]).replace('nan', '--')
+        return repr(self[:]).replace(repr(nan), '--')
