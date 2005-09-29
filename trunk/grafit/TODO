@@ -1,6 +1,5 @@
 bugs
 ----
-* redraw graph when functions are deleted/added
 * update total function curve when term is moved
 * show/hide xorobjects correctly
 * vertical text does not align correctly

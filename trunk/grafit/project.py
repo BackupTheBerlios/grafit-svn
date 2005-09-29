@@ -109,7 +109,7 @@ class Item(HasSignals):
     def check_name(self, name, parent):
         if not re.match('^[a-zA-Z]\w*$', name):
             return False
-        if name in [i.name for i in parent.contents()]:
+        if isinstance(parent, Folder) and name in [i.name for i in parent.contents()]:
             return False
         return True
 
@@ -146,8 +146,7 @@ class Item(HasSignals):
     _parent = wrap_attribute('parent')
 
     def set_name(self, state, n):
-        if n.startswith('0'):
-            print "No!"
+        if not self.check_name(n, self.parent):
             raise StopAction
         state['new'], state['old'] = n, self._name
         self._name = n
@@ -228,6 +227,15 @@ class Folder(Item, HasSignals):
     default_name_prefix = 'folder'
 
     up = property(lambda self: self.parent)
+
+    def __getattr__(self, key):
+#        try:
+#            attr = Item.__getattr__(self, key)
+#        except AttributeError, err:
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError, err
 
     def __getitem__(self, key):
         cn = [i.name for i in self.contents()]

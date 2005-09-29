@@ -17,8 +17,8 @@ class Window(wx.Frame, Widget, Container):
             self.SetToolBar(child)
         elif isinstance(child, Menubar):
             self.SetMenuBar(child)
-#        else:
-#            Widget._add(self, child, **place)
+        else:
+            Widget._add(self, child, **place)
 
 
     title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))
@@ -34,4 +34,5 @@ class Dialog(wx.Dialog, Widget, Container):
             return self.ShowModal()
         else:
             return Widget.show(self)
+
     title = property(lambda self: self.GetTitle(), lambda self, t: self.SetTitle(t))

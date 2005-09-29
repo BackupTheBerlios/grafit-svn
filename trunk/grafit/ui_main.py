@@ -17,6 +17,7 @@ from grafit.gui import Window, Button, Box, Application, Shell, List, \
 import grafit.signals
 
 import wx
+import wx.xrc
 
 class ItemDragData(object):
     def __init__(self, items):
@@ -100,9 +101,9 @@ class FolderTreeNode(HasSignals):
         return self.folder.name.decode('utf-8')
 
     def get_pixmap(self): 
-        if self.folder == self.folder.project.top:
-            return 'grafit16.png'
-        else:
+#        if self.folder == self.folder.project.top:
+#            return 'grafit16.png'
+#        else:
             return '16/folder.png'
 
     def on_modified(self, item=None): 
@@ -386,7 +387,7 @@ class MainWindow(Window):
             'scripts': Command('Scripts...', '', object),
             'run-script': Command('Run script...', '', self.on_run_script),
             'close-active-page': Command('Close', 'Close this worksheet',
-                                        lambda: self.book.active_page.on_close(), 'close.png'),
+                                         lambda: self.book.active_page.on_close(), 'close.png', 'Ctrl+W'),
             None: None
         }
 
@@ -424,9 +425,9 @@ class MainWindow(Window):
         self.main.left_panel._widget.toolbar.Realize()
         self.main.right_panel._widget.toolbar.Realize()
 
-        import wx.xrc
         # preload
         wx.xrc.XmlResource(os.path.join(DATADIR, 'data', 'resources.xrc'))
+
         self.on_action()
         self.on_project_modified(False)
 

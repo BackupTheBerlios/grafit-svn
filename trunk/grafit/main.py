@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
+def test(arg):
+    sys.stderr.write('.')
+sys.path_hooks.append(test)
+
 # we need these lines for cx_Freeze to work on numarray!
 import numarray._bytes,     numarray._ufuncBool,      numarray._ufuncInt32, numarray._ufuncUInt8
 import numarray._chararray, numarray._ufuncComplex32, numarray._ufuncInt64, numarray.libnumarray

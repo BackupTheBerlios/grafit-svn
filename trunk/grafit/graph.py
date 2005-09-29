@@ -222,6 +222,8 @@ class Graph(Item, HasSignals):
         f = Function(self)
         f.connect('modified', self.on_dataset_modified)
         f.func.connect('modified', self.on_dataset_modified)
+        f.func.connect('add-term', self.on_dataset_modified)
+        f.func.connect('remove-term', self.on_dataset_modified)
         self.functions.append(f)
         self.emit('add-function', f)
         return f
