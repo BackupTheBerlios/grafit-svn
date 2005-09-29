@@ -730,15 +730,25 @@ class Graph(Item, HasSignals):
             self.rangehandle.show(*self.mouse_to_phys(x, y))
             self.redraw()
         elif self.mode == 'd-reader':
-            x, y = self.mouse_to_data(x, y)
-            closest = [(d, min((d.xx-x)*(d.xx-x)+(d.yy-y)*(d.yy-y))) for d in self.datasets]
-            dataset = closest[[c[1] for c in closest].index(min(c[1] for c in closest))][0]
-            print dataset
+            qx, qy = self.mouse_to_data(x, y)
+
+            distances = []
+            closest_ind = []
+
+            for d in self.datasets:
+                dist = (d.xx-qx)*(d.xx-qx) + (d.yy-qy)*(d.yy-qy)
+                arg = argmin(dist)
+                closest_ind.append(arg)
+                distances.append(dist[arg])
+
+            ind = argmin(distances)
+            dataset = self.datasets[ind]
+            x, y = dataset.xx[closest_ind[ind]], dataset.yy[closest_ind[ind]]
 
             self.paint_xor_objects = True
-            self.cross.show(*self.mouse_to_phys(x, y))
+            self.cross.show(*self.data_to_phys(x, y))
             self.redraw()
-            self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
+            self.emit('status-message', '%f, %f' % (x, y))
         elif self.mode == 'arrow':
             if button == 1:
                 x, y = self.mouse_to_phys(x, y)
@@ -880,9 +890,23 @@ class Graph(Item, HasSignals):
             self.redraw()
             self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
         elif self.mode == 'd-reader' and dragging:
-            self.cross.move(*self.mouse_to_phys(x, y))
+            qx, qy = self.mouse_to_data(x, y)
+            distances = []
+            closest_ind = []
+
+            for d in self.datasets:
+                dist = (d.xx-qx)*(d.xx-qx) + (d.yy-qy)*(d.yy-qy)
+                arg = argmin(dist)
+                closest_ind.append(arg)
+                distances.append(dist[arg])
+
+            ind = argmin(distances)
+            dataset = self.datasets[ind]
+            x, y = dataset.xx[closest_ind[ind]], dataset.yy[closest_ind[ind]]
+
+            self.cross.move(*self.data_to_phys(x, y))
             self.redraw()
-            self.emit('status-message', '%f, %f' % self.mouse_to_data(x, y))
+            self.emit('status-message', '%f, %f' % (x, y))
         elif self.mode == 'arrow':
             if not hasattr(self, 'res'):
                 # not initialized yet, do nothing

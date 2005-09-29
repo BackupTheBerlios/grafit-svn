@@ -4,4 +4,3 @@ bugs
 * show/hide xorobjects correctly
 * vertical text does not align correctly
 * minor tics for logarithmic axes
-* make data reader work

@@ -415,10 +415,7 @@ class MainWindow(Window):
         ]:
             self.toolbar.append(actions[item])
         self.toolbar._widget.Realize()
-
-        if len(sys.argv) > 1:
-            self.open_project(Project(sys.argv[1]))
-
+        
         self.connect('close', self.on_quit)
 
         self.main.bottom_panel._widget.toolbar.Realize()
@@ -430,6 +427,16 @@ class MainWindow(Window):
 
         self.on_action()
         self.on_project_modified(False)
+
+        if len(self.args) > 0:
+            name = self.args[0]
+            if ':' in name:
+                prj, obj = name.split(':')
+                self.open_project(Project(prj))
+                self.on_item_activated(self.project.top[obj])
+            else:
+                self.open_project(Project(name))
+
 
     def on_action(self, *args, **kwds):
         self.actions['edit-undo'].enabled = action_list.can_undo()

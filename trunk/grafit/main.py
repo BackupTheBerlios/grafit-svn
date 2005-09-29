@@ -8,34 +8,32 @@ def test(arg):
 sys.path_hooks.append(test)
 
 # we need these lines for cx_Freeze to work on numarray!
-import numarray._bytes,     numarray._ufuncBool,      numarray._ufuncInt32, numarray._ufuncUInt8
-import numarray._chararray, numarray._ufuncComplex32, numarray._ufuncInt64, numarray.libnumarray
-import numarray._conv,      numarray._ufuncComplex64, numarray._ufuncInt8,  numarray.memory
-import numarray._ndarray,   numarray._ufuncFloat32,   numarray._ufuncUInt16
-import numarray._numarray,  numarray._ufuncFloat64,   numarray._ufuncUInt32
-import numarray._sort,      numarray._ufuncInt16,     numarray._ufuncUInt64
+#import numarray._bytes,     numarray._ufuncBool,      numarray._ufuncInt32, numarray._ufuncUInt8
+#import numarray._chararray, numarray._ufuncComplex32, numarray._ufuncInt64, numarray.libnumarray
+#import numarray._conv,      numarray._ufuncComplex64, numarray._ufuncInt8,  numarray.memory
+#import numarray._ndarray,   numarray._ufuncFloat32,   numarray._ufuncUInt16
+#import numarray._numarray,  numarray._ufuncFloat64,   numarray._ufuncUInt32
+#import numarray._sort,      numarray._ufuncInt16,     numarray._ufuncUInt64
 
-import os
-import sys
 import logging
-
 logging.basicConfig(format="%(asctime)s [%(name)s] %(message)s")
-from optparse import OptionParser
 
+from optparse import OptionParser
 parser = OptionParser()
 parser.add_option('-l', '--log', dest='log', help='Log program events')
-#   parser.add_option('-u', '--update', action='store_true', dest='update', help='Update grafit to latest version')
 options, args = parser.parse_args()
 
 if options.log is not None:
     for l in options.log.split(','):
         logging.getLogger(l).setLevel(logging.DEBUG)
 
-from settings import DATADIR
-sys.path.append(DATADIR)
-sys.path.append(DATADIR+'/grafit/thirdparty/')
+import os
+import settings
 
-from grafit.thirdparty.ultraTB import VerboseTB
+sys.path.append(settings.DATADIR)
+sys.path.append(os.path.join(settings.DATADIR, 'grafit', 'thirdparty'))
+
+from thirdparty.ultraTB import VerboseTB
 
 import gui
 import mingui
@@ -64,7 +62,7 @@ class BirdWindow(mingui.Dialog):
         hbox = mingui.Box(box.place(), 'horizontal')
 
         mingui.Image(hbox.place(stretch=0), 
-                     Image.open(DATADIR+'/data/images/vogel.png'))
+                     Image.open(os.path.join(settings.DATADIR, 'data', 'images', 'vogel.png')))
 
         book = mingui.Notebook(hbox.place(stretch=1))
 
@@ -82,25 +80,19 @@ class BirdWindow(mingui.Dialog):
         button = mingui.Button(box.place(stretch=0), "That's OK",
                                connect={'clicked': self.close})
 
-sys.argv = args
-
-#import pdb
 
 def excepthook(type, value, traceback):
     sys.__excepthook__(type, value, traceback)
     bw = BirdWindow(type, value, traceback)
     bw.show(modal=True)
     bw.destroy()
-    print sys.stderr, sys.stdout, sys.stdin
-
-#    pdb.pm()
-
 
 def main():
     sys.excepthook = excepthook
     app = gui.Application()
     app.splash()
     from ui_main import MainWindow
+    MainWindow.args = args
     app.run(MainWindow)
 
 if __name__ == '__main__':
