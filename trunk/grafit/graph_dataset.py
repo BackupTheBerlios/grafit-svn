@@ -299,6 +299,8 @@ class Dataset(DrawWithStyle):
 #        print >>sys.stderr, 'o', (t - time.time())*1000,
 #        t = time.time()
 #        for i in xrange(10):
+        if not hasattr(self, 'xx'):
+            self.recalculate()
         self.paint_lines(self.xx, self.yy)
         self.paint_symbols(self.xx, self.yy)
 #        print >>sys.stderr, 'i', (t - time.time())*1000

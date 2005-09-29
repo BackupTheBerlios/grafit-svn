@@ -526,16 +526,18 @@ class Graph(Item, HasSignals):
                 glClipPlane(GL_CLIP_PLANE2, [  0,  1,  0,  0 ])
                 glClipPlane(GL_CLIP_PLANE3, [  0, -1,  0,  self.plot_height ])
 
-                for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
-                    glEnable(plane)
+                if len(self.datasets):
+		    for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
+		       glEnable(plane)
 
                 for d in self.datasets:
                     d.paint()
                 for f in self.functions:
                     f.paint()
 
-                for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
-                    glDisable(plane)
+                if len(self.datasets):
+	            for plane in [GL_CLIP_PLANE0, GL_CLIP_PLANE1, GL_CLIP_PLANE2, GL_CLIP_PLANE3]:
+		        glDisable(plane)
 
                 self.paint_axes()
 
