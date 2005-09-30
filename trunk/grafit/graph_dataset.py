@@ -263,6 +263,14 @@ class Dataset(DrawWithStyle):
     def __repr__(self):
         return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
                                                          self.worksheet.name, self.x.name, self.y.name)
+
+    def active_data(self):
+        length = min(len(self.x), len(self.y))
+        x = asarray(self.x)[:length]
+        y = asarray(self.y)[:length]
+        ind = isfinite(x) & isfinite(y) & (self.xfrom <= x) & (x <= self.xto)
+        return ind
+
     def recalculate(self):
 #        length = min(len(self.x), len(self.y))
 #        x = asarray(self.x)[:length]

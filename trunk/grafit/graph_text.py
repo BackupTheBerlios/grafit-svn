@@ -1,4 +1,5 @@
 import binascii
+import os
 
 import numarray.mlab as mlab
 import Image
@@ -16,7 +17,7 @@ from graph_render import *
 
 from __builtin__ import round
 
-FONTFILE = DATADIR+'/data/fonts/bitstream-vera/Vera.ttf'
+FONTFILE = os.path.join(DATADIR, 'data', 'fonts', 'bitstream-vera', 'Vera.ttf')
 
 # You have: points
 # You want: mm
@@ -343,6 +344,7 @@ def encodeTTFasPS(fontfile):
     numglyphs = font.num_glyphs
     glyphs = []
     for j in range(numglyphs):
+        print font.get_glyph_name(j), j
         glyphs.append('/%s %d def' % (font.get_glyph_name(j), j))
         if j != 0 and j%4 == 0:
             glyphs.append('\n')

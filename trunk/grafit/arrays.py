@@ -2,7 +2,7 @@ import struct
 
 import metakit
 from numarray import *
-from numarray.ieeespecial import nan, inf
+from numarray.ieeespecial import nan, inf, isfinite
 
 Error.setMode(all='ignore')
 
@@ -141,6 +141,8 @@ class MkArray(with_new_opers):
         if isinstance(key, int):
             if key >= len(self):
                 return nan
+            if key <0:
+                key = len(self)-key
             buf = self.view.access(self.prop, self.row, key*8, 8)
             value = struct.unpack('d', buf)[0]
         elif isinstance(key, slice):
@@ -150,6 +152,8 @@ class MkArray(with_new_opers):
                 start = key.start
             if key.stop is None:
                 stop = start+len(self)
+            elif key.stop < 0:
+                stop = len(self)+key.stop
             else:
                 stop = key.stop
             buf = self.view.access(self.prop, self.row, start*8, (stop-start)*8)

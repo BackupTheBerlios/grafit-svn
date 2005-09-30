@@ -6,7 +6,7 @@ from grafit.graph_dataset import Style
 from grafit.signals import HasSignals
 
 from grafit import gui
-from grafit.arrays import nan
+from grafit.arrays import nan, isfinite, asarray
 from grafit.util import flatten
 
 from grafit.settings import DATADIR
@@ -562,8 +562,11 @@ class GraphFunctionsPanel(gui.Box):
         for t in self.function.terms:
             for c in t._lock:
                 lock.append(c.state)
-        print >>sys.stderr, lock
-        self.function.fit(data.xx, data.yy, lock, 50)
+
+        ind = data.active_data()
+
+        self.function.fit(data.xx[ind], data.yy[ind], lock, 50)
+
 #        for t in self.function.terms:
 #            for i, txt in enumerate(t._text):
 #                txt.text = str(t.parameters[i])
