@@ -230,7 +230,7 @@ class Worksheet(Item, HasSignals):
         return self.data.columns.select(*[{'name': n.encode('utf-8')} for n in self.column_names]).find(name=name.encode('utf-8'))
 
     def add_column(self, state, name):
-        ind = self.data.columns.append(name=name, id=create_id(), data='')
+        ind = self.data.columns.append(name=name.encode('utf-8'), id=create_id(), data='')
         self.columns.append(Column(self, ind))
         self.emit('data-changed')
         state['obj'] = self.columns[-1]

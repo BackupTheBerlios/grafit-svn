@@ -386,6 +386,7 @@ class MainWindow(Window):
             'filters': Command('Filters...', '', object),
             'scripts': Command('Scripts...', '', object),
             'run-script': Command('Run script...', '', self.on_run_script),
+            'integrate': Command('Integrate', '', self.on_integrate),
             'close-active-page': Command('Close', 'Close this worksheet',
                                          lambda: self.book.active_page.on_close(), 'close.png', 'Ctrl+W'),
             None: None
@@ -399,6 +400,7 @@ class MainWindow(Window):
             ('&Edit', ['edit-undo', 'edit-redo', None, 
                        'edit-cut', 'edit-copy', 'edit-paste', None, 'edit-delete']),
             ('&Tools', ['functions', 'filters', 'scripts', None, 'run-script']),
+            ('&Analysis', ['integrate']),
             ('&Help', []),
         ]:
             menu = Menu(self.menubar, title)
@@ -437,6 +439,26 @@ class MainWindow(Window):
             else:
                 self.open_project(Project(name))
 
+    def on_integrate(self):
+        page = self.book.active_page 
+        if not isinstance(page, GraphView):
+            return
+
+        sys.path.append(os.path.join(DATADIR, 'data', 'scripts'))
+        from integrate import integrate
+
+        for dataset in page.graph.selected_datasets:
+            w = dataset.worksheet
+            ind = dataset.active_data()
+            x = dataset.x[ind]
+            y = dataset.y[ind]
+            res = integrate(x, y)
+            xname = 'int_%s_%s_x' % (dataset.x.name, dataset.y.name)
+            yname = 'int_%s_%s_y' % (dataset.x.name, dataset.y.name)
+            w[xname], w[yname] = x, res
+            page.graph.add(w[xname], w[yname])
+
+            
 
     def on_action(self, *args, **kwds):
         self.actions['edit-undo'].enabled = action_list.can_undo()
