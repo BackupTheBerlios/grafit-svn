@@ -954,6 +954,7 @@ graphs [
 ]
 """
 
+import string
 for w in string.whitespace:
     desc = desc.replace(w, '')
 

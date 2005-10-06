@@ -96,7 +96,7 @@ def gl2ps_EndPage(): gl2psEndPage()
 cdef enum:
     CIRCLE, SQUARE, DIAMOND, UPTRIANGLE, DOWNTRIANGLE, LEFTTRIANGLE, RIGHTTRIANGLE
 
-def render_symbols(_numarray sx, _numarray sy, int sym, int fill, int size, 
+def render_symbols(ArrayType sx, ArrayType sy, int sym, int fill, int size, 
                    double xmin, double xmax, double ymin, double ymax,
                    double pw, double ph, double pxmin, double pxmax, double pymin, double pymax, int logx, int logy):
     cdef int n, m, l
@@ -145,8 +145,8 @@ def render_symbols(_numarray sx, _numarray sy, int sym, int fill, int size,
 
 #    xbucket, ybucket = -1, -1
 
-    xd = <double *>NA_OFFSETDATA(sx)
-    yd = <double *>NA_OFFSETDATA(sy)
+    xd = <double *>sx.data
+    yd = <double *>sy.data
 
 #    xinterval = (xmax-xmin)/1000.
 #    yinterval = (ymax-ymin)/1000.
@@ -213,14 +213,14 @@ def render_symbols(_numarray sx, _numarray sy, int sym, int fill, int size,
 
     return 1
 
-def render_lines(_numarray sx, _numarray sy, double xmin, double xmax, double ymin, double ymax,
+def render_lines(ArrayType sx, ArrayType sy, double xmin, double xmax, double ymin, double ymax,
                    double pw, double ph, double pxmin, double pxmax, double pymin, double pymax, int logx, int logy):
     cdef int n, l
     cdef double x, y, xnext, ynext
     cdef double *xd, *yd
 
-    xd = <double *>NA_OFFSETDATA(sx)
-    yd = <double *>NA_OFFSETDATA(sy)
+    xd = <double *>sx.data
+    yd = <double *>sy.data
     l = sx.dimensions[0]
 
     if logx == 1:

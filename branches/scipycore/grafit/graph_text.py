@@ -153,18 +153,18 @@ class TextPainter(object):
             else:
                 w, h, imgstr = fonts[0].image_as_str()
                 N = w*h
-                Xall = zeros((N,len(fonts)), typecode=UInt8)
+                Xall = zeros((N,len(fonts)), dtype=UnsignedInt8)
 
                 for i, f in enumerate(fonts):
                     if orientation == 'v':
                         f.horiz_image_to_vert_image()
                     w, h, imgstr = f.image_as_str()
-                    Xall[:,i] = fromstring(imgstr, UInt8)
+                    Xall[:,i] = fromstring(imgstr, UnsignedInt8)
 
                 Xs = mlab.max(Xall, 1)
                 Xs.shape = (h, w)
 
-                pa = zeros(shape=(h,w,4), typecode=UInt8)
+                pa = zeros(shape=(h,w,4), dtype=UnsignedInt8)
                 rgb = (0., 0., 0.)
                 pa[:,:,0] = int(rgb[0]*255)
                 pa[:,:,1] = int(rgb[1]*255)

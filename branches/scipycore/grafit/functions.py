@@ -347,7 +347,8 @@ class Function(HasSignals):
 
     def to_module(self):
         st = []
-        st.append('from numarray import *\n')
+#        st.append('from numarray import *\n')
+        st.append('from scipy import *\n')
 
         st.append('def func(x, '+', '.join(self.parameters)+'):\n')
         for line in self.text.splitlines():

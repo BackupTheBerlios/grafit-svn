@@ -3,7 +3,8 @@ from grafit.signals import HasSignals
 from grafit.actions import action_from_methods2, action_from_methods
 from grafit.functions import MFunctionSum
 from grafit.project import wrap_attribute
-from numarray.ieeespecial import isfinite
+#from numarray.ieeespecial import isfinite
+from scipy import isfinite
 
 import time
 

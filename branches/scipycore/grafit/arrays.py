@@ -1,10 +1,12 @@
 import struct
 
 import metakit
-from numarray import *
-from numarray.ieeespecial import nan, inf, isfinite
+from scipy import *
+#from numarray import *
+#from numarray.ieeespecial import nan, inf, isfinite
 
-Error.setMode(all='ignore')
+#Error.setMode(all='ignore')
+seterr(divide='ignore')
 
 class VarOperation(object):
     def __init__(self, oper):
@@ -38,17 +40,17 @@ class VarOperation(object):
         return repr(self.oper).replace('UFunc', 'vUFunc')
 
 # wrap all ufuncs with VarOperations
-mod_ufuncs = dict([(k, VarOperation(v)) for k, v in ufunc._UFuncs.iteritems() if v.arity in (1,2)])
-globals().update(mod_ufuncs)
+#mod_ufuncs = dict([(k, VarOperation(v)) for k, v in ufunc._UFuncs.iteritems() if v.arity in (1,2)])
+#globals().update(mod_ufuncs)
 
 def asvarray(*args, **kwds):
     arr = asarray(*args, **kwds)
-    arr.__class__ = VArray
+#    arr.__class__ = VArray
     return arr
 
 def varray(*args, **kwds):
     arr = array(*args, **kwds)
-    arr.__class__ = VArray
+#    arr.__class__ = VArray
     return arr
 
 class with_new_opers(object):
@@ -70,7 +72,7 @@ class with_new_opers(object):
     def __gt__(self,other): return greater(self,asvarray(other)) 
     def __ge__(self,other): return greater_equal(self,asvarray(other))
 
-class VArray(with_new_opers, NumArray):
+class VArray(with_new_opers, ArrayType):
     pass
 
 class MkArray(with_new_opers):
@@ -120,12 +122,12 @@ class MkArray(with_new_opers):
 
         # adjust size
         if start > len(self):
-            buf = array([nan]*(start-len(self)), type=Float64).tostring()
+            buf = array([nan]*(start-len(self)), Float64).tostring()
             self.view.modify(self.prop, self.row, buf, len(self)*8)
         
-        arr = asvarray(value, type=Float64)
+        arr = asvarray(value, Float64)
         if arr.shape == ():
-            arr = asvarray([value]*length, type=Float64)
+            arr = asvarray([value]*length, Float64)
         buf = arr.tostring()
 
         if isinstance(key, slice) and key.start is None and key.stop is None:
@@ -157,10 +159,10 @@ class MkArray(with_new_opers):
             else:
                 stop = key.stop
             buf = self.view.access(self.prop, self.row, start*8, (stop-start)*8)
-            value = fromstring(buf, type=Float64)
+            value = fromstring(buf, Float64)
         elif hasattr(key, '__getitem__'):
             buf = self.view.access(self.prop, self.row, 0, len(self)*8)
-            value = fromstring(buf, type=Float64)
+            value = fromstring(buf, Float64)
             if len(key) == 0:
                 return array([], 'd')
             else:

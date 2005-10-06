@@ -4,8 +4,9 @@ import sys
 import os.path
 import sets
 
-from numarray import *
-from numarray.ieeespecial import nan
+#from numarray import *
+#from numarray.ieeespecial import nan
+from scipy import *
 
 def most_frequent(seq):
     """returns the element in a sequence that appears the most times"""
