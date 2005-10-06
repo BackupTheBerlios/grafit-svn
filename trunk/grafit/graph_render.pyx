@@ -12,12 +12,25 @@ cdef extern from "math.h":
     double log10(double x)
 
 # numarray
-cdef extern from "numarray/libnumarray.h":
-    ctypedef class numarray._numarray._numarray [object PyArrayObject]:
-        cdef int *dimensions
-    void import_libnumarray()
-    void *NA_OFFSETDATA(_numarray)
-import_libnumarray()
+#cdef extern from "numarray/libnumarray.h":
+#    ctypedef class numarray._numarray._numarray [object PyArrayObject]:
+#        cdef int *dimensions
+#    void import_libnumarray()
+#    void *NA_OFFSETDATA(_numarray)
+#import_libnumarray()
+
+# scipy.base
+cdef extern from "scipy/arrayobject.h":
+    struct PyArray_Descr:
+        int type_num, elsize
+        char type
+    ctypedef class scipy.ArrayType [object PyArrayObject]:
+        cdef char *data
+        cdef int nd
+        cdef int *dimensions, *strides
+        cdef object base
+        cdef PyArray_Descr *descr
+        cdef int flags
 
 # convert a python file to a FILE
 cdef extern from "stdio.h":

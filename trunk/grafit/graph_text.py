@@ -344,7 +344,6 @@ def encodeTTFasPS(fontfile):
     numglyphs = font.num_glyphs
     glyphs = []
     for j in range(numglyphs):
-        print font.get_glyph_name(j), j
         glyphs.append('/%s %d def' % (font.get_glyph_name(j), j))
         if j != 0 and j%4 == 0:
             glyphs.append('\n')
