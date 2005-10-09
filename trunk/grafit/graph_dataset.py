@@ -260,9 +260,9 @@ class Dataset(DrawWithStyle):
         self.recalculate()
         self.emit('modified', self)
 
-    def __repr__(self):
-        return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
-                                                         self.worksheet.name, self.x.name, self.y.name)
+#    def __repr__(self):
+#        return '<Dataset %s (#%d in graph "%s"), (%s, %s, %s)>' % (self.id, self.graph.datasets.index(self), self.graph.name,
+#                                                         self.worksheet.name, self.x.name, self.y.name)
 
     def active_data(self):
         length = min(len(self.x), len(self.y))

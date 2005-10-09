@@ -1,10 +1,13 @@
 bugs
 ----
+* when a column is renamed, update datasets
+* when drawing lines, ignore nans
+* when auto zooming, ignore nans & add a small margin
 * save data range
-* fix issue with double-click in explorer list
+* rename graphs/worksheets/folders with context menu, not click
 * ask whether to save changes on exit
-* open recent files
+* open recent files (at the end of file menu)
 * update total function curve when term is moved
 * show/hide xorobjects correctly
-* vertical text does not align correctly
+* align vertical text correctly
 * minor tics for logarithmic axes
