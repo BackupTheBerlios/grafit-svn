@@ -245,8 +245,17 @@ class Dataset(DrawWithStyle):
         self.worksheet = self.graph.project.items[self.data.worksheet]
         self.x, self.y = self.worksheet[self.data.x], self.worksheet[self.data.y]
 
+        self.x.connect('rename', self.on_x_rename)
+        self.y.connect('rename', self.on_y_rename)
+
         self.xfrom, self.xto = -inf, inf
 #        self.recalculate()
+
+    def on_x_rename(self, oldname, name):
+        self.data.x = name.encode('utf-8')
+
+    def on_y_rename(self, oldname, name):
+        self.data.y = name.encode('utf-8')
 
     def connect_signals(self):
         self.x.connect('data-changed', self.on_data_changed)

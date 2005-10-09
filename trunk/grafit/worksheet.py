@@ -21,7 +21,9 @@ class Column(MkArray, HasSignals):
         self.data = self.worksheet.data.columns[ind]
 
     def set_name(self, name):
+        prevname = self.data.name
         self.data.name = name.encode('utf-8')
+        self.emit('rename', prevname, name)
     def get_name(self):
         return self.data.name.decode('utf-8')
     name = property(get_name, set_name)
@@ -200,7 +202,11 @@ class Worksheet(Item, HasSignals):
         namespace.update(dict([(c.name, c) for c in worksheet.columns]))
         namespace.update(dict([(i.name, i) for i in worksheet.parent.contents()]))
 
-        result = eval(expression, namespace)
+        try:
+            result = eval(expression, namespace)
+        except:
+            raise ValueError
+
         for name in namespace.recordset:
             self[name]
         return result

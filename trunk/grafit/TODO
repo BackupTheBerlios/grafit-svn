@@ -1,6 +1,8 @@
 bugs
 ----
-* when a column is renamed, update datasets
+* cut/copy/paste in worksheets
+* delete in worksheets
+* differentiate between insert line / insert cell
 * when drawing lines, ignore nans
 * when auto zooming, ignore nans & add a small margin
 * save data range

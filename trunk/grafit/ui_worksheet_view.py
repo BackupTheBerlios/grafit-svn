@@ -28,8 +28,8 @@ class TableData(HasSignals):
         except ValueError:
             try:
                 self.worksheet[col] = self.worksheet.evaluate(value)
-            except:
-                raise
+            except ValueError:
+                print >>sys.stderr, "error"
         else:
             self.worksheet[col][row] = f
 
@@ -163,7 +163,10 @@ class WorksheetView(gui.Box):
         else:
             self.worksheet[col].expr = ''
             if editor.text.strip() != '':
-                self.worksheet[col] = self.worksheet.evaluate(editor.text)
+                try:
+                    self.worksheet[col] = self.worksheet.evaluate(editor.text)
+                except ValueError:
+                    print >>sys.stderr, "error"
         Worksheet.record = None
 
         dlg._widget.Destroy()
