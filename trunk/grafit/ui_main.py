@@ -179,7 +179,7 @@ class ProjectExplorer(Box):
         f = open(d+'/preview.eps', 'wb')
         item.export_ascii(f)
         f.close()
-        subprocess.Popen(['gv', d+'/preview.eps'])
+        subprocess.Popen(['evince', d+'/preview.eps'])
 
     def on_tree_dropped(self, item, data):
         if 'grafit-object' in data.formats:

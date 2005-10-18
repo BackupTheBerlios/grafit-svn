@@ -4,7 +4,8 @@
 import sys
 
 def test(arg):
-    sys.stderr.write('.')
+#    sys.stderr.write('.')
+    print >>sys.stderr, arg
 sys.path_hooks.append(test)
 
 # we need these lines for cx_Freeze to work on numarray!

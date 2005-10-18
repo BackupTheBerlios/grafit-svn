@@ -104,13 +104,14 @@ class Graph(Item, HasSignals):
 
         self.objects = [self.rubberband, self.cross, self.rangehandle]
         self.textpainter = TextPainter(self)
+        self.recalc = True
 
+        # style
         self.axis_title_font_size = 12.
         self.background_color = (1., 1., 1., 1.)
         self.pwidth = 120.
         self.pheight = 100.
 
-        self.recalc = True
 
     default_name_prefix = 'graph'
 

@@ -153,18 +153,28 @@ class Axis(object):
 
     def paint_text(self):
         facesize = round(self.plot.axis_title_font_size * self.plot.magnification)
+        margin = self.plot.axis_title_font_size/6.
 
         if self.position == 'bottom':
             tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
+            h = []
             for x in tics:
                 st = self.totex(x)
                 xm, _ = self.plot.data_to_phys(x, 0.)
-                self.plot.textpainter.render_text(st, facesize, xm, -5, 'center', 'bottom')
+                _, height = self.plot.textpainter.render_text(st, facesize, 0, 0, measure_only=True)
+                h.append(height)
+
+            for x in tics:
+                st = self.totex(x)
+                xm, _ = self.plot.data_to_phys(x, 0.)
+                self.plot.textpainter.render_text(st, facesize, xm, -margin-max(h), 'center', 'bottom')
+
+
         elif self.position == 'left':
             for y in self.tics(self.plot.ymin, self.plot.ymax)[0]:
                 st = self.totex(y)
                 _, ym = self.plot.data_to_phys(0., y)
-                self.plot.textpainter.render_text(st, facesize, -2, ym, 'right', 'center')
+                self.plot.textpainter.render_text(st, facesize, -margin, ym, 'right', 'center')
 
  
     def tics(self, fr, to):
@@ -191,10 +201,15 @@ class Axis(object):
         l = 100
         while l>8:
             major = 10**arange(bottom, top, r)
-            minor = array([])
+            if r > 1:
+                minor = 10**array(list(set(range(bottom, top))-set(range(bottom, top, r))))
+            else:
+                minor = array([])
             major = array([n for n in major if fr<=n<=to])
+            minor = array([n for n in minor if fr<=n<=to])
             l = len(major)
             r += 1
+
         cache[fr, to] = major, minor
         return major, minor
 
