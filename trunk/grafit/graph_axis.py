@@ -118,7 +118,7 @@ class Axis(object):
         facesize = round(self.plot.axis_title_font_size * self.plot.magnification)
         if self.position == 'bottom':
             self.plot.textpainter.render_text(self.plot.xtitle, facesize, 
-                                              self.plot.plot_width/2, -facesize/2.,
+                                              self.plot.plot_width/2, self._bottommargin-self._margin,
                                               align_x='center', align_y='top')
         elif self.position == 'left':
             self.plot.textpainter.render_text(self.plot.ytitle, facesize, 
@@ -153,7 +153,8 @@ class Axis(object):
 
     def paint_text(self):
         facesize = round(self.plot.axis_title_font_size * self.plot.magnification)
-        margin = self.plot.axis_title_font_size/6.
+        margin = self.plot.axis_title_font_size * 0.3514598/6.
+        self._margin = margin
 
         if self.position == 'bottom':
             tics = self.tics(self.plot.xmin, self.plot.xmax)[0]
@@ -168,6 +169,7 @@ class Axis(object):
                 st = self.totex(x)
                 xm, _ = self.plot.data_to_phys(x, 0.)
                 self.plot.textpainter.render_text(st, facesize, xm, -margin-max(h), 'center', 'bottom')
+                self._bottommargin = -margin-max(h)
 
 
         elif self.position == 'left':

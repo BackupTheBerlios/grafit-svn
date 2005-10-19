@@ -629,6 +629,7 @@ class Graph(Item, HasSignals):
             self.margint += (self.height_mm - self.width_mm/self.aspect)/2
             self.marginb += (self.height_mm - self.width_mm/self.aspect)/2
 
+        # width and height of the plot rectangle in mm
         self.plot_width = self.width_mm - self.marginl - self.marginr
         self.plot_height = self.height_mm - self.margint - self.marginb
 
