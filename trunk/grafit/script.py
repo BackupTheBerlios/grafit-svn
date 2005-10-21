@@ -7,59 +7,12 @@ import mingui as gui
 # - python code widget
 # - tree widget
 
-def on_item_activated(item):
-    print item
-
 def handler(*args, **kwds):
     print args, kwds
 
 @gui.Command.from_function('callable', 'callit', 'close', type='check')
 def callable(*args, **kwds):
     print 'called!'
-
-class Panel(gui.Box):
-    def __init__(self, place, position):
-        self.pos = position
-        if position in ['left', 'right']:
-            orientation = 'vertical'
-            tbo = 'horizontal'
-        elif position in ['top', 'bottom']:
-            orientation = 'horizontal'
-            tbo = 'vertical'
-        self.orientation = orientation
-
-        gui.Box.__init__(self, place, tbo)
-        self.contents = []
-        self.toolbar = gui.Toolbar(self.place(stretch=0), orientation)
-        print self.toolbar.size
-        self.splitter = place[0]
-
-    def _add(self, widget, image=None, **opts):
-        if image is not None:
-            self.contents.append(widget)
-            widget._command = self.callback(widget)
-            self.toolbar.append(widget._command)
-        gui.Box._add(self, widget, **opts)
-        if image is not None:
-            self.layout.Hide(widget)
-
-    def callback(self, widget):
-        image = gui.base._text_img_wxbitmap('whatever', 
-                                            gui.images.images['close'][16,16],
-                                            rotate=self.orientation == 'vertical')
-        @gui.Command.from_function('callable', 'callit', image, type='check')
-        def callable(on):
-            sz = self.toolbar.size[self.orientation=='horizontal']
-            if on:
-                for win in self.contents:
-                    if win!=widget:
-                        win._command.state = False
-                self.layout.Show(widget)
-                self.splitter.resize_child(self, 100+sz)
-            else:
-                self.layout.Hide(widget)
-                self.splitter.resize_child(self, sz)
-        return callable
 
 def main():
     gui.images.register('close', Image.open('../data/images/close.png'))
@@ -71,7 +24,7 @@ def main():
 
     split = gui.Splitter(box.place(), 'vertical')
 
-    panel = Panel(split.place(width=100), 'top')
+    panel = gui.Panel(split.place(width=100), 'top')
     btn = gui.Button(panel.place(image='close'), 'arse')
     tree = gui.Tree(panel.place(image='open'), columns=['Topics'])
     root = gui.TreeNode()
@@ -81,7 +34,7 @@ def main():
     panel.toolbar.Realize()
 
     split2 = gui.Splitter(split.place(), 'horizontal')
-    panel2 = Panel(split2.place(width=100), 'left')
+    panel2 = gui.Panel(split2.place(width=100), 'left')
     btn = gui.Button(panel2.place(image='close'), 'arse')
     panel2.toolbar.Realize()
 

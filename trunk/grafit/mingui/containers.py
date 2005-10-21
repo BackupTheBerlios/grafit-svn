@@ -1,4 +1,6 @@
-from base import Widget, Container
+from base import Widget, Container, _text_img_wxbitmap
+from commands import Toolbar, Command
+from images import images
 #from grafit.thirdparty.splitter import MultiSplitterWindow
 from wx.lib.splitter import MultiSplitterWindow
 
@@ -128,5 +130,54 @@ class Notebook(Widget, Container, wx.Notebook):
             self.SetSelection(self.pages.index(widget))
         else:
             raise NameError
+
+
+class Panel(Box):
+    def __init__(self, place, position):
+        self.pos = position
+        if position in ['left', 'right']:
+            orientation = 'vertical'
+            tbo = 'horizontal'
+        elif position in ['top', 'bottom']:
+            orientation = 'horizontal'
+            tbo = 'vertical'
+        self.orientation = orientation
+
+        Box.__init__(self, place, tbo)
+        self.contents = []
+        self.toolbar = Toolbar(self.place(stretch=0), orientation)
+        print self.toolbar.size
+        print self.toolbar.GetBestSize()
+        self.splitter = place[0]
+
+    def on_added(self):
+        print self.toolbar.size
+
+    def _add(self, widget, image=None, **opts):
+        if image is not None:
+            self.contents.append(widget)
+            widget._command = self.callback(widget)
+            self.toolbar.append(widget._command)
+        Box._add(self, widget, **opts)
+        if image is not None:
+            self.layout.Hide(widget)
+
+    def callback(self, widget):
+        image = _text_img_wxbitmap('whatever', 
+                                            images.images['close'][16,16],
+                                            rotate=self.orientation == 'vertical')
+        @Command.from_function('callable', 'callit', image, type='check')
+        def callable(on):
+            sz = self.toolbar.size[self.orientation=='horizontal']
+            if on:
+                for win in self.contents:
+                    if win!=widget:
+                        win._command.state = False
+                self.layout.Show(widget)
+                self.splitter.resize_child(self, 100+sz)
+            else:
+                self.layout.Hide(widget)
+                self.splitter.resize_child(self, sz)
+        return callable
 
 
