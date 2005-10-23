@@ -68,9 +68,14 @@ class Menubar(Widget, wx.MenuBar):
     def __getitem__(self, item):
         return self.menus[item]
 
+class _menu(wx.Menu):
+    def UpdateUI(self, evt):
+        print evt
+        wx.Menu.UpdateUI(evt)
+
 class Menu(object):
     def __init__(self, menubar=None, name=None):
-        self._menu = wx.Menu()
+        self._menu = _menu()
         self.menubar = menubar
         self.name = name
         self.items = {}

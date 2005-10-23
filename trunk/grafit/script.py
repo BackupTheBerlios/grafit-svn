@@ -14,42 +14,46 @@ def handler(*args, **kwds):
 def callable(*args, **kwds):
     print 'called!'
 
+[gui.Window, dict(title='Mingui doc/demo', size=(640, 480)),
+    [{}, gui.Box, dict(orientation='vertical'),
+        
+    ],
+]
+
 def main():
-    gui.images.register('close', Image.open('../data/images/close.png'))
     gui.images.register_dir('../data/images/')
 
     win = gui.Window(title='Mingui doc/demo', size=(640, 480))
     gui.base.app.mainwin = win
-    box = gui.Box(win.place(), 'vertical')
 
-    split = gui.Splitter(box.place(), 'vertical')
+    box = gui.Box(win(), 'vertical')
+    split = gui.Splitter(box(), 'vertical')
 
-    panel = gui.Panel(split.place(width=100), 'top')
-    btn = gui.Button(panel.place(image='close'), 'arse')
-    tree = gui.Tree(panel.place(image='open'), columns=['Topics'])
+    panel = gui.Panel(split(width=100), 'top')
+    btn = gui.Button(panel(image='close'), 'arse')
+    tree = gui.Tree(panel(image='open'), columns=['Topics'])
     root = gui.TreeNode()
-    child = gui.TreeNode()
-    root.append(child)
     tree.append(root)
+    child = gui.TreeNode(root)
+
     panel.toolbar.Realize()
 
-    split2 = gui.Splitter(split.place(), 'horizontal')
-    panel2 = gui.Panel(split2.place(width=100), 'left')
-    btn = gui.Button(panel2.place(image='close'), 'arse')
+    split2 = gui.Splitter(split(), 'horizontal')
+    panel2 = gui.Panel(split2(width=100), 'left')
+    btn = gui.Button(panel2(image='close'), 'arse')
     panel2.toolbar.Realize()
 
-    book = gui.Notebook(split2.place())
-    html = gui.Html(book.place(label='text'))
-    html.SetPage('html/index.html')
-    code = gui.Text(book.place(label='code'), multiline=True, text='hello!')
-    demo = gui.Box(book.place(label='demo'))
+    book = gui.Notebook(split2())
+    html = gui.Html(book(label='text'))
+    html.SetPage(file('test.html').read())
+    code = gui.Text(book(label='code'), multiline=True, text='hello!')
+    demo = gui.Box(book(label='demo'))
 
-    button = gui.Button(demo.place(expand=False, stretch=0), 'button')
-    toggle = gui.Button(demo.place(expand=False, stretch=0), 'button', toggle=True)
-    toggle.connect('toggled', handler)
-    toggle.connect('clicked', handler)
+    button = gui.Button(demo(expand=False, stretch=0), 'button')
+    toggle = gui.Button(demo(expand=False, stretch=0), 'button', toggle=True,
+                        connect={'toggled': handler, 'clicked':handler})
 
-    bar = gui.Menubar(win.place())
+    bar = gui.Menubar(win())
     menu = gui.Menu(bar, 'Foo')
     menu.append(callable)
 
@@ -57,12 +61,12 @@ def main():
 
 
     def on_changed():
-        split.resize_child(tree, 100)
+        split.resize_child(panel, 100)
         
 
-    btn = gui.Button(box.place(stretch=0), 'Close', 
+    btn = gui.Button(box(stretch=0), 'Close', 
                      connect={'clicked': win.close})
-    btn = gui.Button(box.place(stretch=0), 'Change', 
+    btn = gui.Button(box(stretch=0), 'Change', 
                      connect={'clicked': on_changed})
 
     gui.run(win)

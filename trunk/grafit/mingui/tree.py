@@ -3,8 +3,10 @@ import wx
 from base import Widget
  
 class TreeNode(HasSignals):
-    def __init__(self):
+    def __init__(self, parent=None):
         self.children = []
+        if parent is not None:
+            parent.append(self)
 
     def __iter__(self):
         return iter(self.children)

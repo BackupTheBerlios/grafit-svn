@@ -9,6 +9,7 @@ from signals import HasSignals
 class Container(HasSignals):
     def place(self, **kwds):
         return self, kwds
+    __call__ = place
 
 def _pil_to_wxbitmap(image):
     wi = wx.EmptyImage(image.size[0], image.size[1])
@@ -49,8 +50,12 @@ class Widget(HasSignals):
         if place is None:
             self.parent = None
             placeargs = {}
+        elif isinstance(place, Container):
+            self.parent = place
+            placeargs = {}
         else:
             self.parent, placeargs = place
+
         if hasattr(self.parent, '_add'):
             self.parent._add(self, **placeargs)
         for signal, slot in connect.iteritems():
@@ -107,10 +112,6 @@ class Label(Widget, wx.StaticText):
 
 class Image(Widget, wx.StaticBitmap):
     def __init__(self, place, image, **kwds):
-#        image = image.convert('RGB')
-#        wximg = wx.EmptyImage(image.size[0],image.size[1])
-#        wximg.SetData(image.tostring())
-#        bitmap = wximg.ConvertToBitmap()
         bitmap = _pil_to_wxbitmap(image)
 
         wx.StaticBitmap.__init__(self, place[0], -1, bitmap)
@@ -123,10 +124,6 @@ class Button(Widget, wx.Button, wx.ToggleButton):
             wxbase = wx.ToggleButton
         else:
             wxbase = wx.Button
-
-#        class _Button(Widget, wxbase):
-#            pass
-#        self.__class__ = _Button
 
         wxbase.__init__(self, place[0], -1, text)
         Widget.__init__(self, place, connect, **kwds)

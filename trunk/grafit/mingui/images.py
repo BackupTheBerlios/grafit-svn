@@ -1,4 +1,5 @@
 from base import Singleton
+import PIL
 import os
 
 class DirImageProvider(object):
@@ -10,9 +11,12 @@ class DirImageProvider(object):
         self.ids = dict(zip(ids, files))
 
     def provide(self, id):
+        print self, "provide", id,
         if id in self.ids:
+            print True
             return PIL.Image.open(self.ids[id])
         else:
+            print False
             return None
 
 class ImageCatalog(Singleton):

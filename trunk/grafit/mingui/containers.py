@@ -146,26 +146,24 @@ class Panel(Box):
         Box.__init__(self, place, tbo)
         self.contents = []
         self.toolbar = Toolbar(self.place(stretch=0), orientation)
-        print self.toolbar.size
-        print self.toolbar.GetBestSize()
         self.splitter = place[0]
 
-    def on_added(self):
-        print self.toolbar.size
-
-    def _add(self, widget, image=None, **opts):
+    def _add(self, widget, label=None, image=None, **opts):
         if image is not None:
             self.contents.append(widget)
-            widget._command = self.callback(widget)
+            widget._command = self.callback(widget, label, image)
             self.toolbar.append(widget._command)
+        opts['prepend'] = self.pos in ['bottom', 'right']
         Box._add(self, widget, **opts)
         if image is not None:
             self.layout.Hide(widget)
 
-    def callback(self, widget):
-        image = _text_img_wxbitmap('whatever', 
-                                            images.images['close'][16,16],
-                                            rotate=self.orientation == 'vertical')
+    def callback(self, widget, label, image):
+        if label is None:
+            label = ""
+        image = _text_img_wxbitmap(label, images[image][16,16],
+                                   rotate=self.orientation == 'vertical')
+
         @Command.from_function('callable', 'callit', image, type='check')
         def callable(on):
             sz = self.toolbar.size[self.orientation=='horizontal']
