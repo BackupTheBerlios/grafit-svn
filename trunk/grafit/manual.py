@@ -30,7 +30,7 @@ def main():
     book = gui.Notebook(split2(stretch=1.))
     html = gui.Html(book(label='text'))
     html.LoadPage('test.html')
-    code = gui.Text(book(label='code'), multiline=True, text='hello!')
+    code = gui.PythonEditor(book(label='code'))
     demo = gui.Box(book(label='demo'))
 
     button = gui.Button(demo(expand=False, stretch=0), 'button')
@@ -39,7 +39,7 @@ def main():
 
     panel2 = gui.Panel(split2(width=100), 'bottom')
     btn = gui.Button(panel2(label='Command line', image='console'), 'arse')
-
+    btn = gui.PythonShell(panel2(label='Command line', image='console'), locals())
 
     bar = gui.Menubar(win())
     menu = gui.Menu(bar, 'Foo')

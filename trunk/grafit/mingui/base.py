@@ -163,7 +163,6 @@ class Application(Singleton):
 
     def run(self, mainwin):
         self.mainwin = mainwin
-        print mainwin
         self._app.SetTopWindow(self.mainwin)
         self.mainwin.show()
         return self._app.MainLoop()
