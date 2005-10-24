@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Window title="mingui.manual" size="(640, 480)">
-<Box orientation="vertical">
-  <Splitter orientation="horizontal">
-    <Panel position="left">
-      <Tree columns="[&quot;Topics&quot;]"/>
-    </Panel>
-  </Splitter>
-</Box>
+<Window title="'mingui.manual'" size="(640, 480)">
+  <Box orientation="'vertical'">
+    <Splitter orientation="'horizontal'">
+      <Panel position="'left'" _width="100">
+        <Tree columns="['Topics']" _label="'Topics'" _image="'open'"/>
+      </Panel>
+      <Splitter orientation="'vertical'">
+        <Notebook _stretch="1.">
+          <Html _label="'text'"/>
+          <PythonEditor _label="'code'"/>
+          <Box _label="'demo'">
+            <Button _expand="False" _stretch="0" text="'button1'" toggle="True"/>
+            <Button _expand="False" _stretch="0" text="'button'"/>
+          </Box>
+        </Notebook>
+        <Panel _width="100" position="'bottom'">
+          <PythonShell _label="'Command line'" _image="'console'"/>
+        </Panel>
+      </Splitter>
+    </Splitter>
+  </Box>
 </Window>

@@ -73,6 +73,8 @@ class Widget(HasSignals):
         doc = ""
         def fget(self): return self.IsShown()
         def fset(self, vis):
+            if isinstance(vis, basestring):
+                vis = eval(vis, {})
             if vis:
                 self.Show(True)
             else:
@@ -84,21 +86,30 @@ class Widget(HasSignals):
         doc = """True if the control can be manipulated by the user. Disabled controls are typically
 displayed in a different way, and do not respond to user actions."""
         def fget(self): return self.IsEnabled()
-        def fset(self, value): self.Enable(value)
+        def fset(self, value): 
+            if isinstance(value, basestring):
+                value = eval(value, {})
+            self.Enable(value)
         return locals()
     enabled = property(**enabled())
 
     def size():
         doc = ""
         def fget(self): return tuple(self.GetSize())
-        def fset(self, sz): self.SetSize(sz)
+        def fset(self, sz): 
+            if isinstance(sz, basestring):
+                sz = eval(sz, {})
+            self.SetSize(sz)
         return locals()
     size = property(**size())
 
     def position():
         doc = ""
         def fget(self): return tuple(self.GetPosition())
-        def fset(self, po): self.SetPosition(po)
+        def fset(self, po): 
+            if isinstance(sz, basestring):
+                sz = eval(sz, {})
+            self.SetPosition(po)
         return locals()
     position = property(**position())
 
@@ -118,7 +129,7 @@ class Image(Widget, wx.StaticBitmap):
         Widget.__init__(self, place, **kwds)
 
 class Button(Widget, wx.Button, wx.ToggleButton):
-    def __init__(self, place, text, toggle=False, connect={}, **kwds):
+    def __init__(self, place, text='', toggle=False, connect={}, **kwds):
 
         if toggle:
             wxbase = wx.ToggleButton

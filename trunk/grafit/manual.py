@@ -6,53 +6,34 @@ import cElementTree as xml
 def handler(*args, **kwds):
     print args, kwds
 
-
-
 @gui.Command.from_function('callable', 'callit', 'close', type='check')
 def callable(*args, **kwds):
     print 'called!'
 
-def getf(defs, parent=None):
-    cls, place, args, children = defs[0], defs[1], defs[2], defs[3:]
-    print 'creating', cls.__name__
+def from_element(elem, parent=None, level=0):
+    cls = getattr(gui, elem.tag)
+    place = dict((k[1:], eval(v, {})) for k, v in elem.items() if k.startswith('_'))
+    args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
+    print '  '*level, cls.__name__, place, args
+
     if parent is None:
-        win=  gui.app.mainwin= cls(**args)
+        gui.app.mainwin = widget = cls(**args)
     else:
-        win = cls(parent(**place), **args)
+        widget = cls(parent(**place), **args)
 
-    for child in children:
-        getf(child, parent=win)
-    return win
+    for child in elem:
+        from_element(child, widget, level+1)
 
-def from_element(elem, parent):
-    pass
+    return widget
 
 def main():
+    gui.images.register_dir('../data/images/')
+
     tree = xml.parse("gui.xml")
     root = tree.getroot()
 
-    cls = getattr(gui, root.tag)
-    print cls
-
-    for element in root:
-        print element
-
-
-def omain():
-    gui.images.register_dir('../data/images/')
-    win = getf(defs)
+    win = from_element(root)
     gui.run(win)
-    
-defs = \
-[ gui.Window, {}, dict(title='mingui.manual', size=(640, 520)), 
-    [ gui.Box, {}, dict(orientation='vertical'),
-        [ gui.Splitter, {}, dict(orientation='horizontal'),
-            [ gui.Panel, dict(width=100), dict(position='left'),
-                [ gui.Tree, dict(label='Topics', image='open'), dict(columns='Topics') ],
-            ],
-        ], 
-    ],
-]
 
 def imain():
     gui.images.register_dir('../data/images/')
