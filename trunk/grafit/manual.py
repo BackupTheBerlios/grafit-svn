@@ -1,15 +1,60 @@
 import sys
 sys.path.append('..')
 import mingui as gui
+import cElementTree as xml
 
 def handler(*args, **kwds):
     print args, kwds
+
+
 
 @gui.Command.from_function('callable', 'callit', 'close', type='check')
 def callable(*args, **kwds):
     print 'called!'
 
+def getf(defs, parent=None):
+    cls, place, args, children = defs[0], defs[1], defs[2], defs[3:]
+    print 'creating', cls.__name__
+    if parent is None:
+        win=  gui.app.mainwin= cls(**args)
+    else:
+        win = cls(parent(**place), **args)
+
+    for child in children:
+        getf(child, parent=win)
+    return win
+
+def from_element(elem, parent):
+    pass
+
 def main():
+    tree = xml.parse("gui.xml")
+    root = tree.getroot()
+
+    cls = getattr(gui, root.tag)
+    print cls
+
+    for element in root:
+        print element
+
+
+def omain():
+    gui.images.register_dir('../data/images/')
+    win = getf(defs)
+    gui.run(win)
+    
+defs = \
+[ gui.Window, {}, dict(title='mingui.manual', size=(640, 520)), 
+    [ gui.Box, {}, dict(orientation='vertical'),
+        [ gui.Splitter, {}, dict(orientation='horizontal'),
+            [ gui.Panel, dict(width=100), dict(position='left'),
+                [ gui.Tree, dict(label='Topics', image='open'), dict(columns='Topics') ],
+            ],
+        ], 
+    ],
+]
+
+def imain():
     gui.images.register_dir('../data/images/')
 
     # main window

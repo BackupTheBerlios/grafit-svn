@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Window title="mingui.manual" size="(640, 480)">
+<Box orientation="vertical">
+  <Splitter orientation="horizontal">
+    <Panel position="left">
+      <Tree columns="[&quot;Topics&quot;]"/>
+    </Panel>
+  </Splitter>
+</Box>
+</Window>
