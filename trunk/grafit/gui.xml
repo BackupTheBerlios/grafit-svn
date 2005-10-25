@@ -4,12 +4,12 @@
     <Box orientation="'vertical'">
       <Splitter orientation="'horizontal'">
         <Panel position="'left'" _width="100">
-          <Tree columns="['Topics']" _label="'Topics'" _image="'open'"/>
+          <Tree columns="['Topics']" _label="'Topics'" _image="'open'" name="'tree'"/>
         </Panel>
         <Splitter orientation="'vertical'">
           <Notebook _stretch="1.">
-            <Html _label="'text'"/>
-            <PythonEditor _label="'code'"/>
+            <Html name="'html'" _label="'text'"/>
+            <PythonEditor name="'editor'" _label="'code'"/>
             <Box _label="'demo'">
               <Button _expand="False" _stretch="0" text="'button1'" toggle="True"/>
               <Button _expand="False" _stretch="0" text="'button'"/>

@@ -14,6 +14,13 @@ def main():
     gui.images.register_dir('../data/images/')
     res = mingui.xml.Resource('gui.xml')
     win = res.build('mainwin')
+    tree = res.find('mainwin', 'tree')
+
+    root = gui.TreeNode()
+    child = gui.TreeNode()
+    root.append(child)
+    tree.append(root)
+
     gui.run(win)
 
 
