@@ -1,6 +1,6 @@
 import sys
-sys.path.append('..')
 import mingui as gui
+import mingui.xml
 import cElementTree as xml
 
 def handler(*args, **kwds):
@@ -10,30 +10,12 @@ def handler(*args, **kwds):
 def callable(*args, **kwds):
     print 'called!'
 
-def from_element(elem, parent=None, level=0):
-    cls = getattr(gui, elem.tag)
-    place = dict((k[1:], eval(v, {})) for k, v in elem.items() if k.startswith('_'))
-    args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
-    print '  '*level, cls.__name__, place, args
-
-    if parent is None:
-        gui.app.mainwin = widget = cls(**args)
-    else:
-        widget = cls(parent(**place), **args)
-
-    for child in elem:
-        from_element(child, widget, level+1)
-
-    return widget
-
 def main():
     gui.images.register_dir('../data/images/')
-
-    tree = xml.parse("gui.xml")
-    root = tree.getroot()
-
-    win = from_element(root)
+    res = mingui.xml.Resource('gui.xml')
+    win = res.build('mainwin')
     gui.run(win)
+
 
 def imain():
     gui.images.register_dir('../data/images/')
