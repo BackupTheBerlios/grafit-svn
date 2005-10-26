@@ -3,6 +3,8 @@ import mingui as gui
 import mingui.xml
 import cElementTree as xml
 
+from signals import HasSignals
+
 def handler(*args, **kwds):
     print args, kwds
 
@@ -10,16 +12,68 @@ def handler(*args, **kwds):
 def callable(*args, **kwds):
     print 'called!'
 
+class ElementTreeNode(HasSignals):
+    """Adapter from a folder to a Tree node"""
+#    def __new__(cls, elem, **kwds):
+#        if hasattr(elem, '_treenode'):
+#            return elem._treenode
+#        else:
+#            obj = HasSignals.__new__(cls, elem, **kwds)
+#            elem._treenode = obj
+#            return obj
+
+    def __init__(self, elem, isroot=False):
+        self.element = elem
+#        self.folder.connect('modified', self.on_modified)
+#        if isroot:
+#            self.folder.project.connect('add-item', self.on_modified)
+#            self.folder.project.connect('remove-item', self.on_modified)
+#        self.subfolders = list(self.folder.subfolders())
+
+    def __iter__(self):
+        for item in self.element:
+            yield ElementTreeNode(item)
+    
+    def __str__(self): 
+        return self.element.tag
+
+    def get_pixmap(self): 
+#        if self.folder == self.folder.project.top:
+#            return 'grafit16.png'
+#        else:
+            return '16/folder.png'
+
+#    def on_modified(self, item=None): 
+#        subfolders = list(self.folder.subfolders())
+#        if subfolders != self.subfolders:
+#            self.emit('modified')
+#            self.subfolders = subfolders
+#
+#    def rename(self, newname):
+#        if newname == '':
+#            return False
+#        else:
+#            self.folder.name = newname.encode('utf-8')
+#            self.folder.project.top.emit('modified')
+#            return True
+
+#    def close(self):
+#        print >>sys.stderr, 'close'
+#    def open(self):
+
 def main():
     gui.images.register_dir('../data/images/')
     res = mingui.xml.Resource('gui.xml')
     win = res.build('mainwin')
     tree = res.find('mainwin', 'tree')
 
-    root = gui.TreeNode()
-    child = gui.TreeNode()
-    root.append(child)
-    tree.append(root)
+    r = ElementTreeNode(xml.parse('gui.xml').getroot())
+
+#    root = gui.TreeNode()
+#    child = gui.TreeNode()
+#    root.append(child)
+#    tree.append(root)
+    tree.append(r)
 
     gui.run(win)
 
