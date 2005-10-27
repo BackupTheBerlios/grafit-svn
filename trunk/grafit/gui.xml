@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<resource>
+<Resource>
   <Window name="'mainwin'" title="'mingui.manual'" size="(640, 480)">
+    <Menubar>
+      <Menu label="'&amp;File'">
+        <MenuItem command="'file-new'"/>
+        <MenuItem command="'file-open'"/>
+        <MenuItem command="'file-save'"/>
+        <Separator/>
+        <MenuItem command="'file-exit'"/>
+      </Menu>
+    </Menubar>
     <Box orientation="'vertical'">
       <Splitter orientation="'horizontal'">
         <Panel position="'left'" _width="100">
@@ -22,4 +31,11 @@
       </Splitter>
     </Box>
   </Window>
-</resource>
+  <Commands>
+    <Command label="'file-new'" image="'file-new'" description="'Create a new file'"/>
+  </Commands>
+  <Images>
+    <Image label="'file=new'" path="''"/>
+    <DirImageProvider path="'data/images'"/>
+  </Images>
+</Resource>

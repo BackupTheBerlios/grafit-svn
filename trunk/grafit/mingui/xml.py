@@ -5,7 +5,7 @@ from weakref import WeakValueDictionary
 class Resource(object):
     def __init__(self, filename):
         self.root = parse(filename).getroot()
-        self.res = dict((eval(elem.get('name'), {}), elem) for elem in self.root)
+        self.res = dict((eval(elem.get('name'), {}), elem) for elem in self.root if 'name' in elem.keys())
         self.lookup = dict((name, WeakValueDictionary()) for name in self.res)
 
     def build(self, name):
