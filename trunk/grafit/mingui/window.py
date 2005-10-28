@@ -10,6 +10,7 @@ class Window(wx.Frame, Widget, Container):
     def __init__(self, parent=None, connect={}, **kwds):
         wx.Frame.__init__(self, parent, -1)
         Widget.__init__(self, None, connect, **kwds)
+        Container.__init__(self)
         self.parent = parent
 
     def _add(self, child, **place):
@@ -27,6 +28,7 @@ class Dialog(wx.Dialog, Widget, Container):
     def __init__(self, parent=None, connect={}, **kwds):
         wx.Dialog.__init__(self, parent, -1, style=wx.THICK_FRAME)
         Widget.__init__(self, None, connect, **kwds)
+        Container.__init__(self)
         self.parent = parent
 
     def show(self, modal=False):

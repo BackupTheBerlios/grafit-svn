@@ -7,6 +7,9 @@ import PIL.Image
 from signals import HasSignals
 
 class Container(HasSignals):
+    def __init__(self):
+        self.children = []
+
     def place(self, **kwds):
         return self, kwds
     __call__ = place
@@ -45,8 +48,8 @@ def _text_img_wxbitmap(text, image, rotate=False):
 
     return bmp
 
-class Widget(HasSignals):
-    def __init__(self, place, connect={}, **kwds):
+class Placeable(object):
+    def __init__(self, place, **kwds):
         if place is None:
             self.parent = None
             placeargs = {}
@@ -58,10 +61,25 @@ class Widget(HasSignals):
 
         if hasattr(self.parent, '_add'):
             self.parent._add(self, **placeargs)
-        for signal, slot in connect.iteritems():
-            self.connect(signal, slot)
+            self.parent.children.append(self)
         for k, v in kwds.iteritems():
             setattr(self, k, v)
+
+class Widget(Placeable, HasSignals):
+    def __init__(self, place, connect={}, **kwds):
+        self.name = None
+        Placeable.__init__(self, place, **kwds)
+        for signal, slot in connect.iteritems():
+            self.connect(signal, slot)
+
+    def find(self, name):
+        if self.name == name:
+            return self
+        if hasattr(self, 'children'):
+            for c in self.children:
+                f = c.find(name)
+                if f is not None:
+                    return f
 
     def destroy(self):
         self.Destroy()

@@ -10,6 +10,7 @@ class Box(Widget, Container, wx.Panel):
     def __init__(self, place, orientation='vertical', **kwds):
         wx.Panel.__init__(self, place[0], -1)
         Widget.__init__(self, place, **kwds)
+        Container.__init__(self)
         if orientation == 'horizontal':
             self.layout = wx.BoxSizer(wx.HORIZONTAL)
         elif orientation == 'vertical':
@@ -44,6 +45,7 @@ class Splitter(Widget, Container, MultiSplitterWindow):
         self.orientation = orientation
         MultiSplitterWindow.__init__(self, place[0], style=wx.SP_LIVE_UPDATE)
         Widget.__init__(self, place, **kwds)
+        Container.__init__(self)
         self.SetOrientation({'horizontal':wx.HORIZONTAL, 'vertical':wx.VERTICAL}[orientation])
 
     def _add(self, widget, width=-1, stretch=0):
@@ -93,6 +95,7 @@ class Notebook(Widget, Container, wx.Notebook):
     def __init__(self, place, connect={}, **kwds):
         wx.Notebook.__init__(self, place[0], -1)
         Widget.__init__(self, place, connect, **kwds)
+        Container.__init__(self)
 
         # item images
         self.imagelist = wx.ImageList(16, 16)
@@ -133,7 +136,7 @@ class Notebook(Widget, Container, wx.Notebook):
 
 
 class Panel(Box):
-    def __init__(self, place, position):
+    def __init__(self, place, position, **kwds):
         self.pos = position
         if position in ['left', 'right']:
             orientation = 'vertical'
@@ -143,7 +146,7 @@ class Panel(Box):
             tbo = 'vertical'
         self.orientation = orientation
 
-        Box.__init__(self, place, tbo)
+        Box.__init__(self, place, tbo, **kwds)
         self.contents = []
         self.toolbar = Toolbar(self.place(stretch=0), orientation)
         self.splitter = place[0]

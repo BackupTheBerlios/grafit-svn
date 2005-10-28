@@ -1,9 +1,24 @@
-from base import Widget, Container, _pil_to_wxbitmap
+import sys
+
+from base import Widget, Container, _pil_to_wxbitmap, Placeable
 from signals import HasSignals
 from images import images
 
 import Image
 import wx
+
+class MenuItem(Placeable):
+    def __init__(self, parent, command=None):
+        self.command = command
+        Placeable.__init__(self, parent)
+
+class Separator(Placeable):
+    def __init__(self, parent, **kwds):
+        self.command = 'sep'
+        Placeable.__init__(self, parent)
+        pass
+
+#        print >>sys.stderr, kwds
 
 class Toolbar(Widget, Container, wx.ToolBar):
     def __init__(self, place, orientation='horizontal', **kwds):
@@ -11,6 +26,7 @@ class Toolbar(Widget, Container, wx.ToolBar):
         wx.ToolBar.__init__(self, place[0],
                             style=wx.SUNKEN_BORDER|wx.TB_FLAT|wx.TB_TEXT|orient)
         Widget.__init__(self, place, **kwds)
+        Container.__init__(self)
         self.Bind(wx.EVT_TOOL, self.on_tool)
         self.tools = {}
 
@@ -53,9 +69,10 @@ class Toolbar(Widget, Container, wx.ToolBar):
         self.AddControl(child)
  
 
-class Menubar(Widget, wx.MenuBar):
+class Menubar(Widget, Container, wx.MenuBar):
     def __init__(self, place, **kwds):
         wx.MenuBar.__init__(self)
+        Container.__init__(self)
         self.frame = place[0]
         Widget.__init__(self, place, **kwds)
         self.frame.Bind(wx.EVT_MENU, self.on_menu)
@@ -68,21 +85,32 @@ class Menubar(Widget, wx.MenuBar):
     def __getitem__(self, item):
         return self.menus[item]
 
+    def __call__(self):
+        return self
+
 class _menu(wx.Menu):
     def UpdateUI(self, evt):
         print evt
         wx.Menu.UpdateUI(evt)
 
-class Menu(object):
-    def __init__(self, menubar=None, name=None):
+class Menu(Container):
+    def __init__(self, menubar=None, label=None):
+        Container.__init__(self)
         self._menu = _menu()
         self.menubar = menubar
-        self.name = name
+        self.name = label
         self.items = {}
         self._menu.Bind(wx.EVT_MENU, self.on_menu)
         if menubar is not None:
-            menubar.Append(self._menu, name)
-            menubar.menus[name] = self
+            menubar.Append(self._menu, label)
+            menubar.menus[label] = self
+
+#    def __call__(self):
+#        return self
+
+    def _add(self, child, **place):
+        print >>sys.stderr, child, place
+        self.append(Command(child.command, 'foo', object))
 
     def append(self, action):
         if action is None:
@@ -118,8 +146,8 @@ class Menu(object):
         self.items[event.GetId()]()
 
 class Command(HasSignals):
-    def __init__(self, name, desc, call, pixmap=None, accel=None, type='simple'):
-        self.name, self.desc, self.call, self.pixmap, self.accel = name, desc, call, pixmap, accel
+    def __init__(self, label, desc, call, image=None, accel=None, type='simple'):
+        self.name, self.desc, self.call, self.pixmap, self.accel = label, desc, call, image, accel
         self.type = type
 
         self._state = False

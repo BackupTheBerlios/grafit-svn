@@ -24,15 +24,15 @@
               <Button _expand="False" _stretch="0" text="'button'"/>
             </Box>
           </Notebook>
-          <Panel _width="100" position="'bottom'">
+          <Panel name="'xpanel'" _width="100" position="'bottom'">
             <PythonShell _label="'Command line'" _image="'console'"/>
           </Panel>
         </Splitter>
       </Splitter>
     </Box>
   </Window>
-  <Commands>
-    <Command label="'file-new'" image="'file-new'" description="'Create a new file'"/>
+  <Commands name="'foo'">
+    <Command label="'file-new'" image="'file-new'" desc="'Create a new file'"/>
   </Commands>
   <Images>
     <Image label="'file=new'" path="''"/>

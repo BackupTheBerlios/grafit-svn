@@ -1,4 +1,4 @@
-from base import Singleton
+from base import Singleton, Container
 import PIL
 import os
 
@@ -38,3 +38,17 @@ class ImageCatalog(Singleton):
 
 images = ImageCatalog()
 
+class Commands(Singleton, Container):
+    def __init__(self, name=None):
+        if not hasattr(self, 'commands'):
+            self.commands = {}
+
+    def __getitem__(self, id):
+        return self.commands[id]
+
+    def register(self, cmd):
+        self.images[cmd.name] = cmd
+
+    _add = register
+
+commands = Commands()
