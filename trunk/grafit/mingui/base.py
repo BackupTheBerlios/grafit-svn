@@ -77,9 +77,10 @@ class Widget(Placeable, HasSignals):
             return self
         if hasattr(self, 'children'):
             for c in self.children:
-                f = c.find(name)
-                if f is not None:
-                    return f
+                if hasattr(c, 'find'):
+                    f = c.find(name)
+                    if f is not None:
+                        return f
 
     def destroy(self):
         self.Destroy()

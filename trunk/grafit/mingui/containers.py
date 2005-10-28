@@ -1,4 +1,4 @@
-from base import Widget, Container, _text_img_wxbitmap
+from base import Widget, Container, _text_img_wxbitmap, _pil_to_wxbitmap
 from commands import Toolbar, Command
 from images import images
 #from grafit.thirdparty.splitter import MultiSplitterWindow

@@ -5,6 +5,6 @@ from containers import Box, Splitter, Notebook, Panel
 from listctrl import List, ListData
 from images import images
 from text import Text, Html
-from commands import Menu, Menubar, Toolbar, Command, MenuItem, Separator, commands
+from commands import Menu, Menubar, Toolbar, Command, Item, Separator, commands
 from python import PythonEditor, PythonShell
 import xml

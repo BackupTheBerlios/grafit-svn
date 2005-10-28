@@ -5,7 +5,6 @@ from signals import HasSignals
 
 import cElementTree as et
 
-
 class ElementTreeNode(HasSignals):
     """Adapter from an Element to a Tree node"""
     def __init__(self, elem, isroot=False):
@@ -19,12 +18,8 @@ class ElementTreeNode(HasSignals):
     def get_pixmap(self): return '16/folder.png'
 
 def main():
-    print >>sys.stderr, "loading...",
-    gui.xml.merge('gui.xml')
-    print >>sys.stderr, "ok"
-    print >>sys.stderr, "building...",
+    gui.xml.merge('grafit.mgx')
     win = gui.xml.build('mainwin')
-    print >>sys.stderr, "ok"
 
     tree = win.find('tree')
     r = ElementTreeNode(et.parse('gui.xml').getroot())
@@ -35,9 +30,9 @@ def main():
 
     gui.commands['file-new'].connect('activated', hello)
     win.find('bouton').connect('clicked', hello)
+    win.find('html').LoadPage('test.html')
 
     gui.run(win)
 
-    
 if __name__ == '__main__':
     main()

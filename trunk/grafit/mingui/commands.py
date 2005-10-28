@@ -9,7 +9,7 @@ import wx
 
 commands = {}
 
-class MenuItem(Placeable):
+class Item(Placeable):
     def __init__(self, parent, command=None):
         self.command = command
         Placeable.__init__(self, parent)
@@ -65,7 +65,19 @@ class Toolbar(Widget, Container, wx.ToolBar):
             action.upd.append([self, id])
 
     def _add(self, child, **place):
-        self.AddControl(child)
+#         if isinstance(child, Command):
+#        print >>sys.stderr, child, place
+        try:
+            self.append(commands[child.command])
+        except KeyError:
+            pass
+
+#   def _add(self, child, **place):
+#        self.AddControl(child)
+
+    def __call__(self):
+        return self
+
  
 
 class Menubar(Widget, Container, wx.MenuBar):

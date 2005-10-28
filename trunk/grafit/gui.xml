@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Resource>
-  <Window name="'mainwin'" title="'mingui.manual'" size="(640, 480)">
+  <Window name="'mainwin'" title="'mingui.manual'" size="(640, 480)" statusbar="True">
     <Menubar>
       <Menu label="'&amp;File'">
-        <MenuItem command="'file-new'"/>
-        <MenuItem command="'file-open'"/>
-        <MenuItem command="'file-save'"/>
+        <Item command="'file-new'"/>
+        <Item command="'file-open'"/>
+        <Item command="'file-save'"/>
         <Separator/>
-        <MenuItem command="'file-exit'"/>
+        <Item command="'file-exit'"/>
+      </Menu>
+      <Menu label="'&amp;Edit'">
+        <Item command="'edit-cut'"/>
+        <Item command="'edit-copy'"/>
+        <Item command="'edit-paste'"/>
       </Menu>
     </Menubar>
+    <Toolbar>
+      <Item command="'file-new'"/>
+    </Toolbar>
     <Box orientation="'vertical'">
       <Splitter orientation="'horizontal'">
-        <Panel position="'left'" _width="130">
+        <Panel position="'left'" _width="230">
           <Tree columns="['Topics']" _label="'Topics'" _image="'open'" name="'tree'"/>
         </Panel>
         <Splitter orientation="'vertical'">
@@ -36,9 +44,6 @@
     <Command id="'file-open'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
   </Commands>
   <Images>
-<!--    
-    <Image label="'file=new'" path="''"/> 
--->
     <DirImageProvider path="'../data/images'"/>
   </Images>
 </Resource>

@@ -7,10 +7,12 @@ import PIL.Image
 from signals import HasSignals
 
 class Window(wx.Frame, Widget, Container):
-    def __init__(self, parent=None, connect={}, **kwds):
+    def __init__(self, parent=None, statusbar=False, connect={}, **kwds):
         wx.Frame.__init__(self, parent, -1)
         Widget.__init__(self, None, connect, **kwds)
         Container.__init__(self)
+        if statusbar:
+            self.CreateStatusBar()
         self.parent = parent
 
     def _add(self, child, **place):
