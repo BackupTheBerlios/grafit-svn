@@ -1,8 +1,10 @@
 import sys
+
 import mingui as gui
+from signals import HasSignals
+
 import cElementTree as et
 
-from signals import HasSignals
 
 class ElementTreeNode(HasSignals):
     """Adapter from an Element to a Tree node"""
@@ -17,13 +19,22 @@ class ElementTreeNode(HasSignals):
     def get_pixmap(self): return '16/folder.png'
 
 def main():
-    gui.images.register_dir('../data/images/')
+    print >>sys.stderr, "loading...",
     gui.xml.merge('gui.xml')
+    print >>sys.stderr, "ok"
+    print >>sys.stderr, "building...",
     win = gui.xml.build('mainwin')
+    print >>sys.stderr, "ok"
 
     tree = win.find('tree')
     r = ElementTreeNode(et.parse('gui.xml').getroot())
     tree.append(r)
+
+    def hello():
+        print 'hello'
+
+    gui.commands['file-new'].connect('activated', hello)
+    win.find('bouton').connect('clicked', hello)
 
     gui.run(win)
 

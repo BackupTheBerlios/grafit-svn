@@ -12,7 +12,7 @@
     </Menubar>
     <Box orientation="'vertical'">
       <Splitter orientation="'horizontal'">
-        <Panel position="'left'" _width="100">
+        <Panel position="'left'" _width="130">
           <Tree columns="['Topics']" _label="'Topics'" _image="'open'" name="'tree'"/>
         </Panel>
         <Splitter orientation="'vertical'">
@@ -21,7 +21,7 @@
             <PythonEditor name="'editor'" _label="'code'"/>
             <Box _label="'demo'">
               <Button _expand="False" _stretch="0" text="'button1'" toggle="True"/>
-              <Button _expand="False" _stretch="0" text="'button'"/>
+              <Button name="'bouton'" _expand="False" _stretch="0" text="'button'"/>
             </Box>
           </Notebook>
           <Panel name="'xpanel'" _width="100" position="'bottom'">
@@ -32,10 +32,13 @@
     </Box>
   </Window>
   <Commands name="'foo'">
-    <Command label="'file-new'" image="'file-new'" desc="'Create a new file'"/>
+    <Command id="'file-new'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
+    <Command id="'file-open'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
   </Commands>
   <Images>
-    <Image label="'file=new'" path="''"/>
-    <DirImageProvider path="'data/images'"/>
+<!--    
+    <Image label="'file=new'" path="''"/> 
+-->
+    <DirImageProvider path="'../data/images'"/>
   </Images>
 </Resource>

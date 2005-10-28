@@ -151,6 +151,17 @@ class Panel(Box):
         self.toolbar = Toolbar(self.place(stretch=0), orientation)
         self.splitter = place[0]
 
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self._shown = False
+        self._width = place[1].get('width', 100)
+
+    def on_paint(self, evt):
+        if not self._shown:
+            self._shown = True
+            sz = self.toolbar.size[self.orientation=='horizontal']
+            self.splitter.resize_child(self, sz)
+        evt.Skip()
+
     def _add(self, widget, label=None, image=None, **opts):
         if image is not None:
             self.contents.append(widget)
@@ -175,10 +186,9 @@ class Panel(Box):
                     if win!=widget:
                         win._command.state = False
                 self.layout.Show(widget)
-                self.splitter.resize_child(self, 100+sz)
+                self.splitter.resize_child(self, self._width+sz)
             else:
+                self._width = self.size[self.orientation=='horizontal']-sz
                 self.layout.Hide(widget)
                 self.splitter.resize_child(self, sz)
         return callable
-
-

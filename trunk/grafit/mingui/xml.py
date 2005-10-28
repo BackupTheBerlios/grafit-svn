@@ -1,48 +1,53 @@
 import mingui as gui
+import Image
 from cElementTree import parse
 from weakref import WeakValueDictionary
+from commands import commands
+from images import images
 
 registry = {}
 
+def _attr(attr):
+    return eval(attr, {})
+
 def merge(filename):
-    res = Resource(filename)
-    registry.update(res.res)
+    root = parse(filename).getroot()
+    for elem in root:
+        if elem.tag == 'Commands':
+            for e in elem:
+                comm = _from_element(e)
+                commands[comm.id] = comm
+        elif elem.tag == 'Images':
+            for e in elem:
+                if e.tag == 'Image':
+                    images.register(_attr(e.get('id')), Image.open(_attr(e.get('path'))))
+                elif e.tag == 'DirImageProvider':
+                    images.register_dir(_attr(e.get('path')))
+        elif 'name' in elem.keys():
+            registry[eval(elem.get('name'), {})] = elem
+        else:
+            print >>sys.stderr, "cannot use element", elem
 
 def build(objname):
-    return from_element(registry[objname])
+    return _from_element(registry[objname])
 
-def from_element(elem, parent=None, level=0, base=None):
-    if elem.tag == 'Commands':
-        pass
-    elif elem.tag == 'Images':
-        pass
+def _from_element(elem, parent=None, level=0):
+    cls = getattr(gui, elem.tag)
+    place = dict((k[1:], eval(v, {})) for k, v in elem.items() if k.startswith('_'))
+    args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
+
+    if parent is not None and hasattr(parent, '__call__'):
+        widget = cls(parent(**place), **args)
     else:
-        cls = getattr(gui, elem.tag)
-        place = dict((k[1:], eval(v, {})) for k, v in elem.items() if k.startswith('_'))
-        args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
+        widget = cls(**args)
 
-        if parent is None:
-            gui.app.mainwin = widget = cls(**args)
-        else:
-            widget = cls(parent(**place), **args)
+    #TODO remove
+    if 'name' in args and args['name'] == 'mainwin':
+        gui.app.mainwin = widget
 
-        if base is not None and 'name' in args:
-            lookup[base][args['name']] = widget
 
-        for child in elem:
-            from_element(child, widget, level+1, base)
+    for child in elem:
+        _from_element(child, widget, level+1)
 
-        return widget
+    return widget
 
-class Resource(object):
-    def __init__(self, filename):
-        self.root = parse(filename).getroot()
-        self.res = dict((eval(elem.get('name'), {}), elem) 
-                        for elem in self.root if 'name' in elem.keys())
-        self.lookup = dict((name, WeakValueDictionary()) for name in self.res)
-
-#    def build(self, name):
-#        return self.from_element(self.res[name], base=name) 
-
-#    def find(self, base, locate):
-#        return self.lookup[base][locate]

@@ -7,6 +7,8 @@ from images import images
 import Image
 import wx
 
+commands = {}
+
 class MenuItem(Placeable):
     def __init__(self, parent, command=None):
         self.command = command
@@ -16,9 +18,6 @@ class Separator(Placeable):
     def __init__(self, parent, **kwds):
         self.command = 'sep'
         Placeable.__init__(self, parent)
-        pass
-
-#        print >>sys.stderr, kwds
 
 class Toolbar(Widget, Container, wx.ToolBar):
     def __init__(self, place, orientation='horizontal', **kwds):
@@ -109,8 +108,11 @@ class Menu(Container):
 #        return self
 
     def _add(self, child, **place):
-        print >>sys.stderr, child, place
-        self.append(Command(child.command, 'foo', object))
+#        print >>sys.stderr, child, place
+        try:
+            self.append(commands[child.command])
+        except KeyError:
+            pass
 
     def append(self, action):
         if action is None:
@@ -146,8 +148,8 @@ class Menu(Container):
         self.items[event.GetId()]()
 
 class Command(HasSignals):
-    def __init__(self, label, desc, call, image=None, accel=None, type='simple'):
-        self.name, self.desc, self.call, self.pixmap, self.accel = label, desc, call, image, accel
+    def __init__(self, id, label, desc, image=None, accel=None, type='simple'):
+        self.id, self.name, self.desc, self.pixmap, self.accel = id, label, desc, image, accel
         self.type = type
 
         self._state = False
@@ -174,11 +176,16 @@ class Command(HasSignals):
     enabled = property(**enabled())
 
     def __call__(self, *args, **kwds):
-        return self.call(*args, **kwds)
+        if hasattr(self, 'call'):
+            self.call(*args, **kwds)
+        else:
+            self.emit('activated')
 
     @staticmethod
     def from_function(name, desc, pixmap=None, accel=None, type='simple'):
         def f(fcn):
-            return Command(name, desc, fcn, pixmap, accel, type)
+            c = Command(name, name, desc, pixmap, accel, type)
+            c.call = fcn
+            return c
         return f
 

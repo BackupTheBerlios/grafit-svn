@@ -37,18 +37,3 @@ class ImageCatalog(Singleton):
         self.providers.append(DirImageProvider(dir))
 
 images = ImageCatalog()
-
-class Commands(Singleton, Container):
-    def __init__(self, name=None):
-        if not hasattr(self, 'commands'):
-            self.commands = {}
-
-    def __getitem__(self, id):
-        return self.commands[id]
-
-    def register(self, cmd):
-        self.images[cmd.name] = cmd
-
-    _add = register
-
-commands = Commands()
