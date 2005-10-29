@@ -209,13 +209,16 @@ class PythonEditor(Widget, PythonSTC):
 
 
 class PythonShell(Widget, wx.py.shell.Shell):
-    def __init__(self, place, locals={}, **kwds):
-        wx.py.shell.Shell.__init__(self, place[0], -1, locals=locals)
+    def __init__(self, place, **kwds):
+        self.locals = {}
+        wx.py.shell.Shell.__init__(self, place[0], -1, locals=self.locals)
         Widget.__init__(self, place, **kwds)
 
         self.setLocalShell()
         self.zoom(-1)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+        self.clear()
+        self.prompt()
 
     def run(self, cmd):
         return self.interp.push(cmd)

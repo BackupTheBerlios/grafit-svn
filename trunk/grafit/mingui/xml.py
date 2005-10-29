@@ -28,11 +28,14 @@ def merge(filename):
         else:
             print >>sys.stderr, "cannot use element", elem
 
-def build(objname, parent=None, place=None):
-    return _from_element(registry[objname], parent, place)
+def build(objname, parent=None, place=None, src={}):
+    return _from_element(registry[objname], parent, place, src)
 
-def _from_element(elem, parent=None, place=None):
-    cls = getattr(gui, elem.tag)
+def _from_element(elem, parent=None, place=None, src={}):
+    if elem.tag in src:
+        cls = src[elem.tag]
+    else:
+        cls = getattr(gui, elem.tag)
     plac = dict((k[1:], eval(v, {})) for k, v in elem.items() if k.startswith('_'))
     args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
 
@@ -49,7 +52,7 @@ def _from_element(elem, parent=None, place=None):
 
 
     for child in elem:
-        _from_element(child, widget)
+        _from_element(child, widget, src=src)
 
     if hasattr(widget, 'setup'):
         widget.setup()

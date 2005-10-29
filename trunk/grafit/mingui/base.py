@@ -82,6 +82,17 @@ class Widget(Placeable, HasSignals):
                     if f is not None:
                         return f
 
+    def rfind(self, name):
+        widget = self
+        if widget.name == name:
+            return widget
+
+        while hasattr(widget, 'parent'):
+            widget = widget.parent
+            if widget.name == name:
+                return widget
+        return None
+
     def destroy(self):
         self.Destroy()
 

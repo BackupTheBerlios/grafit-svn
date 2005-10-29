@@ -1,9 +1,10 @@
 import wx
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMix
+from images import images
 
 from signals import HasSignals
 
-from base import Widget
+from base import Widget, _pil_to_wxbitmap
 
 class ListData(HasSignals):
     def __init__(self):
@@ -56,16 +57,12 @@ class _xListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin, ListCtrlSelectionManagerMi
         self.SetImageList(self.imagelist, wx.IMAGE_LIST_SMALL)
         self.pixmaps = {}
 
-    def getpixmap(self, filename):
-        if filename is None:
+    def getpixmap(self, image):
+        if image is None:
             return None
-        if isinstance(filename, wx.Bitmap):
-            if id(filename) not in self.pixmaps:
-                self.pixmaps[id(filename)] = self.imagelist.Add(filename)
-            filename = id(filename)
-        if filename not in self.pixmaps:
-            self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
-        return self.pixmaps[filename]
+        if image not in self.pixmaps:
+            self.pixmaps[image] = self.imagelist.Add(_pil_to_wxbitmap(images[image][16,16]))
+        return self.pixmaps[image]
 
     def OnGetItemText(self, item, col):
         if hasattr(self.lst.data, 'get'):
