@@ -1,5 +1,9 @@
-from signals import HasSignals
+import sys
+from itertools import chain
+
 import wx
+
+from signals import HasSignals
 from base import Widget
  
 class TreeNode(HasSignals):
@@ -103,14 +107,22 @@ class Tree(Widget, _xTreeCtrl):
         self.tree = self
         self.selection = None
 
+        self._skip_event = False
+
     def on_sel_changed(self, evt):
-        from itertools import chain
+        if self._skip_event:
+            return
         for item in chain(self.items, self.roots):
             if self.IsSelected(item._nodeid):
                 self.emit('selected', item)
                 self.selection = item
                 return
         self.selection = None
+
+    def select(self, item, skip_event=False):
+        self._skip_event = skip_event
+        self.SelectItem(item._nodeid)
+        self._skip_event = False
 
     def on_label_edit(self, evt):
         item = self.id_to_item(evt.GetItem())

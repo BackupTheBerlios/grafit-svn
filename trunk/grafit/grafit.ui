@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Resource>
+  <MainWindow name="'mainwin'" title="'Grafity'" size="(640, 480)" statusbar="True">
+    <Menubar>
+      <Menu label="'&amp;File'">
+        <Item command="'file-new'"/>
+        <Item command="'file-open'"/>
+        <Item command="'file-save'"/>
+        <Separator/>
+        <Item command="'file-exit'"/>
+      </Menu>
+      <Menu label="'&amp;Edit'">
+        <Item command="'edit-cut'"/>
+        <Item command="'edit-copy'"/>
+        <Item command="'edit-paste'"/>
+      </Menu>
+    </Menubar>
+    <Toolbar>
+      <Item command="'file-new'"/>
+    </Toolbar>
+    <Splitter orientation="'horizontal'">
+      <Panel position="'left'" _width="150">
+        <Splitter _label="'project'" _image="'open'" orientation="'vertical'">
+          <ProjectTree _width="160" columns="['Topics']" name="'tree'"/>
+          <FolderBrowser name="'lili'"/>
+        </Splitter>
+      </Panel>
+      <Splitter orientation="'vertical'">
+        <Notebook name="'notebook'" _stretch="1."/>
+        <Panel name="'xpanel'" _width="100" position="'bottom'">
+          <ProjectShell name="'shell'" _label="'Script'" _image="'console'"/>
+        </Panel>
+      </Splitter>
+    </Splitter>
+  </MainWindow>
+  <WorksheetView name="'worksheet-view'" orientation="'horizontal'">
+    <Commands>
+      <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
+      <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
+    </Commands>
+    <Toolbar _stretch="0" orientation="'vertical'">
+      <Item command="'mode-arrow'"/>
+      <Item command="'mode-hand'"/>
+    </Toolbar>
+    <Table name="'table'"/>
+  </WorksheetView>
+  <Box name="'graph-view'">
+  </Box>
+  <Commands>
+    <Command id="'file-new'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
+    <Command id="'file-open'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
+    <Command id="'file-save'" label="'&amp;Save'" image="'save'" desc="'Save file'"/>
+  </Commands>
+  <Images>
+    <DirImageProvider path="'../data/images'"/>
+  </Images>
+</Resource>

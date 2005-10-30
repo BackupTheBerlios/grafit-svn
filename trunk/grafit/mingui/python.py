@@ -214,6 +214,9 @@ class PythonShell(Widget, wx.py.shell.Shell):
         wx.py.shell.Shell.__init__(self, place[0], -1, locals=self.locals)
         Widget.__init__(self, place, **kwds)
 
+        self.SetMarginType(1, 0)
+        self.SetMarginWidth(1, 0)
+
         self.setLocalShell()
         self.zoom(-1)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
