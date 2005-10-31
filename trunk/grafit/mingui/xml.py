@@ -50,8 +50,15 @@ def _from_element(elem, parent=None, place=None, src={}, extra={}):
     args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
 
     args.update(extra)
+    print args
 
-    if parent is not None and hasattr(parent, '__call__'):
+    if elem.tag == 'Command':
+        return = cls(**args)
+        if parent is not None:
+            parent.commands[cmd.id] = cmd
+        else:
+            commands[cmd.id] = cmd
+    elif parent is not None and hasattr(parent, '__call__'):
         widget = cls(parent(**plac), **args)
     elif place is not None:
         widget = cls(place, **args)

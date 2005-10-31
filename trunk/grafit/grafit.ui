@@ -34,13 +34,24 @@
     </Splitter>
   </MainWindow>
   <WorksheetView name="'worksheet-view'" orientation="'horizontal'">
+<!-- 
+Commands can be defined:
+- directly in a menu or toolbar
+  They are added to the widget and stored 
+  in widget.commands
+
+- in a <Commands> block inside a widget or at the top level
+  They are added to widget.commands
+
+- Commands are accesible by <CommandRef id="" [object=""] />
+-->
     <Commands>
       <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
       <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
     </Commands>
     <Toolbar _stretch="0" orientation="'vertical'">
-      <Item command="'mode-arrow'"/>
-      <Item command="'mode-hand'"/>
+      <CommandRef object="'<worksheet-view'" id="'mode-arrow'"/>
+      <CommandRef object="'<worksheet-view'" id="'mode-hand'"/>
     </Toolbar>
     <Table name="'table'"/>
   </WorksheetView>
