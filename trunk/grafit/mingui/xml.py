@@ -54,6 +54,9 @@ def _from_element(elem, parent=None, place=None, src={}, extra={}):
 
     if elem.tag == 'Command':
         cmd = cls(**args)
+        if cmd.type == 'radio':
+            for item in elem:
+                _from_element(item, parent=cmd)
         if parent is not None:
             parent.commands[cmd.id] = cmd
         else:

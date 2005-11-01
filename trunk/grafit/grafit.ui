@@ -47,12 +47,10 @@ Commands can be defined:
 -->
     <Commands>
       <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
-<!--  
       <Command id="'graph-mode'" type="'radio'">
-        <Item id="''"/>
-        <Item /> 
+        <Item value="'arrow'" label="'foo'" image="'open'"/>
+        <Item value="'hand'" label="'foo'" image="'open'"/>
       </Command>
--->
       <Command id="'insert-row'" label="'&amp;Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
       <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
     </Commands>

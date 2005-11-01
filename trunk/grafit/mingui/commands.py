@@ -23,9 +23,10 @@ def CommandRef(parent=None, object=None, id=None):
 
 
 class Item(Placeable):
-    def __init__(self, parent, command=None):
-        self.command = command
+    def __init__(self, parent, *args, **kwds):
+#        self.command = command
         Placeable.__init__(self, parent)
+        print "$$$$$$$$$$$$$$$$$$", args, kwds
 
 class Separator(Placeable):
     def __init__(self, parent, **kwds):
@@ -175,7 +176,7 @@ class Menu(Container):
         self.items[event.GetId()]()
 
 class Command(HasSignals):
-    def __init__(self, id, label, desc, image=None, accel=None, type='simple'):
+    def __init__(self, id='', label='', desc='', image=None, accel=None, type='simple'):
         self.id, self.name, self.desc, self.pixmap, self.accel = id, label, desc, image, accel
         self.type = type
 
