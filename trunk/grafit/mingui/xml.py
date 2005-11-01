@@ -53,11 +53,12 @@ def _from_element(elem, parent=None, place=None, src={}, extra={}):
     print args
 
     if elem.tag == 'Command':
-        return = cls(**args)
+        cmd = cls(**args)
         if parent is not None:
             parent.commands[cmd.id] = cmd
         else:
             commands[cmd.id] = cmd
+        return cmd
     elif parent is not None and hasattr(parent, '__call__'):
         widget = cls(parent(**plac), **args)
     elif place is not None:

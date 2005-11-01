@@ -9,6 +9,19 @@ import wx
 
 commands = {}
 
+def CommandRef(parent=None, object=None, id=None):
+    if object is None:
+        try:
+            try:
+                parent._add(commands[id])
+            except AttributeError:
+                parent[0]._add(commands[id])
+        except KeyError:
+            pass
+    else:
+        parent._add(parent.ref(object).commands[id])
+
+
 class Item(Placeable):
     def __init__(self, parent, command=None):
         self.command = command
@@ -65,12 +78,13 @@ class Toolbar(Widget, Container, wx.ToolBar):
             action.upd.append([self, id])
 
     def _add(self, child, **place):
-#         if isinstance(child, Command):
-#        print >>sys.stderr, child, place
-        try:
-            self.append(commands[child.command])
-        except KeyError:
-            pass
+        if isinstance(child, Command):
+            self.append(child)
+        else:
+            try:
+                self.append(commands[child.command])
+            except KeyError:
+                pass
 
 #   def _add(self, child, **place):
 #        self.AddControl(child)
@@ -118,13 +132,14 @@ class Menu(Container):
 
 #    def __call__(self):
 #        return self
-
     def _add(self, child, **place):
-#        print >>sys.stderr, child, place
-        try:
-            self.append(commands[child.command])
-        except KeyError:
-            pass
+        if isinstance(child, Command):
+            self.append(child)
+        else:
+            try:
+                self.append(commands[child.command])
+            except KeyError:
+                pass
 
     def append(self, action):
         if action is None:

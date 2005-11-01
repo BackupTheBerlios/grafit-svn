@@ -1,7 +1,8 @@
 # mingui - minimalist gui for python
 
 from base import Widget, Container, Button, Image, Label, run, app
-from commands import Menu, Menubar, Toolbar, Command, Item, Separator, commands
+from commands import Menu, Menubar, Toolbar, Command, \
+                     Item, Separator, commands, CommandRef
 from images import images
 
 from containers import Box, Splitter, Notebook, Panel

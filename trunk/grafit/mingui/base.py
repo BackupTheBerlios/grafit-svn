@@ -1,3 +1,4 @@
+import sys
 import os.path
 import platform
 
@@ -65,12 +66,43 @@ class Placeable(object):
         for k, v in kwds.iteritems():
             setattr(self, k, v)
 
+class Poulos(Exception):
+    pass
+
 class Widget(Placeable, HasSignals):
     def __init__(self, place, connect={}, **kwds):
         self.name = None
         Placeable.__init__(self, place, **kwds)
         for signal, slot in connect.iteritems():
             self.connect(signal, slot)
+
+    def ref(self, path):
+        cmd, path = path[0], path[1:]
+        if '^' not in path and '/' not in path:
+            name = path.strip()
+            ret = True
+        else:
+            try:
+                m1 = path.index('/')
+            except ValueError:
+                m1 = len(path)
+            try:
+                m2 = path.index('^')
+            except ValueError:
+                m2 = len(path)
+            pos = min(m1, m2)
+            name, rest = path[:pos].strip(), path[pos:]
+            ret = False
+
+        if cmd == '/':
+            next = self.find(name)
+        elif cmd == '^':
+            next = self.rfind(name)
+
+        if ret:
+            return next
+        else:
+            return next.ref(rest)
 
     def find(self, name):
         if self.name == name:

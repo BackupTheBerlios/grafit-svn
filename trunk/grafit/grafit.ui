@@ -3,20 +3,20 @@
   <MainWindow name="'mainwin'" title="'Grafity'" size="(640, 480)" statusbar="True">
     <Menubar>
       <Menu label="'&amp;File'">
-        <Item command="'file-new'"/>
-        <Item command="'file-open'"/>
-        <Item command="'file-save'"/>
+        <CommandRef id="'file-new'"/>
+        <CommandRef id="'file-open'"/>
+        <CommandRef id="'file-save'"/>
         <Separator/>
-        <Item command="'file-exit'"/>
+        <CommandRef id="'file-exit'"/>
       </Menu>
       <Menu label="'&amp;Edit'">
-        <Item command="'edit-cut'"/>
-        <Item command="'edit-copy'"/>
-        <Item command="'edit-paste'"/>
+        <CommandRef id="'edit-cut'"/>
+        <CommandRef id="'edit-copy'"/>
+        <CommandRef id="'edit-paste'"/>
       </Menu>
     </Menubar>
     <Toolbar>
-      <Item command="'file-new'"/>
+      <CommandRef id="'file-new'"/>
     </Toolbar>
     <Splitter orientation="'horizontal'">
       <Panel position="'left'" _width="150">
@@ -47,11 +47,19 @@ Commands can be defined:
 -->
     <Commands>
       <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
+<!--  
+      <Command id="'graph-mode'" type="'radio'">
+        <Item id="''"/>
+        <Item /> 
+      </Command>
+-->
+      <Command id="'insert-row'" label="'&amp;Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
       <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
     </Commands>
+
     <Toolbar _stretch="0" orientation="'vertical'">
-      <CommandRef object="'<worksheet-view'" id="'mode-arrow'"/>
-      <CommandRef object="'<worksheet-view'" id="'mode-hand'"/>
+      <CommandRef object="'^worksheet-view'" id="'insert-row'"/>
+      <CommandRef object="'^worksheet-view'" id="'mode-hand'"/>
     </Toolbar>
     <Table name="'table'"/>
   </WorksheetView>
@@ -64,5 +72,6 @@ Commands can be defined:
   </Commands>
   <Images>
     <DirImageProvider path="'../data/images'"/>
+    <DirImageProvider path="'../data/images/16'"/>
   </Images>
 </Resource>
