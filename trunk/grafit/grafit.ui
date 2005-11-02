@@ -47,7 +47,7 @@ Commands can be defined:
 -->
     <Commands>
       <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
-      <Command id="'insert-row'" label="'&amp;Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'insert-row'" label="'&amp;Insert row'" image="'fopen'" desc="'Insert a row'" type="'check'"/>
       <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
     </Commands>
 
@@ -67,7 +67,7 @@ Commands can be defined:
   <Images>
     <DirImageProvider path="'../data/images'"/>
     <DirImageProvider path="'../data/images/16'"/>
-    <Image id="'file-open'">
+    <Image id="'fopen'">
 iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI
 WXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QkDFBoUIFrPqQAAALNJREFUOMvtkzEOwjAMRR+o4gIM
 bD0Ca0fUC3BYLhBV8tTJyp65HZoDMIBZSlFKWyQqMfElK/GPI/+fyLASG8Am+CtwB279OhcHABuj

@@ -1,3 +1,4 @@
+import StringIO
 import mingui as gui
 import Image
 from cElementTree import parse
@@ -20,7 +21,11 @@ def merge(filename):
         elif elem.tag == 'Images':
             for e in elem:
                 if e.tag == 'Image':
-                    images.register(_attr(e.get('id')), Image.open(_attr(e.get('path'))))
+                    if 'path' in e.keys():
+                        img = Image.open(_attr(e.get('path')))
+                    else:
+                        img = Image.open(StringIO.StringIO(e.text.strip().decode('base64')))
+                    images.register(_attr(e.get('id')), img)
                 elif e.tag == 'DirImageProvider':
                     images.register_dir(_attr(e.get('path')))
         elif 'name' in elem.keys():
