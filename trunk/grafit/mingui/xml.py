@@ -32,14 +32,11 @@ def build(objname, parent=None, place=None, src={}, **extra):
     return _from_element(registry[objname], parent, place, src, extra)
 
 def _from_element(elem, parent=None, place=None, src={}, extra={}):
-    print elem.tag, parent, place
-
     if elem.tag == 'Commands':
         if not hasattr(parent, 'commands'):
             parent.commands = {}
         for e in elem:
             comm = _from_element(e)
-            print comm.id
             parent.commands[comm.id] = comm
         return
     elif elem.tag in src:
@@ -50,7 +47,6 @@ def _from_element(elem, parent=None, place=None, src={}, extra={}):
     args = dict((k, eval(v, {})) for k, v in elem.items() if not k.startswith('_'))
 
     args.update(extra)
-    print args
 
     if elem.tag == 'Command':
         cmd = cls(**args)

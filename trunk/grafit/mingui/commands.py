@@ -22,12 +22,6 @@ def CommandRef(parent=None, object=None, id=None):
         parent._add(parent.ref(object).commands[id])
 
 
-class Item(Placeable):
-    def __init__(self, parent, *args, **kwds):
-#        self.command = command
-        Placeable.__init__(self, parent)
-        print "$$$$$$$$$$$$$$$$$$", args, kwds
-
 class Separator(Placeable):
     def __init__(self, parent, **kwds):
         self.command = 'sep'
@@ -175,6 +169,11 @@ class Menu(Container):
     def on_menu(self, event):
         self.items[event.GetId()]()
 
+class Item(Placeable):
+    def __init__(self, parent, value, label, *args, **kwds):
+#        self.command = command
+        Placeable.__init__(self, parent)
+
 class Command(HasSignals):
     def __init__(self, id='', label='', desc='', image=None, accel=None, type='simple'):
         self.id, self.name, self.desc, self.pixmap, self.accel = id, label, desc, image, accel
@@ -183,6 +182,7 @@ class Command(HasSignals):
         self._state = False
         self._enabled = True
         self.upd = []
+        self.items = []
 
     def get_state(self):
         return self._state
