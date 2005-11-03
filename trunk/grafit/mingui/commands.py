@@ -75,6 +75,8 @@ class Toolbar(Widget, Container, wx.ToolBar):
     def _add(self, child, **place):
         if isinstance(child, Command):
             self.append(child)
+        elif isinstance(child, Separator):
+            self.append(None)
         else:
             try:
                 self.append(commands[child.command])
@@ -130,6 +132,8 @@ class Menu(Container):
     def _add(self, child, **place):
         if isinstance(child, Command):
             self.append(child)
+        elif isinstance(child, Separator):
+            self.append(None)
         else:
             try:
                 self.append(commands[child.command])

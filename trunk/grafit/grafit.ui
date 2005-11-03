@@ -35,6 +35,11 @@
     </Menubar>
     <Toolbar>
       <CommandRef id="'file-new'"/>
+      <CommandRef id="'file-open'"/>
+      <CommandRef id="'file-save'"/>
+      <CommandRef id="'file-saveas'"/>
+      <Separator/>
+      <CommandRef id="'exit'"/>
     </Toolbar>
 
     <!-- Widgets -->
@@ -56,9 +61,9 @@
 
   <WorksheetView name="'worksheet-view'" orientation="'horizontal'">
     <Commands>
-      <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
-      <Command id="'insert-row'" label="'&amp;Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
-      <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
+      <Command id="'mode-arrow'" label="'New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
+      <Command id="'insert-row'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'mode-hand'" label="'Open...'" image="'open'" desc="'Open a file'"/>
     </Commands>
     <Toolbar _stretch="0" orientation="'vertical'">
       <CommandRef object="'^worksheet-view'" id="'insert-row'"/>
