@@ -1,13 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Resource>
+
+  <Commands>
+    <Command id="'file-new'" label="'&amp;New'" image="'new'" desc="'Create a new project'" accel="'Ctrl+N'"/>
+    <Command id="'file-open'" label="'&amp;Open...'" image="'open'" desc="'Open a project'"/>
+    <Command id="'file-save'" label="'&amp;Save'" image="'save'" desc="'Save the project'"/>
+    <Command id="'file-saveas'" label="'Save &amp;As...'" image="'saveas'" desc="'Save the project with a new name'"/>
+    <Command id="'exit'" label="'&amp;Exit'" image="'exit'" desc="'Exit grafit'"/>
+  </Commands>
+
+  <Images>
+    <DirImageProvider path="'../data/images/16'"/>
+    <DirImageProvider path="'../data/images/24'"/>
+  </Images>
+
   <MainWindow name="'mainwin'" title="'Grafity'" size="(640, 480)" statusbar="True">
+
+    <!-- Menus and toolbars -->
     <Menubar>
       <Menu label="'&amp;File'">
         <CommandRef id="'file-new'"/>
         <CommandRef id="'file-open'"/>
-        <CommandRef id="'file-save'"/>
         <Separator/>
-        <CommandRef id="'file-exit'"/>
+        <CommandRef id="'file-save'"/>
+        <CommandRef id="'file-saveas'"/>
+        <Separator/>
+        <CommandRef id="'exit'"/>
       </Menu>
       <Menu label="'&amp;Edit'">
         <CommandRef id="'edit-cut'"/>
@@ -18,6 +36,8 @@
     <Toolbar>
       <CommandRef id="'file-new'"/>
     </Toolbar>
+
+    <!-- Widgets -->
     <Splitter orientation="'horizontal'">
       <Panel position="'left'" _width="150">
         <Splitter _label="'project'" _image="'open'" orientation="'vertical'">
@@ -33,47 +53,23 @@
       </Splitter>
     </Splitter>
   </MainWindow>
+
   <WorksheetView name="'worksheet-view'" orientation="'horizontal'">
-<!-- 
-Commands can be defined:
-- directly in a menu or toolbar
-  They are added to the widget and stored 
-  in widget.commands
-
-- in a <Commands> block inside a widget or at the top level
-  They are added to widget.commands
-
-- Commands are accesible by <CommandRef id="" [object=""] />
--->
     <Commands>
       <Command id="'mode-arrow'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
-      <Command id="'insert-row'" label="'&amp;Insert row'" image="'fopen'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'insert-row'" label="'&amp;Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
       <Command id="'mode-hand'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
     </Commands>
-
     <Toolbar _stretch="0" orientation="'vertical'">
       <CommandRef object="'^worksheet-view'" id="'insert-row'"/>
       <CommandRef object="'^worksheet-view'" id="'mode-hand'"/>
     </Toolbar>
     <Table name="'table'"/>
   </WorksheetView>
+
+
   <Box name="'graph-view'">
   </Box>
-  <Commands>
-    <Command id="'file-new'" label="'&amp;New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
-    <Command id="'file-open'" label="'&amp;Open...'" image="'open'" desc="'Open a file'"/>
-    <Command id="'file-save'" label="'&amp;Save'" image="'save'" desc="'Save file'"/>
-  </Commands>
-  <Images>
-    <DirImageProvider path="'../data/images'"/>
-    <DirImageProvider path="'../data/images/16'"/>
-    <Image id="'fopen'">
-iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI
-WXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QkDFBoUIFrPqQAAALNJREFUOMvtkzEOwjAMRR+o4gIM
-bD0Ca0fUC3BYLhBV8tTJyp65HZoDMIBZSlFKWyQqMfElK/GPI/+fyLASG8Am+CtwB279OhcHABuj
-aZqPXAjBAMueLWOMQ3sRIR5PiaS9F8qyHPKu6wDIANq2RURGF6o3X865Ye+9f72BmSUKnHMTCqpE
-QQiBoijYrv2Fry2o6t9CbyEDqOs6KVZVznmecBdV8hG3NAu/wwbY9VM3h6UzHgturJO7ChxbAAAA
-AElFTkSuQmCC
-    </Image>
-  </Images>
+
+
 </Resource>
