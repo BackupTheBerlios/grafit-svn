@@ -7,6 +7,9 @@
     <Command id="'file-save'" label="'&amp;Save'" image="'save'" desc="'Save the project'"/>
     <Command id="'file-saveas'" label="'Save &amp;As...'" image="'saveas'" desc="'Save the project with a new name'"/>
     <Command id="'exit'" label="'&amp;Exit'" image="'exit'" desc="'Exit grafit'"/>
+    <Command id="'new-worksheet'" label="'New worksheet'" image="'new-worksheet'" desc="'Create a new worksheet'"/>
+    <Command id="'new-graph'" label="'New graph'" image="'new-graph'" desc="'Create a new graph'"/>
+    <Command id="'new-folder'" label="'New folder'" image="'new-folder'" desc="'Create a new folder'"/>
   </Commands>
 
   <Images>
@@ -39,13 +42,17 @@
       <CommandRef id="'file-save'"/>
       <CommandRef id="'file-saveas'"/>
       <Separator/>
+      <CommandRef id="'new-folder'"/>
+      <CommandRef id="'new-worksheet'"/>
+      <CommandRef id="'new-graph'"/>
+      <Separator/>
       <CommandRef id="'exit'"/>
     </Toolbar>
 
     <!-- Widgets -->
     <Splitter orientation="'horizontal'">
       <Panel position="'left'" _width="150">
-        <Splitter _label="'project'" _image="'open'" orientation="'vertical'">
+        <Splitter name="'projectpane'" _label="'project'" _image="'open'" orientation="'vertical'">
           <ProjectTree _width="160" columns="['Topics']" name="'tree'"/>
           <FolderBrowser name="'lili'"/>
         </Splitter>

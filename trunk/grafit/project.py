@@ -260,6 +260,8 @@ register_class(Folder, 'folders[name:S,id:S,parent:S]')
 
 class Project(HasSignals):
     def __init__(self, filename=None):
+        if isinstance(filename, unicode):
+            filename = filename.encode(sys.getfilesystemencoding())
         self.filename = filename
 
 
@@ -484,6 +486,8 @@ class Project(HasSignals):
         self.modified = False
 
     def saveto(self, filename):
+        if isinstance(filename, unicode):
+            filename = filename.encode(sys.getfilesystemencoding())
         try:
             f = open(filename, 'wb')
             self.db.save(f)

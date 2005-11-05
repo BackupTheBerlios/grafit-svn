@@ -1,12 +1,14 @@
 import sys
+import os
 import mingui as gui
 
 sys.path.append("..")
 
 from grafit.signals import HasSignals
 from grafit import Project, Folder, Worksheet, Graph
-from grafit.settings import DATADIR
+from grafit.settings import settings, DATADIR
 from grafit.arrays import nan
+from grafit.actions import action_list, undo, redo
 
 class ProjectShell(gui.PythonShell):
     """
@@ -36,7 +38,7 @@ class ProjectShell(gui.PythonShell):
         self.locals.update({'project': project})
         self.run('project.set_dict(globals())')
 
-    def on_close_project(self):
+    def on_close_project(self, project):
         """called when the project is closed"""
         self.locals['project'].unset_dict()
         self.locals.update({'project':None})
@@ -137,16 +139,18 @@ class FolderTreeNode(HasSignals):
 class ProjectTree(gui.Tree):
     def setup(self):
         self.rfind('mainwin').connect('open-project', self.on_open_project)
-        self.rfind('mainwin').connect('close-project', self.on_open_project)
+        self.rfind('mainwin').connect('close-project', self.on_close_project)
+
+        self.connect('selected', self.on_select)
 
     def on_open_project(self, project):
         self.append(FolderTreeNode(project.top))
-        self.connect('selected', self.on_select)
+#        self.connect('selected', self.on_select)
         project.connect('change-current-folder', self.on_change_folder)
 
     def on_close_project(self, project):
         self.clear()
-        self.disconnect('selected', self.on_select)
+#        self.disconnect('selected', self.on_select)
         project.disconnect('change-current-folder', self.on_change_folder)
 
     def on_select(self, item):
@@ -202,8 +206,51 @@ class MainWindow(gui.Window):
         self.shell = self.find('shell')
         self.list = self.find('lili')
 
-        p = Project('test/pdms.gt')
-        self.open_project(p)
+        for cmd, method in {
+            'file-open': self.on_open_project,
+            'file-new': self.on_new_project,
+            'file-save': self.on_save_project,
+            'file-saveas': self.on_save_project_as, 
+            'new-folder': self.on_new_folder, 
+            'new-worksheet': self.on_new_worksheet, 
+            'new-graph': self.on_new_graph, 
+        }.iteritems():
+            gui.commands[cmd].connect('activated', method)
+            
+        self.find('projectpane').parent.open(self.find('projectpane'))
+
+        self.project = None
+
+        self.open_project(Project())
+
+    def on_new_project(self):
+        if self.can_close_project():
+            self.open_project(Project())
+
+    def on_open_project(self):
+        if self.can_close_project():
+            files = gui.request_file_open(wildcard="All Files|*.*|Projects|*.gt")
+            if files is not None:
+                if self.can_close_project():
+                    self.close_project()
+                    self.open_project(Project(files[0]))
+
+    def on_save_project(self):
+        if self.project.filename is not None:
+            self.project.commit()
+            return True
+        else:
+            return self.on_save_project_as()
+
+    def on_save_project_as(self):
+        fil = gui.request_file_save(wildcard="All Files|*.*|Projects|*.gt")
+        if fil is not None:
+            self.project.saveto(fil)
+            self.close_project()
+            self.open_project(Project(fil))
+            return True
+        else:
+            return False
 
     def open_project(self, project):
         self.project = project
@@ -212,14 +259,29 @@ class MainWindow(gui.Window):
         self.project.connect('modified', lambda: self.on_project_modified(True), True)
         self.project.connect('not-modified', lambda: self.on_project_modified(False), True)
 
+        action_list.clear()
+
         self.emit('open-project', self.project)
+
+    def can_close_project(self):
+        if self.project is not None:
+            if self.project.modified:
+                result = gui.alert_yesnocancel('Save changes to this project?', 'Save?')
+                if result == 'yes':
+                    sresult = self.on_save_project()
+                    if not sresult:
+                        return False
+                elif result == 'cancel':
+                    return False
+        return True
+
     
     def close_project(self):
         self.project.disconnect('remove-item', self.on_project_remove_item)
 
         for signal in ['modified', 'not-modified']:
-            for slot in self.project.signals[signal]:
-                project.disconnect(signal, slot)
+            for slot in self.project._signals[signal]:
+                self.project.disconnect(signal, slot)
 
         self.emit('close-project', self.project)
         self.project = None
@@ -229,6 +291,18 @@ class MainWindow(gui.Window):
 
     def on_project_remove_item(self, item):
         pass
+
+
+    def on_new_graph(self):
+        g = self.project.new(Graph, None, self.project.here)
+
+    def on_new_folder(self):
+        self.project.new(Folder, None, self.project.here)
+
+    def on_new_worksheet(self):
+        ws = self.project.new(Worksheet, None, self.project.here)
+        ws.a = [nan]*100
+        ws.b = [nan]*100
 
 
 def main():

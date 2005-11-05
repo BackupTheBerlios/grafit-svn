@@ -15,4 +15,6 @@ from python import PythonEditor, PythonShell
 from table import Table
 from opengl import OpenGLWidget
 
+from dialogs import request_file_save, request_file_open, alert_yesnocancel
+
 import xml

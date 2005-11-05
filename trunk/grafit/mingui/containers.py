@@ -156,10 +156,16 @@ class Panel(Box):
         self._width = place[1].get('width', 100)
 
     def on_paint(self, evt):
+        # The first time we are shown,
+        # set the correct size
         if not self._shown:
             self._shown = True
             sz = self.toolbar.size[self.orientation=='horizontal']
             self.splitter.resize_child(self, sz)
+
+            for w in self.contents:
+                if w._command.state:
+                    w._command(True)
         evt.Skip()
 
     def _add(self, widget, label=None, image=None, **opts):
@@ -171,6 +177,12 @@ class Panel(Box):
         Box._add(self, widget, **opts)
         if image is not None:
             self.layout.Hide(widget)
+
+    def open(self, widget):
+        widget._command.state = True
+
+    def close(self, widget):
+        widget._command.state = False
 
     def callback(self, widget, label, image):
         if label is None:
