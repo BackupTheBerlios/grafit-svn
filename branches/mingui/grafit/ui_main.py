@@ -11,7 +11,7 @@ from grafit.arrays import nan
 from grafit.signals import HasSignals, global_connect
 from grafit.actions import action_list, undo, redo
 from grafit.settings import settings, DATADIR
-from grafit.gui import Window, Button, Box, Application, Shell, List, \
+from mingui import Window, Button, Box, Application, Shell, List, \
                        Splitter, Label, Tree, TreeNode, Notebook, MainPanel, \
                        OpenGLWidget, Table, Command, Menu, Menubar, Toolbar, Html
 import grafit.signals

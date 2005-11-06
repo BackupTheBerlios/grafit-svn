@@ -3,7 +3,8 @@ import sys
 from grafit.signals import HasSignals
 from grafit.arrays import nan, array
 from grafit.worksheet import Worksheet
-from grafit import gui
+
+import mingui as gui
 
 NORMAL_COL_BGCOLOR = (255, 255, 255)
 AUTO_COL_BGCOLOR = (220, 220, 255)
@@ -35,35 +36,51 @@ class TableData(HasSignals):
 
 
 class WorksheetView(gui.Box):
-    def __init__(self, parent, worksheet, **place):
+    def __init__(self, place, worksheet, **kwds):
+        gui.Box.__init__(self, place, **kwds)
+        self.worksheet = worksheet
+
+        self.worksheet.connect('rename', self.on_rename)
+
+    def setup(self):
+        for cmd, method in {
+            'new-column': self.on_new_column,
+            'insert-row': self.on_new_column,
+            'move-left': self.on_move_left,
+            'move-right': self.on_move_right,
+            'move-first': self.on_move_first,
+            'move-last': self.on_move_last,
+        }.iteritems():
+            self.commands[cmd].connect('activated', method)
+        
+        self.table = self.find('table')
+        self.table.connect('right-clicked', self.on_right_clicked)
+        self.table.connect('double-clicked', self.on_double_clicked)
+
+        #XXX
+        self.table.DisableDragRowSize()
+        self.table.set_data(TableData(self.worksheet))
+
+    def __iiiiinit__(self, parent, worksheet, **place):
         gui.Box.__init__(self, parent, 'horizontal', **place)
 
         self.worksheet = worksheet
         self.toolbar = gui.Toolbar(self, orientation='vertical', stretch=0)
 
-        self.toolbar.append(gui.Command('New column', 'Create a new column', 
-                                       self.on_new_column, 'stock_insert-columns.png'))
-        self.toolbar.append(gui.Command('Insert row', 'Insert row', 
-                                       self.on_insert, 'table-insert-row.png'))
-        self.toolbar.append(gui.Command('Delete column', 'Delete a column', 
-                                       self.on_new_column, 'stock_delete-column.png'))
+        self.toolbar.append(gui.Command('New column', 'Create a new column', self.on_new_column, 'stock_insert-columns.png'))
+        self.toolbar.append(gui.Command('Insert row', 'Insert row', self.on_insert, 'table-insert-row.png'))
+        self.toolbar.append(gui.Command('Delete column', 'Delete a column', self.on_new_column, 'stock_delete-column.png'))
 
         self.toolbar.append(None)
 
-        self.toolbar.append(gui.Command('Move left', 'Move columns to the left', 
-                                       self.on_move_left, '16/left.png'))
-        self.toolbar.append(gui.Command('Move right', 'Move columns to the right', 
-                                       self.on_move_right, '16/right.png'))
-        self.toolbar.append(gui.Command('Move to first', '', 
-                                       self.on_move_first, '16/first.png'))
-        self.toolbar.append(gui.Command('Move to last', '', 
-                                       self.on_move_last, '16/last.png'))
+        self.toolbar.append(gui.Command('Move left', 'Move columns to the left', self.on_move_left, '16/left.png'))
+        self.toolbar.append(gui.Command('Move right', 'Move columns to the right', self.on_move_right, '16/right.png'))
+        self.toolbar.append(gui.Command('Move to first', '', self.on_move_first, '16/first.png'))
+        self.toolbar.append(gui.Command('Move to last', '', self.on_move_last, '16/last.png'))
 
         self.table = gui.Table(self, TableData(self.worksheet))
         self.table.connect('right-clicked', self.on_right_clicked)
         self.table.connect('double-clicked', self.on_double_clicked)
-
-        self.table._widget.DisableDragRowSize()
 
         self.object = self.worksheet
         self.worksheet.connect('rename', self.on_rename)

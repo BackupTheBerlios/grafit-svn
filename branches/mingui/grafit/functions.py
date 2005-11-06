@@ -1,6 +1,6 @@
 import sys
 import os
-import gui
+import mingui as gui
 
 from grafit.thirdparty import odr
 

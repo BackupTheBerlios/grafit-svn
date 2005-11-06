@@ -36,7 +36,6 @@ sys.path.append(os.path.join(settings.DATADIR, 'grafit', 'thirdparty'))
 
 from thirdparty.ultraTB import VerboseTB
 
-import gui
 import mingui
 import wx
 import Image

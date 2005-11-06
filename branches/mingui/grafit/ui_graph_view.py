@@ -2,16 +2,17 @@ import sys
 import sets
 
 from grafit import Worksheet, Folder
+
 from grafit.graph_dataset import Style
 from grafit.signals import HasSignals
 
-from grafit import gui
 from grafit.arrays import nan, isfinite, asarray
 from grafit.util import flatten
 
 from grafit.settings import DATADIR
 
 import wx
+import mingui as gui
 
 class LegendModel(HasSignals):
     def __init__(self, graph):
@@ -35,7 +36,28 @@ class LegendModel(HasSignals):
 
 
 class GraphView(gui.Box):
-    def __init__(self, parent, graph, **place):
+    def __init__(self, place, graph, **args):
+        gui.Box.__init__(self, place, **args)
+        self.graph = graph
+
+    def setup(self):
+        self.glwidget = self.find('gl-widget')
+
+        self.graph.connect('redraw', self.glwidget.redraw)
+        self.graph.connect('object-doubleclicked', self.on_object_doubleclicked)
+        self.graph.connect('right-clicked', self.on_right_clicked)
+
+        self.glwidget.connect('initialize-gl', self.graph.init)
+        self.glwidget.connect('resize-gl', self.graph.reshape)
+        self.glwidget.connect('paint-gl', self.graph.display)
+        self.glwidget.connect('button-pressed', self.graph.button_press)
+        self.glwidget.connect('button-released', self.graph.button_release)
+        self.glwidget.connect('button-doubleclicked', self.graph.button_doubleclick)
+        self.glwidget.connect('mouse-moved', self.graph.button_motion)
+        self.glwidget.connect('key-down', self.graph.key_down)
+
+
+    def __binit__(self, parent, graph, **place):
         gui.Box.__init__(self, parent, 'horizontal', **place)
         self.graph = graph
 

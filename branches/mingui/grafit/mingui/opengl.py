@@ -4,10 +4,10 @@ import wx.glcanvas
 from base import Widget
 
 class OpenGLWidget(Widget, wx.glcanvas.GLCanvas):
-    def __init__(self, place):
+    def __init__(self, place, **args):
         wx.glcanvas.GLCanvas.__init__(self, place[0], -1, style=wx.glcanvas.WX_GL_DOUBLEBUFFER)
 #        , attribList =[wx.glcanvas.WX_GL_DOUBLEBUFFER])
-        Widget.__init__(self, place)
+        Widget.__init__(self, place, **args)
 
         self.init = False
 

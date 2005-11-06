@@ -10,6 +10,9 @@ from grafit.settings import settings, DATADIR
 from grafit.arrays import nan
 from grafit.actions import action_list, undo, redo
 
+from ui_worksheet_view import WorksheetView
+from ui_graph_view import GraphView
+
 class ProjectShell(gui.PythonShell):
     """
     The shell window.
@@ -86,10 +89,15 @@ class FolderBrowser(gui.List):
     def on_activated(self, obj):
         if isinstance(obj, Folder):
             obj.project.cd(obj)
-        else:
+        elif isinstance(obj, Worksheet):
             gui.xml.build('worksheet-view',
-                          place=gui.app.mainwin.book(label='fuck'), 
+                          place=gui.app.mainwin.book(label=obj.name), 
                           worksheet=obj,
+                          src=globals())
+        elif isinstance(obj, Graph):
+            gui.xml.build('graph-view',
+                          place=gui.app.mainwin.book(label=obj.name), 
+                          graph=obj,
                           src=globals())
 
     def cd(self, folder):
@@ -152,45 +160,6 @@ class ProjectTree(gui.Tree):
     def on_change_folder(self, folder):
         self.select(folder, skip_event=True)
 
-NORMAL_COL_BGCOLOR = (255, 255, 255)
-AUTO_COL_BGCOLOR = (220, 220, 255)
-
-
-class TableData(HasSignals):
-    def __init__(self, worksheet):
-        self.worksheet = worksheet
-        self.worksheet.connect('data-changed', self.on_data_changed)
-
-    def on_data_changed(self): self.emit('modified')
-    def get_n_columns(self): return self.worksheet.ncolumns
-    def get_n_rows(self): return self.worksheet.nrows
-    def get_column_name(self, col): return self.worksheet.column_names[col]
-    def label_edited(self, col, value): self.worksheet.columns[col].name = value
-    def get_row_name(self, row): return str(row)
-    def get_data(self, col, row): return str(self.worksheet[col][row]).replace(repr(nan), '')
-    def get_background_color(self, col):
-        return (AUTO_COL_BGCOLOR, NORMAL_COL_BGCOLOR)[self.worksheet[col].expr == '']
-    def set_data(self, col, row, value):
-        try:
-            f = float(value)
-        except ValueError:
-            try:
-                self.worksheet[col] = self.worksheet.evaluate(value)
-            except ValueError:
-                print >>sys.stderr, "error"
-        else:
-            self.worksheet[col][row] = f
-
-
-class WorksheetView(gui.Box):
-    def __init__(self, place, worksheet=None, **kwds):
-        gui.Box.__init__(self, place, **kwds)
-        self.worksheet = worksheet
-
-    def setup(self):
-        self.table = self.find('table')
-
-        self.table.set_data(TableData(self.worksheet))
 
 class MainWindow(gui.Window):
     def setup(self):

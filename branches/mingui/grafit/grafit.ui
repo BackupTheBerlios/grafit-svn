@@ -69,8 +69,13 @@
   <WorksheetView name="'worksheet-view'" orientation="'horizontal'">
     <Commands>
       <Command id="'mode-arrow'" label="'New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
-      <Command id="'insert-row'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
       <Command id="'mode-hand'" label="'Open...'" image="'open'" desc="'Open a file'"/>
+      <Command id="'insert-row'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'new-column'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'move-left'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'move-right'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'move-first'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
+      <Command id="'move-last'" label="'Insert row'" image="'table-insert-row'" desc="'Insert a row'" type="'check'"/>
     </Commands>
     <Toolbar _stretch="0" orientation="'vertical'">
       <CommandRef object="'^worksheet-view'" id="'insert-row'"/>
@@ -80,8 +85,14 @@
   </WorksheetView>
 
 
-  <Box name="'graph-view'">
-  </Box>
-
+  <GraphView name="'graph-view'" orientation="'horizontal'">
+    <Toolbar _stretch="0" orientation="'vertical'">
+    </Toolbar>
+    <Splitter orientation="'horizontal'">
+      <OpenGLWidget name="'gl-widget'" _stretch="1."/>
+      <Panel position="'right'" _width="150">
+      </Panel>
+    </Splitter>
+  </GraphView>
 
 </Resource>

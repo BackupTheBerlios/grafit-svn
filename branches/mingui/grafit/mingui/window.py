@@ -1,3 +1,4 @@
+import sys
 from base import Widget, Container
 from commands import Menubar, Toolbar
 
@@ -14,6 +15,12 @@ class Window(wx.Frame, Widget, Container):
         if statusbar:
             self.CreateStatusBar()
         self.parent = parent
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+
+    def on_close(self, evt):
+        self.emit('close')
+        self.Destroy()
+        sys.exit(0)
 
     def _add(self, child, **place):
         if isinstance(child, Toolbar):

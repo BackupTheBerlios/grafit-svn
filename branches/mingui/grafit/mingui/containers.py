@@ -204,3 +204,18 @@ class Panel(Box):
                 self.layout.Hide(widget)
                 self.splitter.resize_child(self, sz)
         return callable
+
+from wx.lib.scrolledpanel import ScrolledPanel
+class Scrolled(Widget, Container, ScrolledPanel):
+    def __init__(self, place, **args):
+        ScrolledPanel.__init__(place[0], -1, style=wx.SUNKEN_BORDER)
+        Widget.__init__(self, place, **args)
+
+        self.layout = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.layout)
+        self.SetAutoLayout(True)
+        self.SetupScrolling()
+
+    def _add(self, widget):
+        self.layout.Add(widget._widget, 1., wx.EXPAND)
+#        self.layout.SetSizeHints(self._widget)
