@@ -172,6 +172,12 @@ displayed in a different way, and do not respond to user actions."""
         return locals()
     position = property(**position())
 
+
+    def get_min_size(self): return self.GetMinSize()
+    def set_min_size(self, size): self.SetMinSize(size)
+    min_size = property(get_min_size, set_min_size)
+
+
     def close(self):
         return self.Close()
 
@@ -398,7 +404,7 @@ class Frame(Widget, Container, wx.Panel):
             expand = 0
         self.layout.Add(widget, stretch, wx.EXPAND)
 #        self.layout.SetSizeHints(self)
-#        self.Layout()
+        self.Layout()
 
 class ProgressBar(Widget, wx.Gauge):
     def __init__(self, place, **args):

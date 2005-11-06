@@ -6,7 +6,7 @@ from commands import Menu, Menubar, Toolbar, Command, \
                      Item, Separator, commands, CommandRef
 from images import images
 
-from containers import Box, Splitter, Notebook, Panel, Grid
+from containers import Box, Splitter, Notebook, Panel, Grid, Scrolled
 from window import Window, Dialog
 from tree import Tree, TreeNode
 from listctrl import List, ListData
@@ -23,20 +23,23 @@ import xml
 base classes
 ------------
     Widget
+    ------
         properties:
             x         -- x-coordinate of upper left corner
             y         -- y-coordinate of upper left corner
             position  -- equivalent to (x, y)
-            width     -- component width
-            height    -- component height
+            width     -- widget width
+            height    -- widget height
             size      -- equivalent to (width, height)
+            min_size  -- minimum size (min_x, min_y) that the widget is allowed to have
             geometry  -- equivalent to (x, y, width, height)
-            visible   -- whether the component is visible
-            enabled   -- whether the component is enabled
-            text      -- text associated with the component
-            parent    -- the containing component
+            visible   -- whether the widget is visible
+            enabled   -- whether the widget is enabled
+            text      -- text associated with the widget
+            parent    -- the containing widget
     
     Container
+    ---------
 
 top level
 ---------
@@ -57,6 +60,7 @@ containers
             span     --
     Frame
     -----
+
     Notebook
     --------
         place options:
@@ -71,6 +75,9 @@ containers
         place options:
             label    -- text in the panel button
             image    -- image in the panel button
+
+    Scrolled
+    --------
 
 static
 ------

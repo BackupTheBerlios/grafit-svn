@@ -284,6 +284,7 @@ class GraphStylePanel(gui.Box):
         self.symbol = gui.PixmapChoice(grid, pos=(0,2))
         self.symbol.label = gui.Label(grid,  'Symbol', pos=(0,1))
         self.symbol.check = gui.Checkbox(grid, pos=(0,0))
+
         self.symbol.min_size = (10, self.symbol.min_size[1])
         for symbol in Style.symbols:
             self.symbol.append(symbol+'.png')

@@ -244,7 +244,7 @@ class Panel(Box):
 from wx.lib.scrolledpanel import ScrolledPanel
 class Scrolled(Widget, Container, ScrolledPanel):
     def __init__(self, place, **args):
-        ScrolledPanel.__init__(self, place[0], -1, style=wx.SUNKEN_BORDER)
+        ScrolledPanel.__init__(self, place[0], -1)#, style=wx.SUNKEN_BORDER)
         Widget.__init__(self, place, **args)
         Container.__init__(self)
 
