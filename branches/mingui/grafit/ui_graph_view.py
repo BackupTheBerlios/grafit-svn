@@ -267,7 +267,9 @@ class GraphAxesPanel(gui.Box):
 ###############################################################################
 
 class GraphStylePanel(gui.Box):
-    def __init__(self, graph, view, parent, **place):
+    def setup(self):
+        pass
+    def __qinit__(self, graph, view, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
 
         self.graph = graph
@@ -482,7 +484,10 @@ class ColumnListModel(HasSignals):
     def __getitem__(self, row): return self.colnames[row]
 
 class GraphDataPanel(gui.Box):
-    def __init__(self, graph, view, parent, **place):
+    def setup(self):
+        pass
+        
+    def __binit__(self, graph, view, parent, **place):
         gui.Box.__init__(self, parent, 'vertical', **place)
 
         self.graph = graph

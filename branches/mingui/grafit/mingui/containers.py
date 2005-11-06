@@ -38,6 +38,38 @@ class Box(Widget, Container, wx.Panel):
             self.layout.Add(widget, stretch, expand | wx.ADJUST_MINSIZE)
         self.layout.Layout()
         self.layout.Fit(self)
+        
+class Grid(Widget, Container, wx.Panel):
+    """
+    usage:
+    ------
+    >>> g = gui.Grid(parent, rows, columns, **place)
+    >>> child = gui.Label('Text', pos=(row, col), span=(x, y), expand=True)
+    """
+    def __init__(self, place, rows=2, columns=2, **args):
+        wx.Panel.__init__(self, place[0], -1)
+        Widget.__init__(self, place, **args)
+        Container.__init__(self)
+
+        self.layout = wx.GridBagSizer(rows, columns)
+        self.layout.SetEmptyCellSize((0,0))
+        self.SetSizer(self.layout)
+#        self.layout.SetSizeHints(self)
+        self.SetAutoLayout(True)
+#        self.Bind(wx.EVT_SIZE, self.OnSize)
+
+    def _add(self, widget, position=(0,0), span=(1,1), expand=False):
+        self.layout.Add(widget, position, span, flag=wx.EXPAND|wx.ALL)
+#        self.layout.CalcMin()
+#        self.layout.RecalcSizes()
+#        self.layout.SetSizeHints(self)
+        self.Fit()
+##    def OnSize(self, evt):
+#        print evt.GetSize()
+#        if self.GetAutoLayout():
+#            self.Layout()
+#        evt.Skip()
+
 
 
 class Splitter(Widget, Container, MultiSplitterWindow):
@@ -154,6 +186,7 @@ class Panel(Box):
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self._shown = False
         self._width = place[1].get('width', 100)
+        self._updatewidth = True
 
     def on_paint(self, evt):
         # The first time we are shown,
@@ -194,13 +227,16 @@ class Panel(Box):
         def callable(on):
             sz = self.toolbar.size[self.orientation=='horizontal']
             if on:
+                self._updatewidth = False
                 for win in self.contents:
                     if win!=widget:
                         win._command.state = False
+                self._updatewidth = True
                 self.layout.Show(widget)
                 self.splitter.resize_child(self, self._width+sz)
             else:
-                self._width = self.size[self.orientation=='horizontal']-sz
+                if self._updatewidth:
+                    self._width = self.size[self.orientation=='horizontal']-sz
                 self.layout.Hide(widget)
                 self.splitter.resize_child(self, sz)
         return callable
@@ -208,8 +244,9 @@ class Panel(Box):
 from wx.lib.scrolledpanel import ScrolledPanel
 class Scrolled(Widget, Container, ScrolledPanel):
     def __init__(self, place, **args):
-        ScrolledPanel.__init__(place[0], -1, style=wx.SUNKEN_BORDER)
+        ScrolledPanel.__init__(self, place[0], -1, style=wx.SUNKEN_BORDER)
         Widget.__init__(self, place, **args)
+        Container.__init__(self)
 
         self.layout = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.layout)
@@ -217,5 +254,5 @@ class Scrolled(Widget, Container, ScrolledPanel):
         self.SetupScrolling()
 
     def _add(self, widget):
-        self.layout.Add(widget._widget, 1., wx.EXPAND)
-#        self.layout.SetSizeHints(self._widget)
+        self.layout.Add(widget, 1., wx.EXPAND)
+#        self.layout.SetSizeHints(self)

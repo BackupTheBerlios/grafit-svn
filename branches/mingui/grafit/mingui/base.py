@@ -66,9 +66,6 @@ class Placeable(object):
         for k, v in kwds.iteritems():
             setattr(self, k, v)
 
-class Poulos(Exception):
-    pass
-
 class Widget(Placeable, HasSignals):
     def __init__(self, place, connect={}, **kwds):
         self.name = None
@@ -179,7 +176,7 @@ displayed in a different way, and do not respond to user actions."""
         return self.Close()
 
 class Label(Widget, wx.StaticText):
-    def __init__(self, place, text, **kwds):
+    def __init__(self, place, text="", **kwds):
         wx.StaticText.__init__(self, place[0], -1, text)
         Widget.__init__(self, place, **kwds)
 
@@ -221,6 +218,201 @@ class Button(Widget, wx.Button, wx.ToggleButton):
         def fset(self, text): self.SetLabel(text)
         return locals()
     text = property(**text())
+
+
+
+class Checkbox(Widget, wx.CheckBox):
+    """ A a labelled box which by default is either on (checkmark is visible) 
+        or off (no checkmark). 
+    """
+    def __init__(self, place, label='', **args):
+        wx.CheckBox.__init__(self, place[0], -1, label)
+        Widget.__init__(self, place, **args)
+
+        self.Bind(wx.EVT_CHECKBOX, self.on_event)
+
+    def get_state(self):
+        return self.GetValue()
+    def set_state(self, state):
+        self.SetValue(state)
+    state = property(get_state, set_state)
+
+    def on_event(self, event):
+        self.emit('modified', self.state)
+
+
+from wx.lib.colourselect import ColourSelect, EVT_COLOURSELECT
+from wx.lib.fancytext import StaticFancyText
+
+class Spin(Widget, wx.SpinCtrl):
+    """
+    usage:
+    ------
+    >>> spin = gui.Spin(parent, **place)
+    >>> spin.value = 16
+    >>> spin.value
+    16
+
+    signals:
+    --------
+    modified(value)
+    """
+    def __init__(self, place, **args):
+        wx.SpinCtrl.__init__(self, place[0], -1)
+        Widget.__init__(self, place, **args) 
+
+        self.Bind(wx.EVT_SPINCTRL, self.on_spin)
+
+    def get_value(self): return self.GetValue()
+    def set_value(self, val): self.SetValue(val)
+    value = property(get_value, set_value)
+
+    def on_spin(self, event):
+        self.emit('modified', self.value)
+
+class Choice(Widget, wx.Choice):
+    def __init__(self, place, **args):
+        wx.Choice.__init__(self, place[0], -1)
+        Widget.__init__(self, place, **args)
+        self.Bind(wx.EVT_CHOICE, self.on_choice)
+
+    def append(self, s):
+        self.Append(s)
+
+    def get_value(self): return self.GetSelection()
+    def set_value(self, sel): self.SetSelection(sel)
+    value = property(get_value, set_value)
+
+    def on_choice(self, event):
+        self.emit('select', self.value)
+
+
+
+class ImageChoice(Widget, wx.BitmapButton):
+    def __init__(self, place, **args):
+#        bimp = wx.Image('../data/images/'+'arrow.png').ConvertToBitmap()
+        bimp = self.create_colored_bitmap((30, 10), (100, 80, 120))
+        wx.BitmapButton.__init__(self, place[0], -1, bimp, style=wx.BU_EXACTFIT)
+        Widget.__init__(self, place, **args) 
+        self.imagelist = wx.ImageList(20, 10)
+
+        self.Bind(wx.EVT_BUTTON, self.on_button)
+
+        self.images = {}
+        self.items = []
+
+        self.down = False
+
+    def create_colored_bitmap(self, size, rgb):
+        dc = wx.MemoryDC()
+        bmp = wx.EmptyBitmap(*size)
+        dc.SelectObject(bmp)
+        dc.BeginDrawing()
+        dc.SetBackground(wx.Brush(wx.Colour(*rgb)))
+        dc.Clear()
+        dc.EndDrawing()
+
+        return bmp
+
+    def on_button(self, event):
+        if self.down:
+            self.on_kill_focus(None)
+            return
+        self.win = win = wx.PopupWindow(self, wx.SUNKEN_BORDER)
+        lst = wx.ListCtrl(win, -1, size=(120, 220), style=wx.LC_SMALL_ICON)
+        win.lst = lst
+#        lst.InsertColumn(0, 'col')
+#        lst.SetImageList(self.imagelist, wx.IMAGE_LIST_NORMAL)
+        lst.SetImageList(self.imagelist, wx.IMAGE_LIST_SMALL)
+        lst.SetItemSpacing(0, 1)
+        for i, img in enumerate(self.items):
+            lst.InsertImageItem(i, img)
+        pos = self.ClientToScreen( (0,0) )
+        sz = self.GetSize()
+        win.Position(pos, (0,sz[1]))
+        win.SetSize(lst.GetSize())
+        win.Show(True)
+#        win.Popup()
+        lst.SetFocus()
+        lst.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_sel)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
+        self.down = True
+        self._selection = -1
+
+    def on_sel(self, event):
+        i = event.GetIndex()
+        bitmap = self.images[self.items[i]]
+        self.SetBitmapLabel(bitmap)
+        wx.CallAfter(self.win.Destroy)
+        self.down = False
+        self._selection = i
+        self.emit('select', i)
+
+    def set_selection(self, idx):
+        bitmap = self.images[self.items[idx]]
+        self._selection = idx
+        self.SetBitmapLabel(bitmap)
+    def get_selection(self):
+        return self._selection
+    value = property(get_selection, set_selection)
+
+    def on_kill_focus(self, event):
+        try:
+            self.win.Destroy()
+            self.down = False
+        except wx.PyDeadObjectError:
+            pass
+
+    def append(self, bitmap):
+        if isinstance(bitmap, basestring):
+            bitmap = wx.Image(DATADIR+'data/images/'+bitmap).ConvertToBitmap()
+        id = self.imagelist.Add(bitmap)
+        self.items.append(id)
+
+class ColorSelect(Widget, ColourSelect):
+    def __init__(self, place, **args):
+        self = ColourSelect(place[0], -1, size=(100, 10))
+        Widget.__init__(self, place, **args)
+
+class Frame(Widget, Container, wx.Panel):
+    def __init__(self, place, orientation='vertical', title='', **kwds):
+        wx.Panel.__init__(self, place[0], -1)
+        Widget.__init__(self, place, **kwds)
+        Container.__init__(self)
+
+        self._box = wx.StaticBox(self, -1, title)
+        if orientation == 'horizontal':
+            self.layout = wx.StaticBoxSizer(self._box, wx.HORIZONTAL)
+        elif orientation == 'vertical':
+            self.layout = wx.StaticBoxSizer(self._box, wx.VERTICAL)
+        else:
+            raise NameError
+        self.SetSizer(self.layout)
+        self.SetAutoLayout(True)
+
+    def _add(self, widget, expand=True, stretch=1.0):
+#        widget.Reparent(self.parent)
+        if expand:
+            expand = wx.EXPAND
+        else:
+            expand = 0
+        self.layout.Add(widget, stretch, wx.EXPAND)
+#        self.layout.SetSizeHints(self)
+#        self.Layout()
+
+class ProgressBar(Widget, wx.Gauge):
+    def __init__(self, place, **args):
+        wx.Gauge.__init__(self, place[0], -1, 100)
+        Widget.__init__(self, place, **args)
+
+    def set_value(self, value): self.SetValue(value); wx.Yield()
+    def get_value(self): return self.GetValue()
+    value = property(get_value, set_value)
+
+    def set_range(self, range): self.SetRange(range)
+    def get_range(self): return self.GetRange()
+    range = property(get_range, set_range)
+
 
 class Singleton(object):
     _state = {}

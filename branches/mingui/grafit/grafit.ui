@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Resource>
-
   <Commands>
     <Command id="'file-new'" label="'&amp;New'" image="'new'" desc="'Create a new project'" accel="'Ctrl+N'"/>
     <Command id="'file-open'" label="'&amp;Open...'" image="'open'" desc="'Open a project'"/>
@@ -11,15 +10,12 @@
     <Command id="'new-graph'" label="'New graph'" image="'new-graph'" desc="'Create a new graph'"/>
     <Command id="'new-folder'" label="'New folder'" image="'new-folder'" desc="'Create a new folder'"/>
   </Commands>
-
   <Images>
     <DirImageProvider path="'../data/images/16'"/>
     <DirImageProvider path="'../data/images/24'"/>
   </Images>
-
   <MainWindow name="'mainwin'" title="'Grafity'" size="(640, 480)" statusbar="True">
-
-    <!-- Menus and toolbars -->
+<!-- Menus and toolbars -->
     <Menubar>
       <Menu label="'&amp;File'">
         <CommandRef id="'file-new'"/>
@@ -48,8 +44,7 @@
       <Separator/>
       <CommandRef id="'exit'"/>
     </Toolbar>
-
-    <!-- Widgets -->
+<!-- Widgets -->
     <Splitter orientation="'horizontal'">
       <Panel position="'left'" _width="150">
         <Splitter name="'projectpane'" _label="'project'" _image="'open'" orientation="'vertical'">
@@ -65,7 +60,6 @@
       </Splitter>
     </Splitter>
   </MainWindow>
-
   <WorksheetView name="'worksheet-view'" orientation="'horizontal'">
     <Commands>
       <Command id="'mode-arrow'" label="'New'" image="'new'" desc="'Create a new file'" accel="'Ctrl+N'"/>
@@ -83,16 +77,45 @@
     </Toolbar>
     <Table name="'table'"/>
   </WorksheetView>
-
-
   <GraphView name="'graph-view'" orientation="'horizontal'">
+    <Commands>
+      <Command id="'add-dataset'" label="'Add'" image="'new'"/>
+      <Command id="'remove-dataset'" label="'Add'" image="'open'"/>
+    </Commands>
     <Toolbar _stretch="0" orientation="'vertical'">
-    </Toolbar>
+        </Toolbar>
     <Splitter orientation="'horizontal'">
       <OpenGLWidget name="'gl-widget'" _stretch="1."/>
       <Panel position="'right'" _width="150">
+
+        <!-- Data panel -->
+
+        <GraphDataPanel _label="'data'" _image="'open'" orientation="'vertical'">
+          <Toolbar _stretch="0" orientation="'horizontal'">
+            <CommandRef object="'^graph-view'" id="'add-dataset'"/>
+            <CommandRef object="'^graph-view'" id="'remove-dataset'"/>
+          </Toolbar>
+          <Label text="'Worksheet'" _stretch="0"/>
+          <List/>
+          <Label text="'X column'" _stretch="0"/>
+          <List/>
+          <Label text="'Y column'" _stretch="0"/>
+          <List/>
+        </GraphDataPanel>
+
+        <!-- Style panel -->
+
+        <GraphStylePanel _label="'style'" _image="'new'" orientation="'vertical'">
+          <Frame orientation="'vertical'" title="'Symbol'" _stretch="1.">
+            <Grid>
+              <Checkbox _position="(0,0)"/>
+              <Label text="'Symbol'" _position="(0,1)"/>
+              <ImageChoice _position="(0,2)"/>
+            </Grid>
+          </Frame>
+        </GraphStylePanel>
+
       </Panel>
     </Splitter>
   </GraphView>
-
 </Resource>
