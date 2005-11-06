@@ -90,11 +90,13 @@ def excepthook(type, value, traceback):
 
 def main():
     sys.excepthook = excepthook
-    app = gui.Application()
-    app.splash()
-    from ui_main import MainWindow
-    MainWindow.args = args
-    app.run(MainWindow)
+    import mgrafit
+    mgrafit.main()
+#    app = gui.Application()
+#    app.splash()
+#    from ui_main import MainWindow
+#    MainWindow.args = args
+#    app.run(MainWindow)
 
 if __name__ == '__main__':
     main()

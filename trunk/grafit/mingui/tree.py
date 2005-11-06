@@ -43,8 +43,7 @@ class _xTreeCtrl(wx.TreeCtrl):
 #        if not (flags & wx.TREE_HITTEST_ONITEM):
 #            item = -1
         try:
-            items = self.tree.items + self.tree.roots
-            item = items[[i._nodeid for i in items].index(item)]
+            item = self.tree.items.key(item)
         except ValueError:
             return wx.DragNone
 
@@ -61,8 +60,7 @@ class _xTreeCtrl(wx.TreeCtrl):
 #        if not (flags & wx.LIST_HITTEST_ONITEM):
 #            item = -1
         try:
-            items = self.tree.items + self.tree.roots
-            item = items[[i._nodeid for i in items].index(item)]
+            item = self.tree.items.key(item)
         except ValueError:
             return False
 
@@ -76,21 +74,43 @@ class _xTreeCtrl(wx.TreeCtrl):
         item, flags = self.HitTest(wx.Point(x, y))
 
         try:
-            items = self.tree.items + self.tree.roots
-            item = items[[i._nodeid for i in items].index(item)]
+            item = self.tree.items.key(item)
         except ValueError:
             return
 
         result = self.tree.emit('dropped', item, data)
 
 
-class Tree(Widget, _xTreeCtrl):
+class TreeData(HasSignals):
+    def root(self):
+        """Returns the object represented by the root node"""
 
-    def __init__(self, place, **kwds):
+    def children(self, obj):
+        """Returns the children of object `obj`"""
+
+    def text(self, obj):
+        """Returns the string representation of object `obj` in the tree"""
+
+    def image(self, obj):
+        """Returns the image of object `obj` in the tree"""
+
+    # signal 'modified' (obj)
+    #   signals that the object `obj` has been modified and the 
+    #   tree branch should be updated. If obj is None the whole
+    #   tree should be updated.
+
+from thirdparty.two_way_dict import TwoWayDict
+
+class Tree(Widget, _xTreeCtrl):
+    def __init__(self, place, data=None, **kwds):
         _xTreeCtrl.__init__(self, self, place[0])
-        Widget.__init__(self, place, **kwds)
-        self.roots = []
-        self.items = []
+        Widget.__init__(self, place,  **kwds)
+
+        self.data = data
+        
+        self.root = None
+        self.items = TwoWayDict()
+        self.selection = None
 
         self.SetIndent(10)
 
@@ -101,48 +121,32 @@ class Tree(Widget, _xTreeCtrl):
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.on_label_edit)
 
-        self.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.on_expand)
-        self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.on_collapse)
-
-        self.tree = self
-        self.selection = None
+#        self.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.on_expand)
+#        self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.on_collapse)
 
         self._skip_event = False
+
 
     def on_sel_changed(self, evt):
         if self._skip_event:
             return
-        for item in chain(self.items, self.roots):
-            if self.IsSelected(item._nodeid):
-                self.emit('selected', item)
-                self.selection = item
+        for id in self.items:
+            if self.IsSelected(id):
+                self.emit('selected', self.items[id])
+                self.selection = self.items[id]
                 return
         self.selection = None
 
     def select(self, item, skip_event=False):
         self._skip_event = skip_event
-        self.SelectItem(item._nodeid)
+        self.SelectItem(self.items.key(item))
         self._skip_event = False
 
     def on_label_edit(self, evt):
-        item = self.id_to_item(evt.GetItem())
+        item = self.items[evt.GetItem()]
         label = evt.GetLabel()
-        if hasattr(item, 'rename') and label != '' and item.rename(label):
+        if hasattr(self.data, 'rename') and label != '' and self.data.rename(item, label):
             evt.Veto()
-
-    def on_expand(self, evt):
-        item = self.id_to_item(evt.GetItem())
-        if hasattr(item, 'open'):
-            item.open()
-
-    def on_collapse(self, evt):
-        item = self.id_to_item(evt.GetItem())
-        if hasattr(item, 'close'):
-            item.close()
-
-    def id_to_item(self, id):
-        items = self.items + self.roots
-        return items[[i._nodeid for i in items].index(id)]
 
     def getpixmap(self, filename):
         if filename is None:
@@ -151,39 +155,39 @@ class Tree(Widget, _xTreeCtrl):
             self.pixmaps[filename] = self.imagelist.Add(wx.Image(DATADIR+'data/images/'+filename).ConvertToBitmap())
         return self.pixmaps[filename]
 
-    def append(self, node):
-        self.roots.append(node)
-        node.connect('modified', self.on_node_modified)
-        self.on_node_modified()
+    def on_data_modified(self, obj):
+        self.clear()
+        self.set_data(self.data)
+        if self.selection is not None:
+            self.SelectItem(self.items.key(self.selection))
 
-    def remove(self, node):
-        self.roots.remove(node)
-        node.disconnect('modified', self.on_node_modified)
-        self.on_node_modified()
+    def set_data(self, data):
+        self.data = data
+        self.data.connect('modified', self.on_data_modified)
+
+        self.root = self.data.root()
+        nodeid = self.AddRoot(self.data.text(self.root))
+        self.items[nodeid] = self.root
+
+        for child in self.data.children(self.root):
+            self._add_node_and_children(self.root, child)
+
+        self.Expand(nodeid)
 
     def _add_node_and_children(self, parent, node):
-        node._nodeid = self.AppendItem(parent._nodeid, str(node))#, self.getpixmap(node.get_pixmap()))
-        self.items.append(node)
-        for child in node:
+        nodeid = self.AppendItem(self.items.key(parent), self.data.text(node))
+        self.items[nodeid] = node
+
+        for child in self.data.children(node):
             self._add_node_and_children(node, child)
-        self.Expand(node._nodeid)
 
-    def on_node_modified(self):
-        self.DeleteAllItems()
-        self.items = []
-        for root in self.roots:
-            root._nodeid = self.AddRoot(str(root))#, self.getpixmap(root.get_pixmap()))
-            for node in root:
-                self._add_node_and_children(root, node)
-            self.Expand(root._nodeid)
-        if self.selection is not None:
-            self.SelectItem(self.selection._nodeid)
-
+        self.Expand(nodeid)
 
     def clear(self):
+        self.root = None
+        self.data.disconnect('modified', self.on_data_modified)
+        self.items.clear()
         self.DeleteAllItems()
-        self.roots = []
-        self.items = []
 
     def enable_drop(self, formats):
         self.can_drop = True

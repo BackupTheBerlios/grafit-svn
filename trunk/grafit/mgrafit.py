@@ -96,45 +96,40 @@ class FolderBrowser(gui.List):
         self.data = FolderListData(folder)
 
 
-class FolderTreeNode(HasSignals):
-    """Adapter from a folder to a Tree node"""
-    def __new__(cls, folder, **kwds):
-        if not hasattr(folder, '_treenode'):
-            folder._treenode = object.__new__(cls, folder, **kwds)
-        return folder._treenode
+class ProjectTreeData(HasSignals):
+    def __init__(self, project):
+        self.project = project
+        self.project.top.connect('modified', self.emitter('modified', self.project.top), True)
 
-    def __init__(self, folder, isroot=False):
-        self.folder = folder
-        self.folder.connect('modified', self.on_modified)
-        if isroot:
-            self.folder.project.connect('add-item', self.on_modified)
-            self.folder.project.connect('remove-item', self.on_modified)
-        self.subfolders = list(self.folder.subfolders())
+    def root(self):
+        """Returns the object represented by the root node"""
+        return self.project.top
 
-    def __iter__(self):
-        for item in self.folder.contents():
-            if isinstance(item, Folder):
-                yield FolderTreeNode(item)
+    def children(self, obj):
+        """Returns the children of object `obj`"""
+        return obj.subfolders()
 
-    def __str__(self):
-        return self.folder.name.decode('utf-8')
+    def text(self, obj):
+        """Returns the string representation of object `obj` in the tree"""
+        return obj.name
 
-    def get_pixmap(self):
-        return '16/folder.png'
+    def image(self, obj):
+        """Returns the image of object `obj` in the tree"""
+        return None
 
-    def on_modified(self, item=None):
-        subfolders = list(self.folder.subfolders())
-        if subfolders != self.subfolders:
-            self.emit('modified')
-            self.subfolders = subfolders
-
-    def rename(self, newname):
+    def rename(self, obj, newame):
         if newname == '':
             return False
         else:
-            self.folder.name = newname.encode('utf-8')
-            self.folder.project.top.emit('modified')
+            obj.name = newname.encode('utf-8')
+            self.emit('modified', self.project.top)
             return True
+
+    # signal 'modified' (obj)
+    #   signals that the object `obj` has been modified and the 
+    #   tree branch should be updated. If obj is None the whole
+    #   tree should be updated.
+
 
 class ProjectTree(gui.Tree):
     def setup(self):
@@ -144,20 +139,18 @@ class ProjectTree(gui.Tree):
         self.connect('selected', self.on_select)
 
     def on_open_project(self, project):
-        self.append(FolderTreeNode(project.top))
-#        self.connect('selected', self.on_select)
+        self.set_data(ProjectTreeData(project))
         project.connect('change-current-folder', self.on_change_folder)
 
     def on_close_project(self, project):
         self.clear()
-#        self.disconnect('selected', self.on_select)
         project.disconnect('change-current-folder', self.on_change_folder)
 
     def on_select(self, item):
-        item.folder.project.cd(item.folder)
+        item.project.cd(item)
 
     def on_change_folder(self, folder):
-        self.select(FolderTreeNode(folder), skip_event=True)
+        self.select(folder, skip_event=True)
 
 NORMAL_COL_BGCOLOR = (255, 255, 255)
 AUTO_COL_BGCOLOR = (220, 220, 255)
@@ -219,9 +212,49 @@ class MainWindow(gui.Window):
             
         self.find('projectpane').parent.open(self.find('projectpane'))
 
+        self.open_project(Project())
+
+
+    def open_project(self, project):
+        """Open a project in the main window"""
+        self.project = project
+
+        self.project.connect('remove-item', self.on_project_remove_item)
+        self.project.connect('modified', lambda: self.on_project_modified(True), True)
+        self.project.connect('not-modified', lambda: self.on_project_modified(False), True)
+
+        action_list.clear()
+
+        self.emit('open-project', self.project)
+
+    def can_close_project(self):
+        """Return whether we are allowed to close the current project.
+        Asks the user whether to save changes and saves, when appropriate
+        """
+        if self.project is not None:
+            if self.project.modified:
+                result = gui.alert_yesnocancel('Save changes to this project?', 'Save?')
+                if result == 'yes':
+                    sresult = self.on_save_project()
+                    if not sresult:
+                        return False
+                elif result == 'cancel':
+                    return False
+        return True
+
+    def close_project(self):
+        """Close the active project and clear appropriate windows"""
+        self.project.disconnect('remove-item', self.on_project_remove_item)
+
+        for signal in ['modified', 'not-modified']:
+            for slot in self.project._signals[signal]:
+                self.project.disconnect(signal, slot)
+
+        self.emit('close-project', self.project)
         self.project = None
 
-        self.open_project(Project())
+
+    # Handle commands
 
     def on_new_project(self):
         if self.can_close_project():
@@ -252,47 +285,6 @@ class MainWindow(gui.Window):
         else:
             return False
 
-    def open_project(self, project):
-        self.project = project
-
-        self.project.connect('remove-item', self.on_project_remove_item)
-        self.project.connect('modified', lambda: self.on_project_modified(True), True)
-        self.project.connect('not-modified', lambda: self.on_project_modified(False), True)
-
-        action_list.clear()
-
-        self.emit('open-project', self.project)
-
-    def can_close_project(self):
-        if self.project is not None:
-            if self.project.modified:
-                result = gui.alert_yesnocancel('Save changes to this project?', 'Save?')
-                if result == 'yes':
-                    sresult = self.on_save_project()
-                    if not sresult:
-                        return False
-                elif result == 'cancel':
-                    return False
-        return True
-
-    
-    def close_project(self):
-        self.project.disconnect('remove-item', self.on_project_remove_item)
-
-        for signal in ['modified', 'not-modified']:
-            for slot in self.project._signals[signal]:
-                self.project.disconnect(signal, slot)
-
-        self.emit('close-project', self.project)
-        self.project = None
-
-    def on_project_modified(self, mod):
-        gui.commands['file-save'].enabled = mod
-
-    def on_project_remove_item(self, item):
-        pass
-
-
     def on_new_graph(self):
         g = self.project.new(Graph, None, self.project.here)
 
@@ -303,6 +295,15 @@ class MainWindow(gui.Window):
         ws = self.project.new(Worksheet, None, self.project.here)
         ws.a = [nan]*100
         ws.b = [nan]*100
+
+
+    # Handle events
+
+    def on_project_modified(self, mod):
+        gui.commands['file-save'].enabled = mod
+
+    def on_project_remove_item(self, item):
+        pass
 
 
 def main():
