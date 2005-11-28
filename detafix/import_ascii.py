@@ -60,6 +60,8 @@ def import_ascii(str, delimiter=None, decimal_symbol='.', max_lines = None):
             commented[n] = line
         if line.strip() == '':
             del text[n]
+        if 'ameter' in line:
+            del text[n]
     if len(text) == 0:
         return None, None
 
